@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":135,"id":37065,"methods":[{"el":44,"sc":5,"sl":26},{"el":49,"sc":5,"sl":46},{"el":54,"sc":5,"sl":51},{"el":64,"sc":5,"sl":60},{"el":76,"sc":5,"sl":66},{"el":95,"sc":5,"sl":78},{"el":106,"sc":5,"sl":97},{"el":134,"sc":5,"sl":132}],"name":"ParserCornersTest","sl":20}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_167":{"methods":[{"sl":26}],"name":"testInnerOuterClass","pass":true,"statements":[{"sl":28}]},"test_173":{"methods":[{"sl":51}],"name":"testCastLookaheadProblem","pass":true,"statements":[{"sl":53}]},"test_174":{"methods":[{"sl":46}],"name":"testGetFirstASTNameImageNull","pass":true,"statements":[{"sl":48}]},"test_438":{"methods":[{"sl":78}],"name":"testMultipleExceptionCatching","pass":true,"statements":[{"sl":80},{"sl":82},{"sl":83},{"sl":86},{"sl":89},{"sl":90}]},"test_539":{"methods":[{"sl":60}],"name":"testGenericsProblem","pass":true,"statements":[{"sl":62},{"sl":63}]},"test_886":{"methods":[{"sl":66},{"sl":97}],"name":"testParsersCases","pass":true,"statements":[{"sl":68},{"sl":69},{"sl":71},{"sl":72},{"sl":74},{"sl":75},{"sl":98},{"sl":99},{"sl":100},{"sl":104}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [167], [], [167], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [174], [], [174], [], [], [173], [], [173], [], [], [], [], [], [], [539], [], [539], [539], [], [], [886], [], [886], [886], [], [886], [886], [], [886], [886], [], [], [438], [], [438], [], [438], [438], [], [], [438], [], [], [438], [438], [], [], [], [], [], [], [886], [886], [886], [886], [], [], [], [886], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]

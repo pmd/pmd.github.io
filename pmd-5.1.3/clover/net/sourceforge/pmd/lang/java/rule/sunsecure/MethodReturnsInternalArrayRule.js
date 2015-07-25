@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":68,"id":20372,"methods":[{"el":31,"sc":5,"sl":25},{"el":65,"sc":5,"sl":33}],"name":"MethodReturnsInternalArrayRule","sl":23}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_338":{"methods":[{"sl":25},{"sl":33}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":27},{"sl":28},{"sl":30},{"sl":35},{"sl":36},{"sl":38},{"sl":39},{"sl":40},{"sl":41},{"sl":42},{"sl":43},{"sl":45},{"sl":48},{"sl":51},{"sl":52},{"sl":64}]},"test_445":{"methods":[{"sl":25},{"sl":33}],"name":"testPmdOptions","pass":true,"statements":[{"sl":27},{"sl":30},{"sl":35},{"sl":36}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [338, 445], [], [338, 445], [338], [], [338, 445], [], [], [338, 445], [], [338, 445], [338, 445], [], [338], [338], [338], [338], [338], [338], [], [338], [], [], [338], [], [], [338], [338], [], [], [], [], [], [], [], [], [], [], [], [338], [], [], [], []]

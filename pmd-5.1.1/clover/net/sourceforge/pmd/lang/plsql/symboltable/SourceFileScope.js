@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":51,"id":26110,"methods":[{"el":19,"sc":5,"sl":17},{"el":23,"sc":5,"sl":21},{"el":27,"sc":5,"sl":25},{"el":39,"sc":5,"sl":33},{"el":43,"sc":5,"sl":41},{"el":49,"sc":5,"sl":45}],"name":"SourceFileScope","sl":13}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_153":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testExpressionParentChildLinks","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_194":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testLabelledStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_333":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testWhileStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_365":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testIfStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_627":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testSimpleCaseStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_633":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testVariableOrConstantDeclaratorParentChildLinks","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_822":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testForStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [153, 633, 333, 627, 365, 194, 822], [153, 633, 333, 627, 365, 194, 822], [], [], [153, 633, 333, 627, 365, 194, 822], [153, 633, 333, 627, 365, 194, 822], [], [], [], [], [], [], [], [], [], [], [153, 633, 333, 627, 365, 194, 822], [], [153, 633, 333, 627, 365, 194, 822], [], [], [153, 633, 333, 627, 365, 194, 822], [], [], [], [], [], [], [], [], [], [], [], [], []]

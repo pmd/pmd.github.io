@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":51,"id":26333,"methods":[{"el":19,"sc":5,"sl":17},{"el":23,"sc":5,"sl":21},{"el":27,"sc":5,"sl":25},{"el":39,"sc":5,"sl":33},{"el":43,"sc":5,"sl":41},{"el":49,"sc":5,"sl":45}],"name":"SourceFileScope","sl":13}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_225":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testForStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_31":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testExpressionParentChildLinks","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_359":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testLabelledStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_473":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testIfStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_494":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testVariableOrConstantDeclaratorParentChildLinks","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_868":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testSimpleCaseStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]},"test_874":{"methods":[{"sl":17},{"sl":21},{"sl":33}],"name":"testWhileStmtHasCorrectTypes","pass":true,"statements":[{"sl":18},{"sl":22},{"sl":35},{"sl":38}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [359, 225, 494, 868, 473, 31, 874], [359, 225, 494, 868, 473, 31, 874], [], [], [359, 225, 494, 868, 473, 31, 874], [359, 225, 494, 868, 473, 31, 874], [], [], [], [], [], [], [], [], [], [], [359, 225, 494, 868, 473, 31, 874], [], [359, 225, 494, 868, 473, 31, 874], [], [], [359, 225, 494, 868, 473, 31, 874], [], [], [], [], [], [], [], [], [], [], [], [], []]

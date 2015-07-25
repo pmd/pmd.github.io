@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":14,"id":9947,"methods":[{"el":13,"sc":5,"sl":11}],"name":"Java17Handler","sl":9}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_271":{"methods":[{"sl":11}],"name":"testParsersCases","pass":true,"statements":[{"sl":12}]},"test_278":{"methods":[{"sl":11}],"name":"testBinaryAndUnderscoresInNumericalLiterals","pass":true,"statements":[{"sl":12}]},"test_285":{"methods":[{"sl":11}],"name":"testCopyXmlToClipboard","pass":true,"statements":[{"sl":12}]},"test_311":{"methods":[{"sl":11}],"name":"testInnerOuterClass","pass":true,"statements":[{"sl":12}]},"test_369":{"methods":[{"sl":11}],"name":"testGenericsProblem","pass":true,"statements":[{"sl":12}]},"test_4":{"methods":[{"sl":11}],"name":"testMulticatch","pass":true,"statements":[{"sl":12}]},"test_475":{"methods":[{"sl":11}],"name":"testGenericDiamond","pass":true,"statements":[{"sl":12}]},"test_608":{"methods":[{"sl":11}],"name":"testStringInSwitch","pass":true,"statements":[{"sl":12}]},"test_652":{"methods":[{"sl":11}],"name":"testTryWithResourcesSemi","pass":true,"statements":[{"sl":12}]},"test_752":{"methods":[{"sl":11}],"name":"testMultipleExceptionCatching","pass":true,"statements":[{"sl":12}]},"test_757":{"methods":[{"sl":11}],"name":"testTryWithResources","pass":true,"statements":[{"sl":12}]},"test_866":{"methods":[{"sl":11}],"name":"testMulticatchWithAnnotations","pass":true,"statements":[{"sl":12}]},"test_924":{"methods":[{"sl":11}],"name":"testTryWithResourcesMulti","pass":true,"statements":[{"sl":12}]},"test_927":{"methods":[{"sl":11}],"name":"testTryWithResourcesWithAnnotations","pass":true,"statements":[{"sl":12}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [608, 757, 369, 752, 285, 652, 311, 271, 4, 475, 924, 866, 278, 927], [608, 757, 369, 752, 285, 652, 311, 271, 4, 475, 924, 866, 278, 927], [], []]

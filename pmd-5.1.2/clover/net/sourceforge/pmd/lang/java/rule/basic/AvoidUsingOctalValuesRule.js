@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":37,"id":13177,"methods":[{"el":24,"sc":5,"sl":22},{"el":36,"sc":5,"sl":26}],"name":"AvoidUsingOctalValuesRule","sl":12}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_111":{"methods":[{"sl":22}],"name":"minimalArgs","pass":true,"statements":[{"sl":23}]},"test_215":{"methods":[{"sl":22}],"name":"changeJavaVersion","pass":true,"statements":[{"sl":23}]},"test_353":{"methods":[{"sl":22}],"name":"usingDebug","pass":true,"statements":[{"sl":23}]},"test_38":{"methods":[{"sl":22}],"name":"testBasic","pass":true,"statements":[{"sl":23}]},"test_513":{"methods":[{"sl":22}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":23}]},"test_612":{"methods":[{"sl":22},{"sl":26}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":23},{"sl":27},{"sl":28},{"sl":30},{"sl":31},{"sl":32},{"sl":35}]},"test_627":{"methods":[{"sl":22},{"sl":26}],"name":"testPmdOptions","pass":true,"statements":[{"sl":23},{"sl":27},{"sl":28},{"sl":30},{"sl":31},{"sl":35}]},"test_651":{"methods":[{"sl":22}],"name":"minimumPriority","pass":true,"statements":[{"sl":23}]},"test_817":{"methods":[{"sl":22}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":23}]},"test_870":{"methods":[{"sl":22}],"name":"testRuleSetFileName","pass":true,"statements":[{"sl":23}]},"test_872":{"methods":[{"sl":22}],"name":"testExtendedReferences","pass":true,"statements":[{"sl":23}]},"test_941":{"methods":[{"sl":22}],"name":"testRuleSetReferenceWithDeprecatedRule","pass":true,"statements":[{"sl":23}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [941, 872, 38, 215, 651, 817, 627, 353, 111, 612, 513, 870], [941, 872, 38, 215, 651, 817, 627, 353, 111, 612, 513, 870], [], [], [627, 612], [627, 612], [627, 612], [], [627, 612], [627, 612], [612], [], [], [627, 612], [], []]

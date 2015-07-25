@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":27,"id":13897,"methods":[{"el":21,"sc":5,"sl":18},{"el":26,"sc":5,"sl":24}],"name":"ExcessiveParameterListRule","sl":17}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_169":{"methods":[{"sl":18}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":19},{"sl":20}]},"test_377":{"methods":[{"sl":18},{"sl":24}],"name":"testNestedRuleset","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_500":{"methods":[{"sl":18},{"sl":24}],"name":"testAbstractNamesInNestedRuleset","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_635":{"methods":[{"sl":18},{"sl":24}],"name":"testAbstractNames","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_638":{"methods":[{"sl":18},{"sl":24}],"name":"testPmdOptions","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_70":{"methods":[{"sl":18},{"sl":24}],"name":"testFormatterWithProperties","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_722":{"methods":[{"sl":18},{"sl":24}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_735":{"methods":[{"sl":18},{"sl":24}],"name":"testCommaInRulesetfiles","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_812":{"methods":[{"sl":18}],"name":"testRemainingTestCases","pass":true,"statements":[{"sl":19},{"sl":20}]},"test_930":{"methods":[{"sl":18}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":19},{"sl":20}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [500, 812, 735, 377, 930, 169, 722, 635, 638, 70], [500, 812, 735, 377, 930, 169, 722, 635, 638, 70], [500, 812, 735, 377, 930, 169, 722, 635, 638, 70], [], [], [], [500, 735, 377, 722, 635, 638, 70], [500, 735, 377, 722, 635, 638, 70], [], []]

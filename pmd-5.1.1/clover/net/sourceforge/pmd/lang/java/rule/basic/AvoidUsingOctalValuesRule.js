@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":37,"id":13142,"methods":[{"el":24,"sc":5,"sl":22},{"el":36,"sc":5,"sl":26}],"name":"AvoidUsingOctalValuesRule","sl":12}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_169":{"methods":[{"sl":22}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":23}]},"test_351":{"methods":[{"sl":22}],"name":"usingDebug","pass":true,"statements":[{"sl":23}]},"test_478":{"methods":[{"sl":22}],"name":"minimumPriority","pass":true,"statements":[{"sl":23}]},"test_480":{"methods":[{"sl":22}],"name":"testExtendedReferences","pass":true,"statements":[{"sl":23}]},"test_597":{"methods":[{"sl":22}],"name":"changeJavaVersion","pass":true,"statements":[{"sl":23}]},"test_638":{"methods":[{"sl":22},{"sl":26}],"name":"testPmdOptions","pass":true,"statements":[{"sl":23},{"sl":27},{"sl":28},{"sl":30},{"sl":31},{"sl":35}]},"test_676":{"methods":[{"sl":22}],"name":"testBasic","pass":true,"statements":[{"sl":23}]},"test_722":{"methods":[{"sl":22},{"sl":26}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":23},{"sl":27},{"sl":28},{"sl":30},{"sl":31},{"sl":32},{"sl":35}]},"test_750":{"methods":[{"sl":22}],"name":"minimalArgs","pass":true,"statements":[{"sl":23}]},"test_870":{"methods":[{"sl":22}],"name":"testRuleSetFileName","pass":true,"statements":[{"sl":23}]},"test_916":{"methods":[{"sl":22}],"name":"testRuleSetReferenceWithDeprecatedRule","pass":true,"statements":[{"sl":23}]},"test_930":{"methods":[{"sl":22}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":23}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [870, 676, 351, 930, 478, 169, 722, 480, 597, 916, 750, 638], [870, 676, 351, 930, 478, 169, 722, 480, 597, 916, 750, 638], [], [], [722, 638], [722, 638], [722, 638], [], [722, 638], [722, 638], [722], [], [], [722, 638], [], []]

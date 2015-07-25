@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":27,"id":13856,"methods":[{"el":21,"sc":5,"sl":18},{"el":26,"sc":5,"sl":24}],"name":"ExcessiveParameterListRule","sl":17}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_202":{"methods":[{"sl":18}],"name":"testRemainingTestCases","pass":true,"statements":[{"sl":19},{"sl":20}]},"test_309":{"methods":[{"sl":18}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":19},{"sl":20}]},"test_315":{"methods":[{"sl":18},{"sl":24}],"name":"testAbstractNames","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_345":{"methods":[{"sl":18},{"sl":24}],"name":"testAbstractNamesInNestedRuleset","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_393":{"methods":[{"sl":18},{"sl":24}],"name":"testNestedRuleset","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_398":{"methods":[{"sl":18},{"sl":24}],"name":"testPmdOptions","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_442":{"methods":[{"sl":18},{"sl":24}],"name":"testFormatterWithProperties","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_527":{"methods":[{"sl":18},{"sl":24}],"name":"testCommaInRulesetfiles","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]},"test_752":{"methods":[{"sl":18}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":19},{"sl":20}]},"test_902":{"methods":[{"sl":18},{"sl":24}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":19},{"sl":20},{"sl":25}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [527, 309, 202, 345, 752, 393, 902, 398, 442, 315], [527, 309, 202, 345, 752, 393, 902, 398, 442, 315], [527, 309, 202, 345, 752, 393, 902, 398, 442, 315], [], [], [], [527, 345, 393, 902, 398, 442, 315], [527, 345, 393, 902, 398, 442, 315], [], []]

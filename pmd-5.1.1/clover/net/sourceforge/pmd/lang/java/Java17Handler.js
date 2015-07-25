@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":14,"id":9921,"methods":[{"el":13,"sc":5,"sl":11}],"name":"Java17Handler","sl":9}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_139":{"methods":[{"sl":11}],"name":"testMulticatch","pass":true,"statements":[{"sl":12}]},"test_167":{"methods":[{"sl":11}],"name":"testInnerOuterClass","pass":true,"statements":[{"sl":12}]},"test_218":{"methods":[{"sl":11}],"name":"testTryWithResourcesWithAnnotations","pass":true,"statements":[{"sl":12}]},"test_431":{"methods":[{"sl":11}],"name":"testTryWithResourcesMulti","pass":true,"statements":[{"sl":12}]},"test_435":{"methods":[{"sl":11}],"name":"testMulticatchWithAnnotations","pass":true,"statements":[{"sl":12}]},"test_438":{"methods":[{"sl":11}],"name":"testMultipleExceptionCatching","pass":true,"statements":[{"sl":12}]},"test_539":{"methods":[{"sl":11}],"name":"testGenericsProblem","pass":true,"statements":[{"sl":12}]},"test_549":{"methods":[{"sl":11}],"name":"testBinaryAndUnderscoresInNumericalLiterals","pass":true,"statements":[{"sl":12}]},"test_575":{"methods":[{"sl":11}],"name":"testStringInSwitch","pass":true,"statements":[{"sl":12}]},"test_703":{"methods":[{"sl":11}],"name":"testCopyXmlToClipboard","pass":true,"statements":[{"sl":12}]},"test_828":{"methods":[{"sl":11}],"name":"testTryWithResourcesSemi","pass":true,"statements":[{"sl":12}]},"test_883":{"methods":[{"sl":11}],"name":"testTryWithResources","pass":true,"statements":[{"sl":12}]},"test_886":{"methods":[{"sl":11}],"name":"testParsersCases","pass":true,"statements":[{"sl":12}]},"test_893":{"methods":[{"sl":11}],"name":"testGenericDiamond","pass":true,"statements":[{"sl":12}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [539, 167, 438, 218, 431, 435, 703, 886, 575, 828, 883, 139, 549, 893], [539, 167, 438, 218, 431, 435, 703, 886, 575, 828, 883, 139, 549, 893], [], []]
