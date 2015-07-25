@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":34,"id":12547,"methods":[{"el":21,"sc":5,"sl":19},{"el":33,"sc":5,"sl":23}],"name":"AvoidUsingOctalValuesRule","sl":9}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_105":{"methods":[{"sl":19}],"name":"changeJavaVersion","pass":true,"statements":[{"sl":20}]},"test_148":{"methods":[{"sl":19}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":20}]},"test_18":{"methods":[{"sl":19}],"name":"testRuleSetReferenceWithDeprecatedRule","pass":true,"statements":[{"sl":20}]},"test_344":{"methods":[{"sl":19}],"name":"testRuleSetFileName","pass":true,"statements":[{"sl":20}]},"test_408":{"methods":[{"sl":19}],"name":"testExtendedReferences","pass":true,"statements":[{"sl":20}]},"test_457":{"methods":[{"sl":19}],"name":"minimalArgs","pass":true,"statements":[{"sl":20}]},"test_46":{"methods":[{"sl":19}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":20}]},"test_552":{"methods":[{"sl":19}],"name":"testBasic","pass":true,"statements":[{"sl":20}]},"test_638":{"methods":[{"sl":19},{"sl":23}],"name":"testPmdOptions","pass":true,"statements":[{"sl":20},{"sl":24},{"sl":25},{"sl":27},{"sl":28},{"sl":32}]},"test_705":{"methods":[{"sl":19}],"name":"usingDebug","pass":true,"statements":[{"sl":20}]},"test_732":{"methods":[{"sl":19},{"sl":23}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":20},{"sl":24},{"sl":25},{"sl":27},{"sl":28},{"sl":29},{"sl":32}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [732, 705, 105, 46, 344, 552, 457, 638, 408, 18, 148], [732, 705, 105, 46, 344, 552, 457, 638, 408, 18, 148], [], [], [732, 638], [732, 638], [732, 638], [], [732, 638], [732, 638], [732], [], [], [732, 638], [], []]

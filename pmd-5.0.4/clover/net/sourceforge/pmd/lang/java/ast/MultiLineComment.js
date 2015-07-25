@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":9,"id":11437,"methods":[{"el":7,"sc":5,"sl":5}],"name":"MultiLineComment","sl":3}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_12":{"methods":[{"sl":5}],"name":"testParsersCases","pass":true,"statements":[{"sl":6}]},"test_152":{"methods":[{"sl":5}],"name":"testRelativeRulesets","pass":true,"statements":[{"sl":6}]},"test_196":{"methods":[{"sl":5}],"name":"testCommaInRulesetfiles","pass":true,"statements":[{"sl":6}]},"test_267":{"methods":[{"sl":5}],"name":"testDefault","pass":true,"statements":[{"sl":6}]},"test_331":{"methods":[{"sl":5}],"name":"testNoFormattersValidation","pass":true,"statements":[{"sl":6}]},"test_410":{"methods":[{"sl":5}],"name":"testAbstractNames","pass":true,"statements":[{"sl":6}]},"test_421":{"methods":[{"sl":5}],"name":"testFormatterWithProperties","pass":true,"statements":[{"sl":6}]},"test_504":{"methods":[{"sl":5}],"name":"testExplicitRuleInRuleSet","pass":true,"statements":[{"sl":6}]},"test_619":{"methods":[{"sl":5}],"name":"testIgnoredConstructorInvocation","pass":true,"statements":[{"sl":6}]},"test_638":{"methods":[{"sl":5}],"name":"testPmdOptions","pass":true,"statements":[{"sl":6}]},"test_719":{"methods":[{"sl":5}],"name":"testFilteredCommentIn","pass":true,"statements":[{"sl":6}]},"test_732":{"methods":[{"sl":5}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":6}]},"test_768":{"methods":[{"sl":5}],"name":"testNestedRuleset","pass":true,"statements":[{"sl":6}]},"test_782":{"methods":[{"sl":5}],"name":"testRelativeRulesetsInRulesetfiles","pass":true,"statements":[{"sl":6}]},"test_86":{"methods":[{"sl":5}],"name":"testAbstractNamesInNestedRuleset","pass":true,"statements":[{"sl":6}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [12, 331, 719, 196, 152, 504, 619, 267, 410, 638, 768, 732, 86, 782, 421], [12, 331, 719, 196, 152, 504, 619, 267, 410, 638, 768, 732, 86, 782, 421], [], [], []]

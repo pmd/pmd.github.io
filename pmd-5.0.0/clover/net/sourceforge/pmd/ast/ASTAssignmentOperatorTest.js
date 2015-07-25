@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":61,"id":51894,"methods":[{"el":20,"sc":5,"sl":16},{"el":26,"sc":5,"sl":22},{"el":32,"sc":5,"sl":28},{"el":60,"sc":5,"sl":58}],"name":"ASTAssignmentOperatorTest","sl":14}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_1163":{"methods":[{"sl":22}],"name":"testCompoundAssignmentPlusRecognized","pass":true,"statements":[{"sl":24},{"sl":25}]},"test_1590":{"methods":[{"sl":28}],"name":"testCompoundAssignmentMultRecognized","pass":true,"statements":[{"sl":30},{"sl":31}]},"test_1928":{"methods":[{"sl":16}],"name":"testSimpleAssignmentRecognized","pass":true,"statements":[{"sl":18},{"sl":19}]},"test_1956":{"methods":[{"sl":22}],"name":"testCompoundAssignmentPlusRecognized","pass":true,"statements":[{"sl":24},{"sl":25}]},"test_2065":{"methods":[{"sl":28}],"name":"testCompoundAssignmentMultRecognized","pass":true,"statements":[{"sl":30},{"sl":31}]},"test_284":{"methods":[{"sl":22}],"name":"testCompoundAssignmentPlusRecognized","pass":true,"statements":[{"sl":24},{"sl":25}]},"test_52":{"methods":[{"sl":16}],"name":"testSimpleAssignmentRecognized","pass":true,"statements":[{"sl":18},{"sl":19}]},"test_575":{"methods":[{"sl":28}],"name":"testCompoundAssignmentMultRecognized","pass":true,"statements":[{"sl":30},{"sl":31}]},"test_601":{"methods":[{"sl":16}],"name":"testSimpleAssignmentRecognized","pass":true,"statements":[{"sl":18},{"sl":19}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [1928, 52, 601], [], [1928, 52, 601], [1928, 52, 601], [], [], [1163, 1956, 284], [], [1163, 1956, 284], [1163, 1956, 284], [], [], [1590, 2065, 575], [], [1590, 2065, 575], [1590, 2065, 575], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]

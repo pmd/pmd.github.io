@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>NonRuleWithAllPropertyTypes xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../testapidocs/net/sourceforge/pmd/properties/NonRuleWithAllPropertyTypes.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <strong class="jxr_keyword">package</strong> net.sourceforge.pmd.properties;
+<a class="jxr_linenumber" name="2" href="#2">2</a>   
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <strong class="jxr_keyword">import</strong> java.lang.reflect.Method;
+<a class="jxr_linenumber" name="4" href="#4">4</a>   
+<a class="jxr_linenumber" name="5" href="#5">5</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.BooleanMultiProperty;
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.CharacterMultiProperty;
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.CharacterProperty;
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.EnumeratedMultiProperty;
+<a class="jxr_linenumber" name="11" href="#11">11</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.EnumeratedProperty;
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.FloatMultiProperty;
+<a class="jxr_linenumber" name="13" href="#13">13</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.FloatProperty;
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.IntegerMultiProperty;
+<a class="jxr_linenumber" name="15" href="#15">15</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
+<a class="jxr_linenumber" name="16" href="#16">16</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.LongMultiProperty;
+<a class="jxr_linenumber" name="17" href="#17">17</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.LongProperty;
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.MethodMultiProperty;
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.MethodProperty;
+<a class="jxr_linenumber" name="20" href="#20">20</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.StringMultiProperty;
+<a class="jxr_linenumber" name="21" href="#21">21</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.StringProperty;
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.TypeMultiProperty;
+<a class="jxr_linenumber" name="23" href="#23">23</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.properties.TypeProperty;
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.util.ClassUtil;
+<a class="jxr_linenumber" name="25" href="#25">25</a>  
+<a class="jxr_linenumber" name="26" href="#26">26</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="27" href="#27">27</a>  <em class="jxr_javadoccomment"> * A non-functional rule containing all property types. Used for testing UIs.</em>
+<a class="jxr_linenumber" name="28" href="#28">28</a>  <em class="jxr_javadoccomment"> * </em>
+<a class="jxr_linenumber" name="29" href="#29">29</a>  <em class="jxr_javadoccomment"> * Steps required to use with Eclipse Plugin:</em>
+<a class="jxr_linenumber" name="30" href="#30">30</a>  <em class="jxr_javadoccomment"> * </em>
+<a class="jxr_linenumber" name="31" href="#31">31</a>  <em class="jxr_javadoccomment"> *  update your chosen ruleset xml file to include this 'rule'</em>
+<a class="jxr_linenumber" name="32" href="#32">32</a>  <em class="jxr_javadoccomment"> *  compile new PMD jars</em>
+<a class="jxr_linenumber" name="33" href="#33">33</a>  <em class="jxr_javadoccomment"> *  copy both the pmd5.0.jar and pmd-test-5.0.jar to the eclipse-plugin/lib directory</em>
+<a class="jxr_linenumber" name="34" href="#34">34</a>  <em class="jxr_javadoccomment"> *  update the /manifest.mf file to ensure it includes the pmd-test-5.0.jar</em>
+<a class="jxr_linenumber" name="35" href="#35">35</a>  <em class="jxr_javadoccomment"> * </em>
+<a class="jxr_linenumber" name="36" href="#36">36</a>  <em class="jxr_javadoccomment"> * @author Brian Remedios</em>
+<a class="jxr_linenumber" name="37" href="#37">37</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="38" href="#38">38</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../net/sourceforge/pmd/properties/NonRuleWithAllPropertyTypes.html">NonRuleWithAllPropertyTypes</a> <strong class="jxr_keyword">extends</strong> AbstractJavaRule {
+<a class="jxr_linenumber" name="39" href="#39">39</a>  
+<a class="jxr_linenumber" name="40" href="#40">40</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Method stringLength = ClassUtil.methodFor(String.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"length"</span>, ClassUtil.EMPTY_CLASS_ARRAY);
+<a class="jxr_linenumber" name="41" href="#41">41</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Method stringToLowerCase = ClassUtil.methodFor(String.<strong class="jxr_keyword">class</strong>, <span class="jxr_string">"toLowerCase"</span>, ClassUtil.EMPTY_CLASS_ARRAY);
+<a class="jxr_linenumber" name="42" href="#42">42</a>       
+<a class="jxr_linenumber" name="43" href="#43">43</a>  	<em class="jxr_comment">// descriptors are public to enable us to write external tests</em>
+<a class="jxr_linenumber" name="44" href="#44">44</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> StringProperty singleStr	  = <strong class="jxr_keyword">new</strong> StringProperty(<span class="jxr_string">"singleStr"</span>, <span class="jxr_string">"String value"</span>, <span class="jxr_string">"hello world"</span> , 3.0f);
+<a class="jxr_linenumber" name="45" href="#45">45</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> StringMultiProperty multiStr  = <strong class="jxr_keyword">new</strong> StringMultiProperty(<span class="jxr_string">"multiStr"</span>, <span class="jxr_string">"Multiple string values"</span>, <strong class="jxr_keyword">new</strong> String[] {<span class="jxr_string">"hello"</span>, <span class="jxr_string">"world"</span>}, 5.0f, '|');
+<a class="jxr_linenumber" name="46" href="#46">46</a>  	
+<a class="jxr_linenumber" name="47" href="#47">47</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> IntegerProperty singleInt	  = <strong class="jxr_keyword">new</strong> IntegerProperty(<span class="jxr_string">"singleInt"</span>, <span class="jxr_string">"Single integer value"</span>, 1, 10, 8 , 3.0f);
+<a class="jxr_linenumber" name="48" href="#48">48</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> IntegerMultiProperty multiInt = <strong class="jxr_keyword">new</strong> IntegerMultiProperty(<span class="jxr_string">"multiInt"</span>, <span class="jxr_string">"Multiple integer values"</span>, 0, 10, <strong class="jxr_keyword">new</strong> Integer[] {1, 2, 3, 4}, 5.0f);
+<a class="jxr_linenumber" name="49" href="#49">49</a>   
+<a class="jxr_linenumber" name="50" href="#50">50</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LongProperty singleLong       = <strong class="jxr_keyword">new</strong> LongProperty(<span class="jxr_string">"singleLong"</span>, <span class="jxr_string">"Single long value"</span>, 1L, 10L, 8L , 3.0f);
+<a class="jxr_linenumber" name="51" href="#51">51</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> LongMultiProperty multiLong   = <strong class="jxr_keyword">new</strong> LongMultiProperty(<span class="jxr_string">"multiLong"</span>, <span class="jxr_string">"Multiple long values"</span>, 0L, 10L, <strong class="jxr_keyword">new</strong> Long[] {1L, 2L, 3L, 4L}, 5.0f);
+<a class="jxr_linenumber" name="52" href="#52">52</a>  	
+<a class="jxr_linenumber" name="53" href="#53">53</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> BooleanProperty singleBool	   = <strong class="jxr_keyword">new</strong> BooleanProperty(<span class="jxr_string">"singleBool"</span>, <span class="jxr_string">"Single boolean value"</span>, <strong class="jxr_keyword">true</strong>, 6.0f);
+<a class="jxr_linenumber" name="54" href="#54">54</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> BooleanMultiProperty multiBool = <strong class="jxr_keyword">new</strong> BooleanMultiProperty(<span class="jxr_string">"multiBool"</span>, <span class="jxr_string">"Multiple boolean values"</span>, <strong class="jxr_keyword">new</strong> Boolean[] { <strong class="jxr_keyword">true</strong>, false}, 5.0f);
+<a class="jxr_linenumber" name="55" href="#55">55</a>  	
+<a class="jxr_linenumber" name="56" href="#56">56</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> CharacterProperty singleChar	 = <strong class="jxr_keyword">new</strong> CharacterProperty(<span class="jxr_string">"singleChar"</span>, <span class="jxr_string">"Single character"</span>, 'a', 5.0f);
+<a class="jxr_linenumber" name="57" href="#57">57</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> CharacterMultiProperty multiChar = <strong class="jxr_keyword">new</strong> CharacterMultiProperty(<span class="jxr_string">"multiChar"</span>, <span class="jxr_string">"Multiple characters"</span>, <strong class="jxr_keyword">new</strong> Character[] {'a', 'e', 'i', 'o', 'u'}, 6.0f, '|');
+<a class="jxr_linenumber" name="58" href="#58">58</a>  	
+<a class="jxr_linenumber" name="59" href="#59">59</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> FloatProperty singleFloat	     = <strong class="jxr_keyword">new</strong> FloatProperty(<span class="jxr_string">"singleFloat"</span>, <span class="jxr_string">"Single float value"</span>, 9f, 10f, .9f, 5.0f);
+<a class="jxr_linenumber" name="60" href="#60">60</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> FloatMultiProperty multiFloat    = <strong class="jxr_keyword">new</strong> FloatMultiProperty(<span class="jxr_string">"multiFloat"</span>, <span class="jxr_string">"Multiple float values"</span>, 0f, 5f, <strong class="jxr_keyword">new</strong> Float[] {1f, 2f, 3f}, 6.0f);
+<a class="jxr_linenumber" name="61" href="#61">61</a>  	
+<a class="jxr_linenumber" name="62" href="#62">62</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> TypeProperty singleType	         = <strong class="jxr_keyword">new</strong> TypeProperty(<span class="jxr_string">"singleType"</span>, <span class="jxr_string">"Single type"</span>, String.<strong class="jxr_keyword">class</strong>, <strong class="jxr_keyword">new</strong> String[] { <span class="jxr_string">"java.lang"</span> }, 5.0f);
+<a class="jxr_linenumber" name="63" href="#63">63</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> TypeMultiProperty multiType	     = <strong class="jxr_keyword">new</strong> TypeMultiProperty(<span class="jxr_string">"multiType"</span>, <span class="jxr_string">"Multiple types"</span>, <strong class="jxr_keyword">new</strong> Class[] {Integer.<strong class="jxr_keyword">class</strong>, Object.<strong class="jxr_keyword">class</strong>}, <strong class="jxr_keyword">new</strong> String[] { <span class="jxr_string">"java.lang"</span> }, 6.0f);
+<a class="jxr_linenumber" name="64" href="#64">64</a>  
+<a class="jxr_linenumber" name="65" href="#65">65</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> MethodProperty singleMethod      = <strong class="jxr_keyword">new</strong> MethodProperty(<span class="jxr_string">"singleMethod"</span>, <span class="jxr_string">"Single method"</span>, stringLength, <strong class="jxr_keyword">new</strong> String[] { <span class="jxr_string">"java.lang"</span> }, 5.0f);
+<a class="jxr_linenumber" name="66" href="#66">66</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> MethodMultiProperty multiMethod  = <strong class="jxr_keyword">new</strong> MethodMultiProperty(<span class="jxr_string">"multiMethod"</span>, <span class="jxr_string">"Multiple methods"</span>, <strong class="jxr_keyword">new</strong> Method[] {stringLength, stringToLowerCase}, <strong class="jxr_keyword">new</strong> String[] { <span class="jxr_string">"java.lang"</span> }, 6.0f);
+<a class="jxr_linenumber" name="67" href="#67">67</a>  
+<a class="jxr_linenumber" name="68" href="#68">68</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> EnumeratedProperty&lt;Class&gt; enumType			 = <strong class="jxr_keyword">new</strong> EnumeratedProperty&lt;Class&gt;(<span class="jxr_string">"enumType"</span>, <span class="jxr_string">"Enumerated choices"</span>, <strong class="jxr_keyword">new</strong> String[] {<span class="jxr_string">"String"</span>, <span class="jxr_string">"Object"</span>}, <strong class="jxr_keyword">new</strong> Class[] {String.<strong class="jxr_keyword">class</strong>, Object.<strong class="jxr_keyword">class</strong>}, 1, 5.0f);
+<a class="jxr_linenumber" name="69" href="#69">69</a>  	<strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> EnumeratedMultiProperty&lt;Class&gt; multiEnumType = <strong class="jxr_keyword">new</strong> EnumeratedMultiProperty&lt;Class&gt;(<span class="jxr_string">"multiEnumType"</span>, <span class="jxr_string">"Multiple enumerated choices"</span>, <strong class="jxr_keyword">new</strong> String[] {<span class="jxr_string">"String"</span>, <span class="jxr_string">"Object"</span>}, <strong class="jxr_keyword">new</strong> Class[] {String.<strong class="jxr_keyword">class</strong>, Object.<strong class="jxr_keyword">class</strong>}, <strong class="jxr_keyword">new</strong> <strong class="jxr_keyword">int</strong>[] {0,1}, 5.0f);
+<a class="jxr_linenumber" name="70" href="#70">70</a>  	
+<a class="jxr_linenumber" name="71" href="#71">71</a>  	
+<a class="jxr_linenumber" name="72" href="#72">72</a>  	<strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/properties/NonRuleWithAllPropertyTypes.html">NonRuleWithAllPropertyTypes</a>() {
+<a class="jxr_linenumber" name="73" href="#73">73</a>  		<strong class="jxr_keyword">super</strong>();
+<a class="jxr_linenumber" name="74" href="#74">74</a>  		definePropertyDescriptor(singleStr);
+<a class="jxr_linenumber" name="75" href="#75">75</a>  		definePropertyDescriptor(multiStr);
+<a class="jxr_linenumber" name="76" href="#76">76</a>  		definePropertyDescriptor(singleInt);
+<a class="jxr_linenumber" name="77" href="#77">77</a>  		definePropertyDescriptor(multiInt);
+<a class="jxr_linenumber" name="78" href="#78">78</a>  	    definePropertyDescriptor(singleLong);
+<a class="jxr_linenumber" name="79" href="#79">79</a>  	    definePropertyDescriptor(multiLong);
+<a class="jxr_linenumber" name="80" href="#80">80</a>  		definePropertyDescriptor(singleBool);
+<a class="jxr_linenumber" name="81" href="#81">81</a>  		definePropertyDescriptor(multiBool);
+<a class="jxr_linenumber" name="82" href="#82">82</a>  		definePropertyDescriptor(singleChar);
+<a class="jxr_linenumber" name="83" href="#83">83</a>  		definePropertyDescriptor(multiChar);
+<a class="jxr_linenumber" name="84" href="#84">84</a>  		definePropertyDescriptor(singleFloat);
+<a class="jxr_linenumber" name="85" href="#85">85</a>  		definePropertyDescriptor(multiFloat);
+<a class="jxr_linenumber" name="86" href="#86">86</a>  		definePropertyDescriptor(singleType);
+<a class="jxr_linenumber" name="87" href="#87">87</a>  		definePropertyDescriptor(multiType);
+<a class="jxr_linenumber" name="88" href="#88">88</a>  		definePropertyDescriptor(enumType);
+<a class="jxr_linenumber" name="89" href="#89">89</a>  		definePropertyDescriptor(singleMethod);
+<a class="jxr_linenumber" name="90" href="#90">90</a>          definePropertyDescriptor(multiMethod);
+<a class="jxr_linenumber" name="91" href="#91">91</a>  		definePropertyDescriptor(multiEnumType);
+<a class="jxr_linenumber" name="92" href="#92">92</a>  	}
+<a class="jxr_linenumber" name="93" href="#93">93</a>  }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+

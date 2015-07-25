@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":80,"id":25667,"methods":[{"el":23,"sc":5,"sl":21},{"el":26,"sc":5,"sl":26},{"el":33,"sc":5,"sl":31},{"el":51,"sc":5,"sl":38},{"el":78,"sc":5,"sl":56}],"name":"TextRenderer","sl":17}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_2":{"methods":[{"sl":21},{"sl":31},{"sl":56}],"name":"minimalArgs","pass":true,"statements":[{"sl":22},{"sl":58},{"sl":59},{"sl":60},{"sl":70}]},"test_456":{"methods":[{"sl":21},{"sl":31},{"sl":38},{"sl":56}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":22},{"sl":40},{"sl":41},{"sl":43},{"sl":44},{"sl":45},{"sl":46},{"sl":47},{"sl":48},{"sl":49},{"sl":58},{"sl":59},{"sl":60},{"sl":62},{"sl":63},{"sl":64},{"sl":65},{"sl":66},{"sl":70}]},"test_77":{"methods":[{"sl":21},{"sl":31},{"sl":38},{"sl":56}],"name":"testPmdOptions","pass":true,"statements":[{"sl":22},{"sl":40},{"sl":41},{"sl":43},{"sl":44},{"sl":45},{"sl":46},{"sl":47},{"sl":48},{"sl":49},{"sl":58},{"sl":59},{"sl":60},{"sl":70}]},"test_776":{"methods":[{"sl":21},{"sl":31},{"sl":56}],"name":"usingDebug","pass":true,"statements":[{"sl":22},{"sl":58},{"sl":59},{"sl":60},{"sl":70}]},"test_811":{"methods":[{"sl":21},{"sl":31},{"sl":56}],"name":"changeJavaVersion","pass":true,"statements":[{"sl":22},{"sl":58},{"sl":59},{"sl":60},{"sl":70}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [776, 456, 811, 2, 77], [776, 456, 811, 2, 77], [], [], [], [], [], [], [], [], [776, 456, 811, 2, 77], [], [], [], [], [], [], [456, 77], [], [456, 77], [456, 77], [], [456, 77], [456, 77], [456, 77], [456, 77], [456, 77], [456, 77], [456, 77], [], [], [], [], [], [], [776, 456, 811, 2, 77], [], [776, 456, 811, 2, 77], [776, 456, 811, 2, 77], [776, 456, 811, 2, 77], [], [456], [456], [456], [456], [456], [], [], [], [776, 456, 811, 2, 77], [], [], [], [], [], [], [], [], [], []]

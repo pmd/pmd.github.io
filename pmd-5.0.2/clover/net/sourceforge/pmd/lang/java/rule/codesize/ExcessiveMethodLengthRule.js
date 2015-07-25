@@ -1,0 +1,10 @@
+var clover = new Object();
+
+// JSON: {classes : [{name, id, sl, el,  methods : [{sl, el}, ...]}, ...]}
+clover.pageData = {"classes":[{"el":19,"id":13165,"methods":[{"el":18,"sc":5,"sl":15}],"name":"ExcessiveMethodLengthRule","sl":14}]}
+
+// JSON: {test_ID : {"methods": [ID1, ID2, ID3...], "name" : "testXXX() void"}, ...};
+clover.testTargets = {"test_120":{"methods":[{"sl":15}],"name":"testExplicitRuleInRuleSet","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_324":{"methods":[{"sl":15}],"name":"testNestedRuleset","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_358":{"methods":[{"sl":15}],"name":"testAbstractNamesInNestedRuleset","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_36":{"methods":[{"sl":15}],"name":"testRelativeRulesetsInRulesetfiles","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_369":{"methods":[{"sl":15}],"name":"testPmdOptions","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_538":{"methods":[{"sl":15}],"name":"testFormatterWithProperties","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_584":{"methods":[{"sl":15}],"name":"testCommaInRulesetfiles","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_622":{"methods":[{"sl":15}],"name":"testAllPMDBuiltInRulesMeetConventions","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_662":{"methods":[{"sl":15}],"name":"testRelativeRulesets","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_744":{"methods":[{"sl":15}],"name":"testAbstractNames","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_751":{"methods":[{"sl":15}],"name":"testResourceFileCommands","pass":true,"statements":[{"sl":16},{"sl":17}]},"test_77":{"methods":[{"sl":15}],"name":"testReadWriteRoundTrip","pass":true,"statements":[{"sl":16},{"sl":17}]}}
+
+// JSON: { lines : [{tests : [testid1, testid2, testid3, ...]}, ...]};
+clover.srcFileLines = [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [744, 36, 120, 662, 77, 622, 324, 584, 358, 751, 538, 369], [744, 36, 120, 662, 77, 622, 324, 584, 358, 751, 538, 369], [744, 36, 120, 662, 77, 622, 324, 584, 358, 751, 538, 369], [], []]

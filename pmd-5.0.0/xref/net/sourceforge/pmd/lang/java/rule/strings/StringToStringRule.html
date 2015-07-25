@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>StringToStringRule xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../apidocs/net/sourceforge/pmd/lang/java/rule/strings/StringToStringRule.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_javadoccomment"> * BSD-style license; for more info see <a href="http://pmd.sourceforge.net/license.html" target="alexandria_uri">http://pmd.sourceforge.net/license.html</a></em>
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="4" href="#4">4</a>   <strong class="jxr_keyword">package</strong> net.sourceforge.pmd.lang.java.rule.strings;
+<a class="jxr_linenumber" name="5" href="#5">5</a>   
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTName;
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.symboltable.NameOccurrence;
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
+<a class="jxr_linenumber" name="11" href="#11">11</a>  
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/strings/StringToStringRule.html">StringToStringRule</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/AbstractJavaRule.html">AbstractJavaRule</a> {
+<a class="jxr_linenumber" name="13" href="#13">13</a>  
+<a class="jxr_linenumber" name="14" href="#14">14</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTVariableDeclaratorId.html">ASTVariableDeclaratorId</a> node, Object data) {
+<a class="jxr_linenumber" name="15" href="#15">15</a>          <strong class="jxr_keyword">if</strong> (!TypeHelper.isA(node.getNameDeclaration(), String.<strong class="jxr_keyword">class</strong>)) {
+<a class="jxr_linenumber" name="16" href="#16">16</a>              <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="17" href="#17">17</a>          }
+<a class="jxr_linenumber" name="18" href="#18">18</a>          <strong class="jxr_keyword">boolean</strong> isArray = node.isArray();
+<a class="jxr_linenumber" name="19" href="#19">19</a>          <strong class="jxr_keyword">for</strong> (NameOccurrence occ: node.getUsages()) {
+<a class="jxr_linenumber" name="20" href="#20">20</a>              <a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/NameOccurrence.html">NameOccurrence</a> qualifier = occ.getNameForWhichThisIsAQualifier();
+<a class="jxr_linenumber" name="21" href="#21">21</a>              <strong class="jxr_keyword">if</strong> (qualifier != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="22" href="#22">22</a>                  <strong class="jxr_keyword">if</strong> (!isArray &amp;&amp; qualifier.getImage().indexOf(<span class="jxr_string">"toString"</span>) != -1) {
+<a class="jxr_linenumber" name="23" href="#23">23</a>                      addViolation(data, occ.getLocation());
+<a class="jxr_linenumber" name="24" href="#24">24</a>                  } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (isArray &amp;&amp; qualifier.getLocation() != <strong class="jxr_keyword">null</strong> &amp;&amp; !(qualifier.getLocation() instanceof ASTName) &amp;&amp; qualifier.getImage().equals(<span class="jxr_string">"toString"</span>)) {
+<a class="jxr_linenumber" name="25" href="#25">25</a>                      addViolation(data, occ.getLocation());
+<a class="jxr_linenumber" name="26" href="#26">26</a>                  }
+<a class="jxr_linenumber" name="27" href="#27">27</a>              }
+<a class="jxr_linenumber" name="28" href="#28">28</a>          }
+<a class="jxr_linenumber" name="29" href="#29">29</a>          <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="30" href="#30">30</a>      }
+<a class="jxr_linenumber" name="31" href="#31">31</a>  }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+

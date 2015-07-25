@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>RuleViolationComparatorTest xref</title>
+<link type="text/css" rel="stylesheet" href="../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../testapidocs/net/sourceforge/pmd/RuleViolationComparatorTest.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <strong class="jxr_keyword">package</strong> net.sourceforge.pmd;
+<a class="jxr_linenumber" name="2" href="#2">2</a>   
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertEquals;
+<a class="jxr_linenumber" name="4" href="#4">4</a>   <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.Assert.assertSame;
+<a class="jxr_linenumber" name="5" href="#5">5</a>   
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <strong class="jxr_keyword">import</strong> java.util.ArrayList;
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <strong class="jxr_keyword">import</strong> java.util.Arrays;
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <strong class="jxr_keyword">import</strong> java.util.Collections;
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <strong class="jxr_keyword">import</strong> java.util.Random;
+<a class="jxr_linenumber" name="11" href="#11">11</a>  
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <strong class="jxr_keyword">import</strong> junit.framework.JUnit4TestAdapter;
+<a class="jxr_linenumber" name="13" href="#13">13</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.Rule;
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.RuleContext;
+<a class="jxr_linenumber" name="15" href="#15">15</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.RuleViolation;
+<a class="jxr_linenumber" name="16" href="#16">16</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.RuleViolationComparator;
+<a class="jxr_linenumber" name="17" href="#17">17</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.DummyJavaNode;
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.rule.JavaRuleViolation;
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.symboltable.SourceFileScope;
+<a class="jxr_linenumber" name="20" href="#20">20</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.rule.MockRule;
+<a class="jxr_linenumber" name="21" href="#21">21</a>  
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> org.junit.Test;
+<a class="jxr_linenumber" name="23" href="#23">23</a>  
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../net/sourceforge/pmd/RuleViolationComparatorTest.html">RuleViolationComparatorTest</a> {
+<a class="jxr_linenumber" name="25" href="#25">25</a>  
+<a class="jxr_linenumber" name="26" href="#26">26</a>      @Test
+<a class="jxr_linenumber" name="27" href="#27">27</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testComparator() {
+<a class="jxr_linenumber" name="28" href="#28">28</a>  	Rule rule1 = <strong class="jxr_keyword">new</strong> MockRule(<span class="jxr_string">"name1"</span>, <span class="jxr_string">"desc"</span>, <span class="jxr_string">"msg"</span>, <span class="jxr_string">"rulesetname1"</span>);
+<a class="jxr_linenumber" name="29" href="#29">29</a>  	Rule rule2 = <strong class="jxr_keyword">new</strong> MockRule(<span class="jxr_string">"name2"</span>, <span class="jxr_string">"desc"</span>, <span class="jxr_string">"msg"</span>, <span class="jxr_string">"rulesetname2"</span>);
+<a class="jxr_linenumber" name="30" href="#30">30</a>  
+<a class="jxr_linenumber" name="31" href="#31">31</a>  	<em class="jxr_comment">// RuleViolations created in pre-sorted order</em>
+<a class="jxr_linenumber" name="32" href="#32">32</a>  	RuleViolation[] expectedOrder = <strong class="jxr_keyword">new</strong> RuleViolation[12];
+<a class="jxr_linenumber" name="33" href="#33">33</a>  
+<a class="jxr_linenumber" name="34" href="#34">34</a>  	<strong class="jxr_keyword">int</strong> index = 0;
+<a class="jxr_linenumber" name="35" href="#35">35</a>  	<em class="jxr_comment">// Different begin line</em>
+<a class="jxr_linenumber" name="36" href="#36">36</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file1"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="37" href="#37">37</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file1"</span>, 20, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="38" href="#38">38</a>  	<em class="jxr_comment">// Different description</em>
+<a class="jxr_linenumber" name="39" href="#39">39</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file2"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="40" href="#40">40</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file2"</span>, 10, <span class="jxr_string">"desc2"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="41" href="#41">41</a>  	<em class="jxr_comment">// Different begin column</em>
+<a class="jxr_linenumber" name="42" href="#42">42</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file3"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="43" href="#43">43</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file3"</span>, 10, <span class="jxr_string">"desc1"</span>, 10, 20, 80);
+<a class="jxr_linenumber" name="44" href="#44">44</a>  	<em class="jxr_comment">// Different end line</em>
+<a class="jxr_linenumber" name="45" href="#45">45</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file4"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="46" href="#46">46</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file4"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 30, 80);
+<a class="jxr_linenumber" name="47" href="#47">47</a>  	<em class="jxr_comment">// Different end column</em>
+<a class="jxr_linenumber" name="48" href="#48">48</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file5"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="49" href="#49">49</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file5"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 90);
+<a class="jxr_linenumber" name="50" href="#50">50</a>  	<em class="jxr_comment">// Different rule name</em>
+<a class="jxr_linenumber" name="51" href="#51">51</a>  	expectedOrder[index++] = createJavaRuleViolation(rule1, <span class="jxr_string">"file6"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="52" href="#52">52</a>  	expectedOrder[index++] = createJavaRuleViolation(rule2, <span class="jxr_string">"file6"</span>, 10, <span class="jxr_string">"desc1"</span>, 0, 20, 80);
+<a class="jxr_linenumber" name="53" href="#53">53</a>  
+<a class="jxr_linenumber" name="54" href="#54">54</a>  	<em class="jxr_comment">// Randomize</em>
+<a class="jxr_linenumber" name="55" href="#55">55</a>  	List&lt;RuleViolation&gt; ruleViolations = <strong class="jxr_keyword">new</strong> ArrayList&lt;RuleViolation&gt;(Arrays.asList(expectedOrder));
+<a class="jxr_linenumber" name="56" href="#56">56</a>  	<strong class="jxr_keyword">long</strong> seed = System.nanoTime();
+<a class="jxr_linenumber" name="57" href="#57">57</a>  	Random random = <strong class="jxr_keyword">new</strong> Random(seed);
+<a class="jxr_linenumber" name="58" href="#58">58</a>  	Collections.shuffle(ruleViolations, random);
+<a class="jxr_linenumber" name="59" href="#59">59</a>  
+<a class="jxr_linenumber" name="60" href="#60">60</a>  	<em class="jxr_comment">// Sort</em>
+<a class="jxr_linenumber" name="61" href="#61">61</a>  	Collections.sort(ruleViolations, RuleViolationComparator.INSTANCE);
+<a class="jxr_linenumber" name="62" href="#62">62</a>  
+<a class="jxr_linenumber" name="63" href="#63">63</a>  	<em class="jxr_comment">// Check</em>
+<a class="jxr_linenumber" name="64" href="#64">64</a>  	<strong class="jxr_keyword">int</strong> count = 0;
+<a class="jxr_linenumber" name="65" href="#65">65</a>  	<strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; expectedOrder.length; i++) {
+<a class="jxr_linenumber" name="66" href="#66">66</a>  	    count++;
+<a class="jxr_linenumber" name="67" href="#67">67</a>  	    assertSame(<span class="jxr_string">"Wrong RuleViolation "</span> + i + <span class="jxr_string">", usind seed: "</span> + seed, expectedOrder[i], ruleViolations.get(i));
+<a class="jxr_linenumber" name="68" href="#68">68</a>  	}
+<a class="jxr_linenumber" name="69" href="#69">69</a>  	assertEquals(<span class="jxr_string">"Missing assertion for every RuleViolation"</span>, expectedOrder.length, count);
+<a class="jxr_linenumber" name="70" href="#70">70</a>      }
+<a class="jxr_linenumber" name="71" href="#71">71</a>  
+<a class="jxr_linenumber" name="72" href="#72">72</a>      <strong class="jxr_keyword">private</strong> RuleViolation createJavaRuleViolation(Rule rule, String fileName, <strong class="jxr_keyword">int</strong> beginLine, String description,
+<a class="jxr_linenumber" name="73" href="#73">73</a>  	    <strong class="jxr_keyword">int</strong> beginColumn, <strong class="jxr_keyword">int</strong> endLine, <strong class="jxr_keyword">int</strong> endColumn) {
+<a class="jxr_linenumber" name="74" href="#74">74</a>  	RuleContext ruleContext = <strong class="jxr_keyword">new</strong> RuleContext();
+<a class="jxr_linenumber" name="75" href="#75">75</a>  	ruleContext.setSourceCodeFilename(fileName);
+<a class="jxr_linenumber" name="76" href="#76">76</a>  	DummyJavaNode simpleNode = <strong class="jxr_keyword">new</strong> DummyJavaNode(1);
+<a class="jxr_linenumber" name="77" href="#77">77</a>  	simpleNode.setScope(<strong class="jxr_keyword">new</strong> SourceFileScope(fileName));
+<a class="jxr_linenumber" name="78" href="#78">78</a>  	simpleNode.testingOnly__setBeginLine(beginLine);
+<a class="jxr_linenumber" name="79" href="#79">79</a>  	simpleNode.testingOnly__setBeginColumn(beginColumn);
+<a class="jxr_linenumber" name="80" href="#80">80</a>  	simpleNode.testingOnly__setEndLine(endLine);
+<a class="jxr_linenumber" name="81" href="#81">81</a>  	simpleNode.testingOnly__setEndColumn(endColumn);
+<a class="jxr_linenumber" name="82" href="#82">82</a>  	RuleViolation ruleViolation = <strong class="jxr_keyword">new</strong> JavaRuleViolation(rule, ruleContext, simpleNode, description);
+<a class="jxr_linenumber" name="83" href="#83">83</a>  	<strong class="jxr_keyword">return</strong> ruleViolation;
+<a class="jxr_linenumber" name="84" href="#84">84</a>      }
+<a class="jxr_linenumber" name="85" href="#85">85</a>  
+<a class="jxr_linenumber" name="86" href="#86">86</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">static</strong> junit.framework.Test suite() {
+<a class="jxr_linenumber" name="87" href="#87">87</a>  	<strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> JUnit4TestAdapter(RuleViolationComparatorTest.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="88" href="#88">88</a>      }
+<a class="jxr_linenumber" name="89" href="#89">89</a>  }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+

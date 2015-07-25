@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>JUnitTestsShouldIncludeAssertRule xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../../apidocs/net/sourceforge/pmd/lang/java/rule/junit/JUnitTestsShouldIncludeAssertRule.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_javadoccomment"> * BSD-style license; for more info see <a href="http://pmd.sourceforge.net/license.html" target="alexandria_uri">http://pmd.sourceforge.net/license.html</a></em>
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="4" href="#4">4</a>   <strong class="jxr_keyword">package</strong> net.sourceforge.pmd.lang.java.rule.junit;
+<a class="jxr_linenumber" name="5" href="#5">5</a>   
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.ast.Node;
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTName;
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+<a class="jxr_linenumber" name="11" href="#11">11</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+<a class="jxr_linenumber" name="13" href="#13">13</a>  
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/junit/JUnitTestsShouldIncludeAssertRule.html">JUnitTestsShouldIncludeAssertRule</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/junit/AbstractJUnitRule.html">AbstractJUnitRule</a> {
+<a class="jxr_linenumber" name="15" href="#15">15</a>  
+<a class="jxr_linenumber" name="16" href="#16">16</a>      @Override
+<a class="jxr_linenumber" name="17" href="#17">17</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTClassOrInterfaceDeclaration.html">ASTClassOrInterfaceDeclaration</a> node, Object data) {
+<a class="jxr_linenumber" name="18" href="#18">18</a>          <strong class="jxr_keyword">if</strong> (node.isInterface()) {
+<a class="jxr_linenumber" name="19" href="#19">19</a>              <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="20" href="#20">20</a>          }
+<a class="jxr_linenumber" name="21" href="#21">21</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.visit(node, data);
+<a class="jxr_linenumber" name="22" href="#22">22</a>      }
+<a class="jxr_linenumber" name="23" href="#23">23</a>  
+<a class="jxr_linenumber" name="24" href="#24">24</a>      @Override
+<a class="jxr_linenumber" name="25" href="#25">25</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTMethodDeclaration.html">ASTMethodDeclaration</a> method, Object data) {
+<a class="jxr_linenumber" name="26" href="#26">26</a>          <strong class="jxr_keyword">if</strong> (isJUnitMethod(method, data))  {
+<a class="jxr_linenumber" name="27" href="#27">27</a>              <strong class="jxr_keyword">if</strong> (!containsAssert(method.getBlock(), false)) {
+<a class="jxr_linenumber" name="28" href="#28">28</a>                  addViolation(data, method);
+<a class="jxr_linenumber" name="29" href="#29">29</a>              }
+<a class="jxr_linenumber" name="30" href="#30">30</a>          }
+<a class="jxr_linenumber" name="31" href="#31">31</a>  		<strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="32" href="#32">32</a>  	}
+<a class="jxr_linenumber" name="33" href="#33">33</a>  
+<a class="jxr_linenumber" name="34" href="#34">34</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> containsAssert(<a href="../../../../../../../net/sourceforge/pmd/lang/ast/Node.html">Node</a> n, <strong class="jxr_keyword">boolean</strong> assertFound) {
+<a class="jxr_linenumber" name="35" href="#35">35</a>          <strong class="jxr_keyword">if</strong> (!assertFound) {
+<a class="jxr_linenumber" name="36" href="#36">36</a>              <strong class="jxr_keyword">if</strong> (n instanceof ASTStatementExpression) {
+<a class="jxr_linenumber" name="37" href="#37">37</a>                  <strong class="jxr_keyword">if</strong> (isAssertOrFailStatement((ASTStatementExpression)n)) {
+<a class="jxr_linenumber" name="38" href="#38">38</a>                      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="39" href="#39">39</a>                  }
+<a class="jxr_linenumber" name="40" href="#40">40</a>              }
+<a class="jxr_linenumber" name="41" href="#41">41</a>              <strong class="jxr_keyword">if</strong> (!assertFound) {
+<a class="jxr_linenumber" name="42" href="#42">42</a>                  <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i=0;i&lt;n.jjtGetNumChildren() &amp;&amp; ! assertFound;i++) {
+<a class="jxr_linenumber" name="43" href="#43">43</a>                      <a href="../../../../../../../net/sourceforge/pmd/lang/ast/Node.html">Node</a> c = n.jjtGetChild(i);
+<a class="jxr_linenumber" name="44" href="#44">44</a>                      <strong class="jxr_keyword">if</strong> (containsAssert(c, assertFound)) {
+<a class="jxr_linenumber" name="45" href="#45">45</a>                          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="46" href="#46">46</a>                      }
+<a class="jxr_linenumber" name="47" href="#47">47</a>                  }
+<a class="jxr_linenumber" name="48" href="#48">48</a>              }
+<a class="jxr_linenumber" name="49" href="#49">49</a>          }
+<a class="jxr_linenumber" name="50" href="#50">50</a>          <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="51" href="#51">51</a>      }
+<a class="jxr_linenumber" name="52" href="#52">52</a>  
+<a class="jxr_linenumber" name="53" href="#53">53</a>      <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="54" href="#54">54</a>  <em class="jxr_javadoccomment">     * Tells if the expression is an assert statement or not.</em>
+<a class="jxr_linenumber" name="55" href="#55">55</a>  <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="56" href="#56">56</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isAssertOrFailStatement(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTStatementExpression.html">ASTStatementExpression</a> expression) {
+<a class="jxr_linenumber" name="57" href="#57">57</a>          <strong class="jxr_keyword">if</strong> (expression!=<strong class="jxr_keyword">null</strong>
+<a class="jxr_linenumber" name="58" href="#58">58</a>                  &amp;&amp; expression.jjtGetNumChildren()&gt;0
+<a class="jxr_linenumber" name="59" href="#59">59</a>                  &amp;&amp; expression.jjtGetChild(0) instanceof ASTPrimaryExpression
+<a class="jxr_linenumber" name="60" href="#60">60</a>                  ) {
+<a class="jxr_linenumber" name="61" href="#61">61</a>              <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTPrimaryExpression.html">ASTPrimaryExpression</a> pe = (ASTPrimaryExpression) expression.jjtGetChild(0);
+<a class="jxr_linenumber" name="62" href="#62">62</a>              <strong class="jxr_keyword">if</strong> (pe.jjtGetNumChildren()&gt; 0 &amp;&amp; pe.jjtGetChild(0) instanceof ASTPrimaryPrefix) {
+<a class="jxr_linenumber" name="63" href="#63">63</a>                  <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTPrimaryPrefix.html">ASTPrimaryPrefix</a> pp = (ASTPrimaryPrefix) pe.jjtGetChild(0);
+<a class="jxr_linenumber" name="64" href="#64">64</a>                  <strong class="jxr_keyword">if</strong> (pp.jjtGetNumChildren()&gt;0 &amp;&amp; pp.jjtGetChild(0) instanceof ASTName) {
+<a class="jxr_linenumber" name="65" href="#65">65</a>                      String img = ((ASTName) pp.jjtGetChild(0)).getImage();
+<a class="jxr_linenumber" name="66" href="#66">66</a>                      <strong class="jxr_keyword">if</strong> (img != <strong class="jxr_keyword">null</strong> &amp;&amp; (img.startsWith(<span class="jxr_string">"assert"</span>) || img.startsWith(<span class="jxr_string">"fail"</span>) || img.startsWith(<span class="jxr_string">"Assert.assert"</span>) || img.startsWith(<span class="jxr_string">"Assert.fail"</span>) )) {
+<a class="jxr_linenumber" name="67" href="#67">67</a>                          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="68" href="#68">68</a>                      }
+<a class="jxr_linenumber" name="69" href="#69">69</a>                  }
+<a class="jxr_linenumber" name="70" href="#70">70</a>              }
+<a class="jxr_linenumber" name="71" href="#71">71</a>          }
+<a class="jxr_linenumber" name="72" href="#72">72</a>          <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="73" href="#73">73</a>      }
+<a class="jxr_linenumber" name="74" href="#74">74</a>  }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+
