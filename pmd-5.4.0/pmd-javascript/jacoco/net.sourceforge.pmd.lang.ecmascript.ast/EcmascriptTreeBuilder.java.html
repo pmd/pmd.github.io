@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>EcmascriptTreeBuilder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JavaScript</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ecmascript.ast</a> &gt; <span class="el_source">EcmascriptTreeBuilder.java</span></div><h1>EcmascriptTreeBuilder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ecmascript.ast;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+
+import net.sourceforge.pmd.lang.ast.Node;
+
+import org.mozilla.javascript.ast.ArrayComprehension;
+import org.mozilla.javascript.ast.ArrayComprehensionLoop;
+import org.mozilla.javascript.ast.ArrayLiteral;
+import org.mozilla.javascript.ast.Assignment;
+import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.AstRoot;
+import org.mozilla.javascript.ast.Block;
+import org.mozilla.javascript.ast.BreakStatement;
+import org.mozilla.javascript.ast.CatchClause;
+import org.mozilla.javascript.ast.Comment;
+import org.mozilla.javascript.ast.ConditionalExpression;
+import org.mozilla.javascript.ast.ContinueStatement;
+import org.mozilla.javascript.ast.DoLoop;
+import org.mozilla.javascript.ast.ElementGet;
+import org.mozilla.javascript.ast.EmptyExpression;
+import org.mozilla.javascript.ast.EmptyStatement;
+import org.mozilla.javascript.ast.ExpressionStatement;
+import org.mozilla.javascript.ast.ForInLoop;
+import org.mozilla.javascript.ast.ForLoop;
+import org.mozilla.javascript.ast.FunctionCall;
+import org.mozilla.javascript.ast.FunctionNode;
+import org.mozilla.javascript.ast.IfStatement;
+import org.mozilla.javascript.ast.InfixExpression;
+import org.mozilla.javascript.ast.KeywordLiteral;
+import org.mozilla.javascript.ast.Label;
+import org.mozilla.javascript.ast.LabeledStatement;
+import org.mozilla.javascript.ast.LetNode;
+import org.mozilla.javascript.ast.Name;
+import org.mozilla.javascript.ast.NewExpression;
+import org.mozilla.javascript.ast.NodeVisitor;
+import org.mozilla.javascript.ast.NumberLiteral;
+import org.mozilla.javascript.ast.ObjectLiteral;
+import org.mozilla.javascript.ast.ObjectProperty;
+import org.mozilla.javascript.ast.ParenthesizedExpression;
+import org.mozilla.javascript.ast.ParseProblem;
+import org.mozilla.javascript.ast.PropertyGet;
+import org.mozilla.javascript.ast.RegExpLiteral;
+import org.mozilla.javascript.ast.ReturnStatement;
+import org.mozilla.javascript.ast.Scope;
+import org.mozilla.javascript.ast.StringLiteral;
+import org.mozilla.javascript.ast.SwitchCase;
+import org.mozilla.javascript.ast.SwitchStatement;
+import org.mozilla.javascript.ast.ThrowStatement;
+import org.mozilla.javascript.ast.TryStatement;
+import org.mozilla.javascript.ast.UnaryExpression;
+import org.mozilla.javascript.ast.VariableDeclaration;
+import org.mozilla.javascript.ast.VariableInitializer;
+import org.mozilla.javascript.ast.WhileLoop;
+import org.mozilla.javascript.ast.WithStatement;
+import org.mozilla.javascript.ast.XmlDotQuery;
+import org.mozilla.javascript.ast.XmlExpression;
+import org.mozilla.javascript.ast.XmlMemberGet;
+import org.mozilla.javascript.ast.XmlString;
+
+public final class EcmascriptTreeBuilder implements NodeVisitor {
+
+<span class="fc" id="L71">    private static final Map&lt;Class&lt;? extends AstNode&gt;, Constructor&lt;? extends EcmascriptNode&lt;?&gt;&gt;&gt; NODE_TYPE_TO_NODE_ADAPTER_TYPE = new HashMap&lt;Class&lt;? extends AstNode&gt;, Constructor&lt;? extends EcmascriptNode&lt;?&gt;&gt;&gt;();</span>
+    static {
+<span class="fc" id="L73">	register(ArrayComprehension.class, ASTArrayComprehension.class);</span>
+<span class="fc" id="L74">	register(ArrayComprehensionLoop.class, ASTArrayComprehensionLoop.class);</span>
+<span class="fc" id="L75">	register(ArrayLiteral.class, ASTArrayLiteral.class);</span>
+<span class="fc" id="L76">	register(Assignment.class, ASTAssignment.class);</span>
+<span class="fc" id="L77">	register(AstRoot.class, ASTAstRoot.class);</span>
+<span class="fc" id="L78">	register(Block.class, ASTBlock.class);</span>
+<span class="fc" id="L79">	register(BreakStatement.class, ASTBreakStatement.class);</span>
+<span class="fc" id="L80">	register(CatchClause.class, ASTCatchClause.class);</span>
+<span class="fc" id="L81">	register(Comment.class, ASTComment.class);</span>
+<span class="fc" id="L82">	register(ConditionalExpression.class, ASTConditionalExpression.class);</span>
+<span class="fc" id="L83">	register(ContinueStatement.class, ASTContinueStatement.class);</span>
+<span class="fc" id="L84">	register(DoLoop.class, ASTDoLoop.class);</span>
+<span class="fc" id="L85">	register(ElementGet.class, ASTElementGet.class);</span>
+<span class="fc" id="L86">	register(EmptyExpression.class, ASTEmptyExpression.class);</span>
+<span class="fc" id="L87">	register(EmptyStatement.class, ASTEmptyStatement.class);</span>
+<span class="fc" id="L88">	register(ExpressionStatement.class, ASTExpressionStatement.class);</span>
+<span class="fc" id="L89">	register(ForInLoop.class, ASTForInLoop.class);</span>
+<span class="fc" id="L90">	register(ForLoop.class, ASTForLoop.class);</span>
+<span class="fc" id="L91">	register(FunctionCall.class, ASTFunctionCall.class);</span>
+<span class="fc" id="L92">	register(FunctionNode.class, ASTFunctionNode.class);</span>
+<span class="fc" id="L93">	register(IfStatement.class, ASTIfStatement.class);</span>
+<span class="fc" id="L94">	register(InfixExpression.class, ASTInfixExpression.class);</span>
+<span class="fc" id="L95">	register(KeywordLiteral.class, ASTKeywordLiteral.class);</span>
+<span class="fc" id="L96">	register(Label.class, ASTLabel.class);</span>
+<span class="fc" id="L97">	register(LabeledStatement.class, ASTLabeledStatement.class);</span>
+<span class="fc" id="L98">	register(LetNode.class, ASTLetNode.class);</span>
+<span class="fc" id="L99">	register(Name.class, ASTName.class);</span>
+<span class="fc" id="L100">	register(NewExpression.class, ASTNewExpression.class);</span>
+<span class="fc" id="L101">	register(NumberLiteral.class, ASTNumberLiteral.class);</span>
+<span class="fc" id="L102">	register(ObjectLiteral.class, ASTObjectLiteral.class);</span>
+<span class="fc" id="L103">	register(ObjectProperty.class, ASTObjectProperty.class);</span>
+<span class="fc" id="L104">	register(ParenthesizedExpression.class, ASTParenthesizedExpression.class);</span>
+<span class="fc" id="L105">	register(PropertyGet.class, ASTPropertyGet.class);</span>
+<span class="fc" id="L106">	register(RegExpLiteral.class, ASTRegExpLiteral.class);</span>
+<span class="fc" id="L107">	register(ReturnStatement.class, ASTReturnStatement.class);</span>
+<span class="fc" id="L108">	register(Scope.class, ASTScope.class);</span>
+<span class="fc" id="L109">	register(StringLiteral.class, ASTStringLiteral.class);</span>
+<span class="fc" id="L110">	register(SwitchCase.class, ASTSwitchCase.class);</span>
+<span class="fc" id="L111">	register(SwitchStatement.class, ASTSwitchStatement.class);</span>
+<span class="fc" id="L112">	register(ThrowStatement.class, ASTThrowStatement.class);</span>
+<span class="fc" id="L113">	register(TryStatement.class, ASTTryStatement.class);</span>
+<span class="fc" id="L114">	register(UnaryExpression.class, ASTUnaryExpression.class);</span>
+<span class="fc" id="L115">	register(VariableDeclaration.class, ASTVariableDeclaration.class);</span>
+<span class="fc" id="L116">	register(VariableInitializer.class, ASTVariableInitializer.class);</span>
+<span class="fc" id="L117">	register(WhileLoop.class, ASTWhileLoop.class);</span>
+<span class="fc" id="L118">	register(WithStatement.class, ASTWithStatement.class);</span>
+<span class="fc" id="L119">	register(XmlDotQuery.class, ASTXmlDotQuery.class);</span>
+<span class="fc" id="L120">	register(XmlExpression.class, ASTXmlExpression.class);</span>
+<span class="fc" id="L121">	register(XmlMemberGet.class, ASTXmlMemberGet.class);</span>
+<span class="fc" id="L122">	register(XmlString.class, ASTXmlString.class);</span>
+<span class="fc" id="L123">    }</span>
+
+    private static &lt;T extends AstNode&gt; void register(Class&lt;T&gt; nodeType, Class&lt;? extends EcmascriptNode&lt;T&gt;&gt; nodeAdapterType) {
+	try {
+<span class="fc" id="L127">	    NODE_TYPE_TO_NODE_ADAPTER_TYPE.put(nodeType, nodeAdapterType.getConstructor(nodeType));</span>
+<span class="nc" id="L128">	} catch (SecurityException e) {</span>
+<span class="nc" id="L129">	    throw new RuntimeException(e);</span>
+<span class="nc" id="L130">	} catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L131">	    throw new RuntimeException(e);</span>
+<span class="fc" id="L132">	}</span>
+<span class="fc" id="L133">    }</span>
+
+    private List&lt;ParseProblem&gt; parseProblems;
+<span class="fc" id="L136">    private Map&lt;ParseProblem, TrailingCommaNode&gt; parseProblemToNode = new HashMap&lt;ParseProblem, TrailingCommaNode&gt;();</span>
+
+    // The nodes having children built.
+<span class="fc" id="L139">    private Stack&lt;Node&gt; nodes = new Stack&lt;Node&gt;();</span>
+
+    // The Rhino nodes with children to build.
+<span class="fc" id="L142">    private Stack&lt;AstNode&gt; parents = new Stack&lt;AstNode&gt;();</span>
+
+    private final SourceCodePositioner sourceCodePositioner;
+
+<span class="fc" id="L146">    public EcmascriptTreeBuilder(String sourceCode, List&lt;ParseProblem&gt; parseProblems) {</span>
+<span class="fc" id="L147">	this.sourceCodePositioner = new SourceCodePositioner(sourceCode);</span>
+<span class="fc" id="L148">	this.parseProblems = parseProblems;</span>
+<span class="fc" id="L149">    }</span>
+
+    static &lt;T extends AstNode&gt; EcmascriptNode&lt;T&gt; createNodeAdapter(T node) {
+	try {
+	    @SuppressWarnings(&quot;unchecked&quot;) // the register function makes sure only EcmascriptNode&lt;T&gt; can be added,
+	    // where T is &quot;T extends AstNode&quot;.
+<span class="fc" id="L155">	    Constructor&lt;? extends EcmascriptNode&lt;T&gt;&gt; constructor = (Constructor&lt;? extends EcmascriptNode&lt;T&gt;&gt;) NODE_TYPE_TO_NODE_ADAPTER_TYPE.get(node.getClass());</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">	    if (constructor == null) {</span>
+<span class="nc" id="L157">		throw new IllegalArgumentException(&quot;There is no Node adapter class registered for the Node class: &quot;</span>
+			+ node.getClass());
+	    }
+<span class="fc" id="L160">	    return constructor.newInstance(node);</span>
+<span class="nc" id="L161">	} catch (InstantiationException e) {</span>
+<span class="nc" id="L162">	    throw new RuntimeException(e);</span>
+<span class="nc" id="L163">	} catch (IllegalAccessException e) {</span>
+<span class="nc" id="L164">	    throw new RuntimeException(e);</span>
+<span class="nc" id="L165">	} catch (InvocationTargetException e) {</span>
+<span class="nc" id="L166">	    throw new RuntimeException(e.getTargetException());</span>
+	}
+    }
+
+    public &lt;T extends AstNode&gt; EcmascriptNode&lt;T&gt; build(T astNode) {
+<span class="fc" id="L171">	EcmascriptNode&lt;T&gt; node = buildInternal(astNode);</span>
+
+<span class="fc" id="L173">	calculateLineNumbers(node);</span>
+
+	// Set all the trailing comma nodes
+<span class="fc bfc" id="L176" title="All 2 branches covered.">	for (TrailingCommaNode trailingCommaNode : parseProblemToNode.values()) {</span>
+<span class="fc" id="L177">	    trailingCommaNode.setTrailingComma(true);</span>
+<span class="fc" id="L178">	}</span>
+
+<span class="fc" id="L180">	return node;</span>
+    }
+
+    private &lt;T extends AstNode&gt; EcmascriptNode&lt;T&gt; buildInternal(T astNode) {
+	// Create a Node
+<span class="fc" id="L185">	EcmascriptNode&lt;T&gt; node = createNodeAdapter(astNode);</span>
+
+	// Append to parent
+<span class="fc bfc" id="L188" title="All 2 branches covered.">	Node parent = nodes.isEmpty() ? null : nodes.peek();</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">	if (parent != null) {</span>
+<span class="fc" id="L190">	    parent.jjtAddChild(node, parent.jjtGetNumChildren());</span>
+<span class="fc" id="L191">	    node.jjtSetParent(parent);</span>
+	}
+	
+<span class="fc" id="L194">	handleParseProblems(node);</span>
+
+	// Build the children...
+<span class="fc" id="L197">	nodes.push(node);</span>
+<span class="fc" id="L198">	parents.push(astNode);</span>
+<span class="fc" id="L199">	astNode.visit(this);</span>
+<span class="fc" id="L200">	nodes.pop();</span>
+<span class="fc" id="L201">	parents.pop();</span>
+
+<span class="fc" id="L203">	return node;</span>
+    }
+
+    public boolean visit(AstNode node) {
+<span class="fc bfc" id="L207" title="All 2 branches covered.">	if (parents.peek() == node) {</span>
+<span class="fc" id="L208">	    return true;</span>
+	} else {
+<span class="fc" id="L210">	    buildInternal(node);</span>
+<span class="fc" id="L211">	    return false;</span>
+	}
+    }
+
+    private void handleParseProblems(EcmascriptNode&lt;? extends AstNode&gt; node) {
+<span class="fc bfc" id="L216" title="All 2 branches covered.">	if (node instanceof TrailingCommaNode) {</span>
+<span class="fc" id="L217">	    TrailingCommaNode trailingCommaNode = (TrailingCommaNode) node;</span>
+<span class="fc" id="L218">	    int nodeStart = node.getNode().getAbsolutePosition();</span>
+<span class="fc" id="L219">	    int nodeEnd = nodeStart + node.getNode().getLength() - 1;</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">	    for (ParseProblem parseProblem : parseProblems) {</span>
+		// The node overlaps the comma (i.e. end of the problem)?
+<span class="fc" id="L222">		int problemStart = parseProblem.getFileOffset();</span>
+<span class="fc" id="L223">		int commaPosition = problemStart + parseProblem.getLength() - 1;</span>
+<span class="fc bfc" id="L224" title="All 4 branches covered.">		if (nodeStart &lt;= commaPosition &amp;&amp; commaPosition &lt;= nodeEnd) {</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">		    if (&quot;Trailing comma is not legal in an ECMA-262 object initializer&quot;.equals(parseProblem.getMessage())) {</span>
+			// Report on the shortest code block containing the
+			// problem (i.e. inner most code in nested structures).
+<span class="fc" id="L228">			EcmascriptNode&lt;? extends AstNode&gt; currentNode = (EcmascriptNode&lt;? extends AstNode&gt;) parseProblemToNode.get(parseProblem);</span>
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">			if (currentNode == null || node.getNode().getLength() &lt; currentNode.getNode().getLength()) {</span>
+<span class="fc" id="L230">			    parseProblemToNode.put(parseProblem, trailingCommaNode);</span>
+			}
+		    }
+		}
+<span class="fc" id="L234">	    }</span>
+	}
+<span class="fc" id="L236">    }</span>
+
+    private void calculateLineNumbers(EcmascriptNode&lt;?&gt; node) {
+<span class="fc" id="L239">	EcmascriptParserVisitorAdapter visitor = new EcmascriptParserVisitorAdapter() {</span>
+	    @Override
+	    public Object visit(EcmascriptNode node, Object data) {
+<span class="fc" id="L242">	        ((AbstractEcmascriptNode&lt;?&gt;)node).calculateLineNumbers(sourceCodePositioner);</span>
+<span class="fc" id="L243">	        return super.visit(node, data); // also visit the children</span>
+	    }
+	};
+<span class="fc" id="L246">	node.jjtAccept(visitor, null);</span>
+<span class="fc" id="L247">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

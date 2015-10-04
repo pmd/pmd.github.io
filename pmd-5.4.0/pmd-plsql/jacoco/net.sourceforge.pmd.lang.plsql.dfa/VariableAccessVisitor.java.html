@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VariableAccessVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.dfa</a> &gt; <span class="el_source">VariableAccessVisitor.java</span></div><h1>VariableAccessVisitor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.dfa;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.dfa.DataFlowNode;
+import net.sourceforge.pmd.lang.dfa.StartOrEndDataFlowNode;
+import net.sourceforge.pmd.lang.dfa.VariableAccess;
+import net.sourceforge.pmd.lang.plsql.ast.ASTCompoundTriggerBlock;
+import net.sourceforge.pmd.lang.plsql.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.plsql.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.plsql.ast.ASTPackageBody;
+import net.sourceforge.pmd.lang.plsql.ast.ASTProgramUnit;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTriggerTimingPointSection;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTriggerUnit;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTypeMethod;
+import net.sourceforge.pmd.lang.plsql.ast.ASTVariableOrConstantInitializer;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
+import net.sourceforge.pmd.lang.plsql.symboltable.PLSQLNameOccurrence;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * @author raik, Sven Jacob
+ *         &lt;p/&gt;
+ *         Searches for special nodes and computes based on the sequence, the type of
+ *         access of a variable.
+ */
+<span class="fc" id="L37">public class VariableAccessVisitor extends PLSQLParserVisitorAdapter {</span>
+
+    public void compute(ASTMethodDeclaration node) {
+	//This includes Package Bodies and Object Type Bodies
+<span class="nc bnc" id="L41" title="All 2 branches missed.">	if (node.jjtGetParent() instanceof ASTPackageBody) {</span>
+<span class="nc" id="L42">	    this.computeNow(node);</span>
+	}
+<span class="nc" id="L44">    }</span>
+
+    public void compute(ASTProgramUnit node) {
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">	if (node.jjtGetParent() instanceof ASTPackageBody </span>
+            || node.jjtGetParent() instanceof ASTCompoundTriggerBlock // Treat Compound Trigger as a Package Body 
+           ) {
+<span class="nc" id="L50">	    this.computeNow(node);</span>
+	}
+<span class="fc" id="L52">    }</span>
+
+    public void compute(ASTTypeMethod node) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">	if (node.jjtGetParent() instanceof ASTPackageBody) {</span>
+<span class="nc" id="L56">	    this.computeNow(node);</span>
+	}
+<span class="nc" id="L58">    }</span>
+
+    public void compute(ASTTriggerUnit node) {
+<span class="nc" id="L61">	    this.computeNow(node);</span>
+<span class="nc" id="L62">    }</span>
+
+    public void compute(ASTTriggerTimingPointSection node) {
+<span class="nc" id="L65">	    this.computeNow(node);</span>
+<span class="nc" id="L66">    }</span>
+
+    /* SRT public void compute(ASTConstructorDeclaration node) {
+	this.computeNow(node);
+    }*/
+
+    private void computeNow(Node node) {
+<span class="nc" id="L73">	DataFlowNode inode = node.getDataFlowNode();</span>
+
+<span class="nc" id="L75">	List&lt;VariableAccess&gt; undefinitions = markUsages(inode);</span>
+
+	// all variables are first in state undefinition
+<span class="nc" id="L78">	DataFlowNode firstINode = inode.getFlow().get(0);</span>
+<span class="nc" id="L79">	firstINode.setVariableAccess(undefinitions);</span>
+
+	// all variables are getting undefined when leaving scope
+<span class="nc" id="L82">	DataFlowNode lastINode = inode.getFlow().get(inode.getFlow().size() - 1);</span>
+<span class="nc" id="L83">	lastINode.setVariableAccess(undefinitions);</span>
+<span class="nc" id="L84">    }</span>
+
+    private List&lt;VariableAccess&gt; markUsages(DataFlowNode inode) {
+	// undefinitions was once a field... seems like it works fine as a local
+<span class="nc" id="L88">	List&lt;VariableAccess&gt; undefinitions = new ArrayList&lt;VariableAccess&gt;();</span>
+<span class="nc" id="L89">	Set&lt;Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; variableDeclarations = collectDeclarations(inode);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">	for (Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations : variableDeclarations) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">	    for (Map.Entry&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : declarations.entrySet()) {</span>
+<span class="nc" id="L92">		NameDeclaration vnd = entry.getKey();</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (vnd.getNode().jjtGetParent() instanceof ASTFormalParameter) {</span>
+		    // no definition/undefinition/references for parameters
+<span class="nc" id="L96">		    continue;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		} else if (  vnd.getNode().jjtGetParent().getFirstDescendantOfType(ASTVariableOrConstantInitializer.class) != null) {</span>
+		    // add definition for initialized variables
+<span class="nc" id="L99">		    addVariableAccess(vnd.getNode(), new VariableAccess(VariableAccess.DEFINITION, vnd.getImage()),</span>
+			    inode.getFlow());
+		}
+<span class="nc" id="L102">		undefinitions.add(new VariableAccess(VariableAccess.UNDEFINITION, vnd.getImage()));</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		for (NameOccurrence occurrence : entry.getValue()) {</span>
+<span class="nc" id="L105">		    addAccess(occurrence, inode);</span>
+<span class="nc" id="L106">		}</span>
+<span class="nc" id="L107">	    }</span>
+<span class="nc" id="L108">	}</span>
+<span class="nc" id="L109">	return undefinitions;</span>
+    }
+
+    private Set&lt;Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; collectDeclarations(DataFlowNode inode) {
+<span class="nc" id="L113">	Set&lt;Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; decls = new HashSet&lt;Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt;();</span>
+	Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; varDecls;
+<span class="nc bnc" id="L115" title="All 2 branches missed.">	for (int i = 0; i &lt; inode.getFlow().size(); i++) {</span>
+<span class="nc" id="L116">	    DataFlowNode n = inode.getFlow().get(i);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">	    if (n instanceof StartOrEndDataFlowNode) {</span>
+<span class="nc" id="L118">		continue;</span>
+	    }
+<span class="nc" id="L120">	    varDecls = ((PLSQLNode)n.getNode()).getScope().getDeclarations();</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">	    if (!decls.contains(varDecls)) {</span>
+<span class="nc" id="L122">		decls.add(varDecls);</span>
+	    }
+	}
+<span class="nc" id="L125">	return decls;</span>
+    }
+
+    private void addAccess(NameOccurrence occ, DataFlowNode inode) {
+<span class="nc" id="L129">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence)occ;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">	if (occurrence.isOnLeftHandSide()) {</span>
+<span class="nc" id="L131">	    this.addVariableAccess(occurrence.getLocation(), new VariableAccess(VariableAccess.DEFINITION, occurrence</span>
+		    .getImage()), inode.getFlow());
+<span class="nc bnc" id="L133" title="All 6 branches missed.">	} else if (occurrence.isOnRightHandSide() || !occurrence.isOnLeftHandSide() &amp;&amp; !occurrence.isOnRightHandSide()) {</span>
+<span class="nc" id="L134">	    this.addVariableAccess(occurrence.getLocation(), new VariableAccess(VariableAccess.REFERENCING, occurrence</span>
+		    .getImage()), inode.getFlow());
+	}
+<span class="nc" id="L137">    }</span>
+
+    /**
+     * Adds a VariableAccess to a dataflow node.
+     * @param node location of the access of a variable
+     * @param va variable access to add
+     * @param flow dataflownodes that can contain the node.
+     */
+    private void addVariableAccess(Node node, VariableAccess va, List&lt;DataFlowNode&gt; flow) {
+	// backwards to find the right inode (not a method declaration)
+<span class="nc bnc" id="L147" title="All 2 branches missed.">	for (int i = flow.size() - 1; i &gt; 0; i--) {</span>
+<span class="nc" id="L148">	    DataFlowNode inode = flow.get(i);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">	    if (inode.getNode() == null) {</span>
+<span class="nc" id="L150">		continue;</span>
+	    }
+
+<span class="nc" id="L153">	    List&lt;? extends Node&gt; children = inode.getNode().findDescendantsOfType(node.getClass());</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">	    for (Node n : children) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (node.equals(n)) {</span>
+<span class="nc" id="L156">		    List&lt;VariableAccess&gt; v = new ArrayList&lt;VariableAccess&gt;();</span>
+<span class="nc" id="L157">		    v.add(va);</span>
+<span class="nc" id="L158">		    inode.setVariableAccess(v);</span>
+<span class="nc" id="L159">		    return;</span>
+		}
+<span class="nc" id="L161">	    }</span>
+	}
+<span class="nc" id="L163">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

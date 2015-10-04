@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PropertyDescriptorWrapper.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">PropertyDescriptorWrapper.java</span></div><h1>PropertyDescriptorWrapper.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.properties;
+
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.Rule;
+
+/**
+ * This class serves as a wrapper class for a PropertyDescriptor instance. It
+ * exists to allowing the {@link PropertyDescriptorFactory} to readily flag
+ * properties it has created, versus those created by Rule classes. This is used
+ * in the encoding of a Rule to XML format to distinguish Rule defined
+ * PropertyDescriptors and those which were originally defined in XML.
+ * 
+ * @param &lt;T&gt; The type of the underlying PropertyDescriptor.
+ */
+public class PropertyDescriptorWrapper&lt;T&gt; implements PropertyDescriptor&lt;T&gt; {
+    private final PropertyDescriptor&lt;T&gt; propertyDescriptor;
+
+<span class="fc" id="L23">    public PropertyDescriptorWrapper(PropertyDescriptor&lt;T&gt; propertyDescriptor) {</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        if (propertyDescriptor == null) {</span>
+<span class="nc" id="L25">            throw new IllegalArgumentException(&quot;PropertyDescriptor cannot be null.&quot;);</span>
+        }
+<span class="fc" id="L27">        this.propertyDescriptor = propertyDescriptor;</span>
+<span class="fc" id="L28">    }</span>
+
+    public PropertyDescriptor&lt;T&gt; getPropertyDescriptor() {
+<span class="fc" id="L31">        return propertyDescriptor;</span>
+    }
+
+    public String asDelimitedString(T value) {
+<span class="nc" id="L35">        return propertyDescriptor.asDelimitedString(value);</span>
+    }
+
+    public Object[][] choices() {
+<span class="nc" id="L39">        return propertyDescriptor.choices();</span>
+    }
+
+    public int compareTo(PropertyDescriptor&lt;?&gt; o) {
+<span class="fc" id="L43">        return propertyDescriptor.compareTo(o);</span>
+    }
+
+    public T defaultValue() {
+<span class="fc" id="L47">        return propertyDescriptor.defaultValue();</span>
+    }
+
+    public String description() {
+<span class="nc" id="L51">        return propertyDescriptor.description();</span>
+    }
+
+    public String errorFor(Object value) {
+<span class="nc" id="L55">        return propertyDescriptor.errorFor(value);</span>
+    }
+
+    public boolean isMultiValue() {
+<span class="nc" id="L59">        return propertyDescriptor.isMultiValue();</span>
+    }
+
+    public boolean isRequired() {
+<span class="nc" id="L63">        return propertyDescriptor.isRequired();</span>
+    }
+
+    public char multiValueDelimiter() {
+<span class="nc" id="L67">        return propertyDescriptor.multiValueDelimiter();</span>
+    }
+
+    public String name() {
+<span class="fc" id="L71">        return propertyDescriptor.name();</span>
+    }
+
+    public int preferredRowCount() {
+<span class="nc" id="L75">        return propertyDescriptor.preferredRowCount();</span>
+    }
+
+    public String propertyErrorFor(Rule rule) {
+<span class="nc" id="L79">        return propertyDescriptor.propertyErrorFor(rule);</span>
+    }
+
+    public Class&lt;T&gt; type() {
+<span class="nc" id="L83">        return propertyDescriptor.type();</span>
+    }
+
+    public float uiOrder() {
+<span class="fc" id="L87">        return propertyDescriptor.uiOrder();</span>
+    }
+
+    public T valueFrom(String propertyString) throws IllegalArgumentException {
+<span class="nc" id="L91">        return propertyDescriptor.valueFrom(propertyString);</span>
+    }
+
+    public Map&lt;String, String&gt; attributeValuesById() {
+<span class="nc" id="L95">        return propertyDescriptor.attributeValuesById();</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (obj instanceof PropertyDescriptorWrapper) {</span>
+<span class="fc" id="L101">            return this.getPropertyDescriptor().equals(((PropertyDescriptorWrapper&lt;?&gt;) obj).getPropertyDescriptor());</span>
+        }
+<span class="fc" id="L103">        return this.getPropertyDescriptor().equals(obj);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L108">        return this.getPropertyDescriptor().hashCode();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L113">        return &quot;wrapped:&quot; + propertyDescriptor.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

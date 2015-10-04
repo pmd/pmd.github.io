@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BasicPropertyDescriptorFactory.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties.factories</a> &gt; <span class="el_source">BasicPropertyDescriptorFactory.java</span></div><h1>BasicPropertyDescriptorFactory.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.properties.factories;
+
+import static net.sourceforge.pmd.PropertyDescriptorFields.DEFAULT_VALUE;
+import static net.sourceforge.pmd.PropertyDescriptorFields.DELIMITER;
+import static net.sourceforge.pmd.PropertyDescriptorFields.DESC;
+import static net.sourceforge.pmd.PropertyDescriptorFields.LEGAL_PACKAGES;
+import static net.sourceforge.pmd.PropertyDescriptorFields.MAX;
+import static net.sourceforge.pmd.PropertyDescriptorFields.MIN;
+import static net.sourceforge.pmd.PropertyDescriptorFields.NAME;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.PropertyDescriptorFactory;
+import net.sourceforge.pmd.lang.rule.properties.AbstractProperty;
+import net.sourceforge.pmd.util.CollectionUtil;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * 
+ * @author Brian Remedios
+ *
+ * @param &lt;T&gt;
+ */
+public class BasicPropertyDescriptorFactory&lt;T&gt; implements PropertyDescriptorFactory {
+
+    private final Class&lt;?&gt; valueType;
+    private final Map&lt;String, Boolean&gt; fieldTypesByKey;
+
+<span class="fc" id="L37">    protected static final Map&lt;String, Boolean&gt; CORE_FIELD_TYPES_BY_KEY = CollectionUtil</span>
+            .mapFrom(new String[] { NAME, DESC, DEFAULT_VALUE, DELIMITER }, new Boolean[] { Boolean.TRUE, Boolean.TRUE,
+                    Boolean.TRUE, Boolean.FALSE });
+
+<span class="fc" id="L41">    public BasicPropertyDescriptorFactory(Class&lt;?&gt; theValueType) {</span>
+<span class="fc" id="L42">        valueType = theValueType;</span>
+<span class="fc" id="L43">        fieldTypesByKey = Collections.unmodifiableMap(CORE_FIELD_TYPES_BY_KEY);</span>
+<span class="fc" id="L44">    }</span>
+
+    // public interface WrapperBuilder&lt;T&gt; {
+    // T[] newArray(int size);
+    // T itemFrom(String txt);
+    // }
+    //
+    // protected WrapperBuilder intBuilder = new WrapperBuilder&lt;Integer&gt;() {
+    // public Integer[] newArray(int size) { return new Integer[size]; }
+    // public Integer itemFrom(String txt) { return Integer.parseInt(txt); }
+    // };
+
+<span class="fc" id="L56">    public BasicPropertyDescriptorFactory(Class&lt;?&gt; theValueType, Map&lt;String, Boolean&gt; additionalFieldTypesByKey) {</span>
+
+<span class="fc" id="L58">        valueType = theValueType;</span>
+<span class="fc" id="L59">        Map&lt;String, Boolean&gt; temp = new HashMap&lt;String, Boolean&gt;(CORE_FIELD_TYPES_BY_KEY.size()</span>
+                + additionalFieldTypesByKey.size());
+<span class="fc" id="L61">        temp.putAll(CORE_FIELD_TYPES_BY_KEY);</span>
+<span class="fc" id="L62">        temp.putAll(additionalFieldTypesByKey);</span>
+
+<span class="fc" id="L64">        fieldTypesByKey = Collections.unmodifiableMap(temp);</span>
+<span class="fc" id="L65">    }</span>
+
+    public Class&lt;?&gt; valueType() {
+<span class="nc" id="L68">        return valueType;</span>
+    }
+
+    public PropertyDescriptor&lt;?&gt; createWith(Map&lt;String, String&gt; valuesById) {
+<span class="nc" id="L72">        throw new RuntimeException(&quot;Unimplemented createWith() method in subclass&quot;);</span>
+    }
+
+    public Map&lt;String, Boolean&gt; expectedFields() {
+<span class="fc" id="L76">        return fieldTypesByKey;</span>
+    }
+
+    protected String nameIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L80">        return valuesById.get(NAME);</span>
+    }
+
+    protected String descriptionIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L84">        return valuesById.get(DESC);</span>
+    }
+
+    protected String defaultValueIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L88">        return valuesById.get(DEFAULT_VALUE);</span>
+    }
+
+    protected String numericDefaultValueIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L92">        String number = defaultValueIn(valuesById);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        return StringUtil.isEmpty(number) ? &quot;0&quot; : number; // TODO is 0</span>
+                                                          // reasonable if
+                                                          // undefined?
+    }
+
+    protected static String minValueIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L99">        return valuesById.get(MIN);</span>
+    }
+
+    protected static String maxValueIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L103">        return valuesById.get(MAX);</span>
+    }
+
+    // protected static T[] primitivesFrom(String text, WrapperBuilder&lt;T&gt;
+    // builder) {
+    //
+    // String[] values = text.split(&quot;,&quot;); // TODO
+    // List items = new ArrayList(values.length);
+    // for (String value : values) {
+    // try {
+    // Object newIten = builder.itemFrom(value);
+    // items.add(newIten);
+    // } catch (Exception ex) {
+    //
+    // }
+    // }
+    // return items.toArray(builder.newArray(items.size()));
+    // }
+
+    protected static Boolean[] booleanValuesIn(String booleanString, char delimiter) {
+<span class="fc" id="L123">        String[] values = StringUtil.substringsOf(booleanString, delimiter);</span>
+<span class="fc" id="L124">        Boolean[] result = new Boolean[values.length];</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc" id="L126">            result[i] = Boolean.valueOf(values[i]);</span>
+        }
+<span class="fc" id="L128">        return result;</span>
+    }
+
+    protected static Character[] charsIn(String charString, char delimiter) {
+<span class="fc" id="L132">        String[] values = StringUtil.substringsOf(charString, delimiter);</span>
+<span class="fc" id="L133">        Character[] chars = new Character[values.length];</span>
+
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">            if (values.length != 1) {</span>
+<span class="nc" id="L137">                throw new IllegalArgumentException(&quot;missing/ambiguous character value&quot;);</span>
+            }
+<span class="nc" id="L139">            chars[i] = values[i].charAt(0);</span>
+        }
+<span class="fc" id="L141">        return chars;</span>
+    }
+
+    protected static Integer[] integersIn(String numberString, char delimiter) {
+<span class="fc" id="L145">        String[] values = StringUtil.substringsOf(numberString, delimiter);</span>
+<span class="fc" id="L146">        List&lt;Integer&gt; ints = new ArrayList&lt;Integer&gt;(values.length);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        for (String value : values) {</span>
+            try {
+<span class="fc" id="L149">                Integer newInt = Integer.parseInt(value);</span>
+<span class="fc" id="L150">                ints.add(newInt);</span>
+<span class="nc" id="L151">            } catch (Exception ex) {</span>
+
+<span class="fc" id="L153">            }</span>
+        }
+<span class="fc" id="L155">        return ints.toArray(new Integer[ints.size()]);</span>
+    }
+
+    protected static Long[] longsIn(String numberString, char delimiter) {
+<span class="nc" id="L159">        String[] values = StringUtil.substringsOf(numberString, delimiter);</span>
+<span class="nc" id="L160">        List&lt;Long&gt; longs = new ArrayList&lt;Long&gt;(values.length);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        for (String value : values) {</span>
+            try {
+<span class="nc" id="L163">                Long newLong = Long.parseLong(value);</span>
+<span class="nc" id="L164">                longs.add(newLong);</span>
+<span class="nc" id="L165">            } catch (Exception ex) {</span>
+
+<span class="nc" id="L167">            }</span>
+        }
+<span class="nc" id="L169">        return longs.toArray(new Long[longs.size()]);</span>
+    }
+
+    protected static Float[] floatsIn(String numberString, char delimiter) {
+<span class="fc" id="L173">        String[] values = StringUtil.substringsOf(numberString, delimiter);</span>
+<span class="fc" id="L174">        List&lt;Float&gt; floats = new ArrayList&lt;Float&gt;(values.length);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        for (String value : values) {</span>
+            try {
+<span class="fc" id="L177">                Float newFloat = Float.parseFloat(value);</span>
+<span class="fc" id="L178">                floats.add(newFloat);</span>
+<span class="nc" id="L179">            } catch (Exception ex) {</span>
+
+<span class="fc" id="L181">            }</span>
+        }
+<span class="fc" id="L183">        return floats.toArray(new Float[floats.size()]);</span>
+    }
+
+    protected static Double[] doublesIn(String numberString, char delimiter) {
+<span class="fc" id="L187">        String[] values = StringUtil.substringsOf(numberString, delimiter);</span>
+<span class="fc" id="L188">        List&lt;Double&gt; doubles = new ArrayList&lt;Double&gt;(values.length);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (String value : values) {</span>
+            try {
+<span class="fc" id="L191">                Double newDouble = Double.parseDouble(value);</span>
+<span class="fc" id="L192">                doubles.add(newDouble);</span>
+<span class="nc" id="L193">            } catch (Exception ex) {</span>
+
+<span class="fc" id="L195">            }</span>
+        }
+<span class="fc" id="L197">        return doubles.toArray(new Double[doubles.size()]);</span>
+    }
+
+    protected static String[] labelsIn(Map&lt;String, String&gt; valuesById) {
+<span class="nc" id="L201">        return null; // TODO</span>
+    }
+
+    protected static Object[] choicesIn(Map&lt;String, String&gt; valuesById) {
+<span class="nc" id="L205">        return null; // TODO</span>
+    }
+
+    protected static int indexIn(Map&lt;String, String&gt; valuesById) {
+<span class="nc" id="L209">        return 0; // TODO</span>
+    }
+
+    protected static int[] indiciesIn(Map&lt;String, String&gt; valuesById) {
+<span class="nc" id="L213">        return null; // TODO</span>
+    }
+
+    protected static char delimiterIn(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L217">        return delimiterIn(valuesById, AbstractProperty.DEFAULT_DELIMITER);</span>
+    }
+
+    protected static char delimiterIn(Map&lt;String, String&gt; valuesById, char defaultDelimiter) {
+<span class="fc" id="L221">        String characterStr = &quot;&quot;;</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (valuesById.containsKey(DELIMITER)) {</span>
+<span class="fc" id="L223">            characterStr = valuesById.get(DELIMITER).trim();</span>
+        }
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        if (characterStr.isEmpty()) {</span>
+<span class="fc" id="L226">            return defaultDelimiter;</span>
+        }
+<span class="fc" id="L228">        return characterStr.charAt(0);</span>
+    }
+
+    protected static String[] minMaxFrom(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L232">        String min = minValueIn(valuesById);</span>
+<span class="fc" id="L233">        String max = maxValueIn(valuesById);</span>
+<span class="pc bpc" id="L234" title="2 of 4 branches missed.">        if (StringUtil.isEmpty(min) || StringUtil.isEmpty(max)) {</span>
+<span class="nc" id="L235">            throw new RuntimeException(&quot;min and max values must be specified&quot;);</span>
+        }
+<span class="fc" id="L237">        return new String[] { min, max };</span>
+    }
+
+    protected static String[] legalPackageNamesIn(Map&lt;String, String&gt; valuesById, char delimiter) {
+<span class="fc" id="L241">        String names = valuesById.get(LEGAL_PACKAGES);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(names)) {</span>
+<span class="fc" id="L243">            return null;</span>
+        }
+<span class="nc" id="L245">        return StringUtil.substringsOf(names, delimiter);</span>
+    }
+
+    public static Map&lt;String, Boolean&gt; expectedFieldTypesWith(String[] otherKeys, Boolean[] otherValues) {
+<span class="fc" id="L249">        Map&lt;String, Boolean&gt; largerMap = new HashMap&lt;String, Boolean&gt;(otherKeys.length + CORE_FIELD_TYPES_BY_KEY.size());</span>
+<span class="fc" id="L250">        largerMap.putAll(CORE_FIELD_TYPES_BY_KEY);</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        for (int i = 0; i &lt; otherKeys.length; i++) {</span>
+<span class="fc" id="L252">            largerMap.put(otherKeys[i], otherValues[i]);</span>
+        }
+<span class="fc" id="L254">        return largerMap;</span>
+    }
+
+    // protected static Map&lt;String, PropertyDescriptorFactory&gt;
+    // factoriesByTypeIdFrom(PropertyDescriptorFactory[] factories) {
+    // Map&lt;String, PropertyDescriptorFactory&gt; factoryMap = new HashMap&lt;String,
+    // PropertyDescriptorFactory&gt;(factories.length);
+    // for (PropertyDescriptorFactory factory : factories)
+    // factoryMap.put(factory.typeId(), factory);
+    // return factoryMap;
+    // }
+    //
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

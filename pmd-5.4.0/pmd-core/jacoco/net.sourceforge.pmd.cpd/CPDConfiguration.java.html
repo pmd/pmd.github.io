@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CPDConfiguration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CPDConfiguration.java</span></div><h1>CPDConfiguration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import net.sourceforge.pmd.AbstractConfiguration;
+import net.sourceforge.pmd.util.FileFinder;
+import net.sourceforge.pmd.util.FileUtil;
+
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.converters.FileConverter;
+
+/**
+ *
+ * @author Brian Remedios
+ * @author Romain Pelisse - &lt;belaran@gmail.com&gt;
+ */
+public class CPDConfiguration extends AbstractConfiguration {
+
+    public final static String DEFAULT_LANGUAGE = &quot;java&quot;;
+
+    public final static String DEFAULT_RENDERER = &quot;text&quot;;
+
+    @Parameter(names = &quot;--language&quot;, description = &quot;Sources code language. Default value is &quot; + DEFAULT_LANGUAGE, required = false, converter = LanguageConverter.class)
+    private Language language;
+
+    @Parameter(names = &quot;--minimum-tokens&quot;, description = &quot;The minimum token length which should be reported as a duplicate.&quot;, required = true)
+    private int minimumTileSize;
+
+    @Parameter(names = &quot;--skip-duplicate-files&quot;, description = &quot;Ignore multiple copies of files of the same name and length in comparison&quot;, required = false)
+    private boolean skipDuplicates;
+
+    @Parameter(names = &quot;--format&quot;, description = &quot;Report format. Default value is &quot; + DEFAULT_RENDERER, required = false)
+    private String rendererName;
+
+    /**
+     * The actual renderer. constructed by using the {@link #rendererName}. This
+     * property is only valid after {@link #postContruct()} has been called!
+     */
+    private Renderer renderer;
+
+    private String encoding;
+
+    @Parameter(names = &quot;--ignore-literals&quot;, description = &quot;Ignore number values and string contents when comparing text&quot;, required = false)
+    private boolean ignoreLiterals;
+
+    @Parameter(names = &quot;--ignore-identifiers&quot;, description = &quot;Ignore constant and variable names when comparing text&quot;, required = false)
+    private boolean ignoreIdentifiers;
+
+    @Parameter(names = &quot;--ignore-annotations&quot;, description = &quot;Ignore language annotations when comparing text&quot;, required = false)
+    private boolean ignoreAnnotations;
+
+<span class="pc" id="L70">    @Parameter(names = &quot;--skip-lexical-errors&quot;, description = &quot;Skip files which can't be tokenized due to invalid characters instead of aborting CPD&quot;, required = false)</span>
+    private boolean skipLexicalErrors = false;
+
+<span class="pc" id="L73">    @Parameter(names = &quot;--no-skip-blocks&quot;, description = &quot;Do not skip code blocks marked with --skip-blocks-pattern (e.g. #if 0 until #endif)&quot;, required = false)</span>
+    private boolean noSkipBlocks = false;
+
+<span class="pc" id="L76">    @Parameter(names = &quot;--skip-blocks-pattern&quot;, description = &quot;Pattern to find the blocks to skip. Start and End pattern separated by |. &quot;</span>
+            + &quot;Default is \&quot;&quot; + Tokenizer.DEFAULT_SKIP_BLOCKS_PATTERN + &quot;\&quot;.&quot;, required = false)
+    private String skipBlocksPattern = Tokenizer.DEFAULT_SKIP_BLOCKS_PATTERN;
+
+    @Parameter(names = &quot;--files&quot;, variableArity = true, description = &quot;List of files and directories to process&quot;, required = false, converter = FileConverter.class)
+    private List&lt;File&gt; files;
+
+    @Parameter(names = &quot;--exclude&quot;, variableArity = true, description = &quot;Files to be excluded from CPD check&quot;, required = false, converter = FileConverter.class)
+    private List&lt;File&gt; excludes;
+
+    @Parameter(names = &quot;--non-recursive&quot;, description = &quot;Don't scan subdirectiories&quot;, required = false)
+    private boolean nonRecursive;
+
+    @Parameter(names = &quot;--uri&quot;, description = &quot;URI to process&quot;, required = false)
+    private String uri;
+
+    @Parameter(names = { &quot;--help&quot;, &quot;-h&quot; }, description = &quot;Print help text&quot;, required = false, help = true)
+    private boolean help;
+
+<span class="pc" id="L95">    @Parameter(names = {&quot;--failOnViolation&quot;, &quot;-failOnViolation&quot;}, arity = 1, description = &quot;By default CPD exits with status 4 if code duplications are found. Disable this option with '-failOnViolation false' to exit with 0 instead and just write the report.&quot;)</span>
+    private boolean failOnViolation = true;
+
+    // this has to be a public static class, so that JCommander can use it!
+<span class="nc" id="L99">    public static class LanguageConverter implements IStringConverter&lt;Language&gt; {</span>
+
+        public Language convert(String languageString) {
+<span class="nc bnc" id="L102" title="All 4 branches missed.">            if (languageString == null || &quot;&quot;.equals(languageString)) {</span>
+<span class="nc" id="L103">                languageString = DEFAULT_LANGUAGE;</span>
+            }
+<span class="nc" id="L105">            return LanguageFactory.createLanguage(languageString);</span>
+        }
+    }
+
+<span class="fc" id="L109">    public CPDConfiguration() {</span>
+<span class="fc" id="L110">    }</span>
+
+    @Deprecated
+<span class="nc" id="L113">    public CPDConfiguration(int minimumTileSize, Language language, String encoding) {</span>
+<span class="nc" id="L114">        setMinimumTileSize(minimumTileSize);</span>
+<span class="nc" id="L115">        setLanguage(language);</span>
+<span class="nc" id="L116">        setEncoding(encoding);</span>
+<span class="nc" id="L117">    }</span>
+
+    @Parameter(names = &quot;--encoding&quot;, description = &quot;Character encoding to use when processing files&quot;, required = false)
+    public void setEncoding(String encoding) {
+<span class="fc" id="L121">        this.encoding = encoding;</span>
+<span class="fc" id="L122">        setSourceEncoding(encoding);</span>
+<span class="fc" id="L123">    }</span>
+
+    public SourceCode sourceCodeFor(File file) {
+<span class="fc" id="L126">        return new SourceCode(new SourceCode.FileCodeLoader(file, getSourceEncoding()));</span>
+    }
+
+    public SourceCode sourceCodeFor(Reader reader, String sourceCodeName) {
+<span class="nc" id="L130">        return new SourceCode(new SourceCode.ReaderCodeLoader(reader, sourceCodeName));</span>
+    }
+
+    public void postContruct() {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (this.getLanguage() == null) {</span>
+<span class="fc" id="L135">            this.setLanguage(CPDConfiguration.getLanguageFromString(DEFAULT_LANGUAGE));</span>
+        }
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (this.getRendererName() == null) {</span>
+<span class="fc" id="L138">            this.setRendererName(DEFAULT_RENDERER);</span>
+        }
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (this.getRenderer() == null) {</span>
+<span class="fc" id="L141">            this.setRenderer(getRendererFromString(getRendererName(), this.getEncoding()));</span>
+        }
+<span class="fc" id="L143">    }</span>
+
+    /**
+     * Gets a renderer with the platform's default encoding.
+     * 
+     * @param name renderer name
+     * @return a fresh renderer instance
+     * @deprecated use {@link #getRendererFromString(String, String)} instead
+     */
+    @Deprecated
+    public static Renderer getRendererFromString(String name) {
+<span class="nc" id="L154">        return getRendererFromString(name, System.getProperty(&quot;file.encoding&quot;));</span>
+    }
+
+<span class="fc" id="L157">    private static final Map&lt;String, Class&lt;? extends Renderer&gt;&gt; RENDERERS = new HashMap&lt;String, Class&lt;? extends Renderer&gt;&gt;();</span>
+    static {
+<span class="fc" id="L159">        RENDERERS.put(DEFAULT_RENDERER, SimpleRenderer.class);</span>
+<span class="fc" id="L160">        RENDERERS.put(&quot;xml&quot;, XMLRenderer.class);</span>
+<span class="fc" id="L161">        RENDERERS.put(&quot;csv&quot;, CSVRenderer.class);</span>
+<span class="fc" id="L162">        RENDERERS.put(&quot;csv_with_linecount_per_file&quot;, CSVWithLinecountPerFileRenderer.class);</span>
+<span class="fc" id="L163">        RENDERERS.put(&quot;vs&quot;, VSRenderer.class);</span>
+<span class="fc" id="L164">    }</span>
+
+    public static Renderer getRendererFromString(String name, String encoding) {
+<span class="fc" id="L167">        String clazzname = name;</span>
+<span class="pc bpc" id="L168" title="2 of 4 branches missed.">        if (clazzname == null || &quot;&quot;.equals(clazzname)) {</span>
+<span class="nc" id="L169">            clazzname = DEFAULT_RENDERER;</span>
+        }
+<span class="fc" id="L171">        Class&lt;? extends Renderer&gt; clazz = RENDERERS.get(clazzname.toLowerCase(Locale.ROOT));</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        if (clazz == null) {</span>
+            try {
+<span class="nc" id="L174">                clazz = Class.forName(clazzname).asSubclass(Renderer.class);</span>
+<span class="nc" id="L175">            } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L176">                System.err.println(&quot;Can't find class '&quot; + name + &quot;', defaulting to SimpleRenderer.&quot;);</span>
+<span class="nc" id="L177">                clazz = SimpleRenderer.class;</span>
+<span class="nc" id="L178">            }</span>
+        }
+        try {
+<span class="fc" id="L181">            Renderer renderer = clazz.getDeclaredConstructor().newInstance();</span>
+<span class="fc" id="L182">            setRendererEncoding(renderer, encoding);</span>
+<span class="fc" id="L183">            return renderer;</span>
+<span class="nc" id="L184">        } catch (Exception e) {</span>
+<span class="nc" id="L185">            System.err.println(&quot;Couldn't instantiate renderer, defaulting to SimpleRenderer: &quot; + e);</span>
+<span class="nc" id="L186">            return new SimpleRenderer();</span>
+        }
+    }
+
+    private static void setRendererEncoding(Renderer renderer, String encoding)
+            throws IllegalAccessException, InvocationTargetException {
+        try {
+<span class="fc" id="L193">            PropertyDescriptor encodingProperty = new PropertyDescriptor(&quot;encoding&quot;, renderer.getClass());</span>
+<span class="fc" id="L194">            Method method = encodingProperty.getWriteMethod();</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">            if (method != null) {</span>
+<span class="fc" id="L196">                method.invoke(renderer, encoding);</span>
+            }
+<span class="fc" id="L198">        } catch (IntrospectionException e) {</span>
+            // ignored - maybe this renderer doesn't have a encoding property
+<span class="fc" id="L200">        }</span>
+<span class="fc" id="L201">    }</span>
+
+    public static String[] getRenderers() {
+<span class="nc" id="L204">        String[] result = RENDERERS.keySet().toArray(new String[RENDERERS.size()]);</span>
+<span class="nc" id="L205">        Arrays.sort(result);</span>
+<span class="nc" id="L206">        return result;</span>
+    }
+
+    public static Language getLanguageFromString(String languageString) {
+<span class="fc" id="L210">        return LanguageFactory.createLanguage(languageString);</span>
+    }
+
+    public static void setSystemProperties(CPDConfiguration configuration) {
+<span class="nc" id="L214">        Properties properties = new Properties();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (configuration.isIgnoreLiterals()) {</span>
+<span class="nc" id="L216">            properties.setProperty(Tokenizer.IGNORE_LITERALS, &quot;true&quot;);</span>
+        } else {
+<span class="nc" id="L218">            properties.remove(Tokenizer.IGNORE_LITERALS);</span>
+        }
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (configuration.isIgnoreIdentifiers()) {</span>
+<span class="nc" id="L221">            properties.setProperty(Tokenizer.IGNORE_IDENTIFIERS, &quot;true&quot;);</span>
+        } else {
+<span class="nc" id="L223">            properties.remove(Tokenizer.IGNORE_IDENTIFIERS);</span>
+        }
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        if (configuration.isIgnoreAnnotations()) {</span>
+<span class="nc" id="L226">            properties.setProperty(Tokenizer.IGNORE_ANNOTATIONS, &quot;true&quot;);</span>
+        } else {
+<span class="nc" id="L228">            properties.remove(Tokenizer.IGNORE_ANNOTATIONS);</span>
+        }
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(!configuration.isNoSkipBlocks()));</span>
+<span class="nc" id="L231">        properties.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, configuration.getSkipBlocksPattern());</span>
+<span class="nc" id="L232">        configuration.getLanguage().setProperties(properties);</span>
+<span class="nc" id="L233">    }</span>
+
+    public Language getLanguage() {
+<span class="fc" id="L236">        return language;</span>
+    }
+
+    public void setLanguage(Language language) {
+<span class="fc" id="L240">        this.language = language;</span>
+<span class="fc" id="L241">    }</span>
+
+    public int getMinimumTileSize() {
+<span class="fc" id="L244">        return minimumTileSize;</span>
+    }
+
+    public void setMinimumTileSize(int minimumTileSize) {
+<span class="fc" id="L248">        this.minimumTileSize = minimumTileSize;</span>
+<span class="fc" id="L249">    }</span>
+
+    public boolean isSkipDuplicates() {
+<span class="fc" id="L252">        return skipDuplicates;</span>
+    }
+
+    public void setSkipDuplicates(boolean skipDuplicates) {
+<span class="fc" id="L256">        this.skipDuplicates = skipDuplicates;</span>
+<span class="fc" id="L257">    }</span>
+
+    public String getRendererName() {
+<span class="fc" id="L260">        return rendererName;</span>
+    }
+
+    public void setRendererName(String rendererName) {
+<span class="fc" id="L264">        this.rendererName = rendererName;</span>
+<span class="fc" id="L265">    }</span>
+
+    public Renderer getRenderer() {
+<span class="fc" id="L268">        return renderer;</span>
+    }
+
+    public Tokenizer tokenizer() {
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        if (language == null) {</span>
+<span class="nc" id="L273">            throw new IllegalStateException(&quot;Language is null.&quot;);</span>
+        }
+<span class="fc" id="L275">        return language.getTokenizer();</span>
+    }
+
+    public FilenameFilter filenameFilter() {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (language == null) {</span>
+<span class="nc" id="L280">            throw new IllegalStateException(&quot;Language is null.&quot;);</span>
+        }
+
+<span class="nc" id="L283">        final FilenameFilter languageFilter = language.getFileFilter();</span>
+<span class="nc" id="L284">        final Set&lt;String&gt; exclusions = new HashSet&lt;String&gt;();</span>
+
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (excludes != null) {</span>
+<span class="nc" id="L287">            FileFinder finder = new FileFinder();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            for (File excludedFile : excludes) {</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">                if (excludedFile.isDirectory()) {</span>
+<span class="nc" id="L290">                    List&lt;File&gt; files = finder.findFilesFrom(excludedFile, languageFilter, true);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">                    for (File f : files) {</span>
+<span class="nc" id="L292">                        exclusions.add(FileUtil.normalizeFilename(f.getAbsolutePath()));</span>
+<span class="nc" id="L293">                    }</span>
+<span class="nc" id="L294">                } else {</span>
+<span class="nc" id="L295">                    exclusions.add(FileUtil.normalizeFilename(excludedFile.getAbsolutePath()));</span>
+                }
+<span class="nc" id="L297">            }</span>
+        }
+
+<span class="nc" id="L300">        FilenameFilter filter = new FilenameFilter() {</span>
+            public boolean accept(File dir, String name) {
+<span class="nc" id="L302">                File f = new File(dir, name);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">                if (exclusions.contains(FileUtil.normalizeFilename(f.getAbsolutePath()))) {</span>
+<span class="nc" id="L304">                    System.err.println(&quot;Excluding &quot; + f.getAbsolutePath());</span>
+<span class="nc" id="L305">                    return false;</span>
+                }
+<span class="nc" id="L307">                return languageFilter.accept(dir, name);</span>
+            }
+        };
+<span class="nc" id="L310">        return filter;</span>
+    }
+
+    public void setRenderer(Renderer renderer) {
+<span class="fc" id="L314">        this.renderer = renderer;</span>
+<span class="fc" id="L315">    }</span>
+
+    public boolean isIgnoreLiterals() {
+<span class="nc" id="L318">        return ignoreLiterals;</span>
+    }
+
+    public void setIgnoreLiterals(boolean ignoreLiterals) {
+<span class="nc" id="L322">        this.ignoreLiterals = ignoreLiterals;</span>
+<span class="nc" id="L323">    }</span>
+
+    public boolean isIgnoreIdentifiers() {
+<span class="nc" id="L326">        return ignoreIdentifiers;</span>
+    }
+
+    public void setIgnoreIdentifiers(boolean ignoreIdentifiers) {
+<span class="nc" id="L330">        this.ignoreIdentifiers = ignoreIdentifiers;</span>
+<span class="nc" id="L331">    }</span>
+
+    public boolean isIgnoreAnnotations() {
+<span class="nc" id="L334">        return ignoreAnnotations;</span>
+    }
+
+    public void setIgnoreAnnotations(boolean ignoreAnnotations) {
+<span class="nc" id="L338">        this.ignoreAnnotations = ignoreAnnotations;</span>
+<span class="nc" id="L339">    }</span>
+
+    public boolean isSkipLexicalErrors() {
+<span class="fc" id="L342">        return skipLexicalErrors;</span>
+    }
+
+    public void setSkipLexicalErrors(boolean skipLexicalErrors) {
+<span class="fc" id="L346">        this.skipLexicalErrors = skipLexicalErrors;</span>
+<span class="fc" id="L347">    }</span>
+
+    public List&lt;File&gt; getFiles() {
+<span class="nc" id="L350">        return files;</span>
+    }
+
+    public void setFiles(List&lt;File&gt; files) {
+<span class="nc" id="L354">        this.files = files;</span>
+<span class="nc" id="L355">    }</span>
+
+    public String getURI() {
+<span class="nc" id="L358">        return uri;</span>
+    }
+
+    public void setURI(String uri) {
+<span class="nc" id="L362">        this.uri = uri;</span>
+<span class="nc" id="L363">    }</span>
+
+    public List&lt;File&gt; getExcludes() {
+<span class="nc" id="L366">        return excludes;</span>
+    }
+
+    public void setExcludes(List&lt;File&gt; excludes) {
+<span class="nc" id="L370">        this.excludes = excludes;</span>
+<span class="nc" id="L371">    }</span>
+
+    public boolean isNonRecursive() {
+<span class="nc" id="L374">        return nonRecursive;</span>
+    }
+
+    public void setNonRecursive(boolean nonRecursive) {
+<span class="nc" id="L378">        this.nonRecursive = nonRecursive;</span>
+<span class="nc" id="L379">    }</span>
+
+    public boolean isHelp() {
+<span class="nc" id="L382">        return help;</span>
+    }
+
+    public void setHelp(boolean help) {
+<span class="nc" id="L386">        this.help = help;</span>
+<span class="nc" id="L387">    }</span>
+
+    public String getEncoding() {
+<span class="fc" id="L390">        return encoding;</span>
+    }
+
+    public boolean isNoSkipBlocks() {
+<span class="nc" id="L394">        return noSkipBlocks;</span>
+    }
+
+    public void setNoSkipBlocks(boolean noSkipBlocks) {
+<span class="nc" id="L398">        this.noSkipBlocks = noSkipBlocks;</span>
+<span class="nc" id="L399">    }</span>
+
+    public String getSkipBlocksPattern() {
+<span class="nc" id="L402">        return skipBlocksPattern;</span>
+    }
+
+    public void setSkipBlocksPattern(String skipBlocksPattern) {
+<span class="nc" id="L406">        this.skipBlocksPattern = skipBlocksPattern;</span>
+<span class="nc" id="L407">    }</span>
+
+    public boolean isFailOnViolation() {
+<span class="nc" id="L410">        return failOnViolation;</span>
+    }
+
+    public void setFailOnViolation(boolean failOnViolation) {
+<span class="nc" id="L414">        this.failOnViolation = failOnViolation;</span>
+<span class="nc" id="L415">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DumpFacade.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.ast</a> &gt; <span class="el_source">DumpFacade.java</span></div><h1>DumpFacade.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.ast;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L12">public class DumpFacade extends PLSQLParserVisitorAdapter {</span>
+
+	private PrintWriter writer;
+	private boolean recurse;
+
+	public void initializeWith(Writer writer, String prefix, boolean recurse, PLSQLNode node) {
+<span class="nc bnc" id="L18" title="All 2 branches missed.">		this.writer = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer);</span>
+<span class="nc" id="L19">		this.recurse = recurse;</span>
+<span class="nc" id="L20">		this.visit(node, prefix);</span>
+		try {
+<span class="nc" id="L22">			writer.flush();</span>
+<span class="nc" id="L23">		} catch (IOException e) {</span>
+<span class="nc" id="L24">			throw new RuntimeException(&quot;Problem flushing PrintWriter.&quot;, e);</span>
+<span class="nc" id="L25">		}</span>
+<span class="nc" id="L26">	}</span>
+
+	@Override
+	public Object visit(PLSQLNode node, Object data) {
+<span class="nc" id="L30">		dump(node, (String) data);</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">		if (recurse) {</span>
+<span class="nc" id="L32">			return super.visit(node, data + &quot; &quot;);</span>
+		} else {
+<span class="nc" id="L34">			return data;</span>
+		}
+	}
+
+	private void dump(PLSQLNode node, String prefix) {
+		//
+		// Dump format is generally composed of the following items...
+		//
+
+		// 1) Dump prefix
+<span class="nc" id="L44">		writer.print(prefix);</span>
+
+		// 2) JJT Name of the Node
+<span class="nc" id="L47">		writer.print(node.toString());</span>
+
+		//
+		// If there are any additional details, then:
+		// 1) A colon
+		// 2) The Node.getImage() if it is non-empty
+		// 3) Extras in parentheses
+		//
+
+		// Standard image handling
+<span class="nc" id="L57">		String image = node.getImage();</span>
+
+		// Special image handling (e.g. Nodes with normally null images)
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (node instanceof ASTBooleanLiteral) {</span>
+<span class="nc" id="L61">			image = node.getImage();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		} else if (node instanceof ASTPrimaryPrefix) {</span>
+<span class="nc" id="L63">			String result = null;</span>
+			/*
+			if (primaryPrefix.usesSuperModifier()) {
+				result = &quot;super&quot;;
+			} else if (primaryPrefix.usesThisModifier()) {
+				result = &quot;this&quot;;
+			}
+			*/
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (image != null) {</span>
+<span class="nc" id="L72">				result += &quot;.&quot; + image;</span>
+			}
+<span class="nc" id="L74">			image = result;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		} else if (node instanceof ASTPrimarySuffix) {</span>
+<span class="nc" id="L76">			ASTPrimarySuffix primarySuffix = (ASTPrimarySuffix) node;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (primarySuffix.isArrayDereference()) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				if (image == null) {</span>
+<span class="nc" id="L79">					image = &quot;[&quot;;</span>
+				} else {
+<span class="nc" id="L81">					image = &quot;[&quot; + image;</span>
+				}
+			}
+		}
+
+		// Extras
+<span class="nc" id="L87">		List&lt;String&gt; extras = new ArrayList&lt;String&gt;();</span>
+
+		// Output image and extras
+<span class="nc bnc" id="L90" title="All 4 branches missed.">		if (image != null || !extras.isEmpty()) {</span>
+<span class="nc" id="L91">			writer.print(':');</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (image != null) {</span>
+<span class="nc" id="L93">				writer.print(image);</span>
+			}
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			for (String extra : extras) {</span>
+<span class="nc" id="L96">				writer.print('(');</span>
+<span class="nc" id="L97">				writer.print(extra);</span>
+<span class="nc" id="L98">				writer.print(')');</span>
+<span class="nc" id="L99">			}</span>
+		}
+
+<span class="nc" id="L102">		writer.println();</span>
+<span class="nc" id="L103">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

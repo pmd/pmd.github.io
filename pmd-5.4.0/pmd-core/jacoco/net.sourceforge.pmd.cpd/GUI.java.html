@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GUI.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">GUI.java</span></div><h1>GUI.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+
+import net.sourceforge.pmd.PMD;
+
+import org.apache.commons.io.IOUtils;
+
+public class GUI implements CPDListener {
+
+//	private interface Renderer {
+//		String render(Iterator&lt;Match&gt; items);
+//	}
+
+<span class="nc" id="L76">	private static final Object[][] RENDERER_SETS = new Object[][] {</span>
+<span class="nc" id="L77">		{ &quot;Text&quot;, 		new Renderer() { public String render(Iterator&lt;Match&gt; items) { return new SimpleRenderer().render(items); } } },</span>
+<span class="nc" id="L78">		{ &quot;XML&quot;, 		new Renderer() { public String render(Iterator&lt;Match&gt; items) { return new XMLRenderer().render(items); } } },</span>
+<span class="nc" id="L79">		{ &quot;CSV (comma)&quot;,new Renderer() { public String render(Iterator&lt;Match&gt; items) { return new CSVRenderer(',').render(items); } } },</span>
+<span class="nc" id="L80">		{ &quot;CSV (tab)&quot;,	new Renderer() { public String render(Iterator&lt;Match&gt; items) { return new CSVRenderer('\t').render(items); } } }</span>
+		};
+
+<span class="nc" id="L83">	private static abstract class LanguageConfig {</span>
+		public abstract Language languageFor(Properties p);
+<span class="nc" id="L85">		public boolean canIgnoreIdentifiers() { return false; }</span>
+<span class="nc" id="L86">		public boolean canIgnoreLiterals() { return false; }</span>
+<span class="nc" id="L87">		public boolean canIgnoreAnnotations() { return false; }</span>
+		public abstract String[] extensions();
+	}
+
+    private static final Object[][] LANGUAGE_SETS;
+
+    static {
+<span class="nc" id="L94">        LANGUAGE_SETS = new Object[LanguageFactory.supportedLanguages.length + 1][2];</span>
+
+        int index;
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (index = 0; index &lt; LanguageFactory.supportedLanguages.length; index++) {</span>
+<span class="nc" id="L98">            final String terseName = LanguageFactory.supportedLanguages[index];</span>
+<span class="nc" id="L99">            final Language lang = LanguageFactory.createLanguage(terseName);</span>
+<span class="nc" id="L100">            LANGUAGE_SETS[index][0] = lang.getName();</span>
+<span class="nc" id="L101">            LANGUAGE_SETS[index][1] = new LanguageConfig() {</span>
+                @Override
+                public Language languageFor(Properties p) {
+<span class="nc" id="L104">                    lang.setProperties(p);</span>
+<span class="nc" id="L105">                    return lang;</span>
+                }
+                @Override
+                public String[] extensions() {
+<span class="nc" id="L109">                    List&lt;String&gt; exts = lang.getExtensions();</span>
+<span class="nc" id="L110">                    return exts.toArray(new String[exts.size()]);</span>
+                }
+                @Override
+                public boolean canIgnoreAnnotations() {
+<span class="nc" id="L114">                    return &quot;java&quot;.equals(terseName);</span>
+                }
+                @Override
+                public boolean canIgnoreIdentifiers() {
+<span class="nc" id="L118">                    return &quot;java&quot;.equals(terseName);</span>
+                }
+                @Override
+                public boolean canIgnoreLiterals() {
+<span class="nc" id="L122">                    return &quot;java&quot;.equals(terseName);</span>
+                }
+            };
+        }
+<span class="nc" id="L126">        LANGUAGE_SETS[index][0] = &quot;by extension...&quot;;</span>
+<span class="nc" id="L127">        LANGUAGE_SETS[index][1] = new LanguageConfig() {</span>
+            @Override
+            public Language languageFor(Properties p) {
+<span class="nc" id="L130">                return LanguageFactory.createLanguage(LanguageFactory.BY_EXTENSION, p);</span>
+            }
+            @Override
+            public String[] extensions() {
+<span class="nc" id="L134">                return new String[] {&quot;&quot; };</span>
+            }
+        };
+    }
+
+	private static final int		DEFAULT_CPD_MINIMUM_LENGTH = 75;
+<span class="nc" id="L140">	private static final Map&lt;String, LanguageConfig&gt; LANGUAGE_CONFIGS_BY_LABEL = new HashMap&lt;String, LanguageConfig&gt;(LANGUAGE_SETS.length);</span>
+<span class="nc" id="L141">	private static final KeyStroke	COPY_KEY_STROKE = KeyStroke.getKeyStroke(KeyEvent.VK_C,ActionEvent.CTRL_MASK,false);</span>
+<span class="nc" id="L142">	private static final KeyStroke	DELETE_KEY_STROKE = KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0);</span>
+
+	private class ColumnSpec {
+		private String label;
+		private int alignment;
+		private int width;
+		private Comparator&lt;Match&gt; sorter;
+
+<span class="nc" id="L150">		public ColumnSpec(String aLabel, int anAlignment, int aWidth, Comparator&lt;Match&gt; aSorter) {</span>
+<span class="nc" id="L151">			label = aLabel;</span>
+<span class="nc" id="L152">			alignment = anAlignment;</span>
+<span class="nc" id="L153">			width = aWidth;</span>
+<span class="nc" id="L154">			sorter = aSorter;</span>
+<span class="nc" id="L155">		}</span>
+<span class="nc" id="L156">		public String label() { return label; };</span>
+<span class="nc" id="L157">		public int alignment() { return alignment; };</span>
+<span class="nc" id="L158">		public int width() { return width; };</span>
+<span class="nc" id="L159">		public Comparator&lt;Match&gt; sorter() { return sorter; };</span>
+	}
+
+<span class="nc" id="L162">	private final ColumnSpec[] matchColumns = new ColumnSpec[] {</span>
+		new ColumnSpec(&quot;Source&quot;, 	SwingConstants.LEFT, -1, Match.LABEL_COMPARATOR),
+		new ColumnSpec(&quot;Matches&quot;, 	SwingConstants.RIGHT, 60, Match.MATCHES_COMPARATOR),
+		new ColumnSpec(&quot;Lines&quot;, 	SwingConstants.RIGHT, 45, Match.LINES_COMPARATOR),
+		};
+
+	static {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		for (int i=0; i&lt;LANGUAGE_SETS.length; i++) {</span>
+<span class="nc" id="L170">			LANGUAGE_CONFIGS_BY_LABEL.put((String)LANGUAGE_SETS[i][0], (LanguageConfig)LANGUAGE_SETS[i][1]);</span>
+		}
+<span class="nc" id="L172">	}</span>
+
+	private static LanguageConfig languageConfigFor(String label) {
+<span class="nc" id="L175">		return LANGUAGE_CONFIGS_BY_LABEL.get(label);</span>
+	}
+
+<span class="nc" id="L178">    private static class CancelListener implements ActionListener {</span>
+        public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L180">            System.exit(0);</span>
+<span class="nc" id="L181">        }</span>
+    }
+
+<span class="nc" id="L184">    private class GoListener implements ActionListener {</span>
+        public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L186">            new Thread(new Runnable() {</span>
+                public void run() {
+<span class="nc" id="L188">                    tokenizingFilesBar.setValue(0);</span>
+<span class="nc" id="L189">                    tokenizingFilesBar.setString(&quot;&quot;);</span>
+<span class="nc" id="L190">                    resultsTextArea.setText(&quot;&quot;);</span>
+<span class="nc" id="L191">                    phaseLabel.setText(&quot;&quot;);</span>
+<span class="nc" id="L192">                    timeField.setText(&quot;&quot;);</span>
+<span class="nc" id="L193">                    go();</span>
+<span class="nc" id="L194">                }</span>
+            }).start();
+<span class="nc" id="L196">        }</span>
+    }
+
+    private class SaveListener implements ActionListener {
+
+    	final Renderer renderer;
+
+<span class="nc" id="L203">    	public SaveListener(Renderer theRenderer) {</span>
+<span class="nc" id="L204">    		renderer = theRenderer;</span>
+<span class="nc" id="L205">    	}</span>
+
+        public void actionPerformed(ActionEvent evt) {
+<span class="nc" id="L208">            JFileChooser fcSave	= new JFileChooser();</span>
+<span class="nc" id="L209">            int ret = fcSave.showSaveDialog(GUI.this.frame);</span>
+<span class="nc" id="L210">            File f = fcSave.getSelectedFile();</span>
+<span class="nc bnc" id="L211" title="All 4 branches missed.">            if (f == null || ret != JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L212">        	return;</span>
+            }
+
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (!f.canWrite()) {</span>
+<span class="nc" id="L216">                PrintWriter pw = null;</span>
+                try {
+<span class="nc" id="L218">                    pw = new PrintWriter(new FileOutputStream(f));</span>
+<span class="nc" id="L219">                    pw.write(renderer.render(matches.iterator()));</span>
+<span class="nc" id="L220">                    pw.flush();</span>
+<span class="nc" id="L221">                    JOptionPane.showMessageDialog(frame, &quot;Saved &quot; + matches.size() + &quot; matches&quot;);</span>
+<span class="nc" id="L222">                } catch (IOException e) {</span>
+<span class="nc" id="L223">                    error(&quot;Couldn't save file&quot; + f.getAbsolutePath(), e);</span>
+                } finally {
+<span class="nc" id="L225">                    IOUtils.closeQuietly(pw);</span>
+<span class="nc" id="L226">                }</span>
+<span class="nc" id="L227">            } else {</span>
+<span class="nc" id="L228">                error(&quot;Could not write to file &quot; + f.getAbsolutePath(), null);</span>
+            }
+<span class="nc" id="L230">        }</span>
+
+        private void error(String message, Exception e) {
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (e != null) {</span>
+<span class="nc" id="L234">                e.printStackTrace();</span>
+            }
+<span class="nc" id="L236">            JOptionPane.showMessageDialog(GUI.this.frame, message);</span>
+<span class="nc" id="L237">        }</span>
+
+    }
+
+<span class="nc" id="L241">    private class BrowseListener implements ActionListener {</span>
+        public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L243">            JFileChooser fc = new JFileChooser(rootDirectoryField.getText());</span>
+<span class="nc" id="L244">            fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);</span>
+<span class="nc" id="L245">            fc.showDialog(frame, &quot;Select&quot;);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">            if (fc.getSelectedFile() != null) {</span>
+<span class="nc" id="L247">                rootDirectoryField.setText(fc.getSelectedFile().getAbsolutePath());</span>
+            }
+<span class="nc" id="L249">        }</span>
+    }
+
+	private class AlignmentRenderer extends DefaultTableCellRenderer {
+
+		private int[] alignments;
+
+<span class="nc" id="L256">		public AlignmentRenderer(int[] theAlignments) {</span>
+<span class="nc" id="L257">			alignments = theAlignments;</span>
+<span class="nc" id="L258">		};</span>
+
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+<span class="nc" id="L261">			super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);</span>
+
+<span class="nc" id="L263">			setHorizontalAlignment(alignments[column]);</span>
+
+<span class="nc" id="L265">			return this;</span>
+		}
+	}
+
+<span class="nc" id="L269">    private JTextField rootDirectoryField	= new JTextField(System.getProperty(&quot;user.home&quot;));</span>
+<span class="nc" id="L270">    private JTextField minimumLengthField	= new JTextField(Integer.toString(DEFAULT_CPD_MINIMUM_LENGTH));</span>
+<span class="nc" id="L271">    private JTextField encodingField		= new JTextField(System.getProperty(&quot;file.encoding&quot;));</span>
+<span class="nc" id="L272">    private JTextField timeField			= new JTextField(6);</span>
+<span class="nc" id="L273">    private JLabel phaseLabel				= new JLabel();</span>
+<span class="nc" id="L274">    private JProgressBar tokenizingFilesBar = new JProgressBar();</span>
+<span class="nc" id="L275">    private JTextArea resultsTextArea		= new JTextArea();</span>
+<span class="nc" id="L276">    private JCheckBox recurseCheckbox		= new JCheckBox(&quot;&quot;, true);</span>
+<span class="nc" id="L277">    private JCheckBox ignoreIdentifiersCheckbox = new JCheckBox(&quot;&quot;, false);</span>
+<span class="nc" id="L278">    private JCheckBox ignoreLiteralsCheckbox = new JCheckBox(&quot;&quot;, false);</span>
+<span class="nc" id="L279">    private JCheckBox ignoreAnnotationsCheckbox = new JCheckBox(&quot;&quot;, false);</span>
+<span class="nc" id="L280">    private JComboBox languageBox			= new JComboBox();</span>
+<span class="nc" id="L281">    private JTextField extensionField		= new JTextField();</span>
+<span class="nc" id="L282">    private JLabel extensionLabel			= new JLabel(&quot;Extension:&quot;, SwingConstants.RIGHT);</span>
+<span class="nc" id="L283">    private JTable resultsTable				= new JTable();</span>
+    private JButton goButton;
+    private JButton cancelButton;
+    private JPanel progressPanel;
+    private JFrame frame;
+    private boolean trimLeadingWhitespace;
+
+<span class="nc" id="L290">    private List&lt;Match&gt; matches = new ArrayList&lt;Match&gt;();</span>
+
+    private void addSaveOptionsTo(JMenu menu) {
+
+        JMenuItem saveItem;
+
+<span class="nc bnc" id="L296" title="All 2 branches missed.">        for (int i=0; i&lt;RENDERER_SETS.length; i++) {</span>
+<span class="nc" id="L297">        	saveItem = new JMenuItem(&quot;Save as &quot; + RENDERER_SETS[i][0]);</span>
+<span class="nc" id="L298">        	saveItem.addActionListener(new SaveListener((Renderer)RENDERER_SETS[i][1]));</span>
+<span class="nc" id="L299">        	menu.add(saveItem);</span>
+        }
+<span class="nc" id="L301">    }</span>
+
+<span class="nc" id="L303">    public GUI() {</span>
+<span class="nc" id="L304">        frame = new JFrame(&quot;PMD Duplicate Code Detector (v &quot; + PMD.VERSION + ')');</span>
+
+<span class="nc" id="L306">        timeField.setEditable(false);</span>
+
+<span class="nc" id="L308">        JMenu fileMenu = new JMenu(&quot;File&quot;);</span>
+<span class="nc" id="L309">        fileMenu.setMnemonic('f');</span>
+
+<span class="nc" id="L311">        addSaveOptionsTo(fileMenu);</span>
+
+<span class="nc" id="L313">        JMenuItem exitItem = new JMenuItem(&quot;Exit&quot;);</span>
+<span class="nc" id="L314">        exitItem.setMnemonic('x');</span>
+<span class="nc" id="L315">        exitItem.addActionListener(new CancelListener());</span>
+<span class="nc" id="L316">        fileMenu.add(exitItem);</span>
+<span class="nc" id="L317">        JMenu viewMenu = new JMenu(&quot;View&quot;);</span>
+<span class="nc" id="L318">        fileMenu.setMnemonic('v');</span>
+<span class="nc" id="L319">        JMenuItem trimItem = new JCheckBoxMenuItem(&quot;Trim leading whitespace&quot;);</span>
+<span class="nc" id="L320">        trimItem.addItemListener(new ItemListener() {</span>
+            public void itemStateChanged(ItemEvent e) {
+<span class="nc" id="L322">                AbstractButton button = (AbstractButton)e.getItem();</span>
+<span class="nc" id="L323">                GUI.this.trimLeadingWhitespace = button.isSelected();</span>
+<span class="nc" id="L324">            }</span>
+        });
+<span class="nc" id="L326">        viewMenu.add(trimItem);</span>
+<span class="nc" id="L327">        JMenuBar menuBar = new JMenuBar();</span>
+<span class="nc" id="L328">        menuBar.add(fileMenu);</span>
+<span class="nc" id="L329">        menuBar.add(viewMenu);</span>
+<span class="nc" id="L330">        frame.setJMenuBar(menuBar);</span>
+
+        // first make all the buttons
+<span class="nc" id="L333">        JButton browseButton = new JButton(&quot;Browse&quot;);</span>
+<span class="nc" id="L334">        browseButton.setMnemonic('b');</span>
+<span class="nc" id="L335">        browseButton.addActionListener(new BrowseListener());</span>
+<span class="nc" id="L336">        goButton = new JButton(&quot;Go&quot;);</span>
+<span class="nc" id="L337">        goButton.setMnemonic('g');</span>
+<span class="nc" id="L338">        goButton.addActionListener(new GoListener());</span>
+<span class="nc" id="L339">        cancelButton = new JButton(&quot;Cancel&quot;);</span>
+<span class="nc" id="L340">        cancelButton.addActionListener(new CancelListener());</span>
+
+<span class="nc" id="L342">        JPanel settingsPanel = makeSettingsPanel(browseButton, goButton, cancelButton);</span>
+<span class="nc" id="L343">        progressPanel = makeProgressPanel();</span>
+<span class="nc" id="L344">        JPanel resultsPanel = makeResultsPanel();</span>
+
+<span class="nc" id="L346">        adjustLanguageControlsFor((LanguageConfig)LANGUAGE_SETS[0][1]);</span>
+
+<span class="nc" id="L348">        frame.getContentPane().setLayout(new BorderLayout());</span>
+<span class="nc" id="L349">        JPanel topPanel = new JPanel();</span>
+<span class="nc" id="L350">        topPanel.setLayout(new BorderLayout());</span>
+<span class="nc" id="L351">        topPanel.add(settingsPanel, BorderLayout.NORTH);</span>
+<span class="nc" id="L352">        topPanel.add(progressPanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L353">        setProgressControls(false);	// not running now</span>
+<span class="nc" id="L354">        frame.getContentPane().add(topPanel, BorderLayout.NORTH);</span>
+<span class="nc" id="L355">        frame.getContentPane().add(resultsPanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L356">        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</span>
+<span class="nc" id="L357">        frame.pack();</span>
+<span class="nc" id="L358">        frame.setVisible(true);</span>
+<span class="nc" id="L359">    }</span>
+
+    private void adjustLanguageControlsFor(LanguageConfig current) {
+<span class="nc" id="L362">         ignoreIdentifiersCheckbox.setEnabled(current.canIgnoreIdentifiers());</span>
+<span class="nc" id="L363">         ignoreLiteralsCheckbox.setEnabled(current.canIgnoreLiterals());</span>
+<span class="nc" id="L364">         ignoreAnnotationsCheckbox.setEnabled(current.canIgnoreAnnotations());</span>
+<span class="nc" id="L365">         extensionField.setText(current.extensions()[0]);</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">         boolean enableExtension = current.extensions()[0].length() == 0;</span>
+<span class="nc" id="L367">         extensionField.setEnabled(enableExtension);</span>
+<span class="nc" id="L368">         extensionLabel.setEnabled(enableExtension);</span>
+<span class="nc" id="L369">    }</span>
+
+    private JPanel makeSettingsPanel(JButton browseButton, JButton goButton, JButton cxButton) {
+<span class="nc" id="L372">        JPanel settingsPanel = new JPanel();</span>
+<span class="nc" id="L373">        GridBagHelper helper = new GridBagHelper(settingsPanel, new double[]{0.2, 0.7, 0.1, 0.1});</span>
+<span class="nc" id="L374">        helper.addLabel(&quot;Root source directory:&quot;);</span>
+<span class="nc" id="L375">        helper.add(rootDirectoryField);</span>
+<span class="nc" id="L376">        helper.add(browseButton, 2);</span>
+<span class="nc" id="L377">        helper.nextRow();</span>
+<span class="nc" id="L378">        helper.addLabel(&quot;Report duplicate chunks larger than:&quot;);</span>
+<span class="nc" id="L379">        minimumLengthField.setColumns(4);</span>
+<span class="nc" id="L380">        helper.add(minimumLengthField);</span>
+<span class="nc" id="L381">        helper.addLabel(&quot;Language:&quot;);</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        for (int i=0; i&lt;LANGUAGE_SETS.length; i++) {</span>
+<span class="nc" id="L383">        	languageBox.addItem(LANGUAGE_SETS[i][0]);</span>
+        }
+<span class="nc" id="L385">        languageBox.addActionListener(new ActionListener() {</span>
+            public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L387">            	adjustLanguageControlsFor(</span>
+            			languageConfigFor((String)languageBox.getSelectedItem())
+            			);
+<span class="nc" id="L390">            }</span>
+        });
+<span class="nc" id="L392">        helper.add(languageBox);</span>
+<span class="nc" id="L393">        helper.nextRow();</span>
+<span class="nc" id="L394">        helper.addLabel(&quot;Also scan subdirectories?&quot;);</span>
+<span class="nc" id="L395">        helper.add(recurseCheckbox);</span>
+
+<span class="nc" id="L397">        helper.add(extensionLabel);</span>
+<span class="nc" id="L398">        helper.add(extensionField);</span>
+
+<span class="nc" id="L400">        helper.nextRow();</span>
+<span class="nc" id="L401">        helper.addLabel(&quot;Ignore literals?&quot;);</span>
+<span class="nc" id="L402">        helper.add(ignoreLiteralsCheckbox);</span>
+<span class="nc" id="L403">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L404">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L405">        helper.nextRow();</span>
+
+<span class="nc" id="L407">        helper.nextRow();</span>
+<span class="nc" id="L408">        helper.addLabel(&quot;Ignore identifiers?&quot;);</span>
+<span class="nc" id="L409">        helper.add(ignoreIdentifiersCheckbox);</span>
+<span class="nc" id="L410">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L411">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L412">        helper.nextRow();</span>
+
+<span class="nc" id="L414">        helper.nextRow();</span>
+<span class="nc" id="L415">        helper.addLabel(&quot;Ignore annotations?&quot;);</span>
+<span class="nc" id="L416">        helper.add(ignoreAnnotationsCheckbox);</span>
+<span class="nc" id="L417">        helper.add(goButton);</span>
+<span class="nc" id="L418">        helper.add(cxButton);</span>
+<span class="nc" id="L419">        helper.nextRow();</span>
+
+<span class="nc" id="L421">        helper.addLabel(&quot;File encoding (defaults based upon locale):&quot;);</span>
+<span class="nc" id="L422">        encodingField.setColumns(1);</span>
+<span class="nc" id="L423">        helper.add(encodingField);</span>
+<span class="nc" id="L424">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L425">        helper.addLabel(&quot;&quot;);</span>
+<span class="nc" id="L426">        helper.nextRow();</span>
+//        settingsPanel.setBorder(BorderFactory.createTitledBorder(&quot;Settings&quot;));
+<span class="nc" id="L428">        return settingsPanel;</span>
+    }
+
+    private JPanel makeProgressPanel() {
+<span class="nc" id="L432">        JPanel progressPanel = new JPanel();</span>
+<span class="nc" id="L433">        final double[] weights = {0.0, 0.8, 0.4, 0.2};</span>
+<span class="nc" id="L434">        GridBagHelper helper = new GridBagHelper(progressPanel, weights);</span>
+<span class="nc" id="L435">        helper.addLabel(&quot;Tokenizing files:&quot;);</span>
+<span class="nc" id="L436">        helper.add(tokenizingFilesBar, 3);</span>
+<span class="nc" id="L437">        helper.nextRow();</span>
+<span class="nc" id="L438">        helper.addLabel(&quot;Phase:&quot;);</span>
+<span class="nc" id="L439">        helper.add(phaseLabel);</span>
+<span class="nc" id="L440">        helper.addLabel(&quot;Time elapsed:&quot;);</span>
+<span class="nc" id="L441">        helper.add(timeField);</span>
+<span class="nc" id="L442">        helper.nextRow();</span>
+<span class="nc" id="L443">        progressPanel.setBorder(BorderFactory.createTitledBorder(&quot;Progress&quot;));</span>
+<span class="nc" id="L444">        return progressPanel;</span>
+    }
+
+    private JPanel makeResultsPanel() {
+<span class="nc" id="L448">        JPanel resultsPanel = new JPanel();</span>
+<span class="nc" id="L449">        resultsPanel.setLayout(new BorderLayout());</span>
+<span class="nc" id="L450">        JScrollPane areaScrollPane = new JScrollPane(resultsTextArea);</span>
+<span class="nc" id="L451">        resultsTextArea.setEditable(false);</span>
+<span class="nc" id="L452">        areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);</span>
+<span class="nc" id="L453">        areaScrollPane.setPreferredSize(new Dimension(600, 300));</span>
+
+<span class="nc" id="L455">        resultsPanel.add(makeMatchList(), BorderLayout.WEST);</span>
+<span class="nc" id="L456">        resultsPanel.add(areaScrollPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L457">        return resultsPanel;</span>
+    }
+
+    private void populateResultArea() {
+<span class="nc" id="L461">    	int[] selectionIndices = resultsTable.getSelectedRows();</span>
+<span class="nc" id="L462">    	TableModel model = resultsTable.getModel();</span>
+<span class="nc" id="L463">    	List&lt;Match&gt; selections = new ArrayList&lt;Match&gt;(selectionIndices.length);</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">    	for (int i=0; i&lt;selectionIndices.length; i++) {</span>
+<span class="nc" id="L465">    		selections.add((Match)model.getValueAt(selectionIndices[i], 99));</span>
+    	}
+<span class="nc" id="L467">    	String report = new SimpleRenderer(trimLeadingWhitespace).render(selections.iterator());</span>
+<span class="nc" id="L468">    	resultsTextArea.setText(report);</span>
+<span class="nc" id="L469">    	resultsTextArea.setCaretPosition(0);	// move to the top</span>
+<span class="nc" id="L470">    }</span>
+
+    private void copyMatchListSelectionsToClipboard() {
+
+<span class="nc" id="L474">    	int[] selectionIndices = resultsTable.getSelectedRows();</span>
+<span class="nc" id="L475">    	int colCount = resultsTable.getColumnCount();</span>
+
+<span class="nc" id="L477">    	StringBuilder sb = new StringBuilder();</span>
+
+<span class="nc bnc" id="L479" title="All 2 branches missed.">    	for (int r=0; r&lt;selectionIndices.length; r++) {</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">			if (r &gt; 0) {</span>
+<span class="nc" id="L481">			    sb.append('\n');</span>
+			}
+<span class="nc" id="L483">			sb.append(resultsTable.getValueAt(selectionIndices[r], 0));</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">    		for (int c=1; c&lt;colCount; c++) {</span>
+<span class="nc" id="L485">    			sb.append('\t');</span>
+<span class="nc" id="L486">    			sb.append(resultsTable.getValueAt(selectionIndices[r], c));</span>
+    		}
+    	}
+
+<span class="nc" id="L490">    	StringSelection ss = new StringSelection(sb.toString());</span>
+<span class="nc" id="L491">        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, null);</span>
+<span class="nc" id="L492">    }</span>
+
+    private void deleteMatchlistSelections() {
+
+<span class="nc" id="L496">    	int[] selectionIndices = resultsTable.getSelectedRows();</span>
+
+<span class="nc bnc" id="L498" title="All 2 branches missed.">    	for (int i=selectionIndices.length-1; i &gt;=0; i--) {</span>
+<span class="nc" id="L499">    		matches.remove(selectionIndices[i]);</span>
+    	}
+
+<span class="nc" id="L502">    	resultsTable.getSelectionModel().clearSelection();</span>
+<span class="nc" id="L503">    	resultsTable.addNotify();</span>
+<span class="nc" id="L504">    }</span>
+
+    private JComponent makeMatchList() {
+
+<span class="nc" id="L508">    	resultsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {</span>
+			public void valueChanged(ListSelectionEvent e) {
+<span class="nc" id="L510">				populateResultArea();</span>
+<span class="nc" id="L511">			}});</span>
+
+<span class="nc" id="L513">    	resultsTable.registerKeyboardAction(new ActionListener() {</span>
+<span class="nc" id="L514">			public void actionPerformed(ActionEvent e) { copyMatchListSelectionsToClipboard(); }</span>
+    		},&quot;Copy&quot;, COPY_KEY_STROKE, JComponent.WHEN_FOCUSED);
+
+<span class="nc" id="L517">    	resultsTable.registerKeyboardAction(new ActionListener() {</span>
+<span class="nc" id="L518">			public void actionPerformed(ActionEvent e) { deleteMatchlistSelections(); }</span>
+    		},&quot;Del&quot;, DELETE_KEY_STROKE, JComponent.WHEN_FOCUSED);
+
+<span class="nc" id="L521">    	int[] alignments = new int[matchColumns.length];</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">    	for (int i=0; i&lt;alignments.length; i++) {</span>
+<span class="nc" id="L523">    	    alignments[i] = matchColumns[i].alignment();</span>
+    	}
+
+<span class="nc" id="L526">    	resultsTable.setDefaultRenderer(Object.class, new AlignmentRenderer(alignments));</span>
+
+<span class="nc" id="L528">    	final JTableHeader header = resultsTable.getTableHeader();</span>
+<span class="nc" id="L529">    	header.addMouseListener( new MouseAdapter() {</span>
+			public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L531">				sortOnColumn(header.columnAtPoint(new Point(e.getX(), e.getY())));</span>
+<span class="nc" id="L532">				}</span>
+			});
+
+<span class="nc" id="L535">        return new JScrollPane(resultsTable);</span>
+    }
+
+    private boolean isLegalPath(String path, LanguageConfig config) {
+<span class="nc" id="L539">    	String[] extensions = config.extensions();</span>
+<span class="nc bnc" id="L540" title="All 2 branches missed.">    	for (int i=0; i&lt;extensions.length; i++) {</span>
+<span class="nc bnc" id="L541" title="All 4 branches missed.">    		if (path.endsWith(extensions[i]) &amp;&amp; extensions[i].length() &gt; 0) {</span>
+<span class="nc" id="L542">    		    return true;</span>
+    		}
+    	}
+<span class="nc" id="L545">    	return false;</span>
+    }
+
+    private String setLabelFor(Match match) {
+
+<span class="nc" id="L550">    	Set&lt;String&gt; sourceIDs = new HashSet&lt;String&gt;(match.getMarkCount());</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">    	for (Iterator&lt;Mark&gt; occurrences = match.iterator(); occurrences.hasNext();) {</span>
+<span class="nc" id="L552">             sourceIDs.add(occurrences.next().getFilename());</span>
+          }
+    	String label;
+
+<span class="nc bnc" id="L556" title="All 2 branches missed.">    	if (sourceIDs.size() == 1) {</span>
+<span class="nc" id="L557">    		String sourceId = sourceIDs.iterator().next();</span>
+<span class="nc" id="L558">    		int separatorPos = sourceId.lastIndexOf(File.separatorChar);</span>
+<span class="nc" id="L559">    		label = &quot;...&quot; + sourceId.substring(separatorPos);</span>
+<span class="nc" id="L560">    		} else {</span>
+<span class="nc" id="L561">    	    	label = &quot;(&quot; + sourceIDs.size() + &quot; separate files)&quot;;</span>
+    		}
+
+<span class="nc" id="L564">    	match.setLabel(label);</span>
+<span class="nc" id="L565">    	return label;</span>
+    }
+
+    private void setProgressControls(boolean isRunning) {
+<span class="nc" id="L569">        progressPanel.setVisible(isRunning);</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">        goButton.setEnabled(!isRunning);</span>
+<span class="nc" id="L571">        cancelButton.setEnabled(isRunning);</span>
+<span class="nc" id="L572">    }</span>
+
+    private void go() {
+        try {
+<span class="nc" id="L576">            File dirPath = new File(rootDirectoryField.getText());</span>
+<span class="nc bnc" id="L577" title="All 2 branches missed.">            if (!dirPath.exists()) {</span>
+<span class="nc" id="L578">                JOptionPane.showMessageDialog(frame,</span>
+                        &quot;Can't read from that root source directory&quot;,
+                        &quot;Error&quot;, JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L581">                return;</span>
+            }
+
+<span class="nc" id="L584">            setProgressControls(true);</span>
+
+<span class="nc" id="L586">            Properties p = new Properties();</span>
+<span class="nc" id="L587">            CPDConfiguration config = new CPDConfiguration();</span>
+<span class="nc" id="L588">            config.setMinimumTileSize(Integer.parseInt(minimumLengthField.getText()));</span>
+<span class="nc" id="L589">            config.setEncoding(encodingField.getText());</span>
+<span class="nc" id="L590">            config.setIgnoreIdentifiers(ignoreIdentifiersCheckbox.isSelected());</span>
+<span class="nc" id="L591">            config.setIgnoreLiterals(ignoreLiteralsCheckbox.isSelected());</span>
+<span class="nc" id="L592">            config.setIgnoreAnnotations(ignoreAnnotationsCheckbox.isSelected());</span>
+<span class="nc" id="L593">            p.setProperty(LanguageFactory.EXTENSION, extensionField.getText());</span>
+
+<span class="nc" id="L595">            LanguageConfig conf = languageConfigFor((String)languageBox.getSelectedItem());</span>
+<span class="nc" id="L596">            Language language = conf.languageFor(p);</span>
+<span class="nc" id="L597">            config.setLanguage(language);</span>
+
+<span class="nc" id="L599">            CPDConfiguration.setSystemProperties(config);</span>
+
+<span class="nc" id="L601">            CPD cpd = new CPD(config);</span>
+<span class="nc" id="L602">            cpd.setCpdListener(this);</span>
+<span class="nc" id="L603">            tokenizingFilesBar.setMinimum(0);</span>
+<span class="nc" id="L604">            phaseLabel.setText(&quot;&quot;);</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">            if (isLegalPath(dirPath.getPath(), conf)) {	// should use the language file filter instead?</span>
+<span class="nc" id="L606">            	cpd.add(dirPath);</span>
+            } else {
+<span class="nc bnc" id="L608" title="All 2 branches missed.">                if (recurseCheckbox.isSelected()) {</span>
+<span class="nc" id="L609">                    cpd.addRecursively(dirPath);</span>
+                } else {
+<span class="nc" id="L611">                    cpd.addAllInDirectory(dirPath);</span>
+                }
+            }
+<span class="nc" id="L614">            Timer t = createTimer();</span>
+<span class="nc" id="L615">            t.start();</span>
+<span class="nc" id="L616">            cpd.go();</span>
+<span class="nc" id="L617">            t.stop();</span>
+
+<span class="nc" id="L619">        	matches = new ArrayList&lt;Match&gt;();</span>
+<span class="nc bnc" id="L620" title="All 2 branches missed.">        	for (Iterator&lt;Match&gt; i = cpd.getMatches(); i.hasNext();) {</span>
+<span class="nc" id="L621">        		Match match = i.next();</span>
+<span class="nc" id="L622">        		setLabelFor(match);</span>
+<span class="nc" id="L623">        		matches.add(match);</span>
+<span class="nc" id="L624">        	}</span>
+
+<span class="nc" id="L626">            setListDataFrom(cpd.getMatches());</span>
+<span class="nc" id="L627">            String report = new SimpleRenderer().render(cpd.getMatches());</span>
+<span class="nc bnc" id="L628" title="All 2 branches missed.">            if (report.length() == 0) {</span>
+<span class="nc" id="L629">                JOptionPane.showMessageDialog(frame,</span>
+                        &quot;Done. Couldn't find any duplicates longer than &quot; + minimumLengthField.getText() + &quot; tokens&quot;);
+            } else {
+<span class="nc" id="L632">                resultsTextArea.setText(report);</span>
+            }
+<span class="nc" id="L634">        } catch (IOException t) {</span>
+<span class="nc" id="L635">            t.printStackTrace();</span>
+<span class="nc" id="L636">            JOptionPane.showMessageDialog(frame, &quot;Halted due to &quot; + t.getClass().getName() + &quot;; &quot; + t.getMessage());</span>
+<span class="nc" id="L637">        } catch (RuntimeException t) {</span>
+<span class="nc" id="L638">            t.printStackTrace();</span>
+<span class="nc" id="L639">            JOptionPane.showMessageDialog(frame, &quot;Halted due to &quot; + t.getClass().getName() + &quot;; &quot; + t.getMessage());</span>
+<span class="nc" id="L640">        }</span>
+<span class="nc" id="L641">        setProgressControls(false);</span>
+<span class="nc" id="L642">    }</span>
+
+	private Timer createTimer() {
+
+<span class="nc" id="L646">		final long start = System.currentTimeMillis();</span>
+
+<span class="nc" id="L648">		Timer t = new Timer(1000, new ActionListener() {</span>
+		    public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L650">		        long now = System.currentTimeMillis();</span>
+<span class="nc" id="L651">		        long elapsedMillis = now - start;</span>
+<span class="nc" id="L652">		        long elapsedSeconds = elapsedMillis / 1000;</span>
+<span class="nc" id="L653">		        long minutes = (long) Math.floor(elapsedSeconds / 60);</span>
+<span class="nc" id="L654">		        long seconds = elapsedSeconds - (minutes * 60);</span>
+<span class="nc" id="L655">		        timeField.setText(formatTime(minutes, seconds));</span>
+<span class="nc" id="L656">		    }</span>
+		});
+<span class="nc" id="L658">		return t;</span>
+	}
+
+	private static String formatTime(long minutes, long seconds) {
+
+<span class="nc" id="L663">		StringBuilder sb = new StringBuilder(5);</span>
+<span class="nc bnc" id="L664" title="All 2 branches missed.">		if (minutes &lt; 10) { sb.append('0'); }</span>
+<span class="nc" id="L665">		sb.append(minutes).append(':');</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">		if (seconds &lt; 10) { sb.append('0'); }</span>
+<span class="nc" id="L667">		sb.append(seconds);</span>
+<span class="nc" id="L668">		return sb.toString();</span>
+	}
+
+    private interface SortingTableModel&lt;E&gt; extends TableModel {
+    	int sortColumn();
+    	void sortColumn(int column);
+    	boolean sortDescending();
+    	void sortDescending(boolean flag);
+    	void sort(Comparator&lt;E&gt; comparator);
+    }
+
+    private TableModel tableModelFrom(final List&lt;Match&gt; items) {
+
+<span class="nc" id="L681">    	TableModel model = new SortingTableModel&lt;Match&gt;() {</span>
+
+    		private int sortColumn;
+    		private boolean sortDescending;
+
+    		 public Object getValueAt(int rowIndex, int columnIndex) {
+<span class="nc" id="L687">    			Match match = items.get(rowIndex);</span>
+<span class="nc bnc" id="L688" title="All 5 branches missed.">    			switch (columnIndex) {</span>
+<span class="nc" id="L689">    				case 0: return match.getLabel();</span>
+<span class="nc" id="L690">    				case 2: return Integer.toString(match.getLineCount());</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">    				case 1: return match.getMarkCount() &gt; 2 ? Integer.toString(match.getMarkCount()) : &quot;&quot;;</span>
+<span class="nc" id="L692">    				case 99: return match;</span>
+<span class="nc" id="L693">    				default: return &quot;&quot;;</span>
+    				}
+    		 	}
+<span class="nc" id="L696">			public int getColumnCount() { return matchColumns.length;	}</span>
+<span class="nc" id="L697">			public int getRowCount() {	return items.size(); }</span>
+<span class="nc" id="L698">			public boolean isCellEditable(int rowIndex, int columnIndex) {	return false;	}</span>
+<span class="nc" id="L699">			public Class&lt;?&gt; getColumnClass(int columnIndex) { return Object.class;	}</span>
+<span class="nc" id="L700">			public void setValueAt(Object aValue, int rowIndex, int columnIndex) {	}</span>
+<span class="nc" id="L701">			public String getColumnName(int i) {	return matchColumns[i].label();	}</span>
+<span class="nc" id="L702">			public void addTableModelListener(TableModelListener l) { }</span>
+<span class="nc" id="L703">			public void removeTableModelListener(TableModelListener l) { }</span>
+<span class="nc" id="L704">			public int sortColumn() { return sortColumn; };</span>
+<span class="nc" id="L705">			public void sortColumn(int column) { sortColumn = column; };</span>
+<span class="nc" id="L706">			public boolean sortDescending() { return sortDescending; };</span>
+<span class="nc" id="L707">			public void sortDescending(boolean flag) { sortDescending = flag; };</span>
+			public void sort(Comparator&lt;Match&gt; comparator) {
+<span class="nc" id="L709">				Collections.sort(items, comparator);</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">				if (sortDescending) {</span>
+<span class="nc" id="L711">				    Collections.reverse(items);</span>
+				}
+<span class="nc" id="L713">				}</span>
+    		};
+
+<span class="nc" id="L716">    	return model;</span>
+    }
+
+    private void sortOnColumn(int columnIndex) {
+<span class="nc" id="L720">    	Comparator&lt;Match&gt; comparator = matchColumns[columnIndex].sorter();</span>
+<span class="nc" id="L721">    	SortingTableModel&lt;Match&gt; model = (SortingTableModel&lt;Match&gt;)resultsTable.getModel();</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">    	if (model.sortColumn() == columnIndex) {</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">    		model.sortDescending(!model.sortDescending());</span>
+    	}
+<span class="nc" id="L725">    	model.sortColumn(columnIndex);</span>
+<span class="nc" id="L726">    	model.sort(comparator);</span>
+
+<span class="nc" id="L728">    	resultsTable.getSelectionModel().clearSelection();</span>
+<span class="nc" id="L729">    	resultsTable.repaint();</span>
+<span class="nc" id="L730">    }</span>
+
+    private void setListDataFrom(Iterator iter) {
+
+<span class="nc" id="L734">    	resultsTable.setModel(tableModelFrom(matches));</span>
+
+<span class="nc" id="L736">    	TableColumnModel colModel = resultsTable.getColumnModel();</span>
+    	TableColumn column;
+    	int width;
+
+<span class="nc bnc" id="L740" title="All 2 branches missed.">    	for (int i=0; i&lt;matchColumns.length; i++) {</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">    		if (matchColumns[i].width() &gt; 0) {</span>
+<span class="nc" id="L742">    			column = colModel.getColumn(i);</span>
+<span class="nc" id="L743">    			width = matchColumns[i].width();</span>
+<span class="nc" id="L744">    			column.setPreferredWidth(width);</span>
+<span class="nc" id="L745">    			column.setMinWidth(width);</span>
+<span class="nc" id="L746">    			column.setMaxWidth(width);</span>
+    		}
+    	}
+<span class="nc" id="L749">    }</span>
+
+    // CPDListener
+    public void phaseUpdate(int phase) {
+<span class="nc" id="L753">        phaseLabel.setText(getPhaseText(phase));</span>
+<span class="nc" id="L754">    }</span>
+
+    public String getPhaseText(int phase) {
+<span class="nc bnc" id="L757" title="All 6 branches missed.">        switch (phase) {</span>
+            case CPDListener.INIT:
+<span class="nc" id="L759">                return &quot;Initializing&quot;;</span>
+            case CPDListener.HASH:
+<span class="nc" id="L761">                return &quot;Hashing&quot;;</span>
+            case CPDListener.MATCH:
+<span class="nc" id="L763">                return &quot;Matching&quot;;</span>
+            case CPDListener.GROUPING:
+<span class="nc" id="L765">                return &quot;Grouping&quot;;</span>
+            case CPDListener.DONE:
+<span class="nc" id="L767">                return &quot;Done&quot;;</span>
+            default :
+<span class="nc" id="L769">                return &quot;Unknown&quot;;</span>
+        }
+    }
+
+    public void addedFile(int fileCount, File file) {
+<span class="nc" id="L774">        tokenizingFilesBar.setMaximum(fileCount);</span>
+<span class="nc" id="L775">        tokenizingFilesBar.setValue(tokenizingFilesBar.getValue() + 1);</span>
+<span class="nc" id="L776">    }</span>
+    // CPDListener
+
+
+    public static void main(String[] args) {
+    	//this should prevent the disk not found popup
+        // System.setSecurityManager(null);
+<span class="nc" id="L783">        new GUI();</span>
+<span class="nc" id="L784">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

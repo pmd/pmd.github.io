@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractCompoundFilter.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.filter</a> &gt; <span class="el_source">AbstractCompoundFilter.java</span></div><h1>AbstractCompoundFilter.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util.filter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A base class for Filters which implements behavior using a List of other
+ * Filters.
+ * 
+ * @param &lt;T&gt;
+ *            The underlying type on which the filter applies.
+ */
+public abstract class AbstractCompoundFilter&lt;T&gt; implements Filter&lt;T&gt; {
+
+	protected List&lt;Filter&lt;T&gt;&gt; filters;
+
+<span class="fc" id="L20">	public AbstractCompoundFilter() {</span>
+<span class="fc" id="L21">		filters = new ArrayList&lt;Filter&lt;T&gt;&gt;(2);</span>
+<span class="fc" id="L22">	}</span>
+
+<span class="fc" id="L24">	public AbstractCompoundFilter(Filter&lt;T&gt;... filters) {</span>
+<span class="fc" id="L25">		this.filters = new ArrayList&lt;Filter&lt;T&gt;&gt;(filters.length);</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">		for (Filter&lt;T&gt; filter : filters) {</span>
+<span class="fc" id="L27">			this.filters.add(filter);</span>
+		}
+<span class="fc" id="L29">	}</span>
+
+	public List&lt;Filter&lt;T&gt;&gt; getFilters() {
+<span class="nc" id="L32">		return filters;</span>
+	}
+
+	public void setFilters(List&lt;Filter&lt;T&gt;&gt; filters) {
+<span class="nc" id="L36">		this.filters = filters;</span>
+<span class="nc" id="L37">	}</span>
+
+	public void addFilter(Filter&lt;T&gt; filter) {
+<span class="fc" id="L40">		filters.add(filter);</span>
+<span class="fc" id="L41">	}</span>
+
+	protected abstract String getOperator();
+
+	public String toString() {
+		
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		if (filters.isEmpty()) { return &quot;()&quot;; }</span>
+		
+<span class="nc" id="L49">		StringBuilder builder = new StringBuilder();</span>
+<span class="nc" id="L50">		builder.append('(').append(filters.get(0));</span>
+		
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		for (int i = 1; i &lt; filters.size(); i++) {</span>
+<span class="nc" id="L53">			builder.append(' ').append(getOperator()).append(' ');</span>
+<span class="nc" id="L54">			builder.append(filters.get(i));</span>
+		}
+<span class="nc" id="L56">		builder.append(')');</span>
+<span class="nc" id="L57">		return builder.toString();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

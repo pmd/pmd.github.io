@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">AbstractRenderer.java</span></div><h1>AbstractRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.renderers;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import net.sourceforge.pmd.AbstractPropertySource;
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * Abstract base class for {@link Renderer} implementations.
+ */
+public abstract class AbstractRenderer extends AbstractPropertySource implements Renderer {
+
+    protected String name;
+    protected String description;
+
+<span class="fc" id="L24">    @Deprecated</span>
+    // use PropertySource.getPropertyDescriptors() instead
+    protected Map&lt;String, String&gt; propertyDefinitions = new LinkedHashMap&lt;String, String&gt;();
+<span class="fc" id="L27">    protected boolean showSuppressedViolations = true;</span>
+    protected Writer writer;
+
+<span class="fc" id="L30">    public AbstractRenderer(String name, String description) {</span>
+<span class="fc" id="L31">        this.name = name;</span>
+<span class="fc" id="L32">        this.description = description;</span>
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getName() {
+<span class="fc" id="L39">        return name;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setName(String name) {
+<span class="fc" id="L46">        this.name = name;</span>
+<span class="fc" id="L47">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getDescription() {
+<span class="nc" id="L53">        return description;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setDescription(String description) {
+<span class="fc" id="L60">        this.description = description;</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Deprecated
+    // use PropertySource.getPropertyDescriptors() instead
+    public Map&lt;String, String&gt; getPropertyDefinitions() {
+<span class="nc" id="L69">        return propertyDefinitions;</span>
+    }
+
+    /**
+     * Define a property.
+     * 
+     * @param name The property name.
+     * @param description The description of the property.
+     */
+    @Deprecated
+    // please use AbstractPropertySource.definePropertyDescriptor() directly
+    // instead
+    protected void defineProperty(String name, String description) {
+<span class="nc" id="L82">        StringProperty propertyDescriptor = new StringProperty(name, description, null, 0);</span>
+<span class="nc" id="L83">        definePropertyDescriptor(propertyDescriptor);</span>
+<span class="nc" id="L84">        propertyDefinitions.put(name, description);</span>
+<span class="nc" id="L85">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isShowSuppressedViolations() {
+<span class="fc" id="L91">        return showSuppressedViolations;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setShowSuppressedViolations(boolean showSuppressedViolations) {
+<span class="fc" id="L98">        this.showSuppressedViolations = showSuppressedViolations;</span>
+<span class="fc" id="L99">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setWriter(Writer writer) {
+<span class="fc" id="L105">        this.writer = writer;</span>
+<span class="fc" id="L106">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public Writer getWriter() {
+<span class="fc" id="L112">        return writer;</span>
+    }
+
+    public void flush() {
+        try {
+<span class="nc" id="L117">            this.writer.flush();</span>
+<span class="nc" id="L118">        } catch (IOException e) {</span>
+<span class="nc" id="L119">            throw new IllegalStateException(e);</span>
+        } finally {
+<span class="nc" id="L121">            IOUtils.closeQuietly(writer);</span>
+<span class="nc" id="L122">        }</span>
+<span class="nc" id="L123">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

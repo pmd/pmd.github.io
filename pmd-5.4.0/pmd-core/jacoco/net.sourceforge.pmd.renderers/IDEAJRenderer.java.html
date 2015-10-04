@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>IDEAJRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">IDEAJRenderer.java</span></div><h1>IDEAJRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.renderers;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+
+/**
+ * Renderer for IntelliJ IDEA integration.
+ */
+public class IDEAJRenderer extends AbstractIncrementingRenderer {
+
+	private String classAndMethodName;
+	private String fileName;
+
+	public static final String NAME = &quot;ideaj&quot;;
+
+<span class="fc" id="L27">	public static final StringProperty FILE_NAME = new StringProperty(&quot;fileName&quot;, &quot;File name.&quot;, &quot;&quot;, 0);</span>
+<span class="fc" id="L28">	public static final StringProperty SOURCE_PATH = new StringProperty(&quot;sourcePath&quot;, &quot;Source path.&quot;, &quot;&quot;, 1);</span>
+<span class="fc" id="L29">	public static final StringProperty CLASS_AND_METHOD_NAME = new StringProperty(&quot;classAndMethodName&quot;, &quot;Class and Method name, pass '.method' when processing a directory.&quot;, &quot;&quot;, 2);</span>
+
+<span class="fc" id="L31">	private static final String FILE_SEPARATOR = System.getProperty(&quot;file.separator&quot;);</span>
+<span class="fc" id="L32">	private static final String PATH_SEPARATOR = System.getProperty(&quot;path.separator&quot;);</span>
+
+	public IDEAJRenderer() {
+<span class="fc" id="L35">		super(NAME, &quot;IntelliJ IDEA integration.&quot;);</span>
+<span class="fc" id="L36">		definePropertyDescriptor(FILE_NAME);</span>
+<span class="fc" id="L37">		definePropertyDescriptor(SOURCE_PATH);</span>
+<span class="fc" id="L38">		definePropertyDescriptor(CLASS_AND_METHOD_NAME);</span>
+<span class="fc" id="L39">	}</span>
+
+<span class="nc" id="L41">	 public String defaultFileExtension() { return &quot;txt&quot;; }</span>
+	 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void renderFileViolations(Iterator&lt;RuleViolation&gt; violations) throws IOException {
+<span class="fc" id="L48">	    classAndMethodName = getProperty(CLASS_AND_METHOD_NAME);</span>
+<span class="fc" id="L49">	    fileName = getProperty(FILE_NAME);</span>
+
+<span class="fc" id="L51">		Writer writer = getWriter();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">		if (&quot;.method&quot;.equals(classAndMethodName)) {</span>
+			// working on a directory tree
+<span class="nc" id="L54">			renderDirectoy(writer, violations);</span>
+		} else {
+			// working on one file
+<span class="fc" id="L57">			renderFile(writer, violations);</span>
+		}
+<span class="fc" id="L59">	}</span>
+
+	private void renderDirectoy(Writer writer, Iterator&lt;RuleViolation&gt; violations) throws IOException {
+<span class="nc" id="L62">		SourcePath sourcePath = new SourcePath(getProperty(SOURCE_PATH));</span>
+<span class="nc" id="L63">		StringBuilder buf = new StringBuilder();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		while (violations.hasNext()) {</span>
+<span class="nc" id="L65">			buf.setLength(0);</span>
+<span class="nc" id="L66">			RuleViolation rv = violations.next();</span>
+<span class="nc" id="L67">			buf.append(rv.getDescription() + PMD.EOL);</span>
+<span class="nc" id="L68">			buf.append(&quot; at &quot;).append(</span>
+					getFullyQualifiedClassName(rv.getFilename(), sourcePath)).append(&quot;.method(&quot;);
+<span class="nc" id="L70">			buf.append(getSimpleFileName(rv.getFilename())).append(':')</span>
+					.append(rv.getBeginLine()).append(')').append(PMD.EOL);
+<span class="nc" id="L72">			writer.write(buf.toString());</span>
+<span class="nc" id="L73">		}</span>
+<span class="nc" id="L74">	}</span>
+
+	private void renderFile(Writer writer, Iterator&lt;RuleViolation&gt; violations) throws IOException {
+<span class="fc" id="L77">		StringBuilder buf = new StringBuilder();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		while (violations.hasNext()) {</span>
+<span class="fc" id="L79">			buf.setLength(0);</span>
+<span class="fc" id="L80">			RuleViolation rv = violations.next();</span>
+<span class="fc" id="L81">			buf.append(rv.getDescription()).append(PMD.EOL);</span>
+<span class="fc" id="L82">			buf.append(&quot; at &quot;).append(classAndMethodName).append('(')</span>
+					.append(fileName).append(':')
+					.append(rv.getBeginLine()).append(')').append(PMD.EOL);
+<span class="fc" id="L85">			writer.write(buf.toString());</span>
+<span class="fc" id="L86">		}</span>
+<span class="fc" id="L87">	}</span>
+
+	private String getFullyQualifiedClassName(String fileName, SourcePath sourcePath) {
+<span class="nc" id="L90">		String classNameWithSlashes = sourcePath.clipPath(fileName);</span>
+<span class="nc" id="L91">		String className = classNameWithSlashes.replace(FILE_SEPARATOR.charAt(0), '.');</span>
+<span class="nc" id="L92">		return className.substring(0, className.length() - 5);</span>
+	}
+
+	private String getSimpleFileName(String fileName) {
+<span class="nc" id="L96">		return fileName.substring(fileName.lastIndexOf(FILE_SEPARATOR) + 1);</span>
+	}
+
+	private static class SourcePath {
+
+<span class="nc" id="L101">		private Set&lt;String&gt; paths = new HashSet&lt;String&gt;();</span>
+
+<span class="nc" id="L103">		public SourcePath(String sourcePathString) {</span>
+<span class="nc" id="L104">			for (StringTokenizer st = new StringTokenizer(sourcePathString,</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">					PATH_SEPARATOR); st.hasMoreTokens();) {</span>
+<span class="nc" id="L106">				paths.add(st.nextToken());</span>
+			}
+<span class="nc" id="L108">		}</span>
+
+		public String clipPath(String fullFilename) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			for (String path : paths) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">				if (fullFilename.startsWith(path)) {</span>
+<span class="nc" id="L113">					return fullFilename.substring(path.length() + 1);</span>
+				}
+<span class="nc" id="L115">			}</span>
+<span class="nc" id="L116">			throw new RuntimeException(&quot;Couldn't find src path for &quot; + fullFilename);</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

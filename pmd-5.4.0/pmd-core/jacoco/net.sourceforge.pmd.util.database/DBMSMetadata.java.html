@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DBMSMetadata.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.database</a> &gt; <span class="el_source">DBMSMetadata.java</span></div><h1>DBMSMetadata.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util.database;
+
+import java.net.MalformedURLException;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Wrap JDBC connection for use by PMD: {@link DBURI} parameters specify the source code to
+ * be passed to PMD.
+ * 
+ * @author sturton
+ */
+public class DBMSMetadata
+{
+
+  /**
+   * Classname utility string for use in logging. 
+   */
+<span class="nc" id="L35">  private final static String CLASS_NAME = DBMSMetadata.class.getCanonicalName();</span>
+
+  /**
+   * Local logger.
+   */
+<span class="nc" id="L40">  private final static Logger LOGGER = Logger.getLogger(CLASS_NAME); </span>
+
+  /**
+   * Optional DBType property specifying a query to fetch the Source Objects from the database.
+   * 
+   * &lt;p&gt;If the DBType lacks this property, then the standard DatabaseMetaData.getProcedures method is used.
+   * &lt;/p&gt;
+   */
+  private final static String GET_SOURCE_OBJECTS_STATEMENT = &quot;getSourceObjectsStatement&quot; ;
+
+  /**
+   * Essential DBType property specifying a CallableStatement to retrieve the Source Object's code from the database.
+   * 
+   * &lt;p&gt;&lt;b&gt;If the DBType lacks this property, there is no DatabaseMetaData method to fallback to&lt;/b&gt;.
+   * &lt;/p&gt;
+   */
+  private final static String GET_SOURCE_CODE_STATEMENT = &quot;getSourceCodeStatement&quot; ;
+
+  /**
+   * DBURI
+   */
+<span class="nc" id="L61">  protected DBURI dburi = null;</span>
+
+  /**
+   * Connection management 
+   */
+<span class="nc" id="L66">  protected Connection connection = null;</span>
+
+  /**
+   * Procedural statement to return list of source code objects.  
+   */
+<span class="nc" id="L71">  protected String  returnSourceCodeObjectsStatement = null ;</span>
+
+  /**
+   * Procedural statement to return source code.  
+   */
+<span class="nc" id="L76">  protected String  returnSourceCodeStatement = null ;</span>
+
+  /**
+   * CallableStatement to return source code.  
+   */
+<span class="nc" id="L81">  protected CallableStatement callableStatement = null;</span>
+
+  /**
+   * {@link java.sql.Types} value representing the type returned by {@link callableStatement}
+   * 
+   * &lt;b&gt;Currently only java.sql.Types.String and java.sql.Types.Clob are supported&lt;/b&gt;
+   */
+<span class="nc" id="L88">  protected int returnType = java.sql.Types.CLOB ;</span>
+
+  /**
+   * Return JDBC Connection for direct JDBC access to the specified database.
+   * 
+   * @return I=JDBC Connection
+   * @throws SQLException 
+   */
+  public Connection getConnection() throws SQLException
+<span class="nc" id="L97">  { return connection; }</span>
+
+  /* constructors */
+  /**
+   * Minimal constructor 
+   * @param c JDBC Connection 
+   * @throws SQLException 
+   */
+  public DBMSMetadata(Connection c) throws SQLException
+<span class="nc" id="L106">  { connection = c; }</span>
+
+  /**
+   * Define database connection and source code to retrieve with explicit database username and password.
+   * 
+   * @param user Database username 
+   * @param password Database password 
+   * @param dbURI {@link  DBURI } containing JDBC connection plus parameters to specify source code.
+   * @throws SQLException on failing to create JDBC connection
+   * @throws MalformedURLException on attempting to connect with malformed JDBC URL
+   * @throws ClassNotFoundException on failing to locate the JDBC driver class.
+   */
+  public DBMSMetadata(String user, String password, DBURI dbURI) throws SQLException, MalformedURLException, ClassNotFoundException
+<span class="nc" id="L119">  { </span>
+<span class="nc" id="L120">    String urlString = init(dbURI);</span>
+
+<span class="nc" id="L122">    Properties mergedProperties = dbURI.getDbType().getProperties() ;</span>
+<span class="nc" id="L123">    Map&lt;String,String&gt; dbURIParameters = dbURI.getParameters();</span>
+<span class="nc" id="L124">    mergedProperties.putAll(dbURIParameters) ;</span>
+<span class="nc" id="L125">    mergedProperties.put(&quot;user&quot;, user) ;</span>
+<span class="nc" id="L126">    mergedProperties.put(&quot;password&quot;, password) ;</span>
+
+<span class="nc" id="L128">    connection = DriverManager.getConnection(urlString, mergedProperties );</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L130">        LOGGER.fine(&quot;we have a connection=&quot;+connection);</span>
+    }
+<span class="nc" id="L132">  } </span>
+
+
+  /**
+   * Define database connection and source code to retrieve with database properties.
+   * 
+   * @param properties database settings such as database username, password 
+   * @param dbURI {@link  DBURI } containing JDBC connection plus parameters to specify source code.
+   * @throws SQLException on failing to create JDBC connection
+   * @throws MalformedURLException on attempting to connect with malformed JDBC URL
+   * @throws ClassNotFoundException on failing to locate the JDBC driver class.
+   */
+  public DBMSMetadata(Properties properties, DBURI dbURI) throws SQLException, MalformedURLException, ClassNotFoundException
+<span class="nc" id="L145">  { </span>
+<span class="nc" id="L146">    String urlString = init(dbURI);</span>
+
+<span class="nc" id="L148">    Properties mergedProperties = dbURI.getDbType().getProperties();</span>
+<span class="nc" id="L149">    Map&lt;String,String&gt; dbURIParameters = dbURI.getParameters();</span>
+<span class="nc" id="L150">    mergedProperties.putAll(dbURIParameters) ;</span>
+<span class="nc" id="L151">    mergedProperties.putAll(properties) ;</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L154">        LOGGER.fine(&quot;Retrieving connection for urlString&quot;+urlString);</span>
+    }
+<span class="nc" id="L156">    connection = DriverManager.getConnection(urlString ,mergedProperties);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L158">        LOGGER.fine(&quot;Secured Connection for DBURI&quot;+dbURI);</span>
+    }
+<span class="nc" id="L160">  } </span>
+
+  /**
+   * Define database connection and source code to retrieve.
+   * 
+   * &lt;p&gt;This constructor is reliant on database username and password embedded in the JDBC URL 
+   * or defaulted from the {@link DBURI}'s {@link DriverType}.
+   * 
+   * @param user Database username 
+   * @param password Database password 
+   * @param dbURI {@link  DBURI } containing JDBC connection plus parameters to specify source code.
+   * @throws SQLException on failing to create JDBC connection
+   * @throws ClassNotFoundException on failing to locate the JDBC driver class.
+   */
+  public DBMSMetadata(DBURI dbURI) throws SQLException, ClassNotFoundException
+<span class="nc" id="L175">  { </span>
+<span class="nc" id="L176">    String urlString = init(dbURI);</span>
+
+<span class="nc" id="L178">    Properties dbURIProperties = dbURI.getDbType().getProperties();</span>
+<span class="nc" id="L179">    Map&lt;String,String&gt; dbURIParameters = dbURI.getParameters();</span>
+
+    /*Overwrite any DBType properties with DBURI parameters
+     * allowing JDBC connection properties to be inherited from DBType
+     * or passed as DBURI parameters 
+     */
+<span class="nc" id="L185">    dbURIProperties.putAll(dbURIParameters) ;</span>
+
+<span class="nc" id="L187">    connection = DriverManager.getConnection(urlString, dbURIProperties);</span>
+<span class="nc" id="L188">  }</span>
+
+  private String init(DBURI dbURI) throws ClassNotFoundException {
+<span class="nc" id="L191">      this.dburi = dbURI;</span>
+<span class="nc" id="L192">      this.returnSourceCodeObjectsStatement = dbURI.getDbType().getProperties().getProperty(GET_SOURCE_OBJECTS_STATEMENT);</span>
+<span class="nc" id="L193">      this.returnSourceCodeStatement = dbURI.getDbType().getProperties().getProperty(GET_SOURCE_CODE_STATEMENT);</span>
+<span class="nc" id="L194">      this.returnType =  dbURI.getSourceCodeType();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">      if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L196">          LOGGER.fine(&quot;returnSourceCodeStatement=&quot;+returnSourceCodeStatement +&quot;, returnType=&quot;+returnType);</span>
+      }
+
+<span class="nc" id="L199">      String driverClass = dbURI.getDriverClass();</span>
+<span class="nc" id="L200">      String urlString = dbURI.getURL().toString();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">      if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L202">          LOGGER.fine(&quot;driverClass=&quot;+driverClass+&quot;, urlString=&quot;+urlString);</span>
+      }
+<span class="nc" id="L204">      Class.forName(driverClass);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">      if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L206">          LOGGER.fine(&quot;Located class for driverClass=&quot;+driverClass);</span>
+      }
+<span class="nc" id="L208">      return urlString;</span>
+  }
+
+ /**
+   * Return source code text from the database.
+   * 
+   * @param source object 
+   * @return source code
+   * @throws SQLException 
+   */
+  public java.io.Reader getSourceCode (SourceObject sourceObject )
+  throws SQLException
+  {
+<span class="nc" id="L221">    return getSourceCode(</span>
+            sourceObject.getType(), sourceObject.getName(), sourceObject.getSchema());
+  
+  }
+
+  /**
+   * return source code text
+   * 
+   * @param objectType 
+   * @param name Source Code name 
+   * @param schema Owner of the code 
+   * @return Source code text.
+   * @throws SQLException on failing to retrieve the source Code text
+   */
+  public java.io.Reader getSourceCode (
+    String objectType,
+    String name,
+    String schema
+    )
+  throws SQLException
+  {
+    Object result;
+
+    /* Only define callableStatement once and reuse it for subsequent calls to getSourceCode()*/ 
+<span class="nc bnc" id="L245" title="All 2 branches missed.">    if (null == callableStatement)</span>
+    {
+<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L248">            LOGGER.finest(&quot;getSourceCode: returnSourceCodeStatement=\&quot;&quot;+returnSourceCodeStatement+&quot;\&quot;&quot;);</span>
+<span class="nc" id="L249">            LOGGER.finest(&quot;getSourceCode: returnType=\&quot;&quot;+returnType+&quot;\&quot;&quot;);</span>
+        }
+<span class="nc" id="L251">	    callableStatement = getConnection().prepareCall(returnSourceCodeStatement);</span>
+<span class="nc" id="L252">	    callableStatement.registerOutParameter(1, returnType);</span>
+    }
+
+    // set IN parameters
+<span class="nc" id="L256">    callableStatement.setString(2, objectType);</span>
+<span class="nc" id="L257">    callableStatement.setString(3, name);</span>
+<span class="nc" id="L258">    callableStatement.setString(4, schema);</span>
+    //
+    // execute statement
+<span class="nc" id="L261">    callableStatement.executeUpdate();</span>
+    // retrieve OUT parameters
+<span class="nc" id="L263">    result = callableStatement.getObject(1);</span>
+
+<span class="nc bnc" id="L265" title="All 2 branches missed.">    return (java.sql.Types.CLOB == returnType) </span>
+	    ? ((Clob) result).getCharacterStream()
+	    : new java.io.StringReader( result.toString() )
+	    ;
+  }
+
+  /**
+   * Return all source code objects associated with any associated DBURI.
+   * @return 
+   */
+  public List&lt;SourceObject&gt; getSourceObjectList ()
+  {
+
+<span class="nc bnc" id="L278" title="All 2 branches missed.">    if (null ==  dburi)</span>
+    {
+<span class="nc" id="L280">      LOGGER.warning(&quot;No dbUri defined - no further action possible&quot;);</span>
+<span class="nc" id="L281">      return null;</span>
+    }
+    else
+    {
+<span class="nc" id="L285">      return getSourceObjectList(</span>
+                                  dburi.getLanguagesList()
+                                  ,dburi.getSchemasList()
+                                  ,dburi.getSourceCodeTypesList()
+                                  ,dburi.getSourceCodeNamesList()
+                                );
+    }
+
+  }
+
+  /**
+   * Return all source code objects associated with the specified languages, schemas, source code types and source code names.
+   * 
+   * &lt;p&gt;Each parameter may be null and the appropriate field from any related DBURI is assigned, defaulting to the normal SQL wildcard expression (&quot;%&quot;).
+   * &lt;/.&gt;
+   * @param languages Optional list of languages to search for   
+   * @param schemas  Optional list of schemas to search for   
+   * @param sourceCodeTypes  Optional list of source code types  to search for   
+   * @param sourceCodeNames  Optional list of source code names to search for    
+   */
+  public List&lt;SourceObject&gt; getSourceObjectList (List&lt;String&gt; languages, List&lt;String&gt; schemas, List&lt;String&gt; sourceCodeTypes, List&lt;String&gt; sourceCodeNames )
+  {
+
+<span class="nc" id="L308">    ResultSet sourceCodeObjects =  null ;</span>
+<span class="nc" id="L309">    List&lt;SourceObject&gt; sourceObjectsList = new ArrayList&lt;SourceObject&gt;() ;</span>
+                                                                  
+<span class="nc" id="L311">    List&lt;String&gt; searchLanguages  =  languages ;</span>
+<span class="nc" id="L312">    List&lt;String&gt; searchSchemas  =  schemas ;</span>
+<span class="nc" id="L313">    List&lt;String&gt; searchSourceCodeTypes  =  sourceCodeTypes ;</span>
+<span class="nc" id="L314">    List&lt;String&gt; searchSourceCodeNames  =  sourceCodeNames ;</span>
+<span class="nc" id="L315">    List&lt;String&gt; wildcardList  =  Arrays.asList(new String[] {&quot;%&quot;} );</span>
+
+    /*
+     * Assign each search list to the first 
+     * 
+     * explicit parameter
+     * dburi field
+     * wildcard list 
+     * 
+     */
+<span class="nc bnc" id="L325" title="All 2 branches missed.">    if( null == searchLanguages ) </span>
+    {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">      List dbURIList = (null == dburi) ? null :  dburi.getLanguagesList() ;</span>
+<span class="nc bnc" id="L328" title="All 4 branches missed.">      if (null == dbURIList || dbURIList.isEmpty())</span>
+      {
+<span class="nc" id="L330">        searchLanguages = wildcardList;</span>
+      }
+      else
+      {
+<span class="nc" id="L334">        searchLanguages = dbURIList;</span>
+      }
+    }
+
+<span class="nc bnc" id="L338" title="All 2 branches missed.">    if( null == searchSchemas ) </span>
+    {
+<span class="nc bnc" id="L340" title="All 2 branches missed.">      List dbURIList = (null == dburi) ? null :  dburi.getSchemasList() ;</span>
+<span class="nc bnc" id="L341" title="All 4 branches missed.">      if (null == dbURIList || dbURIList.isEmpty())</span>
+      {
+<span class="nc" id="L343">        searchSchemas = wildcardList;</span>
+      }
+      else
+      {
+<span class="nc" id="L347">        searchSchemas = dbURIList;</span>
+      }
+    }
+
+<span class="nc bnc" id="L351" title="All 2 branches missed.">    if( null == searchSourceCodeTypes ) </span>
+    {
+<span class="nc bnc" id="L353" title="All 2 branches missed.">      List dbURIList = (null == dburi) ? null :  dburi.getSourceCodeTypesList() ;</span>
+<span class="nc bnc" id="L354" title="All 4 branches missed.">      if (null == dbURIList || dbURIList.isEmpty())</span>
+      {
+<span class="nc" id="L356">        searchSourceCodeTypes = wildcardList;</span>
+      }
+      else
+      {
+<span class="nc" id="L360">        searchSourceCodeTypes = dbURIList;</span>
+      }
+    }
+
+<span class="nc bnc" id="L364" title="All 2 branches missed.">    if( null == searchSourceCodeNames ) </span>
+    {
+<span class="nc bnc" id="L366" title="All 2 branches missed.">      List dbURIList = (null == dburi) ? null :  dburi.getSourceCodeNamesList() ;</span>
+<span class="nc bnc" id="L367" title="All 4 branches missed.">      if (null == dbURIList || dbURIList.isEmpty())</span>
+      {
+<span class="nc" id="L369">        searchSourceCodeNames = wildcardList;</span>
+      }
+      else
+      {
+<span class="nc" id="L373">        searchSourceCodeNames = dbURIList;</span>
+      }
+    }
+
+    try
+    {
+
+<span class="nc bnc" id="L380" title="All 2 branches missed.">      if (null !=  returnSourceCodeObjectsStatement)</span>
+      {
+<span class="nc" id="L382">        LOGGER.log(Level.FINE, &quot;Have bespoke returnSourceCodeObjectsStatement from DBURI: \&quot;{0}\&quot;&quot;</span>
+                             , returnSourceCodeObjectsStatement
+                  );
+<span class="nc" id="L385">        PreparedStatement sourceCodeObjectsStatement = getConnection().prepareStatement(returnSourceCodeObjectsStatement);</span>
+
+<span class="nc bnc" id="L387" title="All 2 branches missed.">        for (String language : searchLanguages )</span>
+        {
+<span class="nc bnc" id="L389" title="All 2 branches missed.">          for (String schema : searchSchemas )</span>
+          {
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            for (String sourceCodeType : searchSourceCodeTypes )</span>
+            {
+<span class="nc bnc" id="L393" title="All 2 branches missed.">              for (String sourceCodeName : searchSourceCodeNames )</span>
+              {
+<span class="nc" id="L395">                sourceCodeObjectsStatement.setString(1, language );</span>
+<span class="nc" id="L396">                sourceCodeObjectsStatement.setString(2, schema );</span>
+<span class="nc" id="L397">                sourceCodeObjectsStatement.setString(3, sourceCodeType );</span>
+<span class="nc" id="L398">                sourceCodeObjectsStatement.setString(4, sourceCodeName );</span>
+<span class="nc" id="L399">                LOGGER.finer(String.format(&quot;searching for language=\&quot;%s\&quot;, schema=\&quot;%s\&quot;, sourceCodeType=\&quot;%s\&quot;, sourceCodeNames=\&quot;%s\&quot; &quot;</span>
+                            ,language 
+                            ,schema 
+                            ,sourceCodeType 
+                            ,sourceCodeName 
+                            )
+                          );
+
+                /*
+                 * public ResultSet getProcedures(String catalog
+                 *                               , String schemaPattern
+                 *                               , String procedureNamePattern) throws SQLException
+                 */
+
+<span class="nc" id="L413">                sourceCodeObjects = sourceCodeObjectsStatement.executeQuery();</span>
+
+                /* From Javadoc ....
+                 * Each procedure description has the the following columns:
+                      PROCEDURE_CAT String =&gt; procedure catalog (may be null)
+                      PROCEDURE_SCHEM String =&gt; procedure schema (may be null)
+                      PROCEDURE_NAME String =&gt; procedure name
+                      reserved for future use
+                      reserved for future use
+                      reserved for future use
+                      REMARKS String =&gt; explanatory comment on the procedure
+                      PROCEDURE_TYPE short =&gt; kind of procedure:
+                      procedureResultUnknown - Cannot determine if a return value will be returned
+                      procedureNoResult - Does not return a return value
+                      procedureReturnsResult - Returns a return value
+                      SPECIFIC_NAME String =&gt; The name which uniquely identifies this procedure within its schema.
+                 */
+<span class="nc bnc" id="L430" title="All 2 branches missed.">                while( sourceCodeObjects.next() )</span>
+                {
+<span class="nc" id="L432">                  LOGGER.finest(String.format(&quot;Found schema=%s,object_type=%s,object_name=%s&quot;</span>
+                                   ,sourceCodeObjects.getString(&quot;PROCEDURE_SCHEM&quot;)
+                                   ,sourceCodeObjects.getString(&quot;PROCEDURE_TYPE&quot;)
+                                   ,sourceCodeObjects.getString(&quot;PROCEDURE_NAME&quot;)
+                                   )
+                               );
+
+
+<span class="nc" id="L440">                  sourceObjectsList.add(new SourceObject(</span>
+                                                          sourceCodeObjects.getString(&quot;PROCEDURE_SCHEM&quot;)
+                                                         ,sourceCodeObjects.getString(&quot;PROCEDURE_TYPE&quot;)
+                                                         ,sourceCodeObjects.getString(&quot;PROCEDURE_NAME&quot;)
+                                                         ,null
+                                                        ) 
+                                       );
+                }
+<span class="nc" id="L448">              }</span>
+<span class="nc" id="L449">            }</span>
+<span class="nc" id="L450">          }</span>
+<span class="nc" id="L451">        }</span>
+<span class="nc" id="L452">      }</span>
+      else // Use standard DatabaseMetaData interface 
+      {
+<span class="nc" id="L455">        LOGGER.fine(&quot;Have dbUri - no returnSourceCodeObjectsStatement, reverting to DatabaseMetaData.getProcedures(...)&quot;);</span>
+
+<span class="nc" id="L457">        DatabaseMetaData metadata =  connection.getMetaData() ;</span>
+<span class="nc" id="L458">        List&lt;String&gt; schemasList = dburi.getSchemasList() ;</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        for (String schema : schemasList )</span>
+        {
+<span class="nc bnc" id="L461" title="All 2 branches missed.">          for (String sourceCodeName : dburi.getSourceCodeNamesList() )</span>
+          {
+            /*
+             * public ResultSet getProcedures(String catalog
+             *                               , String schemaPattern
+             *                               , String procedureNamePattern) throws SQLException
+             */
+<span class="nc" id="L468">            sourceCodeObjects = metadata.getProcedures(null</span>
+                                                       ,schema 
+                                                       ,sourceCodeName 
+                                                      );
+            /* From Javadoc ....
+             * Each procedure description has the the following columns:
+                  PROCEDURE_CAT String =&gt; procedure catalog (may be null)
+                  PROCEDURE_SCHEM String =&gt; procedure schema (may be null)
+                  PROCEDURE_NAME String =&gt; procedure name
+                  reserved for future use
+                  reserved for future use
+                  reserved for future use
+                  REMARKS String =&gt; explanatory comment on the procedure
+                  PROCEDURE_TYPE short =&gt; kind of procedure:
+                    procedureResultUnknown - Cannot determine if a return value will be returned
+                    procedureNoResult - Does not return a return value
+                    procedureReturnsResult - Returns a return value
+                  SPECIFIC_NAME String =&gt; The name which uniquely identifies this procedure within its schema.
+
+                  Oracle  getProcedures actually returns these 8 columns:-
+                  ResultSet &quot;Matched Procedures&quot; has 8 columns and contains ...
+                  [PROCEDURE_CAT,PROCEDURE_SCHEM,PROCEDURE_NAME,NULL,NULL,NULL,REMARKS,PROCEDURE_TYPE
+                  ,null,PHPDEMO,ADD_JOB_HISTORY,null,null,null,Standalone procedure or function,1
+                  ,FETCHPERFPKG,PHPDEMO,BULKSELECTPRC,null,null,null,Packaged function,2
+                  ,FETCHPERFPKG,PHPDEMO,BULKSELECTPRC,null,null,null,Packaged procedure,1
+                  ,null,PHPDEMO,CITY_LIST,null,null,null,Standalone procedure or function,1
+                  ,null,PHPDEMO,EDDISCOUNT,null,null,null,Standalone procedure or function,2
+                  ,SELPKG_BA,PHPDEMO,EMPSELBULK,null,null,null,Packaged function,2
+                  ,SELPKG_BA,PHPDEMO,EMPSELBULK,null,null,null,Packaged procedure,1
+                  ,INSPKG,PHPDEMO,INSFORALL,null,null,null,Packaged procedure,1
+                  ,null,PHPDEMO,MYDOFETCH,null,null,null,Standalone procedure or function,2
+                  ,null,PHPDEMO,MYPROC1,null,null,null,Standalone procedure or function,1
+                  ,null,PHPDEMO,MYPROC2,null,null,null,Standalone procedure or function,1
+                  ,null,PHPDEMO,MYXAQUERY,null,null,null,Standalone procedure or function,1
+                  ,null,PHPDEMO,POLICY_VPDPARTS,null,null,null,Standalone procedure or function,2
+                  ,FETCHPERFPKG,PHPDEMO,REFCURPRC,null,null,null,Packaged procedure,1
+                  ,null,PHPDEMO,SECURE_DML,null,null,null,Standalone procedure or function,1
+                  ...
+                  ]
+             */
+<span class="nc bnc" id="L508" title="All 2 branches missed.">            while( sourceCodeObjects.next() )</span>
+            {
+<span class="nc" id="L510">              LOGGER.finest(String.format(&quot;Located schema=%s,object_type=%s,object_name=%s\n&quot;</span>
+                               ,sourceCodeObjects.getString(&quot;PROCEDURE_SCHEM&quot;)
+                               ,sourceCodeObjects.getString(&quot;PROCEDURE_TYPE&quot;)
+                               ,sourceCodeObjects.getString(&quot;PROCEDURE_NAME&quot;)
+                               ));
+
+
+<span class="nc" id="L517">              sourceObjectsList.add(new SourceObject(</span>
+                                                      sourceCodeObjects.getString(&quot;PROCEDURE_SCHEM&quot;)
+                                                     ,sourceCodeObjects.getString(&quot;PROCEDURE_TYPE&quot;)
+                                                     ,sourceCodeObjects.getString(&quot;PROCEDURE_NAME&quot;)
+                                                     ,null
+                                                    ) 
+                                   );
+            }
+<span class="nc" id="L525">          }</span>
+<span class="nc" id="L526">        }</span>
+      }
+      
+<span class="nc" id="L529">      LOGGER.finer(String.format(&quot;Identfied=%d sourceObjects&quot;, sourceObjectsList.size()));</span>
+
+<span class="nc" id="L531">      return sourceObjectsList ;</span>
+    }
+<span class="nc" id="L533">    catch (SQLException sqle)</span>
+    {
+<span class="nc" id="L535">      throw new RuntimeException (&quot;Problem collecting list of source code objects&quot;,sqle);</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

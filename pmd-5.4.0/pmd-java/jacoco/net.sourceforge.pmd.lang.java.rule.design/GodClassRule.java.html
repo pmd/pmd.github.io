@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GodClassRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">GodClassRule.java</span></div><h1>GodClassRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTCatchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTConditionalAndExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTConditionalOrExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchLabel;
+import net.sourceforge.pmd.lang.java.ast.ASTWhileStatement;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.rule.JavaRuleViolation;
+import net.sourceforge.pmd.lang.java.symboltable.ClassScope;
+import net.sourceforge.pmd.lang.java.symboltable.SourceFileScope;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * The God Class Rule detects a the God Class design flaw using metrics. A god
+ * class does too many things, is very big and complex. It should be split apart
+ * to be more object-oriented. The rule uses the detection strategy described in
+ * [1]. The violations are reported against the entire class.
+ * 
+ * [1] Lanza. Object-Oriented Metrics in Practice. Page 80.
+ * 
+ * @since 5.0
+ */
+<span class="fc" id="L49">public class GodClassRule extends AbstractJavaRule {</span>
+
+    /**
+     * Very high threshold for WMC (Weighted Method Count). See: Lanza.
+     * Object-Oriented Metrics in Practice. Page 16.
+     */
+    private static final int WMC_VERY_HIGH = 47;
+
+    /**
+     * Few means between 2 and 5. See: Lanza. Object-Oriented Metrics in
+     * Practice. Page 18.
+     */
+    private static final int FEW_THRESHOLD = 5;
+
+    /**
+     * One third is a low value. See: Lanza. Object-Oriented Metrics in
+     * Practice. Page 17.
+     */
+    private static final double ONE_THIRD_THRESHOLD = 1.0 / 3.0;
+
+    /** The Weighted Method Count metric. */
+    private int wmcCounter;
+    /** The Access To Foreign Data metric. */
+    private int atfdCounter;
+
+    /**
+     * Collects for each method of the current class, which local attributes are
+     * accessed.
+     */
+    private Map&lt;String, Set&lt;String&gt;&gt; methodAttributeAccess;
+    /** The name of the current method. */
+    private String currentMethodName;
+
+    /**
+     * Base entry point for the visitor - the compilation unit (everything
+     * within one file). The metrics are initialized. Then the other nodes are
+     * visited. Afterwards the metrics are evaluated against fixed thresholds.
+     */
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L89">        wmcCounter = 0;</span>
+<span class="fc" id="L90">        atfdCounter = 0;</span>
+<span class="fc" id="L91">        methodAttributeAccess = new HashMap&lt;String, Set&lt;String&gt;&gt;();</span>
+
+<span class="fc" id="L93">        Object result = super.visit(node, data);</span>
+
+<span class="fc" id="L95">        double tcc = calculateTcc();</span>
+
+        // StringBuilder debug = new StringBuilder();
+        // debug.append(&quot;Values for class &quot;)
+        // .append(node.getImage()).append(&quot;: &quot;)
+        // .append(&quot;WMC=&quot;).append(wmcCounter).append(&quot;, &quot;)
+        // .append(&quot;ATFD=&quot;).append(atfdCounter).append(&quot;, &quot;)
+        // .append(&quot;TCC=&quot;).append(tcc);
+        // System.out.println(debug.toString());
+
+<span class="fc bfc" id="L105" title="All 6 branches covered.">        if (wmcCounter &gt;= WMC_VERY_HIGH &amp;&amp; atfdCounter &gt; FEW_THRESHOLD &amp;&amp; tcc &lt; ONE_THIRD_THRESHOLD) {</span>
+
+<span class="fc" id="L107">            StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L108">            sb.append(getMessage()).append(&quot; (&quot;).append(&quot;WMC=&quot;).append(wmcCounter).append(&quot;, &quot;).append(&quot;ATFD=&quot;)</span>
+                    .append(atfdCounter).append(&quot;, &quot;).append(&quot;TCC=&quot;).append(tcc).append(')');
+
+<span class="fc" id="L111">            RuleContext ctx = (RuleContext) data;</span>
+<span class="fc" id="L112">            ctx.getReport().addRuleViolation(new JavaRuleViolation(this, ctx, node, sb.toString()));</span>
+        }
+<span class="fc" id="L114">        return result;</span>
+    }
+
+    /**
+     * Calculates the Tight Class Cohesion metric.
+     * 
+     * @return a value between 0 and 1.
+     */
+    private double calculateTcc() {
+<span class="fc" id="L123">        double tcc = 0.0;</span>
+<span class="fc" id="L124">        int methodPairs = determineMethodPairs();</span>
+<span class="fc" id="L125">        double totalMethodPairs = calculateTotalMethodPairs();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (totalMethodPairs &gt; 0) {</span>
+<span class="fc" id="L127">            tcc = methodPairs / totalMethodPairs;</span>
+        }
+<span class="fc" id="L129">        return tcc;</span>
+    }
+
+    /**
+     * Calculates the number of possible method pairs. Its basically the sum of
+     * the first (methodCount - 1) integers. It will be 0, if no methods exist
+     * or only one method, means, if no pairs exist.
+     * 
+     * @return
+     */
+    private double calculateTotalMethodPairs() {
+<span class="fc" id="L140">        int methodCount = methodAttributeAccess.size();</span>
+<span class="fc" id="L141">        int n = methodCount - 1;</span>
+<span class="fc" id="L142">        double totalMethodPairs = n * (n + 1) / 2.0;</span>
+<span class="fc" id="L143">        return totalMethodPairs;</span>
+    }
+
+    /**
+     * Uses the {@link #methodAttributeAccess} map to detect method pairs, that
+     * use at least one common attribute of the class.
+     * 
+     * @return
+     */
+    private int determineMethodPairs() {
+<span class="fc" id="L153">        List&lt;String&gt; methods = new ArrayList&lt;String&gt;(methodAttributeAccess.keySet());</span>
+<span class="fc" id="L154">        int methodCount = methods.size();</span>
+<span class="fc" id="L155">        int pairs = 0;</span>
+
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (methodCount &gt; 1) {</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">            for (int i = 0; i &lt; methodCount; i++) {</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                for (int j = i + 1; j &lt; methodCount; j++) {</span>
+<span class="fc" id="L160">                    String firstMethodName = methods.get(i);</span>
+<span class="fc" id="L161">                    String secondMethodName = methods.get(j);</span>
+<span class="fc" id="L162">                    Set&lt;String&gt; accessesOfFirstMethod = methodAttributeAccess.get(firstMethodName);</span>
+<span class="fc" id="L163">                    Set&lt;String&gt; accessesOfSecondMethod = methodAttributeAccess.get(secondMethodName);</span>
+<span class="fc" id="L164">                    Set&lt;String&gt; combinedAccesses = new HashSet&lt;String&gt;();</span>
+
+<span class="fc" id="L166">                    combinedAccesses.addAll(accessesOfFirstMethod);</span>
+<span class="fc" id="L167">                    combinedAccesses.addAll(accessesOfSecondMethod);</span>
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                    if (combinedAccesses.size() &lt; (accessesOfFirstMethod.size() + accessesOfSecondMethod.size())) {</span>
+<span class="fc" id="L170">                        pairs++;</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L175">        return pairs;</span>
+    }
+
+    /**
+     * The primary expression node is used to detect access to attributes and
+     * method calls. If the access is not for a foreign class, then the
+     * {@link #methodAttributeAccess} map is updated for the current method.
+     */
+    @Override
+    public Object visit(ASTPrimaryExpression node, Object data) {
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (isForeignAttributeOrMethod(node)) {</span>
+<span class="fc bfc" id="L186" title="All 6 branches covered.">            if (isAttributeAccess(node) || isMethodCall(node) &amp;&amp; isForeignGetterSetterCall(node)) {</span>
+<span class="fc" id="L187">                atfdCounter++;</span>
+            }
+        } else {
+<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (currentMethodName != null) {</span>
+<span class="fc" id="L191">                Set&lt;String&gt; methodAccess = methodAttributeAccess.get(currentMethodName);</span>
+<span class="fc" id="L192">                String variableName = getVariableName(node);</span>
+<span class="fc" id="L193">                VariableNameDeclaration variableDeclaration = findVariableDeclaration(variableName, node.getScope()</span>
+                        .getEnclosingScope(ClassScope.class));
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                if (variableDeclaration != null) {</span>
+<span class="fc" id="L196">                    methodAccess.add(variableName);</span>
+                }
+            }
+        }
+
+<span class="fc" id="L201">        return super.visit(node, data);</span>
+    }
+
+    private boolean isForeignGetterSetterCall(ASTPrimaryExpression node) {
+
+<span class="fc" id="L206">        String methodOrAttributeName = getMethodOrAttributeName(node);</span>
+
+<span class="pc bpc" id="L208" title="1 of 4 branches missed.">        return methodOrAttributeName != null &amp;&amp; StringUtil.startsWithAny(methodOrAttributeName, &quot;get&quot;, &quot;is&quot;, &quot;set&quot;);</span>
+    }
+
+    private boolean isMethodCall(ASTPrimaryExpression node) {
+<span class="fc" id="L212">        boolean result = false;</span>
+<span class="fc" id="L213">        List&lt;ASTPrimarySuffix&gt; suffixes = node.findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (suffixes.size() == 1) {</span>
+<span class="fc" id="L215">            result = suffixes.get(0).isArguments();</span>
+        }
+<span class="fc" id="L217">        return result;</span>
+    }
+
+    private boolean isForeignAttributeOrMethod(ASTPrimaryExpression node) {
+<span class="fc" id="L221">        boolean result = false;</span>
+<span class="fc" id="L222">        String nameImage = getNameImage(node);</span>
+
+<span class="pc bpc" id="L224" title="1 of 6 branches missed.">        if (nameImage != null &amp;&amp; (!nameImage.contains(&quot;.&quot;) || nameImage.startsWith(&quot;this.&quot;))) {</span>
+<span class="fc" id="L225">            result = false;</span>
+<span class="fc bfc" id="L226" title="All 4 branches covered.">        } else if (nameImage == null &amp;&amp; node.getFirstDescendantOfType(ASTPrimaryPrefix.class).usesThisModifier()) {</span>
+<span class="fc" id="L227">            result = false;</span>
+<span class="fc bfc" id="L228" title="All 4 branches covered.">        } else if (nameImage == null &amp;&amp; node.hasDecendantOfAnyType(ASTLiteral.class, ASTAllocationExpression.class)) {</span>
+<span class="fc" id="L229">            result = false;</span>
+        } else {
+<span class="fc" id="L231">            result = true;</span>
+        }
+
+<span class="fc" id="L234">        return result;</span>
+    }
+
+    private String getNameImage(ASTPrimaryExpression node) {
+<span class="fc" id="L238">        ASTPrimaryPrefix prefix = node.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc" id="L239">        ASTName name = prefix.getFirstDescendantOfType(ASTName.class);</span>
+
+<span class="fc" id="L241">        String image = null;</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (name != null) {</span>
+<span class="fc" id="L243">            image = name.getImage();</span>
+        }
+<span class="fc" id="L245">        return image;</span>
+    }
+
+    private String getVariableName(ASTPrimaryExpression node) {
+<span class="fc" id="L249">        ASTPrimaryPrefix prefix = node.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc" id="L250">        ASTName name = prefix.getFirstDescendantOfType(ASTName.class);</span>
+
+<span class="fc" id="L252">        String variableName = null;</span>
+
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        if (name != null) {</span>
+<span class="fc" id="L255">            int dotIndex = name.getImage().indexOf(&quot;.&quot;);</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            if (dotIndex == -1) {</span>
+<span class="fc" id="L257">                variableName = name.getImage();</span>
+            } else {
+<span class="nc" id="L259">                variableName = name.getImage().substring(0, dotIndex);</span>
+            }
+        }
+
+<span class="fc" id="L263">        return variableName;</span>
+    }
+
+    private String getMethodOrAttributeName(ASTPrimaryExpression node) {
+<span class="fc" id="L267">        ASTPrimaryPrefix prefix = node.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc" id="L268">        ASTName name = prefix.getFirstDescendantOfType(ASTName.class);</span>
+
+<span class="fc" id="L270">        String methodOrAttributeName = null;</span>
+
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        if (name != null) {</span>
+<span class="fc" id="L273">            int dotIndex = name.getImage().indexOf(&quot;.&quot;);</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">            if (dotIndex &gt; -1) {</span>
+<span class="fc" id="L275">                methodOrAttributeName = name.getImage().substring(dotIndex + 1);</span>
+            }
+        }
+
+<span class="fc" id="L279">        return methodOrAttributeName;</span>
+    }
+
+    private VariableNameDeclaration findVariableDeclaration(String variableName, Scope scope) {
+<span class="fc" id="L283">        VariableNameDeclaration result = null;</span>
+
+<span class="fc bfc" id="L285" title="All 2 branches covered.">        for (VariableNameDeclaration declaration : scope.getDeclarations(VariableNameDeclaration.class).keySet()) {</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">            if (declaration.getImage().equals(variableName)) {</span>
+<span class="fc" id="L287">                result = declaration;</span>
+<span class="fc" id="L288">                break;</span>
+            }
+<span class="fc" id="L290">        }</span>
+
+<span class="pc bpc" id="L292" title="1 of 6 branches missed.">        if (result == null &amp;&amp; scope.getParent() != null &amp;&amp; !(scope.getParent() instanceof SourceFileScope)) {</span>
+<span class="fc" id="L293">            result = findVariableDeclaration(variableName, scope.getParent());</span>
+        }
+
+<span class="fc" id="L296">        return result;</span>
+    }
+
+    private boolean isAttributeAccess(ASTPrimaryExpression node) {
+<span class="fc" id="L300">        return node.findDescendantsOfType(ASTPrimarySuffix.class).isEmpty();</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L305">        wmcCounter++;</span>
+
+<span class="fc" id="L307">        currentMethodName = node.getFirstChildOfType(ASTMethodDeclarator.class).getImage();</span>
+<span class="fc" id="L308">        methodAttributeAccess.put(currentMethodName, new HashSet&lt;String&gt;());</span>
+
+<span class="fc" id="L310">        Object result = super.visit(node, data);</span>
+
+<span class="fc" id="L312">        currentMethodName = null;</span>
+
+<span class="fc" id="L314">        return result;</span>
+    }
+
+    @Override
+    public Object visit(ASTConditionalOrExpression node, Object data) {
+<span class="fc" id="L319">        wmcCounter++;</span>
+<span class="fc" id="L320">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTConditionalAndExpression node, Object data) {
+<span class="fc" id="L325">        wmcCounter++;</span>
+<span class="fc" id="L326">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L331">        wmcCounter++;</span>
+<span class="fc" id="L332">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTWhileStatement node, Object data) {
+<span class="fc" id="L337">        wmcCounter++;</span>
+<span class="fc" id="L338">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L343">        wmcCounter++;</span>
+<span class="fc" id="L344">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTSwitchLabel node, Object data) {
+<span class="fc" id="L349">        wmcCounter++;</span>
+<span class="fc" id="L350">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTCatchStatement node, Object data) {
+<span class="fc" id="L355">        wmcCounter++;</span>
+<span class="fc" id="L356">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTConditionalExpression node, Object data) {
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">        if (node.isTernary()) {</span>
+<span class="fc" id="L362">            wmcCounter++;</span>
+        }
+<span class="fc" id="L364">        return super.visit(node, data);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

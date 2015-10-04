@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AccessorClassGenerationRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">AccessorClassGenerationRule.java</span></div><h1>AccessorClassGenerationRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTArguments;
+import net.sourceforge.pmd.lang.java.ast.ASTArrayDimsAndInits;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.SourceFileScope;
+
+/**
+ * 1. Note all private constructors. 2. Note all instantiations from outside of
+ * the class by way of the private constructor. 3. Flag instantiations.
+ * &lt;p/&gt;
+ * &lt;p/&gt;
+ * Parameter types can not be matched because they can come as exposed members
+ * of classes. In this case we have no way to know what the type is. We can make
+ * a best effort though which can filter some?
+ *
+ * @author CL Gilbert (dnoyeb@users.sourceforge.net)
+ * @author David Konecny (david.konecny@)
+ * @author Romain PELISSE, belaran@gmail.com, patch bug#1807370
+ */
+<span class="fc" id="L35">public class AccessorClassGenerationRule extends AbstractJavaRule {</span>
+
+<span class="fc" id="L37">    private List&lt;ClassData&gt; classDataList = new ArrayList&lt;ClassData&gt;();</span>
+<span class="fc" id="L38">    private int classID = -1;</span>
+    private String packageName;
+
+    public Object visit(ASTEnumDeclaration node, Object data) {
+<span class="fc" id="L42">        return data; // just skip Enums</span>
+    }
+
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L46">        classDataList.clear();</span>
+<span class="fc" id="L47">        packageName = node.getScope().getEnclosingScope(SourceFileScope.class).getPackageName();</span>
+<span class="fc" id="L48">        return super.visit(node, data);</span>
+    }
+
+    private static class ClassData {
+        private String className;
+        private List&lt;ASTConstructorDeclaration&gt; privateConstructors;
+        private List&lt;AllocData&gt; instantiations;
+        /**
+         * List of outer class names that exist above this class
+         */
+        private List&lt;String&gt; classQualifyingNames;
+
+<span class="fc" id="L60">        public ClassData(String className) {</span>
+<span class="fc" id="L61">            this.className = className;</span>
+<span class="fc" id="L62">            this.privateConstructors = new ArrayList&lt;ASTConstructorDeclaration&gt;();</span>
+<span class="fc" id="L63">            this.instantiations = new ArrayList&lt;AllocData&gt;();</span>
+<span class="fc" id="L64">            this.classQualifyingNames = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L65">        }</span>
+
+        public void addInstantiation(AllocData ad) {
+<span class="fc" id="L68">            instantiations.add(ad);</span>
+<span class="fc" id="L69">        }</span>
+
+        public Iterator&lt;AllocData&gt; getInstantiationIterator() {
+<span class="fc" id="L72">            return instantiations.iterator();</span>
+        }
+
+        public void addConstructor(ASTConstructorDeclaration cd) {
+<span class="fc" id="L76">            privateConstructors.add(cd);</span>
+<span class="fc" id="L77">        }</span>
+
+        public Iterator&lt;ASTConstructorDeclaration&gt; getPrivateConstructorIterator() {
+<span class="fc" id="L80">            return privateConstructors.iterator();</span>
+        }
+
+        public String getClassName() {
+<span class="fc" id="L84">            return className;</span>
+        }
+
+        public void addClassQualifyingName(String name) {
+<span class="fc" id="L88">            classQualifyingNames.add(name);</span>
+<span class="fc" id="L89">        }</span>
+
+        public List&lt;String&gt; getClassQualifyingNamesList() {
+<span class="fc" id="L92">            return classQualifyingNames;</span>
+        }
+    }
+
+<span class="fc" id="L96">    private static class AllocData {</span>
+        private String name;
+        private int argumentCount;
+        private ASTAllocationExpression allocationExpression;
+        private boolean isArray;
+
+<span class="fc" id="L102">        public AllocData(ASTAllocationExpression node, String aPackageName, List&lt;String&gt; classQualifyingNames) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (node.jjtGetChild(1) instanceof ASTArguments) {</span>
+<span class="fc" id="L104">                ASTArguments aa = (ASTArguments) node.jjtGetChild(1);</span>
+<span class="fc" id="L105">                argumentCount = aa.getArgumentCount();</span>
+                // Get name and strip off all superfluous data
+                // strip off package name if it is current package
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                if (!(node.jjtGetChild(0) instanceof ASTClassOrInterfaceType)) {</span>
+<span class="nc" id="L109">                    throw new RuntimeException(&quot;BUG: Expected a ASTClassOrInterfaceType, got a &quot;</span>
+                            + node.jjtGetChild(0).getClass());
+                }
+<span class="fc" id="L112">                ASTClassOrInterfaceType an = (ASTClassOrInterfaceType) node.jjtGetChild(0);</span>
+<span class="fc" id="L113">                name = stripString(aPackageName + '.', an.getImage());</span>
+
+                // strip off outer class names
+                // try OuterClass, then try OuterClass.InnerClass, then try
+                // OuterClass.InnerClass.InnerClass2, etc...
+<span class="fc" id="L118">                String findName = &quot;&quot;;</span>
+<span class="fc" id="L119">                for (ListIterator&lt;String&gt; li = classQualifyingNames.listIterator(classQualifyingNames.size()); li</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                        .hasPrevious();) {</span>
+<span class="fc" id="L121">                    String aName = li.previous();</span>
+<span class="fc" id="L122">                    findName = aName + '.' + findName;</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                    if (name.startsWith(findName)) {</span>
+                        // strip off name and exit
+<span class="nc" id="L125">                        name = name.substring(findName.length());</span>
+<span class="nc" id="L126">                        break;</span>
+                    }
+<span class="fc" id="L128">                }</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            } else if (node.jjtGetChild(1) instanceof ASTArrayDimsAndInits) {</span>
+                // this is incomplete because I dont need it.
+                // child 0 could be primitive or object (ASTName or
+                // ASTPrimitiveType)
+<span class="fc" id="L133">                isArray = true;</span>
+            }
+<span class="fc" id="L135">            allocationExpression = node;</span>
+<span class="fc" id="L136">        }</span>
+
+        public String getName() {
+<span class="fc" id="L139">            return name;</span>
+        }
+
+        public int getArgumentCount() {
+<span class="fc" id="L143">            return argumentCount;</span>
+        }
+
+        public ASTAllocationExpression getASTAllocationExpression() {
+<span class="fc" id="L147">            return allocationExpression;</span>
+        }
+
+        public boolean isArray() {
+<span class="fc" id="L151">            return isArray;</span>
+        }
+    }
+
+    /**
+     * Outer interface visitation
+     */
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (node.isInterface()) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (!(node.jjtGetParent().jjtGetParent() instanceof ASTCompilationUnit)) {</span>
+                // not a top level interface
+<span class="fc" id="L162">                String interfaceName = node.getImage();</span>
+<span class="fc" id="L163">                int formerID = getClassID();</span>
+<span class="fc" id="L164">                setClassID(classDataList.size());</span>
+<span class="fc" id="L165">                ClassData newClassData = new ClassData(interfaceName);</span>
+                // store the names of any outer classes of this class in the
+                // classQualifyingName List
+<span class="fc" id="L168">                ClassData formerClassData = classDataList.get(formerID);</span>
+<span class="fc" id="L169">                newClassData.addClassQualifyingName(formerClassData.getClassName());</span>
+<span class="fc" id="L170">                classDataList.add(getClassID(), newClassData);</span>
+<span class="fc" id="L171">                Object o = super.visit(node, data);</span>
+<span class="fc" id="L172">                setClassID(formerID);</span>
+<span class="fc" id="L173">                return o;</span>
+            } else {
+<span class="fc" id="L175">                String interfaceName = node.getImage();</span>
+<span class="fc" id="L176">                classDataList.clear();</span>
+<span class="fc" id="L177">                setClassID(0);</span>
+<span class="fc" id="L178">                classDataList.add(getClassID(), new ClassData(interfaceName));</span>
+<span class="fc" id="L179">                Object o = super.visit(node, data);</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                if (o != null) {</span>
+<span class="nc" id="L181">                    processRule(o);</span>
+                } else {
+<span class="fc" id="L183">                    processRule(data);</span>
+                }
+<span class="fc" id="L185">                setClassID(-1);</span>
+<span class="fc" id="L186">                return o;</span>
+            }
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        } else if (!(node.jjtGetParent().jjtGetParent() instanceof ASTCompilationUnit)) {</span>
+            // not a top level class
+<span class="fc" id="L190">            int formerID = getClassID();</span>
+<span class="fc" id="L191">            setClassID(classDataList.size());</span>
+            // TODO
+            // this is a hack to bail out here
+            // but I'm not sure why this is happening
+            // TODO
+<span class="pc bpc" id="L196" title="2 of 4 branches missed.">            if (formerID == -1 || formerID &gt;= classDataList.size()) {</span>
+<span class="nc" id="L197">                return null;</span>
+            }
+            // store the names of any outer classes of this class in the
+            // classQualifyingName List
+<span class="fc" id="L201">            ClassData formerClassData = classDataList.get(formerID);</span>
+<span class="fc" id="L202">            String className = node.getImage();</span>
+<span class="fc" id="L203">            ClassData newClassData = new ClassData(className);</span>
+<span class="fc" id="L204">            newClassData.addClassQualifyingName(formerClassData.getClassName());</span>
+<span class="fc" id="L205">            classDataList.add(getClassID(), newClassData);</span>
+<span class="fc" id="L206">            Object o = super.visit(node, data);</span>
+<span class="fc" id="L207">            setClassID(formerID);</span>
+<span class="fc" id="L208">            return o;</span>
+        }
+        // outer classes
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        if (!node.isStatic()) { // See bug# 1807370</span>
+<span class="fc" id="L212">            String className = node.getImage();</span>
+<span class="fc" id="L213">            classDataList.clear();</span>
+<span class="fc" id="L214">            setClassID(0);// first class</span>
+<span class="fc" id="L215">            classDataList.add(getClassID(), new ClassData(className));</span>
+        }
+<span class="fc" id="L217">        Object o = super.visit(node, data);</span>
+<span class="pc bpc" id="L218" title="3 of 4 branches missed.">        if (o != null &amp;&amp; !node.isStatic()) { // See bug# 1807370</span>
+<span class="nc" id="L219">            processRule(o);</span>
+        } else {
+<span class="fc" id="L221">            processRule(data);</span>
+        }
+<span class="fc" id="L223">        setClassID(-1);</span>
+<span class="fc" id="L224">        return o;</span>
+    }
+
+    /**
+     * Store all target constructors
+     */
+    public Object visit(ASTConstructorDeclaration node, Object data) {
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (node.isPrivate()) {</span>
+<span class="fc" id="L232">            getCurrentClassData().addConstructor(node);</span>
+        }
+<span class="fc" id="L234">        return super.visit(node, data);</span>
+    }
+
+    public Object visit(ASTAllocationExpression node, Object data) {
+        // TODO
+        // this is a hack to bail out here
+        // but I'm not sure why this is happening
+        // TODO
+<span class="pc bpc" id="L242" title="2 of 4 branches missed.">        if (classID == -1 || getCurrentClassData() == null) {</span>
+<span class="nc" id="L243">            return data;</span>
+        }
+<span class="fc" id="L245">        AllocData ad = new AllocData(node, packageName, getCurrentClassData().getClassQualifyingNamesList());</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (!ad.isArray()) {</span>
+<span class="fc" id="L247">            getCurrentClassData().addInstantiation(ad);</span>
+        }
+<span class="fc" id="L249">        return super.visit(node, data);</span>
+    }
+
+    private void processRule(Object ctx) {
+        // check constructors of outerIterator against allocations of
+        // innerIterator
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        for (ClassData outerDataSet : classDataList) {</span>
+<span class="fc" id="L256">            for (Iterator&lt;ASTConstructorDeclaration&gt; constructors = outerDataSet.getPrivateConstructorIterator(); constructors</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">                    .hasNext();) {</span>
+<span class="fc" id="L258">                ASTConstructorDeclaration cd = constructors.next();</span>
+
+<span class="fc bfc" id="L260" title="All 2 branches covered.">                for (ClassData innerDataSet : classDataList) {</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">                    if (outerDataSet.equals(innerDataSet)) {</span>
+<span class="fc" id="L262">                        continue;</span>
+                    }
+<span class="fc" id="L264">                    for (Iterator&lt;AllocData&gt; allocations = innerDataSet.getInstantiationIterator(); allocations</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">                            .hasNext();) {</span>
+<span class="fc" id="L266">                        AllocData ad = allocations.next();</span>
+                        // if the constructor matches the instantiation
+                        // flag the instantiation as a generator of an extra
+                        // class
+<span class="pc bpc" id="L270" title="1 of 4 branches missed.">                        if (outerDataSet.getClassName().equals(ad.getName())</span>
+                                &amp;&amp; cd.getParameterCount() == ad.getArgumentCount()) {
+<span class="fc" id="L272">                            addViolation(ctx, ad.getASTAllocationExpression());</span>
+                        }
+<span class="fc" id="L274">                    }</span>
+<span class="fc" id="L275">                }</span>
+<span class="fc" id="L276">            }</span>
+<span class="fc" id="L277">        }</span>
+<span class="fc" id="L278">    }</span>
+
+    private ClassData getCurrentClassData() {
+        // TODO
+        // this is a hack to bail out here
+        // but I'm not sure why this is happening
+        // TODO
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if (classID &gt;= classDataList.size()) {</span>
+<span class="nc" id="L286">            return null;</span>
+        }
+<span class="fc" id="L288">        return classDataList.get(classID);</span>
+    }
+
+    private void setClassID(int id) {
+<span class="fc" id="L292">        classID = id;</span>
+<span class="fc" id="L293">    }</span>
+
+    private int getClassID() {
+<span class="fc" id="L296">        return classID;</span>
+    }
+
+    // remove = Fire.
+    // value = someFire.Fighter
+    // 0123456789012345
+    // index = 4
+    // remove.size() = 5
+    // value.substring(0,4) = some
+    // value.substring(4 + remove.size()) = Fighter
+    // return &quot;someFighter&quot;
+
+    // TODO move this into StringUtil
+    private static String stripString(String remove, String value) {
+        String returnValue;
+<span class="fc" id="L311">        int index = value.indexOf(remove);</span>
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        if (index != -1) { // if the package name can start anywhere but 0</span>
+                           // please inform the author because this will break
+<span class="nc" id="L314">            returnValue = value.substring(0, index) + value.substring(index + remove.length());</span>
+        } else {
+<span class="fc" id="L316">            returnValue = value;</span>
+        }
+<span class="fc" id="L318">        return returnValue;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

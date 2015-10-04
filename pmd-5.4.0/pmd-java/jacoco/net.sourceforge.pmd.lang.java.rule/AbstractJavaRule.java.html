@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractJavaRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule</a> &gt; <span class="el_source">AbstractJavaRule.java</span></div><h1>AbstractJavaRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule;
+
+import java.util.List;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.JavaLanguageModule;
+import net.sourceforge.pmd.lang.java.ast.*;
+import net.sourceforge.pmd.lang.rule.AbstractRule;
+import net.sourceforge.pmd.lang.rule.ImmutableLanguage;
+
+public abstract class AbstractJavaRule extends AbstractRule implements JavaParserVisitor, ImmutableLanguage {
+
+<span class="fc" id="L18">    public AbstractJavaRule() {</span>
+<span class="fc" id="L19">	super.setLanguage(LanguageRegistry.getLanguage(JavaLanguageModule.NAME));</span>
+	// Enable Type Resolution on Java Rules by default
+<span class="fc" id="L21">	super.setUsesTypeResolution();</span>
+<span class="fc" id="L22">    }</span>
+
+    public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="fc" id="L25">	visitAll(nodes, ctx);</span>
+<span class="fc" id="L26">    }</span>
+
+    protected void visitAll(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">	for (Object element : nodes) {</span>
+<span class="fc" id="L30">	    ASTCompilationUnit node = (ASTCompilationUnit) element;</span>
+<span class="fc" id="L31">	    visit(node, ctx);</span>
+<span class="fc" id="L32">	}</span>
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * Gets the Image of the first parent node of type
+     * ASTClassOrInterfaceDeclaration or &lt;code&gt;null&lt;/code&gt;
+     *
+     * @param node
+     *            the node which will be searched
+     */
+    protected final String getDeclaringType(Node node) {
+<span class="nc" id="L43">	ASTClassOrInterfaceDeclaration c = node.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">	if (c != null) {</span>
+<span class="nc" id="L45">	    return c.getImage();</span>
+	}
+<span class="nc" id="L47">	return null;</span>
+    }
+
+    public static boolean isQualifiedName(Node node) {
+<span class="fc bfc" id="L51" title="All 2 branches covered.">	return node.getImage().indexOf('.') != -1;</span>
+    }
+
+    public static boolean importsPackage(ASTCompilationUnit node, String packageName) {
+<span class="nc" id="L55">	List&lt;ASTImportDeclaration&gt; nodes = node.findChildrenOfType(ASTImportDeclaration.class);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">	for (ASTImportDeclaration n : nodes) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">	    if (n.getPackageName().startsWith(packageName)) {</span>
+<span class="nc" id="L58">		return true;</span>
+	    }
+<span class="nc" id="L60">	}</span>
+<span class="nc" id="L61">	return false;</span>
+    }
+
+    protected boolean isSuppressed(Node node) {
+<span class="fc" id="L65">        return JavaRuleViolation.isSupressed(node, this);</span>
+    }
+
+    //
+    // The following APIs are identical to those in JavaParserVisitorAdapter.
+    // Due to Java single inheritance, it preferred to extend from the more
+    // complex Rule base class instead of from relatively simple Visitor.
+    //
+    public Object visit(JavaNode node, Object data) {
+<span class="fc" id="L74">	node.childrenAccept(this, data);</span>
+<span class="fc" id="L75">	return null;</span>
+    }
+
+    public Object visit(ASTExtendsList node, Object data) {
+<span class="fc" id="L79">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc" id="L83">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTImplementsList node, Object data) {
+<span class="fc" id="L87">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeParameters node, Object data) {
+<span class="fc" id="L91">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMemberSelector node, Object data) {
+<span class="fc" id="L95">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeParameter node, Object data) {
+<span class="fc" id="L99">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeBound node, Object data) {
+<span class="nc" id="L103">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTClassOrInterfaceBody node, Object data) {
+<span class="fc" id="L107">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTClassOrInterfaceBodyDeclaration node, Object data) {
+<span class="fc" id="L111">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTEnumBody node, Object data) {
+<span class="fc" id="L115">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTEnumConstant node, Object data) {
+<span class="fc" id="L119">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTReferenceType node, Object data) {
+<span class="fc" id="L123">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTClassOrInterfaceType node, Object data) {
+<span class="fc" id="L127">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeArguments node, Object data) {
+<span class="fc" id="L131">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeArgument node, Object data) {
+<span class="fc" id="L135">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTWildcardBounds node, Object data) {
+<span class="fc" id="L139">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAnnotation node, Object data) {
+<span class="fc" id="L143">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTNormalAnnotation node, Object data) {
+<span class="fc" id="L147">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMarkerAnnotation node, Object data) {
+<span class="fc" id="L151">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTSingleMemberAnnotation node, Object data) {
+<span class="fc" id="L155">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMemberValuePairs node, Object data) {
+<span class="fc" id="L159">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMemberValuePair node, Object data) {
+<span class="fc" id="L163">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMemberValue node, Object data) {
+<span class="fc" id="L167">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMemberValueArrayInitializer node, Object data) {
+<span class="fc" id="L171">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAnnotationTypeDeclaration node, Object data) {
+<span class="fc" id="L175">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAnnotationTypeBody node, Object data) {
+<span class="fc" id="L179">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAnnotationTypeMemberDeclaration node, Object data) {
+<span class="fc" id="L183">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAnnotationMethodDeclaration node, Object data) {
+<span class="nc" id="L187">	return visit((JavaNode)node, data);</span>
+    }
+
+    public Object visit(ASTDefaultValue node, Object data) {
+<span class="nc" id="L191">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTRUNSIGNEDSHIFT node, Object data) {
+<span class="fc" id="L195">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTRSIGNEDSHIFT node, Object data) {
+<span class="fc" id="L199">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L203">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTEnumDeclaration node, Object data) {
+<span class="fc" id="L207">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAssertStatement node, Object data) {
+<span class="fc" id="L211">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPackageDeclaration node, Object data) {
+<span class="fc" id="L215">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTImportDeclaration node, Object data) {
+<span class="fc" id="L219">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTypeDeclaration node, Object data) {
+<span class="fc" id="L223">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="fc" id="L227">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTVariableDeclarator node, Object data) {
+<span class="fc" id="L231">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTVariableDeclaratorId node, Object data) {
+<span class="fc" id="L235">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTVariableInitializer node, Object data) {
+<span class="fc" id="L239">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTArrayInitializer node, Object data) {
+<span class="fc" id="L243">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L247">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMethodDeclarator node, Object data) {
+<span class="fc" id="L251">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTFormalParameters node, Object data) {
+<span class="fc" id="L255">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTFormalParameter node, Object data) {
+<span class="fc" id="L259">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTConstructorDeclaration node, Object data) {
+<span class="fc" id="L263">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTExplicitConstructorInvocation node, Object data) {
+<span class="fc" id="L267">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTInitializer node, Object data) {
+<span class="fc" id="L271">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTType node, Object data) {
+<span class="fc" id="L275">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPrimitiveType node, Object data) {
+<span class="fc" id="L279">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTResultType node, Object data) {
+<span class="fc" id="L283">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTName node, Object data) {
+<span class="fc" id="L287">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTNameList node, Object data) {
+<span class="fc" id="L291">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTExpression node, Object data) {
+<span class="fc" id="L295">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAssignmentOperator node, Object data) {
+<span class="fc" id="L299">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTConditionalExpression node, Object data) {
+<span class="fc" id="L303">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTConditionalOrExpression node, Object data) {
+<span class="fc" id="L307">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTConditionalAndExpression node, Object data) {
+<span class="fc" id="L311">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTInclusiveOrExpression node, Object data) {
+<span class="fc" id="L315">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTExclusiveOrExpression node, Object data) {
+<span class="fc" id="L319">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAndExpression node, Object data) {
+<span class="fc" id="L323">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTEqualityExpression node, Object data) {
+<span class="fc" id="L327">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTInstanceOfExpression node, Object data) {
+<span class="fc" id="L331">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTRelationalExpression node, Object data) {
+<span class="fc" id="L335">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTShiftExpression node, Object data) {
+<span class="fc" id="L339">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAdditiveExpression node, Object data) {
+<span class="fc" id="L343">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTMultiplicativeExpression node, Object data) {
+<span class="fc" id="L347">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTUnaryExpression node, Object data) {
+<span class="fc" id="L351">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPreIncrementExpression node, Object data) {
+<span class="fc" id="L355">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPreDecrementExpression node, Object data) {
+<span class="fc" id="L359">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data) {
+<span class="fc" id="L363">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPostfixExpression node, Object data) {
+<span class="fc" id="L367">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTCastExpression node, Object data) {
+<span class="fc" id="L371">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPrimaryExpression node, Object data) {
+<span class="fc" id="L375">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPrimaryPrefix node, Object data) {
+<span class="fc" id="L379">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTPrimarySuffix node, Object data) {
+<span class="fc" id="L383">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTLiteral node, Object data) {
+<span class="fc" id="L387">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTBooleanLiteral node, Object data) {
+<span class="fc" id="L391">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTNullLiteral node, Object data) {
+<span class="fc" id="L395">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTArguments node, Object data) {
+<span class="fc" id="L399">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTArgumentList node, Object data) {
+<span class="fc" id="L403">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTAllocationExpression node, Object data) {
+<span class="fc" id="L407">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTArrayDimsAndInits node, Object data) {
+<span class="fc" id="L411">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTStatement node, Object data) {
+<span class="fc" id="L415">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTLabeledStatement node, Object data) {
+<span class="fc" id="L419">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTBlock node, Object data) {
+<span class="fc" id="L423">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTBlockStatement node, Object data) {
+<span class="fc" id="L427">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTLocalVariableDeclaration node, Object data) {
+<span class="fc" id="L431">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTEmptyStatement node, Object data) {
+<span class="fc" id="L435">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTStatementExpression node, Object data) {
+<span class="fc" id="L439">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTSwitchStatement node, Object data) {
+<span class="fc" id="L443">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTSwitchLabel node, Object data) {
+<span class="fc" id="L447">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L451">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTWhileStatement node, Object data) {
+<span class="fc" id="L455">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTDoStatement node, Object data) {
+<span class="fc" id="L459">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L463">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTForInit node, Object data) {
+<span class="fc" id="L467">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTStatementExpressionList node, Object data) {
+<span class="fc" id="L471">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTForUpdate node, Object data) {
+<span class="fc" id="L475">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTBreakStatement node, Object data) {
+<span class="fc" id="L479">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTContinueStatement node, Object data) {
+<span class="fc" id="L483">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTReturnStatement node, Object data) {
+<span class="fc" id="L487">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTThrowStatement node, Object data) {
+<span class="fc" id="L491">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTSynchronizedStatement node, Object data) {
+<span class="fc" id="L495">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTTryStatement node, Object data) {
+<span class="fc" id="L499">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTFinallyStatement node, Object data) {
+<span class="fc" id="L503">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTCatchStatement node, Object data) {
+<span class="fc" id="L507">	return visit((JavaNode) node, data);</span>
+    }
+
+    public Object visit(ASTResourceSpecification node, Object data) {
+<span class="fc" id="L511">         return visit((JavaNode)node, data);</span>
+    }
+
+    public Object visit(ASTResources node, Object data) {
+<span class="fc" id="L515">         return visit((JavaNode)node, data);</span>
+    }
+
+    public Object visit(ASTResource node, Object data) {
+<span class="fc" id="L519">         return visit((JavaNode)node, data);</span>
+    }
+
+    public Object visit(ASTLambdaExpression node, Object data) {
+<span class="fc" id="L523">        return visit((JavaNode)node, data);</span>
+    }
+
+    public Object visit(ASTMethodReference node, Object data) {
+<span class="fc" id="L527">        return visit((JavaNode)node, data);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

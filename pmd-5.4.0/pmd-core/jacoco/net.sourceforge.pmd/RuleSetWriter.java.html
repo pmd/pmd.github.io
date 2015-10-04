@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RuleSetWriter.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">RuleSetWriter.java</span></div><h1>RuleSetWriter.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.rule.ImmutableLanguage;
+import net.sourceforge.pmd.lang.rule.RuleReference;
+import net.sourceforge.pmd.lang.rule.XPathRule;
+import net.sourceforge.pmd.lang.rule.properties.PropertyDescriptorWrapper;
+import net.sourceforge.pmd.lang.rule.properties.factories.PropertyDescriptorUtil;
+
+import org.apache.commons.io.IOUtils;
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Text;
+
+/**
+ * This class represents a way to serialize a RuleSet to an XML configuration file.
+ */
+public class RuleSetWriter {
+	
+    public static final String RULESET_NS_URI = &quot;http://pmd.sourceforge.net/ruleset/2.0.0&quot;;
+    
+	private final OutputStream outputStream;
+    private Document document;
+    private Set&lt;String&gt; ruleSetFileNames;
+
+<span class="fc" id="L49">    public RuleSetWriter(OutputStream outputStream) {</span>
+<span class="fc" id="L50">		this.outputStream = outputStream;</span>
+<span class="fc" id="L51">    }</span>
+
+    public void close() {
+<span class="fc" id="L54">    	IOUtils.closeQuietly(outputStream);</span>
+<span class="fc" id="L55">    }</span>
+
+    public void write(RuleSet ruleSet) {
+		try {
+<span class="fc" id="L59">		    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L60">		    documentBuilderFactory.setNamespaceAware(true);</span>
+<span class="fc" id="L61">		    DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();</span>
+<span class="fc" id="L62">		    document = documentBuilder.newDocument();</span>
+<span class="fc" id="L63">		    ruleSetFileNames = new HashSet&lt;String&gt;();</span>
+	
+<span class="fc" id="L65">		    Element ruleSetElement = createRuleSetElement(ruleSet);</span>
+<span class="fc" id="L66">		    document.appendChild(ruleSetElement);</span>
+	
+<span class="fc" id="L68">		    TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+		    try {
+<span class="nc" id="L70">		    	transformerFactory.setAttribute(&quot;indent-number&quot;, 3);</span>
+<span class="fc" id="L71">		    	} catch (IllegalArgumentException iae) {</span>
+		    		//ignore it, specific to one parser
+<span class="nc" id="L73">		    	}</span>
+<span class="fc" id="L74">		    Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="fc" id="L75">		    transformer.setOutputProperty(OutputKeys.METHOD, &quot;xml&quot;);</span>
+		    // This is as close to pretty printing as we'll get using standard Java APIs.
+<span class="fc" id="L77">		    transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="fc" id="L78">		    transformer.setOutputProperty(OutputKeys.ENCODING, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L79">		    transformer.transform(new DOMSource(document), new StreamResult(outputStream));</span>
+<span class="nc" id="L80">		} catch (DOMException e) {</span>
+<span class="nc" id="L81">		    throw new RuntimeException(e);</span>
+<span class="nc" id="L82">		} catch (FactoryConfigurationError e) {</span>
+<span class="nc" id="L83">		    throw new RuntimeException(e);</span>
+<span class="nc" id="L84">		} catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L85">		    throw new RuntimeException(e);</span>
+<span class="nc" id="L86">		} catch (TransformerException e) {</span>
+<span class="nc" id="L87">		    throw new RuntimeException(e);</span>
+<span class="fc" id="L88">		}</span>
+<span class="fc" id="L89">    }</span>
+
+    private Element createRuleSetElement(RuleSet ruleSet) {
+<span class="fc" id="L92">    	Element ruleSetElement = document.createElementNS(RULESET_NS_URI, &quot;ruleset&quot;);</span>
+<span class="fc" id="L93">    	ruleSetElement.setAttribute(&quot;xmlns:xsi&quot;, &quot;http://www.w3.org/2001/XMLSchema-instance&quot;);</span>
+<span class="fc" id="L94">		ruleSetElement.setAttributeNS(&quot;http://www.w3.org/2001/XMLSchema-instance&quot;, &quot;xsi:schemaLocation&quot;, RULESET_NS_URI + &quot; http://pmd.sourceforge.net/ruleset_2_0_0.xsd&quot;);</span>
+<span class="fc" id="L95">		ruleSetElement.setAttribute(&quot;name&quot;, ruleSet.getName());</span>
+	
+<span class="fc" id="L97">		Element descriptionElement = createDescriptionElement(ruleSet.getDescription());</span>
+<span class="fc" id="L98">		ruleSetElement.appendChild(descriptionElement);</span>
+	
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">		for (String excludePattern : ruleSet.getExcludePatterns()) {</span>
+<span class="nc" id="L101">		    Element excludePatternElement = createExcludePatternElement(excludePattern);</span>
+<span class="nc" id="L102">		    ruleSetElement.appendChild(excludePatternElement);</span>
+<span class="nc" id="L103">		}</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">		for (String includePattern : ruleSet.getIncludePatterns()) {</span>
+<span class="nc" id="L105">		    Element includePatternElement = createIncludePatternElement(includePattern);</span>
+<span class="nc" id="L106">		    ruleSetElement.appendChild(includePatternElement);</span>
+<span class="nc" id="L107">		}</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		for (Rule rule : ruleSet.getRules()) {</span>
+<span class="fc" id="L109">		    Element ruleElement = createRuleElement(rule);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">		    if (ruleElement != null) {</span>
+<span class="fc" id="L111">			ruleSetElement.appendChild(ruleElement);</span>
+		    }
+<span class="fc" id="L113">	}</span>
+
+<span class="fc" id="L115">	return ruleSetElement;</span>
+    }
+
+    private Element createDescriptionElement(String description) {
+<span class="fc" id="L119">    	return createTextElement(&quot;description&quot;, description);</span>
+    }
+
+    private Element createExcludePatternElement(String excludePattern) {
+<span class="nc" id="L123">    	return createTextElement(&quot;exclude-pattern&quot;, excludePattern);</span>
+    }
+
+    private Element createIncludePatternElement(String includePattern) {
+<span class="nc" id="L127">    	return createTextElement(&quot;include-pattern&quot;, includePattern);</span>
+    }
+    
+    private Element createRuleElement() {
+<span class="fc" id="L131">    	return document.createElementNS(RULESET_NS_URI, &quot;rule&quot;);</span>
+    }
+    
+    private Element createExcludeElement(String exclude) {
+<span class="fc" id="L135">        Element element = document.createElementNS(RULESET_NS_URI, &quot;exclude&quot;);</span>
+<span class="fc" id="L136">        element.setAttribute(&quot;name&quot;, exclude);</span>
+<span class="fc" id="L137">        return element;</span>
+    }
+
+    private Element createExampleElement(String example) {
+<span class="nc" id="L141">    	return createCDATASectionElement(&quot;example&quot;, example);</span>
+    }
+
+    private Element createPriorityElement(RulePriority priority) {
+<span class="nc" id="L145">    	return createTextElement(&quot;priority&quot;, String.valueOf(priority.getPriority()));</span>
+    }
+    
+    private Element createPropertiesElement() {
+<span class="nc" id="L149">    	return document.createElementNS(RULESET_NS_URI, &quot;properties&quot;);</span>
+    }
+    
+    private Element createRuleElement(Rule rule) {
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		if (rule instanceof RuleReference) {</span>
+<span class="fc" id="L154">		    RuleReference ruleReference = (RuleReference) rule;</span>
+<span class="fc" id="L155">		    RuleSetReference ruleSetReference = ruleReference.getRuleSetReference();</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">		    if (ruleSetReference.isAllRules()) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">			if (!ruleSetFileNames.contains(ruleSetReference.getRuleSetFileName())) {</span>
+<span class="fc" id="L158">			    ruleSetFileNames.add(ruleSetReference.getRuleSetFileName());</span>
+<span class="fc" id="L159">			    Element ruleSetReferenceElement = createRuleSetReferenceElement(ruleSetReference);</span>
+<span class="fc" id="L160">			    return ruleSetReferenceElement;</span>
+			} else {
+<span class="fc" id="L162">			    return null;</span>
+			}
+		    } else {
+<span class="fc" id="L165">			Language language = ruleReference.getOverriddenLanguage();</span>
+<span class="fc" id="L166">			LanguageVersion minimumLanguageVersion = ruleReference.getOverriddenMinimumLanguageVersion();</span>
+<span class="fc" id="L167">			LanguageVersion maximumLanguageVersion = ruleReference.getOverriddenMaximumLanguageVersion();</span>
+<span class="fc" id="L168">			Boolean deprecated = ruleReference.isOverriddenDeprecated();</span>
+<span class="fc" id="L169">			String name = ruleReference.getOverriddenName();</span>
+<span class="fc" id="L170">			String ref = ruleReference.getRuleSetReference().getRuleSetFileName() + &quot;/&quot; + ruleReference.getRule().getName();</span>
+<span class="fc" id="L171">			String message = ruleReference.getOverriddenMessage();</span>
+<span class="fc" id="L172">			String externalInfoUrl = ruleReference.getOverriddenExternalInfoUrl();</span>
+<span class="fc" id="L173">			String description = ruleReference.getOverriddenDescription();</span>
+<span class="fc" id="L174">			RulePriority priority = ruleReference.getOverriddenPriority();</span>
+<span class="fc" id="L175">			List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors = ruleReference.getOverriddenPropertyDescriptors();</span>
+<span class="fc" id="L176">			Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor = ruleReference.getOverriddenPropertiesByPropertyDescriptor();</span>
+<span class="fc" id="L177">			List&lt;String&gt; examples = ruleReference.getOverriddenExamples();</span>
+			
+<span class="fc" id="L179">			return createSingleRuleElement(language, minimumLanguageVersion, maximumLanguageVersion, deprecated,</span>
+				name, null, ref, message, externalInfoUrl, null, null, null, description, priority,
+				propertyDescriptors, propertiesByPropertyDescriptor, examples);
+		    }
+		} else {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		    return createSingleRuleElement(rule instanceof ImmutableLanguage ? null : rule.getLanguage(), </span>
+		    	rule.getMinimumLanguageVersion(), rule.getMaximumLanguageVersion(), rule.isDeprecated(),
+			    rule.getName(), rule.getSince(), null, rule.getMessage(), rule.getExternalInfoUrl(),
+			    rule.getRuleClass(), rule.usesDFA(), rule.usesTypeResolution(), rule.getDescription(), 
+			    rule.getPriority(), rule.getPropertyDescriptors(), rule.getPropertiesByPropertyDescriptor(),
+			    rule.getExamples());
+		}
+    }
+
+    private void setIfNonNull(Object value, Element target, String id) {
+<span class="fc bfc" id="L194" title="All 2 branches covered.">    	if (value != null) {</span>
+<span class="fc" id="L195">    		target.setAttribute(id, value.toString());</span>
+    	}
+<span class="fc" id="L197">    }</span>
+    
+    private Element createSingleRuleElement(Language language, LanguageVersion minimumLanguageVersion,
+	    LanguageVersion maximumLanguageVersion, Boolean deprecated, String name, String since, String ref,
+	    String message, String externalInfoUrl, String clazz, Boolean dfa, Boolean typeResolution,
+	    String description, RulePriority priority, List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors,
+	    Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor, List&lt;String&gt; examples) {
+<span class="fc" id="L204">		Element ruleElement = createRuleElement();</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">		if (language != null) {</span>
+<span class="nc" id="L206">		    ruleElement.setAttribute(&quot;language&quot;, language.getTerseName());</span>
+		}
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">		if (minimumLanguageVersion != null) {</span>
+<span class="nc" id="L209">		    ruleElement.setAttribute(&quot;minimumLanguageVersion&quot;, minimumLanguageVersion.getVersion());</span>
+		}
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">		if (maximumLanguageVersion != null) {</span>
+<span class="nc" id="L212">		    ruleElement.setAttribute(&quot;maximumLanguageVersion&quot;, maximumLanguageVersion.getVersion());</span>
+		}
+		
+<span class="fc" id="L215">		setIfNonNull(deprecated, 	  ruleElement, 	&quot;deprecated&quot;);</span>
+<span class="fc" id="L216">		setIfNonNull(name, 			  ruleElement, 	&quot;name&quot;);</span>
+<span class="fc" id="L217">		setIfNonNull(since, 		  ruleElement, 	&quot;since&quot;);</span>
+<span class="fc" id="L218">		setIfNonNull(ref, 			  ruleElement,	&quot;ref&quot;);</span>
+<span class="fc" id="L219">		setIfNonNull(message, 		  ruleElement, 	&quot;message&quot;);</span>
+<span class="fc" id="L220">		setIfNonNull(clazz, 		  ruleElement, 	&quot;class&quot;);</span>
+<span class="fc" id="L221">		setIfNonNull(externalInfoUrl, ruleElement,  &quot;externalInfoUrl&quot;);</span>
+<span class="fc" id="L222">		setIfNonNull(dfa, 			  ruleElement,  &quot;dfa&quot;);</span>
+<span class="fc" id="L223">		setIfNonNull(typeResolution,  ruleElement,  &quot;typeResolution&quot;);</span>
+	
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">		if (description != null) {</span>
+<span class="nc" id="L226">		    Element descriptionElement = createDescriptionElement(description);</span>
+<span class="nc" id="L227">		    ruleElement.appendChild(descriptionElement);</span>
+		}
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">		if (priority != null) {</span>
+<span class="nc" id="L230">		    Element priorityElement = createPriorityElement(priority);</span>
+<span class="nc" id="L231">		    ruleElement.appendChild(priorityElement);</span>
+		}
+<span class="fc" id="L233">		Element propertiesElement = createPropertiesElement(propertyDescriptors, propertiesByPropertyDescriptor);</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">		if (propertiesElement != null) {</span>
+<span class="nc" id="L235">		    ruleElement.appendChild(propertiesElement);</span>
+		}
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">		if (examples != null) {</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		    for (String example : examples) {</span>
+<span class="nc" id="L239">			Element exampleElement = createExampleElement(example);</span>
+<span class="nc" id="L240">			ruleElement.appendChild(exampleElement);</span>
+<span class="nc" id="L241">		    }</span>
+		}
+<span class="fc" id="L243">		return ruleElement;</span>
+    }
+
+    private Element createRuleSetReferenceElement(RuleSetReference ruleSetReference) {
+<span class="fc" id="L247">		Element ruleSetReferenceElement = createRuleElement();</span>
+<span class="fc" id="L248">		ruleSetReferenceElement.setAttribute(&quot;ref&quot;, ruleSetReference.getRuleSetFileName());</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">		for (String exclude : ruleSetReference.getExcludes()) {</span>
+<span class="fc" id="L250">		    Element excludeElement = createExcludeElement(exclude);</span>
+<span class="fc" id="L251">		    ruleSetReferenceElement.appendChild(excludeElement);</span>
+<span class="fc" id="L252">		}</span>
+<span class="fc" id="L253">		return ruleSetReferenceElement;</span>
+    }
+    
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    private Element createPropertiesElement(List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors,  Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor) {
+
+<span class="fc" id="L259">		Element propertiesElement = null;</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		if (propertyDescriptors != null) {</span>
+		    
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">		    for (PropertyDescriptor&lt;?&gt; propertyDescriptor : propertyDescriptors) {		// For each provided PropertyDescriptor</span>
+			
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (propertyDescriptor instanceof PropertyDescriptorWrapper) {				// Any wrapper property needs to go out as a definition.</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			    if (propertiesElement == null) {</span>
+<span class="nc" id="L266">			    	propertiesElement = createPropertiesElement();</span>
+			    }
+			    
+<span class="nc" id="L269">			    Element propertyElement = createPropertyDefinitionElementBR(((PropertyDescriptorWrapper&lt;?&gt;) propertyDescriptor).getPropertyDescriptor());</span>
+<span class="nc" id="L270">			    propertiesElement.appendChild(propertyElement);</span>
+<span class="nc" id="L271">			} else {			    </span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			    if (propertiesByPropertyDescriptor != null) {		// Otherwise, any property which has a value different than the default needs to go out as a value.</span>
+<span class="nc" id="L273">				Object defaultValue = propertyDescriptor.defaultValue();</span>
+<span class="nc" id="L274">				Object value = propertiesByPropertyDescriptor.get(propertyDescriptor);</span>
+<span class="nc bnc" id="L275" title="All 6 branches missed.">				if (value != defaultValue &amp;&amp; (value == null || !value.equals(defaultValue))) {</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">				    if (propertiesElement == null) {</span>
+<span class="nc" id="L277">				    	propertiesElement = createPropertiesElement();</span>
+				    }
+				    
+<span class="nc" id="L280">				    Element propertyElement = createPropertyValueElement(propertyDescriptor, value);</span>
+<span class="nc" id="L281">				    propertiesElement.appendChild(propertyElement);</span>
+					}
+			    }
+			}
+<span class="nc" id="L285">		}</span>
+	}
+
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">	if (propertiesByPropertyDescriptor != null) {</span>
+	    // Then, for each PropertyDescriptor not explicitly provided
+<span class="nc bnc" id="L290" title="All 2 branches missed.">	    for (Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry : propertiesByPropertyDescriptor.entrySet()) {</span>
+		// If not explicitly given...
+<span class="nc" id="L292">		PropertyDescriptor&lt;?&gt; propertyDescriptor = entry.getKey();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		if (!propertyDescriptors.contains(propertyDescriptor)) {</span>
+		    // Otherwise, any property which has a value different than the
+		    // default needs to go out as a value.
+<span class="nc" id="L296">		    Object defaultValue = propertyDescriptor.defaultValue();</span>
+<span class="nc" id="L297">		    Object value = entry.getValue();</span>
+<span class="nc bnc" id="L298" title="All 6 branches missed.">		    if (value != defaultValue &amp;&amp; (value == null || !value.equals(defaultValue))) {</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			if (propertiesElement == null) {</span>
+<span class="nc" id="L300">			    propertiesElement = createPropertiesElement();</span>
+			}
+<span class="nc" id="L302">			Element propertyElement = createPropertyValueElement(propertyDescriptor, value);</span>
+<span class="nc" id="L303">			propertiesElement.appendChild(propertyElement);</span>
+		    }
+		}
+<span class="nc" id="L306">	    }</span>
+	}
+<span class="fc" id="L308">	return propertiesElement;</span>
+    }
+
+    private Element createPropertyValueElement(PropertyDescriptor propertyDescriptor, Object value) {
+<span class="nc" id="L312">		Element propertyElement = document.createElementNS(RULESET_NS_URI, &quot;property&quot;);</span>
+<span class="nc" id="L313">		propertyElement.setAttribute(&quot;name&quot;, propertyDescriptor.name());</span>
+<span class="nc" id="L314">		String valueString = propertyDescriptor.asDelimitedString(value);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">		if (XPathRule.XPATH_DESCRIPTOR.equals(propertyDescriptor)) {</span>
+<span class="nc" id="L316">		    Element valueElement = createCDATASectionElement(&quot;value&quot;, valueString);</span>
+<span class="nc" id="L317">		    propertyElement.appendChild(valueElement);</span>
+<span class="nc" id="L318">		} else {</span>
+<span class="nc" id="L319">		    propertyElement.setAttribute(&quot;value&quot;, valueString);</span>
+		}
+	
+<span class="nc" id="L322">		return propertyElement;</span>
+    }
+
+//	private Element createPropertyDefinitionElement(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
+//		Element propertyElement = createPropertyValueElement(propertyDescriptor, propertyDescriptor.defaultValue());
+//		
+//		propertyElement.setAttribute(&quot;description&quot;, propertyDescriptor.description());
+//		String type = PropertyDescriptorFactory.getPropertyDescriptorType(propertyDescriptor);
+//		propertyElement.setAttribute(&quot;type&quot;, type);
+//		
+//		if (propertyDescriptor.isMultiValue()) {
+//			propertyElement.setAttribute(&quot;delimiter&quot;, String.valueOf(propertyDescriptor.multiValueDelimiter()));
+//		}
+//		
+//		if (propertyDescriptor instanceof AbstractNumericProperty) {
+//			propertyElement.setAttribute(&quot;min&quot;, String.valueOf(((AbstractNumericProperty&lt;?&gt;) propertyDescriptor).lowerLimit()));
+//			propertyElement.setAttribute(&quot;max&quot;, String.valueOf(((AbstractNumericProperty&lt;?&gt;) propertyDescriptor).upperLimit()));
+//		}
+//
+//		return propertyElement;
+//    }
+	
+	private Element createPropertyDefinitionElementBR(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
+		
+<span class="nc" id="L346">		final Element propertyElement = createPropertyValueElement(propertyDescriptor, propertyDescriptor.defaultValue());</span>
+<span class="nc" id="L347">		propertyElement.setAttribute(PropertyDescriptorFields.TYPE, PropertyDescriptorUtil.typeIdFor(propertyDescriptor.type()));</span>
+		
+<span class="nc" id="L349">		Map&lt;String, String&gt; propertyValuesById = propertyDescriptor.attributeValuesById();</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		for (Map.Entry&lt;String, String&gt; entry : propertyValuesById.entrySet()) {</span>
+<span class="nc" id="L351">			propertyElement.setAttribute(entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L352">		}</span>
+		
+<span class="nc" id="L354">		return propertyElement;</span>
+    }
+
+    private Element createTextElement(String name, String value) {
+<span class="fc" id="L358">		Element element = document.createElementNS(RULESET_NS_URI, name);</span>
+<span class="fc" id="L359">		Text text = document.createTextNode(value);</span>
+<span class="fc" id="L360">		element.appendChild(text);</span>
+<span class="fc" id="L361">		return element;</span>
+    }
+
+    private Element createCDATASectionElement(String name, String value) {
+<span class="nc" id="L365">		Element element = document.createElementNS(RULESET_NS_URI, name);</span>
+<span class="nc" id="L366">		CDATASection cdataSection = document.createCDATASection(value);</span>
+<span class="nc" id="L367">		element.appendChild(cdataSection);</span>
+<span class="nc" id="L368">		return element;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

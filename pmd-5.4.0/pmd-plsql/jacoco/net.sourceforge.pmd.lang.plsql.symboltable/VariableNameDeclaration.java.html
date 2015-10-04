@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VariableNameDeclaration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">VariableNameDeclaration.java</span></div><h1>VariableNameDeclaration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.plsql.ast.ASTVariableOrConstantDeclaratorId;
+import net.sourceforge.pmd.lang.symboltable.AbstractNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+
+public class VariableNameDeclaration extends AbstractNameDeclaration {
+<span class="fc" id="L14">   private final static Logger LOGGER = Logger.getLogger(VariableNameDeclaration.class.getName()); </span>
+
+    public VariableNameDeclaration(ASTVariableOrConstantDeclaratorId node) {
+<span class="fc" id="L17">	super(node);</span>
+<span class="fc" id="L18">    }</span>
+
+    @Override
+    public Scope getScope() {
+	try {
+<span class="nc" id="L23">	  return node.getScope().getEnclosingScope(ClassScope.class);</span>
+	}
+<span class="nc" id="L25">	catch (Exception e)</span>
+	{
+<span class="nc bnc" id="L27" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L28">	  LOGGER.finest(&quot;This Node does not have an enclosing Class: &quot;</span>
+		              + node.getBeginLine() + &quot;/&quot; + node.getBeginColumn()
+		              + &quot; =&gt; &quot; + this.getImage()
+		             );
+	    }
+<span class="nc" id="L33">          return null; //@TODO SRT a cop-out </span>
+	}
+    }
+
+    public ASTVariableOrConstantDeclaratorId getDeclaratorId() {
+<span class="nc" id="L38">	return (ASTVariableOrConstantDeclaratorId) node;</span>
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (!(o instanceof VariableNameDeclaration)) {</span>
+<span class="nc" id="L45">            return false;</span>
+        }
+<span class="nc" id="L47">	VariableNameDeclaration n = (VariableNameDeclaration) o;</span>
+	try
+	{
+<span class="nc" id="L50">	return n.getImage().equals(this.getImage());</span>
+	}
+<span class="nc" id="L52">	catch (Exception e)</span>
+	{
+<span class="nc" id="L54">		e.printStackTrace(System.err);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L56">		LOGGER.finest(&quot;n.node=&quot;+n.node);</span>
+<span class="nc" id="L57">		LOGGER.finest(&quot;n.getImage=&quot;+n.getImage());</span>
+<span class="nc" id="L58">		LOGGER.finest(&quot;node=&quot;+node);</span>
+<span class="nc" id="L59">		LOGGER.finest(&quot;this.getImage=&quot;+this.getImage());</span>
+		}
+<span class="nc" id="L61">		return false;</span>
+	}
+    }
+
+    @Override
+    public int hashCode() {
+	try
+	{
+<span class="fc" id="L69">	  return this.getImage().hashCode();</span>
+	}
+<span class="nc" id="L71">	catch(Exception e)</span>
+	{
+<span class="nc bnc" id="L73" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L74">		LOGGER.finest(&quot;VariableNameDeclaration: node=&quot;</span>
+			           +node
+			);
+<span class="nc" id="L77">		LOGGER.finest(&quot;VariableNameDeclaration: node,getImage=&quot;</span>
+			           +this.getImage()
+			);
+	    }
+<span class="nc" id="L81">		return 0;</span>
+	}
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L87">	return &quot;Variable: image = '&quot; + node.getImage() + &quot;', line = &quot; + node.getBeginLine();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

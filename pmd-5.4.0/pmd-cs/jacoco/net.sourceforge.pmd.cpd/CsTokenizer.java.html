@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CsTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD C#</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CsTokenizer.java</span></div><h1>CsTokenizer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import java.io.BufferedReader;
+import java.io.CharArrayReader;
+import java.io.IOException;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * This class does a best-guess try-anything tokenization.
+ *
+ * @author jheintz
+ */
+<span class="fc" id="L17">public class CsTokenizer implements Tokenizer {</span>
+
+    @Override
+    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
+<span class="fc" id="L21">        BufferedReader reader = new BufferedReader(new CharArrayReader(sourceCode.getCodeBuffer().toString()</span>
+                .toCharArray()));
+        try {
+<span class="fc" id="L24">            int ic = reader.read();</span>
+<span class="fc" id="L25">            int line = 1;</span>
+            char c;
+            StringBuilder b;
+<span class="fc bfc" id="L28" title="All 2 branches covered.">            while (ic != -1) {</span>
+<span class="fc" id="L29">                c = (char) ic;</span>
+<span class="fc bfc" id="L30" title="All 9 branches covered.">                switch (c) {</span>
+                // new line
+                case '\n':
+<span class="fc" id="L33">                    line++;</span>
+<span class="fc" id="L34">                    ic = reader.read();</span>
+<span class="fc" id="L35">                    break;</span>
+
+                // white space
+                case ' ':
+                case '\t':
+                case '\r':
+<span class="fc" id="L41">                    ic = reader.read();</span>
+<span class="fc" id="L42">                    break;</span>
+
+                // ignore semicolons
+                case ';':
+<span class="fc" id="L46">                    ic = reader.read();</span>
+<span class="fc" id="L47">                    break;</span>
+
+                // &lt; &lt;&lt; &lt;= &lt;&lt;= &gt; &gt;&gt; &gt;= &gt;&gt;=
+                case '&lt;':
+                case '&gt;':
+<span class="fc" id="L52">                    ic = reader.read();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                    if (ic == '=') {</span>
+<span class="fc" id="L54">                        tokenEntries.add(new TokenEntry(c + &quot;=&quot;, sourceCode.getFileName(), line));</span>
+<span class="fc" id="L55">                        ic = reader.read();</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">                    } else if (ic == c) {</span>
+<span class="fc" id="L57">                        ic = reader.read();</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                        if (ic == '=') {</span>
+<span class="nc" id="L59">                            tokenEntries.add(new TokenEntry(c + c + &quot;=&quot;, sourceCode</span>
+                                    .getFileName(), line));
+<span class="nc" id="L61">                            ic = reader.read();</span>
+                        } else {
+<span class="fc" id="L63">                            tokenEntries.add(new TokenEntry(String.valueOf(c) + c, sourceCode</span>
+                                    .getFileName(), line));
+                        }
+                    } else {
+<span class="nc" id="L67">                        tokenEntries.add(new TokenEntry(String.valueOf(c), sourceCode.getFileName(), line));</span>
+                    }
+<span class="nc" id="L69">                    break;</span>
+
+                // = == &amp; &amp;= &amp;&amp; | |= || + += ++ - -= --
+                case '=':
+                case '&amp;':
+                case '|':
+                case '+':
+                case '-':
+<span class="fc" id="L77">                    ic = reader.read();</span>
+<span class="fc bfc" id="L78" title="All 4 branches covered.">                    if (ic == '=' || ic == c) {</span>
+<span class="fc" id="L79">                        tokenEntries.add(new TokenEntry(c + String.valueOf((char) ic), sourceCode</span>
+                                .getFileName(), line));
+<span class="fc" id="L81">                        ic = reader.read();</span>
+                    } else {
+<span class="fc" id="L83">                        tokenEntries.add(new TokenEntry(String.valueOf(c), sourceCode.getFileName(), line));</span>
+                    }
+<span class="fc" id="L85">                    break;</span>
+
+                // ! != * *= % %= ^ ^= ~ ~=
+                case '!':
+                case '*':
+                case '%':
+                case '^':
+                case '~':
+<span class="fc" id="L93">                    ic = reader.read();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                    if (ic == '=') {</span>
+<span class="fc" id="L95">                        tokenEntries.add(new TokenEntry(c + &quot;=&quot;, sourceCode.getFileName(), line));</span>
+<span class="fc" id="L96">                        ic = reader.read();</span>
+                    } else {
+<span class="fc" id="L98">                        tokenEntries.add(new TokenEntry(String.valueOf(c), sourceCode.getFileName(), line));</span>
+                    }
+<span class="fc" id="L100">                    break;</span>
+
+                // strings &amp; chars
+                case '&quot;':
+                case '\'':
+<span class="fc" id="L105">                    int beginLine = line;</span>
+<span class="fc" id="L106">                    b = new StringBuilder();</span>
+<span class="fc" id="L107">                    b.append(c);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                    while ((ic = reader.read()) != c) {</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">                        if (ic == -1) {</span>
+<span class="fc" id="L110">                            break;</span>
+                        }
+<span class="fc" id="L112">                        b.append((char) ic);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                        if (ic == '\\') {</span>
+<span class="fc" id="L114">                            int next = reader.read();</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                            if (next != -1) {</span>
+<span class="fc" id="L116">                                b.append((char) next);</span>
+
+<span class="fc bfc" id="L118" title="All 2 branches covered.">                                if (next == '\n') {</span>
+<span class="fc" id="L119">                                    line++;</span>
+                                }
+                            }
+<span class="fc bfc" id="L122" title="All 2 branches covered.">                        } else if (ic == '\n') {</span>
+<span class="fc" id="L123">                            line++;</span>
+                        }
+                    }
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                    if (ic != -1) {</span>
+<span class="fc" id="L127">                        b.append((char) ic);</span>
+                    }
+<span class="fc" id="L129">                    tokenEntries.add(new TokenEntry(b.toString(), sourceCode.getFileName(), beginLine));</span>
+<span class="fc" id="L130">                    ic = reader.read();</span>
+<span class="fc" id="L131">                    break;</span>
+
+                // / /= /*...*/ //...
+                case '/':
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">                    switch (c = (char) (ic = reader.read())) {</span>
+                    case '*':
+                        //int beginLine = line;
+<span class="fc" id="L138">                        int state = 1;</span>
+<span class="fc" id="L139">                        b = new StringBuilder();</span>
+<span class="fc" id="L140">                        b.append(&quot;/*&quot;);</span>
+
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">                        while ((ic = reader.read()) != -1) {</span>
+<span class="fc" id="L143">                            c = (char) ic;</span>
+<span class="fc" id="L144">                            b.append(c);</span>
+
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                            if (c == '\n') {</span>
+<span class="fc" id="L147">                                line++;</span>
+                            }
+
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                            if (state == 1) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                                if (c == '*') {</span>
+<span class="fc" id="L152">                                    state = 2;</span>
+                                }
+                            } else {
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                                if (c == '/') {</span>
+<span class="fc" id="L156">                                    ic = reader.read();</span>
+<span class="fc" id="L157">                                    break;</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">                                } else if (c != '*') {</span>
+<span class="fc" id="L159">                                    state = 1;</span>
+                                }
+                            }
+                        }
+                        // ignore the /* comment
+                        // tokenEntries.add(new TokenEntry(b.toString(),
+                        // sourceCode.getFileName(), beginLine));
+                        break;
+
+                    case '/':
+<span class="fc" id="L169">                        b = new StringBuilder();</span>
+<span class="fc" id="L170">                        b.append(&quot;//&quot;);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                        while ((ic = reader.read()) != '\n') {</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">                            if (ic == -1) {</span>
+<span class="nc" id="L173">                                break;</span>
+                            }
+<span class="fc" id="L175">                            b.append((char) ic);</span>
+                        }
+                        // ignore the // comment
+                        // tokenEntries.add(new TokenEntry(b.toString(),
+                        // sourceCode.getFileName(), line));
+                        break;
+
+                    case '=':
+<span class="fc" id="L183">                        tokenEntries.add(new TokenEntry(&quot;/=&quot;, sourceCode.getFileName(), line));</span>
+<span class="fc" id="L184">                        ic = reader.read();</span>
+<span class="fc" id="L185">                        break;</span>
+
+                    default:
+<span class="nc" id="L188">                        tokenEntries.add(new TokenEntry(&quot;/&quot;, sourceCode.getFileName(), line));</span>
+<span class="nc" id="L189">                        break;</span>
+                    }
+                    break;
+
+                default:
+                    // [a-zA-Z_][a-zA-Z_0-9]*
+<span class="fc bfc" id="L195" title="All 2 branches covered.">                    if (Character.isJavaIdentifierStart(c)) {</span>
+<span class="fc" id="L196">                        b = new StringBuilder();</span>
+                        do {
+<span class="fc" id="L198">                            b.append(c);</span>
+<span class="fc" id="L199">                            c = (char) (ic = reader.read());</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">                        } while (Character.isJavaIdentifierPart(c));</span>
+<span class="fc" id="L201">                        tokenEntries.add(new TokenEntry(b.toString(), sourceCode.getFileName(), line));</span>
+                    }
+                    // numbers
+<span class="pc bpc" id="L204" title="1 of 4 branches missed.">                    else if (Character.isDigit(c) || c == '.') {</span>
+<span class="fc" id="L205">                        b = new StringBuilder();</span>
+                        do {
+<span class="fc" id="L207">                            b.append(c);</span>
+<span class="pc bpc" id="L208" title="1 of 4 branches missed.">                            if (c == 'e' || c == 'E') {</span>
+<span class="fc" id="L209">                                c = (char) (ic = reader.read());</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">                                if (&quot;1234567890-&quot;.indexOf(c) == -1) {</span>
+<span class="nc" id="L211">                                    break;</span>
+                                }
+<span class="fc" id="L213">                                b.append(c);</span>
+                            }
+<span class="fc" id="L215">                            c = (char) (ic = reader.read());</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">                        } while (&quot;1234567890.iIlLfFdDsSuUeExX&quot;.indexOf(c) != -1);</span>
+
+<span class="fc" id="L218">                        tokenEntries.add(new TokenEntry(b.toString(), sourceCode.getFileName(), line));</span>
+                    }
+                    // anything else
+                    else {
+<span class="fc" id="L222">                        tokenEntries.add(new TokenEntry(String.valueOf(c), sourceCode.getFileName(), line));</span>
+<span class="fc" id="L223">                        ic = reader.read();</span>
+<span class="fc" id="L224">                        break;</span>
+                    }
+                }
+            }
+<span class="nc" id="L228">        } catch (IOException e) {</span>
+<span class="nc" id="L229">            e.printStackTrace();</span>
+        } finally {
+<span class="pc" id="L231">            IOUtils.closeQuietly(reader);</span>
+<span class="pc" id="L232">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="pc" id="L233">        }</span>
+<span class="fc" id="L234">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ImportWrapper.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">ImportWrapper.java</span></div><h1>ImportWrapper.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+
+public class ImportWrapper {
+    private Node node;
+    private String name;
+    private String fullname;
+    private boolean isStaticDemand;
+<span class="nc" id="L18">    private Set&lt;String&gt; allDemands = new HashSet&lt;String&gt;();</span>
+
+    public ImportWrapper(String fullname, String name) {
+<span class="nc" id="L21">        this(fullname, name, null);</span>
+<span class="nc" id="L22">    }</span>
+
+    public ImportWrapper(String fullname, String name, Node node) {
+<span class="nc" id="L25">        this(fullname, name, node, false);</span>
+<span class="nc" id="L26">    }</span>
+
+    public ImportWrapper(String fullname, String name, Node node, Class&lt;?&gt; type, boolean isStaticDemand) {
+<span class="nc" id="L29">        this(fullname, name, node, isStaticDemand);</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (type != null) {</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">            for (Method m : type.getMethods()) {</span>
+<span class="nc" id="L32">                allDemands.add(m.getName());</span>
+            }
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            for (Field f : type.getFields()) {</span>
+<span class="nc" id="L35">                allDemands.add(f.getName());</span>
+            }
+        }
+<span class="nc" id="L38">    }</span>
+
+<span class="nc" id="L40">    public ImportWrapper(String fullname, String name, Node node, boolean isStaticDemand) {</span>
+<span class="nc" id="L41">        this.fullname = fullname;</span>
+<span class="nc" id="L42">        this.name = name;</span>
+<span class="nc" id="L43">        this.node = node;</span>
+<span class="nc" id="L44">        this.isStaticDemand = isStaticDemand;</span>
+<span class="nc" id="L45">    }</span>
+
+    public boolean equals(Object other) {
+<span class="nc bnc" id="L48" title="All 2 branches missed.">    	if (other == null) {</span>
+<span class="nc" id="L49">    	    return false;</span>
+    	}
+<span class="nc bnc" id="L51" title="All 2 branches missed.">    	if (other == this) {</span>
+<span class="nc" id="L52">    	    return true;</span>
+    	}
+<span class="nc bnc" id="L54" title="All 2 branches missed.">    	if (other instanceof ImportWrapper) {</span>
+<span class="nc" id="L55">	        ImportWrapper i = (ImportWrapper) other;</span>
+<span class="nc bnc" id="L56" title="All 4 branches missed.">	        if (name == null &amp;&amp; i.getName() == null) {</span>
+<span class="nc" id="L57">	            return i.getFullName().equals(fullname);</span>
+	        }
+<span class="nc" id="L59">	        return i.getName().equals(name);</span>
+    	}
+<span class="nc" id="L61">    	return false;</span>
+    }
+
+    public boolean matches(ImportWrapper i) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (isStaticDemand) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (allDemands.contains(i.fullname)) {</span>
+<span class="nc" id="L67">                return true;</span>
+            }
+        }
+<span class="nc bnc" id="L70" title="All 4 branches missed.">        if (name == null &amp;&amp; i.getName() == null) {</span>
+<span class="nc" id="L71">            return i.getFullName().equals(fullname);</span>
+        }
+<span class="nc" id="L73">        return i.getName().equals(name);</span>
+    }
+
+    public int hashCode() {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if(name == null){</span>
+<span class="nc" id="L78">            return fullname.hashCode();</span>
+        }
+<span class="nc" id="L80">        return name.hashCode();</span>
+    }
+
+    public String getName() {
+<span class="nc" id="L84">        return name;</span>
+    }
+
+    public String getFullName() {
+<span class="nc" id="L88">        return fullname;</span>
+    }
+
+    public Node getNode() {
+<span class="nc" id="L92">        return node;</span>
+    }
+
+    public boolean isStaticOnDemand() {
+<span class="nc" id="L96">        return isStaticDemand;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L101">        return &quot;Import[name=&quot; + name + &quot;,fullname=&quot; + fullname + &quot;,static*=&quot; + isStaticDemand + &quot;]&quot;;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
