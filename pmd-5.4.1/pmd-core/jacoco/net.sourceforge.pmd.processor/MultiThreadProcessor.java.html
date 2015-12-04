@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MultiThreadProcessor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.processor</a> &gt; <span class="el_source">MultiThreadProcessor.java</span></div><h1>MultiThreadProcessor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.processor;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RuleSetFactory;
+import net.sourceforge.pmd.RuleSets;
+import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.util.datasource.DataSource;
+
+/**
+ * @author Romain Pelisse &lt;belaran@gmail.com&gt;
+ *
+ */
+public class MultiThreadProcessor extends AbstractPMDProcessor {
+
+
+	public MultiThreadProcessor(final PMDConfiguration configuration) {
+<span class="nc" id="L29">		super(configuration);</span>
+<span class="nc" id="L30">	}</span>
+
+	/**
+	 * Run PMD on a list of files using multiple threads.
+	 */
+	public void processFiles(final RuleSetFactory ruleSetFactory, final List&lt;DataSource&gt; files,
+			final RuleContext ctx, final List&lt;Renderer&gt; renderers) {
+
+<span class="nc" id="L38">		RuleSets rs = createRuleSets(ruleSetFactory);</span>
+<span class="nc" id="L39">		configuration.setPmdRuleSets(rs);</span>
+<span class="nc" id="L40">		rs.start(ctx);</span>
+
+<span class="nc" id="L42">		PmdThreadFactory factory = new PmdThreadFactory(ruleSetFactory, ctx);</span>
+<span class="nc" id="L43">		ExecutorService executor = Executors.newFixedThreadPool(</span>
+				configuration.getThreads(), factory);
+<span class="nc" id="L45">		List&lt;Future&lt;Report&gt;&gt; tasks = new LinkedList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		for (DataSource dataSource : files) {</span>
+<span class="nc" id="L48">			String niceFileName = filenameFrom(dataSource);</span>
+
+<span class="nc" id="L50">			PmdRunnable r = new PmdRunnable(executor, configuration,</span>
+					dataSource, niceFileName, renderers);
+<span class="nc" id="L52">			Future&lt;Report&gt; future = executor.submit(r);</span>
+<span class="nc" id="L53">			tasks.add(future);</span>
+<span class="nc" id="L54">		}</span>
+<span class="nc" id="L55">		executor.shutdown();</span>
+
+<span class="nc" id="L57">		processReports(renderers, tasks);</span>
+		
+<span class="nc" id="L59">		rs.end(ctx);</span>
+<span class="nc" id="L60">		super.renderReports(renderers, ctx.getReport());</span>
+
+<span class="nc" id="L62">	}</span>
+
+	private void processReports(final List&lt;Renderer&gt; renderers, List&lt;Future&lt;Report&gt;&gt; tasks) throws Error {
+		
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		while (!tasks.isEmpty()) {</span>
+<span class="nc" id="L67">			Future&lt;Report&gt; future = tasks.remove(0);</span>
+<span class="nc" id="L68">			Report report = null;</span>
+			try {
+<span class="nc" id="L70">				report = future.get();</span>
+<span class="nc" id="L71">			} catch (InterruptedException ie) {</span>
+<span class="nc" id="L72">				Thread.currentThread().interrupt();</span>
+<span class="nc" id="L73">				future.cancel(true);</span>
+<span class="nc" id="L74">			} catch (ExecutionException ee) {</span>
+<span class="nc" id="L75">				Throwable t = ee.getCause();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">				if (t instanceof RuntimeException) {</span>
+<span class="nc" id="L77">					throw (RuntimeException) t;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				} else if (t instanceof Error) {</span>
+<span class="nc" id="L79">					throw (Error) t;</span>
+				} else {
+<span class="nc" id="L81">					throw new IllegalStateException(</span>
+							&quot;PmdRunnable exception&quot;, t);
+				}
+<span class="nc" id="L84">			}</span>
+
+<span class="nc" id="L86">			super.renderReports(renderers, report);</span>
+<span class="nc" id="L87">		}</span>
+<span class="nc" id="L88">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

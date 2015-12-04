@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Report.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">Report.java</span></div><h1>Report.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.dfa.report.ReportTree;
+import net.sourceforge.pmd.renderers.AbstractAccumulatingRenderer;
+import net.sourceforge.pmd.stat.Metric;
+import net.sourceforge.pmd.util.DateTimeUtil;
+import net.sourceforge.pmd.util.EmptyIterator;
+import net.sourceforge.pmd.util.NumericConstants;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * A {@link Report} collects all informations during a PMD execution. This
+ * includes violations, suppressed violations, metrics, error during processing
+ * and configuration errors.
+ */
+<span class="fc" id="L29">public class Report implements Iterable&lt;RuleViolation&gt; {</span>
+
+    /**
+     * Creates a new, initialized, empty report for the given file name.
+     *
+     * @param ctx The context to use to connect to the report
+     * @param fileName the filename used to report any violations
+     * @return the new report
+     */
+    public static Report createReport(RuleContext ctx, String fileName) {
+<span class="nc" id="L39">        Report report = new Report();</span>
+
+        // overtake the listener
+<span class="nc" id="L42">        report.addSynchronizedListeners(ctx.getReport().getSynchronizedListeners());</span>
+
+<span class="nc" id="L44">        ctx.setReport(report);</span>
+<span class="nc" id="L45">        ctx.setSourceCodeFilename(fileName);</span>
+<span class="nc" id="L46">        ctx.setSourceCodeFile(new File(fileName));</span>
+<span class="nc" id="L47">        return report;</span>
+    }
+
+    /**
+     * Represents a duration. Useful for reporting processing time.
+     */
+    public static class ReadableDuration {
+        private final long duration;
+
+        /**
+         * Creates a new duration.
+         *
+         * @param duration the duration in milliseconds.
+         */
+<span class="fc" id="L61">        public ReadableDuration(long duration) {</span>
+<span class="fc" id="L62">            this.duration = duration;</span>
+<span class="fc" id="L63">        }</span>
+
+        /**
+         * Gets a human readable representation of the duration, such as
+         * &quot;1h 3m 5s&quot;.
+         *
+         * @return human readable representation of the duration
+         */
+        public String getTime() {
+<span class="fc" id="L72">            return DateTimeUtil.asHoursMinutesSeconds(duration);</span>
+        }
+    }
+
+    /**
+     * Represents a configuration error.
+     */
+    public static class RuleConfigurationError {
+        private final Rule rule;
+        private final String issue;
+
+        /**
+         * Creates a new configuration error.
+         *
+         * @param theRule the rule which is configured wrongly
+         * @param theIssue the reason, why the configuration is wrong
+         */
+<span class="nc" id="L89">        public RuleConfigurationError(Rule theRule, String theIssue) {</span>
+<span class="nc" id="L90">            rule = theRule;</span>
+<span class="nc" id="L91">            issue = theIssue;</span>
+<span class="nc" id="L92">        }</span>
+
+        /**
+         * Gets the wrongly configured rule
+         *
+         * @return the wrongly configured rule
+         */
+        public Rule rule() {
+<span class="nc" id="L100">            return rule;</span>
+        }
+
+        /**
+         * Gets the reason for the configuration error.
+         *
+         * @return the issue
+         */
+        public String issue() {
+<span class="nc" id="L109">            return issue;</span>
+        }
+    }
+
+    /**
+     * Represents a processing error, such as a parse error.
+     */
+    public static class ProcessingError {
+        private final String msg;
+        private final String file;
+
+        /**
+         * Creates a new processing error
+         *
+         * @param msg the error message
+         * @param file the file during which the error occurred
+         */
+<span class="fc" id="L126">        public ProcessingError(String msg, String file) {</span>
+<span class="fc" id="L127">            this.msg = msg;</span>
+<span class="fc" id="L128">            this.file = file;</span>
+<span class="fc" id="L129">        }</span>
+
+        public String getMsg() {
+<span class="fc" id="L132">            return msg;</span>
+        }
+
+        public String getFile() {
+<span class="fc" id="L136">            return file;</span>
+        }
+    }
+
+    /**
+     * Represents a violation, that has been suppressed.
+     */
+    public static class SuppressedViolation {
+        private final RuleViolation rv;
+        private final boolean isNOPMD;
+        private final String userMessage;
+
+        /**
+         * Creates a suppressed violation.
+         *
+         * @param rv the actual violation, that has been suppressed
+         * @param isNOPMD the suppression mode: &lt;code&gt;true&lt;/code&gt; if it is
+         *            suppressed via a NOPMD comment, &lt;code&gt;false&lt;/code&gt; if
+         *            suppressed via annotations.
+         * @param userMessage contains the suppressed code line or
+         *            &lt;code&gt;null&lt;/code&gt;
+         */
+<span class="fc" id="L158">        public SuppressedViolation(RuleViolation rv, boolean isNOPMD, String userMessage) {</span>
+<span class="fc" id="L159">            this.isNOPMD = isNOPMD;</span>
+<span class="fc" id="L160">            this.rv = rv;</span>
+<span class="fc" id="L161">            this.userMessage = userMessage;</span>
+<span class="fc" id="L162">        }</span>
+
+        /**
+         * Returns &lt;code&gt;true&lt;/code&gt; if the violation has been suppressed via a
+         * NOPMD comment.
+         *
+         * @return &lt;code&gt;true&lt;/code&gt; if the violation has been suppressed via a
+         *         NOPMD comment.
+         */
+        public boolean suppressedByNOPMD() {
+<span class="fc" id="L172">            return this.isNOPMD;</span>
+        }
+
+        /**
+         * Returns &lt;code&gt;true&lt;/code&gt; if the violation has been suppressed via a
+         * annotation.
+         *
+         * @return &lt;code&gt;true&lt;/code&gt; if the violation has been suppressed via a
+         *         annotation.
+         */
+        public boolean suppressedByAnnotation() {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            return !this.isNOPMD;</span>
+        }
+
+        public RuleViolation getRuleViolation() {
+<span class="fc" id="L187">            return this.rv;</span>
+        }
+
+        public String getUserMessage() {
+<span class="fc" id="L191">            return userMessage;</span>
+        }
+    }
+
+    /*
+     * The idea is to store the violations in a tree instead of a list, to do
+     * better and faster sort and filter mechanism and to visualize the result
+     * as tree. (ide plugins).
+     */
+<span class="fc" id="L200">    private final ReportTree violationTree = new ReportTree();</span>
+
+    // Note that this and the above data structure are both being maintained for
+    // a bit
+<span class="fc" id="L204">    private final List&lt;RuleViolation&gt; violations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L205">    private final Set&lt;Metric&gt; metrics = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L206">    private final List&lt;SynchronizedReportListener&gt; listeners = new ArrayList&lt;&gt;();</span>
+    private List&lt;ProcessingError&gt; errors;
+    private List&lt;RuleConfigurationError&gt; configErrors;
+<span class="fc" id="L209">    private Map&lt;Integer, String&gt; linesToSuppress = new HashMap&lt;&gt;();</span>
+    private long start;
+    private long end;
+
+<span class="fc" id="L213">    private List&lt;SuppressedViolation&gt; suppressedRuleViolations = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Configure the lines, that are suppressed via a NOPMD comment.
+     *
+     * @param lines the suppressed lines
+     */
+    public void suppress(Map&lt;Integer, String&gt; lines) {
+<span class="fc" id="L221">        linesToSuppress = lines;</span>
+<span class="fc" id="L222">    }</span>
+
+    private static String keyFor(RuleViolation rv) {
+
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        return StringUtil.isNotEmpty(rv.getPackageName()) ? rv.getPackageName() + '.' + rv.getClassName() : &quot;&quot;;</span>
+    }
+
+    /**
+     * Calculate a summary of violation counts per fully classified class name.
+     *
+     * @return violations per class name
+     */
+    public Map&lt;String, Integer&gt; getCountSummary() {
+<span class="fc" id="L235">        Map&lt;String, Integer&gt; summary = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        for (RuleViolation rv : violationTree) {</span>
+<span class="fc" id="L237">            String key = keyFor(rv);</span>
+<span class="fc" id="L238">            Integer o = summary.get(key);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            summary.put(key, o == null ? NumericConstants.ONE : o + 1);</span>
+<span class="fc" id="L240">        }</span>
+<span class="fc" id="L241">        return summary;</span>
+    }
+
+    public ReportTree getViolationTree() {
+<span class="fc" id="L245">        return this.violationTree;</span>
+    }
+
+    /**
+     * Calculate a summary of violations per rule.
+     *
+     * @return a Map summarizing the Report: String (rule name) -&gt;Integer (count
+     *         of violations)
+     */
+    public Map&lt;String, Integer&gt; getSummary() {
+<span class="fc" id="L255">        Map&lt;String, Integer&gt; summary = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        for (RuleViolation rv : violations) {</span>
+<span class="fc" id="L257">            String name = rv.getRule().getName();</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">            if (!summary.containsKey(name)) {</span>
+<span class="fc" id="L259">                summary.put(name, NumericConstants.ZERO);</span>
+            }
+<span class="fc" id="L261">            Integer count = summary.get(name);</span>
+<span class="fc" id="L262">            summary.put(name, count + 1);</span>
+<span class="fc" id="L263">        }</span>
+<span class="fc" id="L264">        return summary;</span>
+    }
+
+    /**
+     * Registers a report listener
+     *
+     * @param listener the listener
+     */
+    public void addListener(ReportListener listener) {
+<span class="fc" id="L273">        listeners.add(new SynchronizedReportListener(listener));</span>
+<span class="fc" id="L274">    }</span>
+
+    public List&lt;SuppressedViolation&gt; getSuppressedRuleViolations() {
+<span class="fc" id="L277">        return suppressedRuleViolations;</span>
+    }
+
+    /**
+     * Adds a new rule violation to the report and notify the listeners.
+     *
+     * @param violation the violation to add
+     */
+    public void addRuleViolation(RuleViolation violation) {
+
+        // NOPMD suppress
+<span class="fc" id="L288">        int line = violation.getBeginLine();</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        if (linesToSuppress.containsKey(line)) {</span>
+<span class="fc" id="L290">            suppressedRuleViolations.add(new SuppressedViolation(violation, true, linesToSuppress.get(line)));</span>
+<span class="fc" id="L291">            return;</span>
+        }
+
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (violation.isSuppressed()) {</span>
+<span class="nc" id="L295">            suppressedRuleViolations.add(new SuppressedViolation(violation, false, null));</span>
+<span class="nc" id="L296">            return;</span>
+        }
+
+<span class="fc" id="L299">        int index = Collections.binarySearch(violations, violation, RuleViolationComparator.INSTANCE);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        violations.add(index &lt; 0 ? -index - 1 : index, violation);</span>
+<span class="fc" id="L301">        violationTree.addRuleViolation(violation);</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">        for (ReportListener listener : listeners) {</span>
+<span class="fc" id="L303">            listener.ruleViolationAdded(violation);</span>
+<span class="fc" id="L304">        }</span>
+<span class="fc" id="L305">    }</span>
+
+    /**
+     * Adds a new metric to the report and notify the listeners
+     *
+     * @param metric the metric to add
+     */
+    public void addMetric(Metric metric) {
+<span class="fc" id="L313">        metrics.add(metric);</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">        for (ReportListener listener : listeners) {</span>
+<span class="fc" id="L315">            listener.metricAdded(metric);</span>
+<span class="fc" id="L316">        }</span>
+<span class="fc" id="L317">    }</span>
+
+    /**
+     * Adds a new configuration error to the report.
+     *
+     * @param error the error to add
+     */
+    public void addConfigError(RuleConfigurationError error) {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (configErrors == null) {</span>
+<span class="nc" id="L326">            configErrors = new ArrayList&lt;&gt;();</span>
+        }
+<span class="nc" id="L328">        configErrors.add(error);</span>
+<span class="nc" id="L329">    }</span>
+
+    /**
+     * Adds a new processing error to the report.
+     *
+     * @param error the error to add
+     */
+    public void addError(ProcessingError error) {
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (errors == null) {</span>
+<span class="fc" id="L338">            errors = new ArrayList&lt;&gt;();</span>
+        }
+<span class="fc" id="L340">        errors.add(error);</span>
+<span class="fc" id="L341">    }</span>
+
+    /**
+     * Merges the given report into this report. This might be necessary, if a
+     * summary over all violations is needed as PMD creates one report per file
+     * by default.
+     *
+     * @param r the report to be merged into this.
+     * @see AbstractAccumulatingRenderer
+     */
+    public void merge(Report r) {
+<span class="fc" id="L352">        Iterator&lt;ProcessingError&gt; i = r.errors();</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">        while (i.hasNext()) {</span>
+<span class="fc" id="L354">            addError(i.next());</span>
+        }
+<span class="fc" id="L356">        Iterator&lt;Metric&gt; m = r.metrics();</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">        while (m.hasNext()) {</span>
+<span class="nc" id="L358">            addMetric(m.next());</span>
+        }
+<span class="fc" id="L360">        Iterator&lt;RuleViolation&gt; v = r.iterator();</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">        while (v.hasNext()) {</span>
+<span class="fc" id="L362">            RuleViolation violation = v.next();</span>
+<span class="fc" id="L363">            int index = Collections.binarySearch(violations, violation, RuleViolationComparator.INSTANCE);</span>
+<span class="pc bpc" id="L364" title="1 of 2 branches missed.">            violations.add(index &lt; 0 ? -index - 1 : index, violation);</span>
+<span class="fc" id="L365">            violationTree.addRuleViolation(violation);</span>
+<span class="fc" id="L366">        }</span>
+<span class="fc" id="L367">        Iterator&lt;SuppressedViolation&gt; s = r.getSuppressedRuleViolations().iterator();</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">        while (s.hasNext()) {</span>
+<span class="fc" id="L369">            suppressedRuleViolations.add(s.next());</span>
+        }
+<span class="fc" id="L371">    }</span>
+
+    /**
+     * Check whether any metrics have been reported
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if there are metrics, &lt;code&gt;false&lt;/code&gt;
+     *         otherwise
+     */
+    public boolean hasMetrics() {
+<span class="fc bfc" id="L380" title="All 2 branches covered.">        return !metrics.isEmpty();</span>
+    }
+
+    /**
+     * Iterate over the metrics.
+     *
+     * @return an iterator over the metrics
+     */
+    public Iterator&lt;Metric&gt; metrics() {
+<span class="fc" id="L389">        return metrics.iterator();</span>
+    }
+
+    public boolean isEmpty() {
+<span class="pc bpc" id="L393" title="2 of 4 branches missed.">        return !violations.iterator().hasNext() &amp;&amp; !hasErrors();</span>
+    }
+
+    /**
+     * Checks whether any processing errors have been reported.
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if there were any processing errors,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise
+     */
+    public boolean hasErrors() {
+<span class="pc bpc" id="L403" title="3 of 4 branches missed.">        return errors != null &amp;&amp; !errors.isEmpty();</span>
+    }
+
+    /**
+     * Checks whether any configuration errors have been reported.
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if there were any configuration errors,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise
+     */
+    public boolean hasConfigErrors() {
+<span class="nc bnc" id="L413" title="All 4 branches missed.">        return configErrors != null &amp;&amp; !configErrors.isEmpty();</span>
+    }
+
+    /**
+     * Checks whether no violations have been reported.
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if no violations have been reported,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise
+     */
+    public boolean treeIsEmpty() {
+<span class="nc bnc" id="L423" title="All 2 branches missed.">        return !violationTree.iterator().hasNext();</span>
+    }
+
+    /**
+     * Returns an iteration over the reported violations.
+     *
+     * @return an iterator
+     */
+    public Iterator&lt;RuleViolation&gt; treeIterator() {
+<span class="fc" id="L432">        return violationTree.iterator();</span>
+    }
+
+    @Override
+    public Iterator&lt;RuleViolation&gt; iterator() {
+<span class="fc" id="L437">        return violations.iterator();</span>
+    }
+
+    /**
+     * Returns an iterator of the reported processing errors.
+     *
+     * @return the iterator
+     */
+    public Iterator&lt;ProcessingError&gt; errors() {
+<span class="fc bfc" id="L446" title="All 2 branches covered.">        return errors == null ? EmptyIterator.&lt;ProcessingError&gt; instance() : errors.iterator();</span>
+    }
+
+    /**
+     * Returns an iterator of the reported configuration errors.
+     *
+     * @return the iterator
+     */
+    public Iterator&lt;RuleConfigurationError&gt; configErrors() {
+<span class="nc bnc" id="L455" title="All 2 branches missed.">        return configErrors == null ? EmptyIterator.&lt;RuleConfigurationError&gt; instance() : configErrors.iterator();</span>
+    }
+
+    /**
+     * The number of violations.
+     *
+     * @return number of violations.
+     */
+    public int treeSize() {
+<span class="nc" id="L464">        return violationTree.size();</span>
+    }
+
+    /**
+     * The number of violations.
+     *
+     * @return number of violations.
+     */
+    public int size() {
+<span class="fc" id="L473">        return violations.size();</span>
+    }
+
+    /**
+     * Mark the start time of the report. This is used to get the elapsed time
+     * in the end.
+     *
+     * @see #getElapsedTimeInMillis()
+     */
+    public void start() {
+<span class="nc" id="L483">        start = System.currentTimeMillis();</span>
+<span class="nc" id="L484">    }</span>
+
+    /**
+     * Mark the end time of the report. This is ued to get the elapsed time.
+     *
+     * @see #getElapsedTimeInMillis()
+     */
+    public void end() {
+<span class="nc" id="L492">        end = System.currentTimeMillis();</span>
+<span class="nc" id="L493">    }</span>
+
+    public long getElapsedTimeInMillis() {
+<span class="nc" id="L496">        return end - start;</span>
+    }
+
+    public List&lt;SynchronizedReportListener&gt; getSynchronizedListeners() {
+<span class="fc" id="L500">        return listeners;</span>
+    }
+
+    /**
+     * Adds all given listeners to this report
+     *
+     * @param synchronizedListeners the report listeners
+     */
+    public void addSynchronizedListeners(List&lt;SynchronizedReportListener&gt; synchronizedListeners) {
+<span class="fc" id="L509">        listeners.addAll(synchronizedListeners);</span>
+<span class="fc" id="L510">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

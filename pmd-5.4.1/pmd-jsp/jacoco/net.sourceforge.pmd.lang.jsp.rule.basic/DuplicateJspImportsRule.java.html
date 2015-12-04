@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DuplicateJspImportsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JSP</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.jsp.rule.basic</a> &gt; <span class="el_source">DuplicateJspImportsRule.java</span></div><h1>DuplicateJspImportsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.jsp.rule.basic;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.jsp.ast.ASTJspDirectiveAttribute;
+import net.sourceforge.pmd.lang.jsp.rule.AbstractJspRule;
+import net.sourceforge.pmd.lang.rule.ImportWrapper;
+
+<span class="fc" id="L17">public class DuplicateJspImportsRule extends AbstractJspRule {</span>
+
+<span class="fc" id="L19">    private Set&lt;ImportWrapper&gt; imports = new HashSet&lt;&gt;();</span>
+
+    @Override
+    public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+	/*
+	 * TODO: This method is a hack! It's overriding the parent's method
+	 * because the JSP parsing doesn't seem to hit ASTCompilationUnit
+	 * properly
+	 */
+<span class="fc" id="L28">	imports.clear();</span>
+<span class="fc" id="L29">	super.apply(nodes, ctx);</span>
+<span class="fc" id="L30">    }</span>
+
+    @Override
+    public Object visit(ASTJspDirectiveAttribute node, Object data) {
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">	if (!&quot;import&quot;.equals(node.getName())) {</span>
+<span class="fc" id="L36">	    return super.visit(node, data);</span>
+	}
+<span class="fc" id="L38">	String values = node.getValue();</span>
+<span class="fc" id="L39">	StringTokenizer st = new StringTokenizer(values, &quot;,&quot;);</span>
+<span class="fc" id="L40">	int count = st.countTokens();</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">	for (int ix = 0; ix &lt; count; ix++) {</span>
+<span class="fc" id="L42">	    String token = st.nextToken();</span>
+<span class="fc" id="L43">	    ImportWrapper wrapper = new ImportWrapper(token, token, node);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">	    if (imports.contains(wrapper)) {</span>
+<span class="fc" id="L45">		addViolation(data, node, node.getImage());</span>
+	    } else {
+<span class="fc" id="L47">		imports.add(wrapper);</span>
+	    }
+	}
+<span class="fc" id="L50">	return super.visit(node, data);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TypeSet.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">TypeSet.java</span></div><h1>TypeSet.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Keeps track of the types encountered in a ASTinput
+ */
+<span class="nc" id="L16">public class TypeSet {</span>
+
+    /**
+     * TODO should Resolver provide a canResolve() and a resolve()?
+     * Requiring 2 calls seems clunky... but so does this
+     * throwing an exception for flow control...
+     */
+    public interface Resolver {
+	Class&lt;?&gt; resolve(String name) throws ClassNotFoundException;
+    }
+
+    public static class ExplicitImportResolver implements Resolver {
+	private Set&lt;String&gt; importStmts;
+
+<span class="nc" id="L30">	public ExplicitImportResolver(Set&lt;String&gt; importStmts) {</span>
+<span class="nc" id="L31">	    this.importStmts = importStmts;</span>
+<span class="nc" id="L32">	}</span>
+
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">	    for (String importStmt : importStmts) {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">		if (importStmt.endsWith(name)) {</span>
+<span class="nc" id="L37">		    return Class.forName(importStmt);</span>
+		}
+<span class="nc" id="L39">	    }</span>
+<span class="nc" id="L40">	    throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+	}
+    }
+
+    public static class CurrentPackageResolver implements Resolver {
+	private String pkg;
+
+<span class="nc" id="L47">	public CurrentPackageResolver(String pkg) {</span>
+<span class="nc" id="L48">	    this.pkg = pkg;</span>
+<span class="nc" id="L49">	}</span>
+
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc" id="L52">	    return Class.forName(pkg + name);</span>
+	}
+    }
+
+    // TODO cite the JLS section on implicit imports
+<span class="nc" id="L57">    public static class ImplicitImportResolver implements Resolver {</span>
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc" id="L59">	    return Class.forName(&quot;java.lang.&quot; + name);</span>
+	}
+    }
+
+    public static class ImportOnDemandResolver implements Resolver {
+	private Set&lt;String&gt; importStmts;
+
+<span class="nc" id="L66">	public ImportOnDemandResolver(Set&lt;String&gt; importStmts) {</span>
+<span class="nc" id="L67">	    this.importStmts = importStmts;</span>
+<span class="nc" id="L68">	}</span>
+
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">	    for (String importStmt : importStmts) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (importStmt.endsWith(&quot;*&quot;)) {</span>
+		    try {
+<span class="nc" id="L74">			String importPkg = importStmt.substring(0, importStmt.indexOf('*') - 1);</span>
+<span class="nc" id="L75">			return Class.forName(importPkg + '.' + name);</span>
+<span class="nc" id="L76">		    } catch (ClassNotFoundException cnfe) {</span>
+		    }
+		}
+<span class="nc" id="L79">	    }</span>
+<span class="nc" id="L80">	    throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+	}
+    }
+
+    public static class PrimitiveTypeResolver implements Resolver {
+<span class="nc" id="L85">	private Map&lt;String, Class&lt;?&gt;&gt; primitiveTypes = new HashMap&lt;&gt;();</span>
+
+	@SuppressWarnings(&quot;PMD.AvoidUsingShortType&quot;)
+<span class="nc" id="L88">	public PrimitiveTypeResolver() {</span>
+<span class="nc" id="L89">	    primitiveTypes.put(&quot;int&quot;, int.class);</span>
+<span class="nc" id="L90">	    primitiveTypes.put(&quot;float&quot;, float.class);</span>
+<span class="nc" id="L91">	    primitiveTypes.put(&quot;double&quot;, double.class);</span>
+<span class="nc" id="L92">	    primitiveTypes.put(&quot;long&quot;, long.class);</span>
+<span class="nc" id="L93">	    primitiveTypes.put(&quot;boolean&quot;, boolean.class);</span>
+<span class="nc" id="L94">	    primitiveTypes.put(&quot;byte&quot;, byte.class);</span>
+<span class="nc" id="L95">	    primitiveTypes.put(&quot;short&quot;, short.class);</span>
+<span class="nc" id="L96">	    primitiveTypes.put(&quot;char&quot;, char.class);</span>
+<span class="nc" id="L97">	}</span>
+
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">	    if (!primitiveTypes.containsKey(name)) {</span>
+<span class="nc" id="L101">		throw new ClassNotFoundException();</span>
+	    }
+<span class="nc" id="L103">	    return primitiveTypes.get(name);</span>
+	}
+    }
+
+<span class="nc" id="L107">    public static class VoidResolver implements Resolver {</span>
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">	    if (name.equals(&quot;void&quot;)) {</span>
+<span class="nc" id="L110">		return void.class;</span>
+	    }
+<span class="nc" id="L112">	    throw new ClassNotFoundException();</span>
+	}
+    }
+
+<span class="nc" id="L116">    public static class FullyQualifiedNameResolver implements Resolver {</span>
+	public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="nc" id="L118">	    return Class.forName(name);</span>
+	}
+    }
+
+    private String pkg;
+<span class="nc" id="L123">    private Set&lt;String&gt; imports = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L124">    private List&lt;Resolver&gt; resolvers = new ArrayList&lt;&gt;();</span>
+
+    public void setASTinputPackage(String pkg) {
+<span class="nc" id="L127">	this.pkg = pkg;</span>
+<span class="nc" id="L128">    }</span>
+
+    public String getASTinputPackage() {
+<span class="nc" id="L131">	return pkg;</span>
+    }
+
+    public void addImport(String importString) {
+<span class="nc" id="L135">	imports.add(importString);</span>
+<span class="nc" id="L136">    }</span>
+
+    public int getImportsCount() {
+<span class="nc" id="L139">	return imports.size();</span>
+    }
+
+    public Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
+	// we don't build the resolvers until now since we first want to get all the imports
+<span class="nc bnc" id="L144" title="All 2 branches missed.">	if (resolvers.isEmpty()) {</span>
+<span class="nc" id="L145">	    buildResolvers();</span>
+	}
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">	for (Resolver resolver : resolvers) {</span>
+	    try {
+<span class="nc" id="L150">		return resolver.resolve(name);</span>
+<span class="nc" id="L151">	    } catch (ClassNotFoundException cnfe) {</span>
+	    }
+<span class="nc" id="L153">	}</span>
+
+<span class="nc" id="L155">	throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+    }
+
+    private void buildResolvers() {
+<span class="nc" id="L159">	resolvers.add(new PrimitiveTypeResolver());</span>
+<span class="nc" id="L160">	resolvers.add(new VoidResolver());</span>
+<span class="nc" id="L161">	resolvers.add(new ExplicitImportResolver(imports));</span>
+<span class="nc" id="L162">	resolvers.add(new CurrentPackageResolver(pkg));</span>
+<span class="nc" id="L163">	resolvers.add(new ImplicitImportResolver());</span>
+<span class="nc" id="L164">	resolvers.add(new ImportOnDemandResolver(imports));</span>
+<span class="nc" id="L165">	resolvers.add(new FullyQualifiedNameResolver());</span>
+<span class="nc" id="L166">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

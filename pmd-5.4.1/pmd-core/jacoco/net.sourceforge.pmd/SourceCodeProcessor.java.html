@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceCodeProcessor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">SourceCodeProcessor.java</span></div><h1>SourceCodeProcessor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sourceforge.pmd.benchmark.Benchmark;
+import net.sourceforge.pmd.benchmark.Benchmarker;
+import net.sourceforge.pmd.lang.*;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.lang.xpath.Initializer;
+
+import org.apache.commons.io.IOUtils;
+
+public class SourceCodeProcessor {
+
+    private final PMDConfiguration configuration;
+
+<span class="fc" id="L26">    public SourceCodeProcessor(PMDConfiguration configuration) {</span>
+<span class="fc" id="L27">    	this.configuration = configuration;</span>
+<span class="fc" id="L28">    }</span>
+    
+    
+    /**
+     * Processes the input stream against a rule set using the given input encoding.
+     *
+     * @param sourceCode The InputStream to analyze.
+     * @param ruleSets The collection of rules to process against the file.
+     * @param ctx The context in which PMD is operating.
+     * @throws PMDException if the input encoding is unsupported, the input stream could
+     *                      not be parsed, or other error is encountered.
+     * @see #processSourceCode(Reader, RuleSets, RuleContext)
+     */
+    public void processSourceCode(InputStream sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
+		try {
+<span class="nc" id="L43">		    processSourceCode(new InputStreamReader(sourceCode, configuration.getSourceEncoding()), ruleSets, ctx);</span>
+<span class="nc" id="L44">		} catch (UnsupportedEncodingException uee) {</span>
+<span class="nc" id="L45">		    throw new PMDException(&quot;Unsupported encoding exception: &quot; + uee.getMessage());</span>
+<span class="nc" id="L46">		}</span>
+<span class="nc" id="L47">    }</span>
+    
+    
+    /**
+     * Processes the input stream against a rule set using the given input encoding.
+     * If the LanguageVersion is &lt;code&gt;null&lt;/code&gt;  on the RuleContext, it will
+     * be automatically determined.  Any code which wishes to process files for
+     * different Languages, will need to be sure to either properly set the
+     * Language on the RuleContext, or set it to &lt;code&gt;null&lt;/code&gt; first.
+     *
+     * @see RuleContext#setLanguageVersion(net.sourceforge.pmd.lang.LanguageVersion)
+     * @see PMDConfiguration#getLanguageVersionOfFile(String)
+     *
+     * @param sourceCode The Reader to analyze.
+     * @param ruleSets The collection of rules to process against the file.
+     * @param ctx The context in which PMD is operating.
+     * @throws PMDException if the input encoding is unsupported, the input stream could
+     *                      not be parsed, or other error is encountered.
+     */
+    public void processSourceCode(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
+<span class="nc" id="L67">    	determineLanguage(ctx);</span>
+
+		// make sure custom XPath functions are initialized
+<span class="nc" id="L70">		Initializer.initialize();</span>
+
+	    // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		 if (ruleSets.applies(ctx.getSourceCodeFile())) {</span>
+
+		try {
+<span class="nc" id="L76">			processSource(sourceCode, ruleSets,ctx);</span>
+
+<span class="nc" id="L78">		} catch (ParseException pe) {</span>
+<span class="nc" id="L79">		    throw new PMDException(&quot;Error while parsing &quot; + ctx.getSourceCodeFilename(), pe);</span>
+<span class="nc" id="L80">		} catch (Exception e) {</span>
+<span class="nc" id="L81">		    throw new PMDException(&quot;Error while processing &quot; + ctx.getSourceCodeFilename(), e);</span>
+		} finally {
+<span class="nc" id="L83">		    IOUtils.closeQuietly(sourceCode);</span>
+<span class="nc" id="L84">		}</span>
+		}
+<span class="nc" id="L86">    }</span>
+
+    
+    private Node parse(RuleContext ctx, Reader sourceCode, Parser parser) {
+<span class="nc" id="L90">		long start = System.nanoTime();</span>
+<span class="nc" id="L91">		Node rootNode = parser.parse(ctx.getSourceCodeFilename(), sourceCode);</span>
+<span class="nc" id="L92">		ctx.getReport().suppress(parser.getSuppressMap());</span>
+<span class="nc" id="L93">		long end = System.nanoTime();    	</span>
+<span class="nc" id="L94">		Benchmarker.mark(Benchmark.Parser, end - start, 0);</span>
+<span class="nc" id="L95">		return rootNode;</span>
+    }
+
+    private void symbolFacade(Node rootNode, LanguageVersionHandler languageVersionHandler) {
+<span class="nc" id="L99">    	long start = System.nanoTime();</span>
+<span class="nc" id="L100">		languageVersionHandler.getSymbolFacade(configuration.getClassLoader()).start(rootNode);</span>
+<span class="nc" id="L101">		long end = System.nanoTime();</span>
+<span class="nc" id="L102">		Benchmarker.mark(Benchmark.SymbolTable, end - start, 0);</span>
+<span class="nc" id="L103">    }</span>
+    
+//    private ParserOptions getParserOptions(final LanguageVersionHandler languageVersionHandler) {
+//		// TODO Handle Rules having different parser options.
+//		ParserOptions parserOptions = languageVersionHandler.getDefaultParserOptions();
+//		parserOptions.setSuppressMarker(configuration.getSuppressMarker());
+//		return parserOptions;
+//    }
+
+    private void usesDFA(LanguageVersion languageVersion, Node rootNode, RuleSets ruleSets, Language language ) {
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (ruleSets.usesDFA(language)) {</span>
+<span class="nc" id="L115">		    long start = System.nanoTime();</span>
+<span class="nc" id="L116">		    VisitorStarter dataFlowFacade = languageVersion.getLanguageVersionHandler().getDataFlowFacade();</span>
+<span class="nc" id="L117">		    dataFlowFacade.start(rootNode);</span>
+<span class="nc" id="L118">		    long end = System.nanoTime();</span>
+<span class="nc" id="L119">		    Benchmarker.mark(Benchmark.DFA, end - start, 0);</span>
+		}
+<span class="nc" id="L121">    }</span>
+
+    private void usesTypeResolution(LanguageVersion languageVersion, Node rootNode, RuleSets ruleSets, Language language) {
+	
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (ruleSets.usesTypeResolution(language)) {</span>
+<span class="nc" id="L126">		    long start = System.nanoTime();</span>
+<span class="nc" id="L127">		    languageVersion.getLanguageVersionHandler().getTypeResolutionFacade(configuration.getClassLoader()).start(rootNode);</span>
+<span class="nc" id="L128">		    long end = System.nanoTime();</span>
+<span class="nc" id="L129">		    Benchmarker.mark(Benchmark.TypeResolution, end - start, 0);</span>
+		}
+<span class="nc" id="L131">    }</span>
+    
+    private void processSource(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) {
+<span class="nc" id="L134">		LanguageVersion languageVersion = ctx.getLanguageVersion();</span>
+<span class="nc" id="L135">		LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="nc" id="L136">		Parser parser = PMD.parserFor(languageVersion, configuration);</span>
+		
+<span class="nc" id="L138">		Node rootNode = parse(ctx, sourceCode, parser);</span>
+<span class="nc" id="L139">		symbolFacade(rootNode, languageVersionHandler);</span>
+<span class="nc" id="L140">		Language language = languageVersion.getLanguage();</span>
+<span class="nc" id="L141">		usesDFA(languageVersion, rootNode, ruleSets, language);</span>
+<span class="nc" id="L142">		usesTypeResolution(languageVersion, rootNode, ruleSets,language);</span>
+		
+<span class="nc" id="L144">		List&lt;Node&gt; acus = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L145">		acus.add(rootNode);</span>
+<span class="nc" id="L146">		ruleSets.apply(acus, ctx, language);</span>
+<span class="nc" id="L147">	}</span>
+
+
+
+	private void determineLanguage(RuleContext ctx) {
+		// If LanguageVersion of the source file is not known, make a determination
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (ctx.getLanguageVersion() == null) {</span>
+<span class="nc" id="L154">		    LanguageVersion languageVersion = configuration.getLanguageVersionOfFile(ctx.getSourceCodeFilename());</span>
+<span class="nc" id="L155">		    ctx.setLanguageVersion(languageVersion);</span>
+		}
+<span class="nc" id="L157">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

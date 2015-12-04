@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDParameters.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cli</a> &gt; <span class="el_source">PMDParameters.java</span></div><h1>PMDParameters.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cli;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.validators.PositiveInteger;
+
+<span class="fc" id="L21">public class PMDParameters {</span>
+
+    @Parameter(names = { &quot;-rulesets&quot;, &quot;-R&quot; }, description = &quot;Comma separated list of ruleset names to use.&quot;, required = true)
+    private String rulesets;
+
+    @Parameter(names = { &quot;-uri&quot;, &quot;-u&quot; }, description = &quot;Database URI for sources.&quot;, required = false)
+    private String uri;
+
+    @Parameter(names = { &quot;-dir&quot;, &quot;-d&quot; }, description = &quot;Root directory for sources.&quot;, required = false)
+    private String sourceDir;
+
+<span class="fc" id="L32">    @Parameter(names = { &quot;-format&quot;, &quot;-f&quot; }, description = &quot;Report format type.&quot;)</span>
+    private String format = &quot;text&quot;; // Enhance to support other usage
+
+<span class="fc" id="L35">    @Parameter(names = { &quot;-debug&quot;, &quot;-verbose&quot;, &quot;-D&quot;, &quot;-V&quot; }, description = &quot;Debug mode.&quot;)</span>
+    private boolean debug = false;
+
+<span class="fc" id="L38">    @Parameter(names = { &quot;-help&quot;, &quot;-h&quot;, &quot;-H&quot; }, description = &quot;Display help on usage.&quot;, help = true)</span>
+    private boolean help = false;
+
+<span class="fc" id="L41">    @Parameter(names = { &quot;-encoding&quot;, &quot;-e&quot; }, description = &quot;Specifies the character set encoding of the source code files PMD is reading (i.e., UTF-8).&quot;)</span>
+    private String encoding = &quot;UTF-8&quot;;
+
+<span class="fc" id="L44">    @Parameter(names = { &quot;-threads&quot;, &quot;-t&quot; }, description = &quot;Sets the number of threads used by PMD.&quot;, validateWith = PositiveInteger.class)</span>
+    private Integer threads = 1;
+
+<span class="fc" id="L47">    @Parameter(names = { &quot;-benchmark&quot;, &quot;-b&quot; }, description = &quot;Benchmark mode - output a benchmark report upon completion; default to System.err.&quot;)</span>
+    private boolean benchmark = false;
+
+<span class="fc" id="L50">    @Parameter(names = { &quot;-stress&quot;, &quot;-S&quot; }, description = &quot;Performs a stress test.&quot;)</span>
+    private boolean stress = false;
+
+<span class="fc" id="L53">    @Parameter(names = &quot;-shortnames&quot;, description = &quot;Prints shortened filenames in the report.&quot;)</span>
+    private boolean shortnames = false;
+
+<span class="fc" id="L56">    @Parameter(names = &quot;-showsuppressed&quot;, description = &quot;Report should show suppressed rule violations.&quot;)</span>
+    private boolean showsuppressed = false;
+
+<span class="fc" id="L59">    @Parameter(names = &quot;-suppressmarker&quot;, description = &quot;Specifies the string that marks the a line which PMD should ignore; default is NOPMD.&quot;)</span>
+    private String suppressmarker = &quot;NOPMD&quot;;
+
+<span class="fc" id="L62">    @Parameter(names = { &quot;-minimumpriority&quot;, &quot;-min&quot; }, description = &quot;Rule priority threshold; rules with lower priority than configured here won't be used. Default is '5' which is the lowest priority.&quot;, converter = RulePriorityConverter.class)</span>
+    private RulePriority minimumPriority = RulePriority.LOW;
+
+<span class="fc" id="L65">    @Parameter(names = { &quot;-property&quot;, &quot;-P&quot; }, description = &quot;{name}={value}: Define a property for the report format.&quot;,</span>
+            converter = PropertyConverter.class)
+    private List&lt;Properties&gt; properties = new ArrayList&lt;&gt;();
+
+<span class="fc" id="L69">    @Parameter(names = { &quot;-reportfile&quot;, &quot;-r&quot; }, description = &quot;Sends report output to a file; default to System.out.&quot;)</span>
+    private String reportfile = null;
+
+<span class="fc" id="L72">    @Parameter(names = { &quot;-version&quot;, &quot;-v&quot; }, description = &quot;Specify version of a language PMD should use.&quot;)</span>
+    private String version = null;
+
+<span class="fc" id="L75">    @Parameter(names = { &quot;-language&quot;, &quot;-l&quot; }, description = &quot;Specify a language PMD should use.&quot;)</span>
+    private String language = null;
+
+    @Parameter(names = &quot;-auxclasspath&quot;, description = &quot;Specifies the classpath for libraries used by the source code. This is used by the type resolution. Alternatively, a 'file://' URL to a text file containing path elements on consecutive lines can be specified.&quot;)
+    private String auxclasspath;
+
+<span class="fc" id="L81">    @Parameter(names = {&quot;-failOnViolation&quot;, &quot;--failOnViolation&quot;}, arity = 1, description = &quot;By default PMD exits with status 4 if violations are found. Disable this option with '-failOnViolation false' to exit with 0 instead and just write the report.&quot;)</span>
+    private boolean failOnViolation = true;
+
+    // this has to be a public static class, so that JCommander can use it!
+<span class="fc" id="L85">    public static class PropertyConverter implements IStringConverter&lt;Properties&gt; {</span>
+
+        private static final char SEPARATOR = '=';
+
+        public Properties convert(String value) {
+<span class="fc" id="L90">            int indexOfSeparator = value.indexOf(SEPARATOR);</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">            if (indexOfSeparator &lt; 0) {</span>
+<span class="nc" id="L92">                throw new ParameterException(</span>
+                        &quot;Property name must be separated with an = sign from it value: name=value.&quot;);
+            }
+<span class="fc" id="L95">            String propertyName = value.substring(0, indexOfSeparator);</span>
+<span class="fc" id="L96">            String propertyValue = value.substring(indexOfSeparator + 1);</span>
+<span class="fc" id="L97">            Properties properties = new Properties();</span>
+<span class="fc" id="L98">            properties.put(propertyName, propertyValue);</span>
+<span class="fc" id="L99">            return properties;</span>
+        }
+    }
+
+    // this has to be a public static class, so that JCommander can use it!
+<span class="pc" id="L104">    public static class RulePriorityConverter implements IStringConverter&lt;RulePriority&gt; {</span>
+
+        public int validate(String value) throws ParameterException {
+<span class="nc" id="L107">            int minPriorityValue = Integer.parseInt(value);</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">            if (minPriorityValue &lt; 1 || minPriorityValue &gt; 5) {</span>
+<span class="nc" id="L109">                throw new ParameterException(&quot;Priority values can only be integer value, between 1 and 5,&quot; + value</span>
+                        + &quot; is not valid&quot;);
+            }
+<span class="nc" id="L112">            return minPriorityValue;</span>
+        }
+
+        public RulePriority convert(String value) {
+<span class="nc" id="L116">            return RulePriority.valueOf(validate(value));</span>
+        }
+    }
+
+    public static PMDConfiguration transformParametersIntoConfiguration(PMDParameters params) {
+<span class="nc bnc" id="L121" title="All 4 branches missed.">        if (null == params.getSourceDir() &amp;&amp; null == params.getUri()) {</span>
+<span class="nc" id="L122">            throw new IllegalArgumentException(</span>
+                    &quot;Please provide either source root directory (-dir or -d) or database URI (-uri or -u) parameter&quot;);
+        }
+<span class="nc" id="L125">        PMDConfiguration configuration = new PMDConfiguration();</span>
+<span class="nc" id="L126">        configuration.setInputPaths(params.getSourceDir());</span>
+<span class="nc" id="L127">        configuration.setInputUri(params.getUri());</span>
+<span class="nc" id="L128">        configuration.setReportFormat(params.getFormat());</span>
+<span class="nc" id="L129">        configuration.setBenchmark(params.isBenchmark());</span>
+<span class="nc" id="L130">        configuration.setDebug(params.isDebug());</span>
+<span class="nc" id="L131">        configuration.setMinimumPriority(params.getMinimumPriority());</span>
+<span class="nc" id="L132">        configuration.setReportFile(params.getReportfile());</span>
+<span class="nc" id="L133">        configuration.setReportProperties(params.getProperties());</span>
+<span class="nc" id="L134">        configuration.setReportShortNames(params.isShortnames());</span>
+<span class="nc" id="L135">        configuration.setRuleSets(params.getRulesets());</span>
+<span class="nc" id="L136">        configuration.setShowSuppressedViolations(params.isShowsuppressed());</span>
+<span class="nc" id="L137">        configuration.setSourceEncoding(params.getEncoding());</span>
+<span class="nc" id="L138">        configuration.setStressTest(params.isStress());</span>
+<span class="nc" id="L139">        configuration.setSuppressMarker(params.getSuppressmarker());</span>
+<span class="nc" id="L140">        configuration.setThreads(params.getThreads());</span>
+<span class="nc" id="L141">        configuration.setFailOnViolation(params.isFailOnViolation());</span>
+
+<span class="nc" id="L143">        LanguageVersion languageVersion = LanguageRegistry.findLanguageVersionByTerseName(params.getLanguage() + &quot; &quot; + params.getVersion());</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if(languageVersion != null) {</span>
+<span class="nc" id="L145">            configuration.getLanguageVersionDiscoverer().setDefaultLanguageVersion(languageVersion);</span>
+        }
+        try {
+<span class="nc" id="L148">            configuration.prependClasspath(params.getAuxclasspath());</span>
+<span class="nc" id="L149">        } catch (IOException e) {</span>
+<span class="nc" id="L150">            throw new IllegalArgumentException(&quot;Invalid auxiliary classpath: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L151">        }</span>
+<span class="nc" id="L152">        return configuration;</span>
+    }
+
+    public boolean isDebug() {
+<span class="nc" id="L156">        return debug;</span>
+    }
+
+    public boolean isHelp() {
+<span class="fc" id="L160">        return help;</span>
+    }
+
+    public String getEncoding() {
+<span class="nc" id="L164">        return encoding;</span>
+    }
+
+    public Integer getThreads() {
+<span class="nc" id="L168">        return threads;</span>
+    }
+
+    public boolean isBenchmark() {
+<span class="nc" id="L172">        return benchmark;</span>
+    }
+
+    public boolean isStress() {
+<span class="nc" id="L176">        return stress;</span>
+    }
+
+    public boolean isShortnames() {
+<span class="nc" id="L180">        return shortnames;</span>
+    }
+
+    public boolean isShowsuppressed() {
+<span class="nc" id="L184">        return showsuppressed;</span>
+    }
+
+    public String getSuppressmarker() {
+<span class="nc" id="L188">        return suppressmarker;</span>
+    }
+
+    public RulePriority getMinimumPriority() {
+<span class="nc" id="L192">        return minimumPriority;</span>
+    }
+
+    public Properties getProperties() {
+<span class="fc" id="L196">        Properties result = new Properties();</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        for (Properties p : properties) {</span>
+<span class="fc" id="L198">            result.putAll(p);</span>
+<span class="fc" id="L199">        }</span>
+<span class="fc" id="L200">        return result;</span>
+    }
+
+    public String getReportfile() {
+<span class="nc" id="L204">        return reportfile;</span>
+    }
+
+    public String getVersion() {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        return version != null ? version : LanguageRegistry.getDefaultLanguage().getDefaultVersion().getVersion();</span>
+    }
+
+    public String getLanguage() {
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        return language != null ? language : LanguageRegistry.getDefaultLanguage().getTerseName();</span>
+    }
+
+    public String getAuxclasspath() {
+<span class="nc" id="L216">        return auxclasspath;</span>
+    }
+
+    public String getRulesets() {
+<span class="nc" id="L220">        return rulesets;</span>
+    }
+
+    public String getSourceDir() {
+<span class="nc" id="L224">        return sourceDir;</span>
+    }
+
+    public String getFormat() {
+<span class="nc" id="L228">        return format;</span>
+    }
+
+    public boolean isFailOnViolation() {
+<span class="nc" id="L232">        return failOnViolation;</span>
+    }
+
+    /**
+     * @return the uri alternative to source directory.
+     */
+    public String getUri() {
+<span class="nc" id="L239">        return uri;</span>
+    }
+
+    /**
+     * @param uri the uri specifying the source directory.
+     */
+    public void setUri(String uri) {
+<span class="nc" id="L246">        this.uri = uri;</span>
+<span class="nc" id="L247">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

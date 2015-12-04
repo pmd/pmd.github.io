@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DoubleCheckedLockingRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.basic</a> &gt; <span class="el_source">DoubleCheckedLockingRule.java</span></div><h1>DoubleCheckedLockingRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.basic;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTReferenceType;
+import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTSynchronizedStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTType;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+/**
+ * void method() {
+ * if(x == null) {
+ * synchronized(this){
+ * if(x == null) {
+ * x = new | method();
+ * }
+ * }
+ * }
+ * 1.  The error is when one uses the value assigned within a synchronized
+ * section, outside of a synchronized section.
+ * if(x == null) is outside of synchronized section
+ * x = new | method();
+ * &lt;p/&gt;
+ * &lt;p/&gt;
+ * Very very specific check for double checked locking.
+ *
+ * @author CL Gilbert (dnoyeb@users.sourceforge.net)
+ */
+<span class="fc" id="L48">public class DoubleCheckedLockingRule extends AbstractJavaRule {</span>
+
+    private List&lt;String&gt; volatileFields;
+
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (node.isInterface()) {</span>
+<span class="fc" id="L55">            return data;</span>
+        }
+<span class="fc" id="L57">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTCompilationUnit compilationUnit, Object data) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (this.volatileFields == null) {</span>
+<span class="fc" id="L63">            this.volatileFields = new ArrayList&lt;&gt;(0);</span>
+        } else {
+<span class="fc" id="L65">            this.volatileFields.clear();</span>
+        }
+<span class="fc" id="L67">        return super.visit(compilationUnit, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTFieldDeclaration fieldDeclaration, Object data) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (fieldDeclaration.isVolatile()) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            for (ASTVariableDeclaratorId declarator : fieldDeclaration</span>
+                    .findDescendantsOfType(ASTVariableDeclaratorId.class)) {
+<span class="fc" id="L75">                this.volatileFields.add(declarator.getImage());</span>
+<span class="fc" id="L76">            }</span>
+        }
+<span class="fc" id="L78">        return super.visit(fieldDeclaration, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (node.getResultType().isVoid()) {</span>
+<span class="fc" id="L84">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L87">        ASTType typeNode = (ASTType) node.getResultType().jjtGetChild(0);</span>
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">        if (typeNode.jjtGetNumChildren() == 0 || !(typeNode.jjtGetChild(0) instanceof ASTReferenceType)) {</span>
+<span class="fc" id="L89">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L92">        List&lt;ASTReturnStatement&gt; rsl = node.findDescendantsOfType(ASTReturnStatement.class);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (rsl.size() != 1) {</span>
+<span class="fc" id="L94">            return super.visit(node, data);</span>
+        }
+<span class="fc" id="L96">        ASTReturnStatement rs = rsl.get(0);</span>
+
+<span class="fc" id="L98">        List&lt;ASTPrimaryExpression&gt; pel = rs.findDescendantsOfType(ASTPrimaryExpression.class);</span>
+<span class="fc" id="L99">        ASTPrimaryExpression ape = pel.get(0);</span>
+<span class="fc" id="L100">        Node lastChild = ape.jjtGetChild(ape.jjtGetNumChildren() - 1);</span>
+<span class="fc" id="L101">        String returnVariableName = null;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (lastChild instanceof ASTPrimaryPrefix) {</span>
+<span class="fc" id="L103">            returnVariableName = getNameFromPrimaryPrefix((ASTPrimaryPrefix) lastChild);</span>
+        }
+        // With Java5 and volatile keyword, DCL is no longer an issue
+<span class="fc bfc" id="L106" title="All 4 branches covered.">        if (returnVariableName == null || this.volatileFields.contains(returnVariableName)) {</span>
+<span class="fc" id="L107">            return super.visit(node, data);</span>
+        }
+<span class="fc" id="L109">        List&lt;ASTIfStatement&gt; isl = node.findDescendantsOfType(ASTIfStatement.class);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (isl.size() == 2) {</span>
+<span class="fc" id="L111">            ASTIfStatement is = isl.get(0);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (ifVerify(is, returnVariableName)) {</span>
+                // find synchronized
+<span class="fc" id="L114">                List&lt;ASTSynchronizedStatement&gt; ssl = is.findDescendantsOfType(ASTSynchronizedStatement.class);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                if (ssl.size() == 1) {</span>
+<span class="fc" id="L116">                    ASTSynchronizedStatement ss = ssl.get(0);</span>
+<span class="fc" id="L117">                    isl = ss.findDescendantsOfType(ASTIfStatement.class);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                    if (isl.size() == 1) {</span>
+<span class="fc" id="L119">                        ASTIfStatement is2 = isl.get(0);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                        if (ifVerify(is2, returnVariableName)) {</span>
+<span class="fc" id="L121">                            List&lt;ASTStatementExpression&gt; sel = is2.findDescendantsOfType(ASTStatementExpression.class);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">                            if (sel.size() == 1) {</span>
+<span class="fc" id="L123">                                ASTStatementExpression se = sel.get(0);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                                if (se.jjtGetNumChildren() == 3) { // primaryExpression,</span>
+                                                                   // AssignmentOperator,
+                                                                   // Expression
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">                                    if (se.jjtGetChild(0) instanceof ASTPrimaryExpression) {</span>
+<span class="fc" id="L128">                                        ASTPrimaryExpression pe = (ASTPrimaryExpression) se.jjtGetChild(0);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">                                        if (matchName(pe, returnVariableName)) {</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">                                            if (se.jjtGetChild(1) instanceof ASTAssignmentOperator) {</span>
+<span class="fc" id="L131">                                                addViolation(data, node);</span>
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+<span class="fc" id="L142">        return super.visit(node, data);</span>
+    }
+
+    private boolean ifVerify(ASTIfStatement is, String varname) {
+<span class="fc" id="L146">        List&lt;ASTPrimaryExpression&gt; finder = is.findDescendantsOfType(ASTPrimaryExpression.class);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (finder.size() &gt; 1) {</span>
+<span class="fc" id="L148">            ASTPrimaryExpression nullStmt = findNonVariableStmt(varname, finder.get(0), finder.get(1));</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            if (nullStmt != null) {</span>
+<span class="pc bpc" id="L150" title="2 of 4 branches missed.">                if (nullStmt.jjtGetNumChildren() == 1 &amp;&amp; nullStmt.jjtGetChild(0) instanceof ASTPrimaryPrefix) {</span>
+<span class="fc" id="L151">                    ASTPrimaryPrefix pp2 = (ASTPrimaryPrefix) nullStmt.jjtGetChild(0);</span>
+<span class="pc bpc" id="L152" title="1 of 4 branches missed.">                    if (pp2.jjtGetNumChildren() == 1 &amp;&amp; pp2.jjtGetChild(0) instanceof ASTLiteral) {</span>
+<span class="fc" id="L153">                        ASTLiteral lit = (ASTLiteral) pp2.jjtGetChild(0);</span>
+<span class="pc bpc" id="L154" title="2 of 4 branches missed.">                        if (lit.jjtGetNumChildren() == 1 &amp;&amp; lit.jjtGetChild(0) instanceof ASTNullLiteral) {</span>
+<span class="fc" id="L155">                            return true;</span>
+                        }
+                    }
+                }
+            }
+        }
+<span class="fc" id="L161">        return false;</span>
+    }
+
+    /**
+     * &lt;p&gt;
+     * Sort out if apeLeft or apeRight are variable with the provided
+     * 'variableName'.
+     * &lt;/p&gt;
+     * 
+     * @param variableName
+     * @param apeLeft
+     * @param apeRight
+     * @return reference from either apeLeft or apeRight, if one of them match,
+     *         or 'null', if none match.
+     */
+    private ASTPrimaryExpression findNonVariableStmt(String variableName, ASTPrimaryExpression apeLeft,
+            ASTPrimaryExpression apeRight) {
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (matchName(apeLeft, variableName)) {</span>
+<span class="fc" id="L179">            return apeRight;</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        } else if (matchName(apeRight, variableName)) {</span>
+<span class="fc" id="L181">            return apeLeft;</span>
+        }
+<span class="fc" id="L183">        return null;</span>
+    }
+
+    private boolean matchName(ASTPrimaryExpression ape, String name) {
+<span class="pc bpc" id="L187" title="1 of 4 branches missed.">        if (ape.jjtGetNumChildren() == 1 &amp;&amp; ape.jjtGetChild(0) instanceof ASTPrimaryPrefix) {</span>
+<span class="fc" id="L188">            ASTPrimaryPrefix pp = (ASTPrimaryPrefix) ape.jjtGetChild(0);</span>
+<span class="fc" id="L189">            String name2 = getNameFromPrimaryPrefix(pp);</span>
+<span class="fc bfc" id="L190" title="All 4 branches covered.">            if (name2 != null &amp;&amp; name2.equals(name)) {</span>
+<span class="fc" id="L191">                return true;</span>
+            }
+        }
+<span class="fc" id="L194">        return false;</span>
+    }
+
+    private String getNameFromPrimaryPrefix(ASTPrimaryPrefix pp) {
+<span class="pc bpc" id="L198" title="1 of 4 branches missed.">        if (pp.jjtGetNumChildren() == 1 &amp;&amp; pp.jjtGetChild(0) instanceof ASTName) {</span>
+<span class="fc" id="L199">            return ((ASTName) pp.jjtGetChild(0)).getImage();</span>
+        }
+<span class="fc" id="L201">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

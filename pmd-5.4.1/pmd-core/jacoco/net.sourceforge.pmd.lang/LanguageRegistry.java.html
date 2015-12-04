@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LanguageRegistry.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang</a> &gt; <span class="el_source">LanguageRegistry.java</span></div><h1>LanguageRegistry.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+/**
+ * Created by christoferdutz on 20.09.14.
+ */
+public final class LanguageRegistry {
+
+<span class="fc" id="L18">    private static LanguageRegistry instance = new LanguageRegistry();</span>
+
+    private Map&lt;String, Language&gt; languages;
+
+<span class="fc" id="L22">    private LanguageRegistry() {</span>
+<span class="fc" id="L23">        languages = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L24">        ServiceLoader&lt;Language&gt; languageLoader = ServiceLoader.load(Language.class);</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        for (Language language : languageLoader) {</span>
+<span class="fc" id="L26">            languages.put(language.getName(), language);</span>
+<span class="fc" id="L27">        }</span>
+<span class="fc" id="L28">    }</span>
+
+    public static LanguageRegistry getInstance() {
+<span class="fc" id="L31">        return instance;</span>
+    }
+
+    public static Collection&lt;Language&gt; getLanguages() {
+<span class="nc" id="L35">        return getInstance().languages.values();</span>
+    }
+
+    public static Language getLanguage(String languageName) {
+<span class="fc" id="L39">        return getInstance().languages.get(languageName);</span>
+    }
+
+    public static Language getDefaultLanguage() {
+<span class="nc" id="L43">        return getLanguage(&quot;Java&quot;);</span>
+    }
+
+    public static Language findLanguageByTerseName(String terseName) {
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (Language language : getInstance().languages.values()) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (language.getTerseName().equals(terseName)) {</span>
+<span class="fc" id="L49">                return language;</span>
+            }
+<span class="fc" id="L51">        }</span>
+<span class="fc" id="L52">        return null;</span>
+    }
+
+    public static LanguageVersion findLanguageVersionByTerseName(String terseNameAndVersion) {
+        String version;
+        String terseName;
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (terseNameAndVersion.contains(&quot; &quot;)) {</span>
+<span class="fc" id="L59">            version = terseNameAndVersion.substring(terseNameAndVersion.lastIndexOf(' ') + 1);</span>
+<span class="fc" id="L60">            terseName = terseNameAndVersion.substring(0, terseNameAndVersion.lastIndexOf(' '));</span>
+        } else {
+<span class="nc" id="L62">            version = null;</span>
+<span class="nc" id="L63">            terseName = terseNameAndVersion;</span>
+        }
+<span class="fc" id="L65">        Language language = findLanguageByTerseName(terseName);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (language != null) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (version == null) {</span>
+<span class="nc" id="L68">                return language.getDefaultVersion();</span>
+            } else {
+<span class="nc" id="L70">                return language.getVersion(version);</span>
+            }
+        }
+<span class="fc" id="L73">        return null;</span>
+    }
+
+    public static List&lt;Language&gt; findByExtension(String extension) {
+<span class="nc" id="L77">        List&lt;Language&gt; languages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        for (Language language : getInstance().languages.values()) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (language.hasExtension(extension)) {</span>
+<span class="nc" id="L80">                languages.add(language);</span>
+            }
+<span class="nc" id="L82">        }</span>
+<span class="nc" id="L83">        return languages;</span>
+    }
+
+    public static List&lt;LanguageVersion&gt; findAllVersions() {
+<span class="nc" id="L87">        List&lt;LanguageVersion&gt; versions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        for (Language language : getLanguages()) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            for (LanguageVersion languageVersion : language.getVersions()) {</span>
+<span class="nc" id="L90">                versions.add(languageVersion);</span>
+<span class="nc" id="L91">            }</span>
+<span class="nc" id="L92">        }</span>
+<span class="nc" id="L93">        return versions;</span>
+    }
+
+    /**
+     * A utility method to find the Languages which have Rule support.
+     * 
+     * @return A List of Languages with Rule support.
+     */
+    public static List&lt;Language&gt; findWithRuleSupport() {
+<span class="fc" id="L102">        List&lt;Language&gt; languages = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (Language language : getInstance().languages.values()) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (language.getRuleChainVisitorClass() != null) {</span>
+<span class="fc" id="L105">                languages.add(language);</span>
+            }
+<span class="fc" id="L107">        }</span>
+<span class="fc" id="L108">        return languages;</span>
+    }
+
+    public static String commaSeparatedTerseNamesForLanguage(List&lt;Language&gt; languages) {
+<span class="fc" id="L112">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (Language language : languages) {</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            if (builder.length() &gt; 0) {</span>
+<span class="nc" id="L115">                builder.append(&quot;, &quot;);</span>
+            }
+<span class="fc" id="L117">            builder.append(language.getTerseName());</span>
+<span class="fc" id="L118">        }</span>
+<span class="fc" id="L119">        return builder.toString();</span>
+    }
+
+    public static String commaSeparatedTerseNamesForLanguageVersion(List&lt;LanguageVersion&gt; languageVersions) {
+<span class="pc bpc" id="L123" title="2 of 4 branches missed.">        if (languageVersions == null || languageVersions.isEmpty()) {</span>
+<span class="nc" id="L124">            return &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L127">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L128">        builder.append(languageVersions.get(0).getTerseName());</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (int i = 1; i &lt; languageVersions.size(); i++) {</span>
+<span class="fc" id="L130">            builder.append(&quot;, &quot;).append(languageVersions.get(i).getTerseName());</span>
+        }
+<span class="fc" id="L132">        return builder.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

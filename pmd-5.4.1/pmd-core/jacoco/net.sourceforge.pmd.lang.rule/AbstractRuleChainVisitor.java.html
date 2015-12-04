@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractRuleChainVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">AbstractRuleChainVisitor.java</span></div><h1>AbstractRuleChainVisitor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RuleSet;
+import net.sourceforge.pmd.benchmark.Benchmark;
+import net.sourceforge.pmd.benchmark.Benchmarker;
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * This is a base class for RuleChainVisitor implementations which
+ * extracts interesting nodes from an AST, and lets each Rule visit
+ * the nodes it has expressed interest in.
+ */
+<span class="fc" id="L27">public abstract class AbstractRuleChainVisitor implements RuleChainVisitor {</span>
+    /**
+     * These are all the rules participating in the RuleChain, grouped by RuleSet.
+     */
+<span class="fc" id="L31">    protected Map&lt;RuleSet, List&lt;Rule&gt;&gt; ruleSetRules = new LinkedHashMap&lt;&gt;();</span>
+
+    /**
+     * This is a mapping from node names to nodes instances for the current AST.
+     */
+    protected Map&lt;String, List&lt;Node&gt;&gt; nodeNameToNodes;
+
+    /**
+     * @see RuleChainVisitor#add(RuleSet, Rule)
+     */
+    public void add(RuleSet ruleSet, Rule rule) {
+    	
+<span class="fc bfc" id="L43" title="All 2 branches covered.">		if (!ruleSetRules.containsKey(ruleSet)) {</span>
+<span class="fc" id="L44">		    ruleSetRules.put(ruleSet, new ArrayList&lt;Rule&gt;());</span>
+		}
+<span class="fc" id="L46">		ruleSetRules.get(ruleSet).add(rule);</span>
+<span class="fc" id="L47">    }</span>
+
+    /**
+     * @see RuleChainVisitor#visitAll(List, RuleContext)
+     */
+    public void visitAll(List&lt;Node&gt; nodes, RuleContext ctx) {
+<span class="fc" id="L53">        initialize();</span>
+<span class="fc" id="L54">        clear();</span>
+
+        // Perform a visitation of the AST to index nodes which need visiting by
+        // type
+<span class="fc" id="L58">        long start = System.nanoTime();</span>
+<span class="fc" id="L59">        indexNodes(nodes, ctx);</span>
+<span class="fc" id="L60">        long end = System.nanoTime();</span>
+<span class="fc" id="L61">        Benchmarker.mark(Benchmark.RuleChainVisit, end - start, 1);</span>
+
+        // For each RuleSet, only if this source file applies
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (Map.Entry&lt;RuleSet, List&lt;Rule&gt;&gt; entry : ruleSetRules.entrySet()) {</span>
+<span class="fc" id="L65">        	RuleSet ruleSet = entry.getKey();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (!ruleSet.applies(ctx.getSourceCodeFile())) {</span>
+<span class="fc" id="L67">	        	continue;</span>
+	            }
+
+            // For each rule, allow it to visit the nodes it desires
+<span class="fc" id="L71">            start = System.nanoTime();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            for (Rule rule: entry.getValue()) {</span>
+<span class="fc" id="L73">                int visits = 0;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">	        	if (!RuleSet.applies(rule, ctx.getLanguageVersion())) {</span>
+<span class="nc" id="L75">	        	    continue;</span>
+	        	}
+<span class="fc" id="L77">                final List&lt;String&gt; nodeNames = rule.getRuleChainVisits();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                for (int j = 0; j &lt; nodeNames.size(); j++) {</span>
+<span class="fc" id="L79">                    List&lt;Node&gt; ns = nodeNameToNodes.get(nodeNames.get(j));</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">                    for (Node node: ns) {</span>
+                        // Visit with underlying Rule, not the RuleReference
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                        while (rule instanceof RuleReference) {</span>
+<span class="nc" id="L83">                            rule = ((RuleReference)rule).getRule();</span>
+                        }
+<span class="fc" id="L85">                        visit(rule, node, ctx);</span>
+<span class="fc" id="L86">                    }</span>
+<span class="fc" id="L87">                    visits += ns.size();</span>
+                }
+<span class="fc" id="L89">                end = System.nanoTime();</span>
+<span class="fc" id="L90">                Benchmarker.mark(Benchmark.RuleChainRule, rule.getName(), end - start, visits);</span>
+<span class="fc" id="L91">                start = end;</span>
+<span class="fc" id="L92">            }</span>
+<span class="fc" id="L93">        }</span>
+<span class="fc" id="L94">    }</span>
+
+    /**
+     * Visit the given rule to the given node.
+     */
+    protected abstract void visit(Rule rule, Node node, RuleContext ctx);
+
+    /**
+     * Index all nodes for visitation by rules.
+     */
+    protected abstract void indexNodes(List&lt;Node&gt; nodes, RuleContext ctx);
+
+    /**
+     * Index a single node for visitation by rules.
+     */
+    protected void indexNode(Node node) {
+<span class="fc" id="L110">        List&lt;Node&gt; nodes = nodeNameToNodes.get(node.toString());</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (nodes != null) {</span>
+<span class="fc" id="L112">            nodes.add(node);</span>
+        }
+<span class="fc" id="L114">    }</span>
+
+    /**
+     * Initialize the RuleChainVisitor to be ready to perform visitations. This
+     * method should not be called until it is known that all Rules participating
+     * in the RuleChain are ready to be initialized themselves.  Some rules
+     * may require full initialization to determine if they will participate in
+     * the RuleChain, so this has been delayed as long as possible to ensure
+     * that manipulation of the Rules is no longer occurring.
+     */
+    protected void initialize() {
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (nodeNameToNodes != null) {</span>
+<span class="nc" id="L126">            return;</span>
+        }
+
+        // Determine all node types that need visiting
+<span class="fc" id="L130">        Set&lt;String&gt; visitedNodes = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (Iterator&lt;Map.Entry&lt;RuleSet, List&lt;Rule&gt;&gt;&gt; entryIterator = ruleSetRules.entrySet().iterator(); entryIterator.hasNext();) {</span>
+<span class="fc" id="L132">            Map.Entry&lt;RuleSet, List&lt;Rule&gt;&gt; entry = entryIterator.next();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            for (Iterator&lt;Rule&gt; ruleIterator = entry.getValue().iterator(); ruleIterator.hasNext();) {</span>
+<span class="fc" id="L134">                Rule rule = ruleIterator.next();</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                if (rule.usesRuleChain()) {</span>
+<span class="fc" id="L136">                    visitedNodes.addAll(rule.getRuleChainVisits());</span>
+                }
+                else {
+                    // Drop rules which do not participate in the rule chain.
+<span class="nc" id="L140">                    ruleIterator.remove();</span>
+                }
+<span class="fc" id="L142">            }</span>
+            // Drop RuleSets in which all Rules have been dropped.
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            if (entry.getValue().isEmpty()) {</span>
+<span class="nc" id="L145">        	entryIterator.remove();</span>
+            }
+<span class="fc" id="L147">        }</span>
+
+        // Setup the data structure to manage mapping node names to node
+        // instances.  We intend to reuse this data structure between
+        // visits to different ASTs.
+<span class="fc" id="L152">        nodeNameToNodes = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (String s: visitedNodes) {</span>
+<span class="fc" id="L154">            List&lt;Node&gt; nodes = new ArrayList&lt;&gt;(100);</span>
+<span class="fc" id="L155">            nodeNameToNodes.put(s, nodes);</span>
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">    }</span>
+
+    /**
+     * Clears the internal data structure used to manage the nodes visited
+     * between visiting different ASTs.
+     */
+    protected void clear() {
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (List&lt;Node&gt; l: nodeNameToNodes.values()) {</span>
+<span class="fc" id="L165">            l.clear();</span>
+<span class="fc" id="L166">        }</span>
+<span class="fc" id="L167">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
