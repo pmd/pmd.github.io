@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SaxonXPathRuleQuery.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.xpath</a> &gt; <span class="el_source">SaxonXPathRuleQuery.java</span></div><h1>SaxonXPathRuleQuery.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.xpath;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.saxon.om.ValueRepresentation;
+import net.sf.saxon.sxpath.AbstractStaticContext;
+import net.sf.saxon.sxpath.IndependentContext;
+import net.sf.saxon.sxpath.XPathDynamicContext;
+import net.sf.saxon.sxpath.XPathEvaluator;
+import net.sf.saxon.sxpath.XPathExpression;
+import net.sf.saxon.sxpath.XPathStaticContext;
+import net.sf.saxon.sxpath.XPathVariable;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.BooleanValue;
+import net.sf.saxon.value.Int64Value;
+import net.sf.saxon.value.StringValue;
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.xpath.saxon.DocumentNode;
+import net.sourceforge.pmd.lang.ast.xpath.saxon.ElementNode;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.EnumeratedProperty;
+import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
+import net.sourceforge.pmd.lang.rule.properties.PropertyDescriptorWrapper;
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+import net.sourceforge.pmd.lang.xpath.Initializer;
+
+/**
+ * This is a Saxon based XPathRule query.
+ */
+<span class="nc" id="L38">public class SaxonXPathRuleQuery extends AbstractXPathRuleQuery {</span>
+
+    // Mapping from Node name to applicable XPath queries
+    private XPathExpression xpathExpression;
+    private List&lt;XPathVariable&gt; xpathVariables;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isSupportedVersion(String version) {
+<span class="nc bnc" id="L49" title="All 4 branches missed.">        return XPATH_1_0_COMPATIBILITY.equals(version) || XPATH_2_0.equals(version);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public List&lt;Node&gt; evaluate(Node node, RuleContext data) {
+<span class="nc" id="L58">        initializeXPathExpression();</span>
+
+<span class="nc" id="L60">        List&lt;Node&gt; results = new ArrayList&lt;&gt;();</span>
+        try {
+            // Get the DocumentNode for the AST
+<span class="nc" id="L63">            DocumentNode documentNode = getDocumentNode(node);</span>
+
+            // Get the corresponding ElementNode for this node.
+<span class="nc" id="L66">            ElementNode rootElementNode = documentNode.nodeToElementNode.get(node);</span>
+
+            // Create a dynamic context for this node
+<span class="nc" id="L69">            XPathDynamicContext xpathDynamicContext = xpathExpression.createDynamicContext(rootElementNode);</span>
+
+            // Set variable values on the dynamic context
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            for (XPathVariable xpathVariable : xpathVariables) {</span>
+<span class="nc" id="L73">                String name = xpathVariable.getVariableQName().getLocalName();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                for (Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry : super.properties.entrySet()) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                    if (name.equals(entry.getKey().name())) {</span>
+<span class="nc" id="L76">                        PropertyDescriptor&lt;?&gt; propertyDescriptor = entry.getKey();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                        if (propertyDescriptor instanceof PropertyDescriptorWrapper) {</span>
+<span class="nc" id="L78">                            propertyDescriptor = ((PropertyDescriptorWrapper) propertyDescriptor)</span>
+                                    .getPropertyDescriptor();
+                        }
+<span class="nc" id="L81">                        Object value = entry.getValue();</span>
+                        ValueRepresentation valueRepresentation;
+
+                        // TODO Need to handle null values?
+                        // TODO Need to handle more PropertyDescriptors, is
+                        // there an easy factory in Saxon we can use for this?
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                        if (propertyDescriptor instanceof StringProperty) {</span>
+<span class="nc" id="L88">                            valueRepresentation = new StringValue((String) value);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                        } else if (propertyDescriptor instanceof BooleanProperty) {</span>
+<span class="nc" id="L90">                            valueRepresentation = BooleanValue.get(((Boolean) value).booleanValue());</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                        } else if (propertyDescriptor instanceof IntegerProperty) {</span>
+<span class="nc" id="L92">                            valueRepresentation = Int64Value.makeIntegerValue((Integer) value);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                        } else if (propertyDescriptor instanceof EnumeratedProperty) {</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">                            if (value instanceof String) {</span>
+<span class="nc" id="L95">                                valueRepresentation = new StringValue((String) value);</span>
+                            } else {
+<span class="nc" id="L97">                                throw new RuntimeException(</span>
+                                        &quot;Unable to create ValueRepresentaton for non-String EnumeratedProperty value: &quot;
+                                                + value);
+                            }
+                        } else {
+<span class="nc" id="L102">                            throw new RuntimeException(&quot;Unable to create ValueRepresentaton for PropertyDescriptor: &quot;</span>
+                                    + propertyDescriptor);
+                        }
+<span class="nc" id="L105">                        xpathDynamicContext.setVariable(xpathVariable, valueRepresentation);</span>
+                    }
+<span class="nc" id="L107">                }</span>
+<span class="nc" id="L108">            }</span>
+
+<span class="nc" id="L110">            List&lt;ElementNode&gt; nodes = xpathExpression.evaluate(xpathDynamicContext);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (ElementNode elementNode : nodes) {</span>
+<span class="nc" id="L112">                results.add((Node) elementNode.getUnderlyingNode());</span>
+<span class="nc" id="L113">            }</span>
+<span class="nc" id="L114">        } catch (XPathException e) {</span>
+<span class="nc" id="L115">            throw new RuntimeException(super.xpath + &quot; had problem: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L116">        }</span>
+<span class="nc" id="L117">        return results;</span>
+    }
+
+<span class="nc" id="L120">    private static final Map&lt;Node, DocumentNode&gt; CACHE = new HashMap&lt;&gt;();</span>
+
+    private DocumentNode getDocumentNode(Node node) {
+        // Get the root AST node
+<span class="nc" id="L124">        Node root = node;</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        while (root.jjtGetParent() != null) {</span>
+<span class="nc" id="L126">            root = root.jjtGetParent();</span>
+        }
+
+        // Cache DocumentNode trees, so that different XPath queries can re-use
+        // them.
+        // Ideally this would be an LRU cache.
+        DocumentNode documentNode;
+<span class="nc" id="L133">        synchronized (CACHE) {</span>
+<span class="nc" id="L134">            documentNode = CACHE.get(root);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (documentNode == null) {</span>
+<span class="nc" id="L136">                documentNode = new DocumentNode(root);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                if (CACHE.size() &gt; 20) {</span>
+<span class="nc" id="L138">                    CACHE.clear();</span>
+                }
+<span class="nc" id="L140">                CACHE.put(root, documentNode);</span>
+            }
+<span class="nc" id="L142">        }</span>
+<span class="nc" id="L143">        return documentNode;</span>
+    }
+
+    private void initializeXPathExpression() {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (xpathExpression != null) {</span>
+<span class="nc" id="L148">            return;</span>
+        }
+        try {
+<span class="nc" id="L151">            XPathEvaluator xpathEvaluator = new XPathEvaluator();</span>
+<span class="nc" id="L152">            XPathStaticContext xpathStaticContext = xpathEvaluator.getStaticContext();</span>
+
+            // Enable XPath 1.0 compatibility
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (XPATH_1_0_COMPATIBILITY.equals(version)) {</span>
+<span class="nc" id="L156">                ((AbstractStaticContext) xpathStaticContext).setBackwardsCompatibilityMode(true);</span>
+            }
+
+            // Register PMD functions
+<span class="nc" id="L160">            Initializer.initialize((IndependentContext) xpathStaticContext);</span>
+
+            // Create XPathVariables for later use. It is a Saxon quirk that
+            // XPathVariables must be defined on the static context, and
+            // reused later to associate an actual value on the dynamic context.
+<span class="nc" id="L165">            xpathVariables = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            for (PropertyDescriptor&lt;?&gt; propertyDescriptor : super.properties.keySet()) {</span>
+<span class="nc" id="L167">                String name = propertyDescriptor.name();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                if (!&quot;xpath&quot;.equals(name)) {</span>
+<span class="nc" id="L169">                    XPathVariable xpathVariable = xpathStaticContext.declareVariable(null, name);</span>
+<span class="nc" id="L170">                    xpathVariables.add(xpathVariable);</span>
+                }
+<span class="nc" id="L172">            }</span>
+
+            // TODO Come up with a way to make use of RuleChain. I had hacked up
+            // an approach which used Jaxen's stuff, but that only works for
+            // 1.0 compatibility mode. Rather do it right instead of kludging.
+<span class="nc" id="L177">            xpathExpression = xpathEvaluator.createExpression(super.xpath);</span>
+<span class="nc" id="L178">        } catch (XPathException e) {</span>
+<span class="nc" id="L179">            throw new RuntimeException(e);</span>
+<span class="nc" id="L180">        }</span>
+<span class="nc" id="L181">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

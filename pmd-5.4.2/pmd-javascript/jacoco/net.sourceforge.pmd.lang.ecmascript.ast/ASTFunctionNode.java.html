@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ASTFunctionNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JavaScript</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ecmascript.ast</a> &gt; <span class="el_source">ASTFunctionNode.java</span></div><h1>ASTFunctionNode.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ecmascript.ast;
+
+import org.mozilla.javascript.ast.FunctionNode;
+
+public class ASTFunctionNode extends AbstractEcmascriptNode&lt;FunctionNode&gt; {
+    public ASTFunctionNode(FunctionNode functionNode) {
+<span class="fc" id="L10">	super(functionNode);</span>
+<span class="fc" id="L11">	super.setImage(functionNode.getName());</span>
+<span class="fc" id="L12">    }</span>
+
+    /**
+     * Accept the visitor.
+     */
+    public Object jjtAccept(EcmascriptParserVisitor visitor, Object data) {
+<span class="fc" id="L18">	return visitor.visit(this, data);</span>
+    }
+
+    public int getNumParams() {
+<span class="nc" id="L22">	return node.getParams().size();</span>
+    }
+
+    public ASTName getFunctionName() {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">	if (node.getFunctionName() != null) {</span>
+<span class="nc" id="L27">	    return (ASTName) jjtGetChild(0);</span>
+	}
+<span class="nc" id="L29">	return null;</span>
+    }
+
+    public EcmascriptNode&lt;?&gt; getParam(int index) {
+<span class="nc" id="L33">        int paramIndex = index;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">	if (node.getFunctionName() != null) {</span>
+<span class="nc" id="L35">	    paramIndex = index + 1;</span>
+	}
+<span class="nc" id="L37">	return (EcmascriptNode&lt;?&gt;) jjtGetChild(paramIndex);</span>
+    }
+
+    public EcmascriptNode&lt;?&gt; getBody() {
+<span class="fc" id="L41">        return (EcmascriptNode&lt;?&gt;) jjtGetChild(jjtGetNumChildren() - 1);</span>
+    }
+
+    @Deprecated // use getBody() instead
+    public EcmascriptNode&lt;?&gt; getBody(int index) {
+<span class="nc" id="L46">	return getBody();</span>
+    }
+
+    public boolean isClosure() {
+<span class="fc" id="L50">	return node.isExpressionClosure();</span>
+    }
+
+    public boolean isGetter() {
+<span class="nc" id="L54">	return node.isGetterMethod();</span>
+    }
+
+    public boolean isSetter() {
+<span class="nc" id="L58">	return node.isSetterMethod();</span>
+    }
+
+    public boolean isGetterOrSetter() {
+<span class="nc bnc" id="L62" title="All 4 branches missed.">        return isGetter() || isSetter();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

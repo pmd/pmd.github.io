@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DocumentNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ast.xpath.saxon</a> &gt; <span class="el_source">DocumentNode.java</span></div><h1>DocumentNode.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ast.xpath.saxon;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import net.sf.saxon.om.Axis;
+import net.sf.saxon.om.AxisIterator;
+import net.sf.saxon.om.DocumentInfo;
+import net.sf.saxon.om.Navigator;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.SingleNodeIterator;
+import net.sf.saxon.type.Type;
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * A Saxon OM Document node for an AST Node.
+ */
+public class DocumentNode extends AbstractNodeInfo implements DocumentInfo {
+
+    /**
+     * The root ElementNode of the DocumentNode.
+     */
+    protected final ElementNode rootNode;
+
+    /**
+     * Mapping from AST Node to corresponding ElementNode.
+     */
+<span class="nc" id="L32">    public final Map&lt;Node, ElementNode&gt; nodeToElementNode = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Construct a DocumentNode, with the given AST Node serving as the root
+     * ElementNode.
+     * 
+     * @param node The root AST Node.
+     * 
+     * @see ElementNode
+     */
+<span class="nc" id="L42">    public DocumentNode(Node node) {</span>
+<span class="nc" id="L43">	this.rootNode = new ElementNode(this, new IdGenerator(), null, node, -1);</span>
+<span class="nc" id="L44">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public String[] getUnparsedEntity(String name) {
+<span class="nc" id="L50">	throw createUnsupportedOperationException(&quot;DocumentInfo.getUnparsedEntity(String)&quot;);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Iterator getUnparsedEntityNames() {
+<span class="nc" id="L57">	throw createUnsupportedOperationException(&quot;DocumentInfo.getUnparsedEntityNames()&quot;);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public NodeInfo selectID(String id) {
+<span class="nc" id="L64">	throw createUnsupportedOperationException(&quot;DocumentInfo.selectID(String)&quot;);</span>
+    }
+
+    @Override
+    public int getNodeKind() {
+<span class="nc" id="L69">	return Type.DOCUMENT;</span>
+    }
+
+    @Override
+    public DocumentInfo getDocumentRoot() {
+<span class="nc" id="L74">	return this;</span>
+    }
+
+    @Override
+    public boolean hasChildNodes() {
+<span class="nc" id="L79">	return true;</span>
+    }
+
+    @Override
+    public AxisIterator iterateAxis(byte axisNumber) {
+<span class="nc bnc" id="L84" title="All 4 branches missed.">	switch (axisNumber) {</span>
+	case Axis.DESCENDANT:
+<span class="nc" id="L86">	    return new Navigator.DescendantEnumeration(this, false, true);</span>
+	case Axis.DESCENDANT_OR_SELF:
+<span class="nc" id="L88">	    return new Navigator.DescendantEnumeration(this, true, true);</span>
+	case Axis.CHILD:
+<span class="nc" id="L90">	    return SingleNodeIterator.makeIterator(rootNode);</span>
+	default:
+<span class="nc" id="L92">	    return super.iterateAxis(axisNumber);</span>
+	}
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

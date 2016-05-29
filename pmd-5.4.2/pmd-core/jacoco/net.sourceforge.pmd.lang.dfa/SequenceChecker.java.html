@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SequenceChecker.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa</a> &gt; <span class="el_source">SequenceChecker.java</span></div><h1>SequenceChecker.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.dfa;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * @author raik
+ *         &lt;p/&gt;
+ *         Computes the first sequence in a list.
+ *         &lt;p/&gt;
+ *         e.g. IF_START 0 WHILE_EXPR 1 WHILE_END 2 IF_END 3
+ *         &lt;p/&gt;
+ *         The first sequence is WHILE_EXPR and WHILE_END. It returns always the
+ *         first inner nested scope.
+ */
+public class SequenceChecker {
+<span class="nc" id="L22">    private final static Logger LOGGER = Logger.getLogger(SequenceChecker.class.getName());</span>
+
+    /*
+     * Element of logical structure of brace nodes.
+     */
+    private static class Status {
+
+        public static final int ROOT = -1;
+
+<span class="nc" id="L31">        private List&lt;Status&gt; nextSteps = new ArrayList&lt;&gt;();</span>
+        // NodeType
+        private int type;
+        private boolean lastStep;
+
+        public Status(int type) {
+<span class="nc" id="L37">            this(type, false);</span>
+<span class="nc" id="L38">        }</span>
+
+<span class="nc" id="L40">        public Status(int type, boolean lastStep) {</span>
+<span class="nc" id="L41">            this.type = type;</span>
+<span class="nc" id="L42">            this.lastStep = lastStep;</span>
+<span class="nc" id="L43">        }</span>
+
+        public void addStep(Status type) {
+<span class="nc" id="L46">            nextSteps.add(type);</span>
+<span class="nc" id="L47">        }</span>
+
+        /**
+         * 
+         * @param type candidate
+         * @return valid Status or null if NodeType is not a valid transition
+         *         NodeType
+         */
+        public Status step(int type) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            for (int i = 0; i &lt; this.nextSteps.size(); i++) {</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                if (type == nextSteps.get(i).type) {</span>
+<span class="nc" id="L58">                    return nextSteps.get(i);</span>
+                }
+            }
+<span class="nc" id="L61">            return null;</span>
+        }
+
+        public boolean isLastStep() {
+<span class="nc" id="L65">            return this.lastStep;</span>
+        }
+
+        public boolean hasMoreSteps() {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            return this.nextSteps.size() &gt; 1;</span>
+        }
+
+        public String toString() {
+<span class="nc" id="L73">            return &quot;NodeType=&quot; + NodeType.stringFromType(type) + &quot;(&quot; + type + &quot;), lastStep=&quot; + lastStep;</span>
+        }
+    }
+
+    private static Status root;
+
+    /**
+     * Create State transition map for the control structures
+     */
+    static {
+<span class="nc" id="L83">        root = new Status(Status.ROOT);</span>
+<span class="nc" id="L84">        Status ifNode = new Status(NodeType.IF_EXPR);</span>
+<span class="nc" id="L85">        Status ifSt = new Status(NodeType.IF_LAST_STATEMENT);</span>
+<span class="nc" id="L86">        Status ifStWithoutElse = new Status(NodeType.IF_LAST_STATEMENT_WITHOUT_ELSE, true);</span>
+<span class="nc" id="L87">        Status elseSt = new Status(NodeType.ELSE_LAST_STATEMENT, true);</span>
+<span class="nc" id="L88">        Status whileNode = new Status(NodeType.WHILE_EXPR);</span>
+<span class="nc" id="L89">        Status whileSt = new Status(NodeType.WHILE_LAST_STATEMENT, true);</span>
+<span class="nc" id="L90">        Status switchNode = new Status(NodeType.SWITCH_START);</span>
+<span class="nc" id="L91">        Status caseSt = new Status(NodeType.CASE_LAST_STATEMENT);</span>
+<span class="nc" id="L92">        Status switchDefault = new Status(NodeType.SWITCH_LAST_DEFAULT_STATEMENT);</span>
+<span class="nc" id="L93">        Status switchEnd = new Status(NodeType.SWITCH_END, true);</span>
+
+<span class="nc" id="L95">        Status forInit = new Status(NodeType.FOR_INIT);</span>
+<span class="nc" id="L96">        Status forExpr = new Status(NodeType.FOR_EXPR);</span>
+<span class="nc" id="L97">        Status forUpdate = new Status(NodeType.FOR_UPDATE);</span>
+<span class="nc" id="L98">        Status forSt = new Status(NodeType.FOR_BEFORE_FIRST_STATEMENT);</span>
+<span class="nc" id="L99">        Status forEnd = new Status(NodeType.FOR_END, true);</span>
+
+<span class="nc" id="L101">        Status doSt = new Status(NodeType.DO_BEFORE_FIRST_STATEMENT);</span>
+<span class="nc" id="L102">        Status doExpr = new Status(NodeType.DO_EXPR, true);</span>
+
+<span class="nc" id="L104">        Status labelNode = new Status(NodeType.LABEL_STATEMENT);</span>
+<span class="nc" id="L105">        Status labelEnd = new Status(NodeType.LABEL_LAST_STATEMENT, true);</span>
+
+<span class="nc" id="L107">        root.addStep(ifNode);</span>
+<span class="nc" id="L108">        root.addStep(whileNode);</span>
+<span class="nc" id="L109">        root.addStep(switchNode);</span>
+<span class="nc" id="L110">        root.addStep(forInit);</span>
+<span class="nc" id="L111">        root.addStep(forExpr);</span>
+<span class="nc" id="L112">        root.addStep(forUpdate);</span>
+<span class="nc" id="L113">        root.addStep(forSt);</span>
+<span class="nc" id="L114">        root.addStep(doSt);</span>
+<span class="nc" id="L115">        root.addStep(labelNode);</span>
+
+<span class="nc" id="L117">        ifNode.addStep(ifSt);</span>
+<span class="nc" id="L118">        ifNode.addStep(ifStWithoutElse);</span>
+<span class="nc" id="L119">        ifSt.addStep(elseSt);</span>
+<span class="nc" id="L120">        ifStWithoutElse.addStep(root);</span>
+<span class="nc" id="L121">        elseSt.addStep(root);</span>
+
+<span class="nc" id="L123">        labelNode.addStep(labelEnd);</span>
+<span class="nc" id="L124">        labelEnd.addStep(root);</span>
+
+<span class="nc" id="L126">        whileNode.addStep(whileSt);</span>
+<span class="nc" id="L127">        whileSt.addStep(root);</span>
+
+<span class="nc" id="L129">        switchNode.addStep(caseSt);</span>
+<span class="nc" id="L130">        switchNode.addStep(switchDefault);</span>
+<span class="nc" id="L131">        switchNode.addStep(switchEnd);</span>
+<span class="nc" id="L132">        caseSt.addStep(caseSt);</span>
+<span class="nc" id="L133">        caseSt.addStep(switchDefault);</span>
+<span class="nc" id="L134">        caseSt.addStep(switchEnd);</span>
+<span class="nc" id="L135">        switchDefault.addStep(switchEnd);</span>
+<span class="nc" id="L136">        switchDefault.addStep(caseSt);</span>
+<span class="nc" id="L137">        switchEnd.addStep(root);</span>
+
+<span class="nc" id="L139">        forInit.addStep(forExpr);</span>
+<span class="nc" id="L140">        forInit.addStep(forUpdate);</span>
+<span class="nc" id="L141">        forInit.addStep(forSt);</span>
+<span class="nc" id="L142">        forExpr.addStep(forUpdate);</span>
+<span class="nc" id="L143">        forExpr.addStep(forSt);</span>
+<span class="nc" id="L144">        forUpdate.addStep(forSt);</span>
+<span class="nc" id="L145">        forSt.addStep(forEnd);</span>
+<span class="nc" id="L146">        forEnd.addStep(root);</span>
+
+<span class="nc" id="L148">        doSt.addStep(doExpr);</span>
+<span class="nc" id="L149">        doExpr.addStep(root);</span>
+<span class="nc" id="L150">    }</span>
+
+    private Status aktStatus;
+    private List&lt;StackObject&gt; bracesList;
+
+<span class="nc" id="L155">    private int firstIndex = -1;</span>
+<span class="nc" id="L156">    private int lastIndex = -1;</span>
+
+    /*
+     * Defines the logical structure.
+     */
+<span class="nc" id="L161">    public SequenceChecker(List&lt;StackObject&gt; bracesList) {</span>
+<span class="nc" id="L162">        this.aktStatus = root;</span>
+<span class="nc" id="L163">        this.bracesList = bracesList;</span>
+<span class="nc" id="L164">    }</span>
+
+    /**
+     * Finds the first innermost sequence e.g IFStart &amp; IFEnd. If the list has
+     * been exhausted (firstIndex==lastIndex) the method returns true.
+     */
+    public boolean run() {
+<span class="nc" id="L171">        LOGGER.entering(this.getClass().getCanonicalName(), &quot;run&quot;);</span>
+<span class="nc" id="L172">        this.aktStatus = root;</span>
+<span class="nc" id="L173">        this.firstIndex = 0;</span>
+<span class="nc" id="L174">        this.lastIndex = 0;</span>
+<span class="nc" id="L175">        boolean lookAhead = false;</span>
+
+        /*
+         * Walk through the bracesList attempting to identify the first
+         * contiguous graph of Nodes from the initial Status to a final Status.
+         * 
+         * There are 2 loop indexes:- i which ranges through the bracesList:
+         * this may be reset l serves as a control to cope with invalid lists of
+         * StackObjects, preventing infinite loops within the SequenceChecker.
+         */
+<span class="nc" id="L185">        int maximumIterations = this.bracesList.size() * this.bracesList.size();</span>
+<span class="nc" id="L186">        int l = -1;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        for (int i = 0; i &lt; this.bracesList.size(); i++) {</span>
+<span class="nc" id="L188">            l++;</span>
+<span class="nc" id="L189">            StackObject so = bracesList.get(i);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L191">                LOGGER.finest(&quot;Processing bracesList(l,i)=(&quot; + l + &quot;,&quot; + i + &quot;) of Type &quot;</span>
+                        + NodeType.stringFromType(so.getType()) + &quot; with State (aktStatus) = &quot; + aktStatus);
+                // LOGGER.finest(&quot;StackObject of Type=&quot;+so.getType());
+<span class="nc" id="L194">                LOGGER.finest(&quot;DataFlowNode @ line &quot; + so.getDataFlowNode().getLine() + &quot; and index=&quot;</span>
+                        + so.getDataFlowNode().getIndex());
+            }
+
+            // Attempt to get to this StackObject's NodeType from the current
+            // State
+<span class="nc" id="L200">            aktStatus = this.aktStatus.step(so.getType());</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L202">                LOGGER.finest(&quot;Transition aktStatus=&quot; + aktStatus);</span>
+            }
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (aktStatus == null) { // Not a valid Node from the current State</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">                if (lookAhead) {</span>
+<span class="nc" id="L207">                    this.lastIndex = i - 1;</span>
+<span class="nc" id="L208">                    LOGGER.finer(&quot;aktStatus is NULL (lookAhead): Invalid transition&quot;);</span>
+<span class="nc" id="L209">                    LOGGER.exiting(this.getClass().getCanonicalName(), &quot;run&quot;, false);</span>
+<span class="nc" id="L210">                    return false;</span>
+                }
+                // Cope with incorrect bracesList contents
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                else if (l &gt; maximumIterations) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                    if (LOGGER.isLoggable(Level.SEVERE)) {</span>
+<span class="nc" id="L215">                        LOGGER.severe(&quot;aktStatus is NULL: maximum Iterations exceeded, abort &quot; + i);</span>
+                    }
+<span class="nc" id="L217">                    LOGGER.exiting(this.getClass().getCanonicalName(), &quot;run&quot;, false);</span>
+<span class="nc" id="L218">                    return false;</span>
+                } else {
+<span class="nc" id="L220">                    this.aktStatus = root;</span>
+<span class="nc" id="L221">                    this.firstIndex = i;</span>
+<span class="nc" id="L222">                    i--;</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L224">                        LOGGER.finest(&quot;aktStatus is NULL: Restarting search continue i==&quot; + i + &quot;, firstIndex=&quot;</span>
+                                + this.firstIndex);
+                    }
+                    continue;
+                }
+            } else { // This NodeType _is_ a valid transition from the previous
+                     // State
+<span class="nc bnc" id="L231" title="All 4 branches missed.">                if (aktStatus.isLastStep() &amp;&amp; !aktStatus.hasMoreSteps()) { // Terminal</span>
+                                                                           // State
+<span class="nc" id="L233">                    this.lastIndex = i;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L235">                        LOGGER.finest(&quot;aktStatus is NOT NULL: lastStep reached and no moreSteps - firstIndex=&quot;</span>
+                                + firstIndex + &quot;, lastIndex=&quot; + lastIndex);
+                    }
+<span class="nc" id="L238">                    LOGGER.exiting(this.getClass().getCanonicalName(), &quot;run&quot;, false);</span>
+<span class="nc" id="L239">                    return false;</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">                } else if (aktStatus.isLastStep() &amp;&amp; aktStatus.hasMoreSteps()) {</span>
+<span class="nc" id="L241">                    lookAhead = true;</span>
+<span class="nc" id="L242">                    this.lastIndex = i;</span>
+<span class="nc" id="L243">                    LOGGER.finest(&quot;aktStatus is NOT NULL: set lookAhead on&quot;);</span>
+                }
+            }
+        }
+<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L248">            LOGGER.finer(&quot;Completed search: firstIndex=&quot; + firstIndex + &quot;, lastIndex=&quot; + lastIndex);</span>
+        }
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        LOGGER.exiting(this.getClass().getCanonicalName(), &quot;run&quot;, this.firstIndex == this.lastIndex);</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">        return this.firstIndex == this.lastIndex;</span>
+    }
+
+    public int getFirstIndex() {
+<span class="nc" id="L255">        return this.firstIndex;</span>
+    }
+
+    public int getLastIndex() {
+<span class="nc" id="L259">        return this.lastIndex;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

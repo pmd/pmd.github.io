@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMD.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">PMD.java</span></div><h1>PMD.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.benchmark.Benchmark;
+import net.sourceforge.pmd.benchmark.Benchmarker;
+import net.sourceforge.pmd.benchmark.TextReport;
+import net.sourceforge.pmd.cli.PMDCommandLineInterface;
+import net.sourceforge.pmd.cli.PMDParameters;
+import net.sourceforge.pmd.lang.*;
+import net.sourceforge.pmd.processor.MonoThreadProcessor;
+import net.sourceforge.pmd.processor.MultiThreadProcessor;
+import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.stat.Metric;
+import net.sourceforge.pmd.util.FileUtil;
+import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.util.SystemUtils;
+import net.sourceforge.pmd.util.database.DBMSMetadata;
+import net.sourceforge.pmd.util.database.DBURI;
+import net.sourceforge.pmd.util.database.SourceObject;
+import net.sourceforge.pmd.util.datasource.DataSource;
+import net.sourceforge.pmd.util.datasource.ReaderDataSource;
+import net.sourceforge.pmd.util.log.ConsoleLogHandler;
+import net.sourceforge.pmd.util.log.ScopedLogHandlersManager;
+
+/**
+ * This is the main class for interacting with PMD. The primary flow of all Rule
+ * process is controlled via interactions with this class. A command line
+ * interface is supported, as well as a programmatic API for integrating PMD
+ * with other software such as IDEs and Ant.
+ */
+public class PMD {
+
+<span class="fc" id="L54">    private static final Logger LOG = Logger.getLogger(PMD.class.getName());</span>
+
+    /** The line delimiter used by PMD in outputs. Usually the platform specific line separator. */
+<span class="fc" id="L57">    public static final String EOL = System.getProperty(&quot;line.separator&quot;, &quot;\n&quot;);</span>
+
+    /** The default suppress marker string. */
+    public static final String SUPPRESS_MARKER = &quot;NOPMD&quot;;
+
+    /**
+     * Parses the given string as a database uri and returns a list of datasources.
+     * @param uriString the URI to parse
+     * @return list of data sources
+     * @throws PMDException if the URI couldn't be parsed
+     * @see DBURI
+     */
+    public static List&lt;DataSource&gt; getURIDataSources(String uriString) throws PMDException {
+<span class="nc" id="L70">        List&lt;DataSource&gt; dataSources = new ArrayList&lt;&gt;();</span>
+
+        try {
+<span class="nc" id="L73">            DBURI dbUri = new DBURI(uriString);</span>
+<span class="nc" id="L74">            DBMSMetadata dbmsMetadata = new DBMSMetadata(dbUri);</span>
+<span class="nc" id="L75">            LOG.log(Level.FINE, &quot;DBMSMetadata retrieved&quot;);</span>
+<span class="nc" id="L76">            List&lt;SourceObject&gt; sourceObjectList = dbmsMetadata.getSourceObjectList();</span>
+<span class="nc" id="L77">            LOG.log(Level.FINE, &quot;Located {0} database source objects&quot;, sourceObjectList.size());</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (SourceObject sourceObject : sourceObjectList) {</span>
+<span class="nc" id="L79">                String falseFilePath = sourceObject.getPseudoFileName();</span>
+<span class="nc" id="L80">                LOG.log(Level.FINEST, &quot;Adding database source object {0}&quot;, falseFilePath);</span>
+
+                try {
+<span class="nc" id="L83">                    dataSources.add(new ReaderDataSource(dbmsMetadata.getSourceCode(sourceObject), falseFilePath));</span>
+<span class="nc" id="L84">                } catch (SQLException ex) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                    if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="nc" id="L86">                        LOG.log(Level.WARNING, &quot;Cannot get SourceCode for &quot; + falseFilePath + &quot;  - skipping ...&quot;, ex);</span>
+                    }
+<span class="nc" id="L88">                }</span>
+<span class="nc" id="L89">            }</span>
+<span class="nc" id="L90">        } catch (URISyntaxException e) {</span>
+<span class="nc" id="L91">            throw new PMDException(&quot;Cannot get DataSources from DBURI - \&quot;&quot; + uriString + &quot;\&quot;&quot;, e);</span>
+<span class="nc" id="L92">        } catch (SQLException e) {</span>
+<span class="nc" id="L93">            throw new PMDException(&quot;Cannot get DataSources from DBURI, couldn't access the database - \&quot;&quot; + uriString</span>
+                    + &quot;\&quot;&quot;, e);
+<span class="nc" id="L95">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L96">            throw new PMDException(&quot;Cannot get DataSources from DBURI, probably missing database jdbc driver - \&quot;&quot;</span>
+                    + uriString + &quot;\&quot;&quot;, e);
+<span class="nc" id="L98">        } catch (Exception e) {</span>
+<span class="nc" id="L99">            throw new PMDException(&quot;Encountered unexpected problem with URI \&quot;&quot;</span>
+                    + uriString + &quot;\&quot;&quot;, e);
+<span class="nc" id="L101">        }</span>
+<span class="nc" id="L102">        return dataSources;</span>
+    }
+
+    /** Contains the configuration with which this PMD instance has been created. */
+    protected final PMDConfiguration configuration;
+
+    private final SourceCodeProcessor rulesetsFileProcessor;
+
+    /**
+     * Helper method to get a configured parser for the requested language. The parser is
+     * configured based on the given {@link PMDConfiguration}.
+     * @param languageVersion the requested language
+     * @param configuration the given configuration
+     * @return the pre-configured parser
+     */
+    public static Parser parserFor(LanguageVersion languageVersion, PMDConfiguration configuration) {
+
+        // TODO Handle Rules having different parser options.
+<span class="fc" id="L120">        LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="fc" id="L121">        ParserOptions options = languageVersionHandler.getDefaultParserOptions();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (configuration != null) {</span>
+<span class="fc" id="L123">            options.setSuppressMarker(configuration.getSuppressMarker());</span>
+        }
+<span class="fc" id="L125">        return languageVersionHandler.getParser(options);</span>
+    }
+
+    /**
+     * Create a report, filter out any defective rules, and keep a record of
+     * them.
+     * 
+     * @param rs the rules
+     * @param ctx the rule context
+     * @param fileName the filename of the source file, which should appear in the report
+     * @return the Report
+     */
+    public static Report setupReport(RuleSets rs, RuleContext ctx, String fileName) {
+
+<span class="fc" id="L139">        Set&lt;Rule&gt; brokenRules = removeBrokenRules(rs);</span>
+<span class="fc" id="L140">        Report report = Report.createReport(ctx, fileName);</span>
+
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        for (Rule rule : brokenRules) {</span>
+<span class="nc" id="L143">            report.addConfigError(new Report.RuleConfigurationError(rule, rule.dysfunctionReason()));</span>
+<span class="nc" id="L144">        }</span>
+
+<span class="fc" id="L146">        return report;</span>
+    }
+
+    /**
+     * Remove and return the misconfigured rules from the rulesets and log them
+     * for good measure.
+     * 
+     * @param ruleSets
+     *            RuleSets
+     * @return Set&lt;Rule&gt;
+     */
+    private static Set&lt;Rule&gt; removeBrokenRules(RuleSets ruleSets) {
+
+<span class="fc" id="L159">        Set&lt;Rule&gt; brokenRules = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L160">        ruleSets.removeDysfunctionalRules(brokenRules);</span>
+
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        for (Rule rule : brokenRules) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="nc" id="L164">                LOG.log(Level.WARNING,</span>
+                    &quot;Removed misconfigured rule: &quot; + rule.getName() + &quot;  cause: &quot; + rule.dysfunctionReason());
+            }
+<span class="nc" id="L167">        }</span>
+
+<span class="fc" id="L169">        return brokenRules;</span>
+    }
+
+    /**
+     * Create a PMD instance using a default Configuration. Changes to the
+     * configuration may be required.
+     */
+    public PMD() {
+<span class="fc" id="L177">        this(new PMDConfiguration());</span>
+<span class="fc" id="L178">    }</span>
+
+    /**
+     * Create a PMD instance using the specified Configuration.
+     * 
+     * @param configuration
+     *            The runtime Configuration of PMD to use.
+     */
+<span class="fc" id="L186">    public PMD(PMDConfiguration configuration) {</span>
+<span class="fc" id="L187">        this.configuration = configuration;</span>
+<span class="fc" id="L188">        this.rulesetsFileProcessor = new SourceCodeProcessor(configuration);</span>
+<span class="fc" id="L189">    }</span>
+
+    /**
+     * Get the runtime configuration. The configuration can be modified to
+     * affect how PMD behaves.
+     * 
+     * @return The configuration.
+     * @see PMDConfiguration
+     */
+    public PMDConfiguration getConfiguration() {
+<span class="nc" id="L199">        return configuration;</span>
+    }
+
+    /**
+     * Gets the source code processor.
+     * @return SourceCodeProcessor
+     */
+    public SourceCodeProcessor getSourceCodeProcessor() {
+<span class="fc" id="L207">        return rulesetsFileProcessor;</span>
+    }
+
+    /**
+     * This method is the main entry point for command line usage.
+     * 
+     * @param configuration the configure to use
+     * @return number of violations found.
+     */
+    public static int doPMD(PMDConfiguration configuration) {
+
+        // Load the RuleSets
+<span class="nc" id="L219">        RuleSetFactory ruleSetFactory = RulesetsFactoryUtils.getRulesetFactory(configuration);</span>
+<span class="nc" id="L220">        RuleSets ruleSets = RulesetsFactoryUtils.getRuleSetsWithBenchmark(configuration.getRuleSets(), ruleSetFactory);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (ruleSets == null) {</span>
+<span class="nc" id="L222">            return 0;</span>
+        }
+
+<span class="nc" id="L225">        Set&lt;Language&gt; languages = getApplicableLanguages(configuration, ruleSets);</span>
+<span class="nc" id="L226">        List&lt;DataSource&gt; files = getApplicableFiles(configuration, languages);</span>
+
+<span class="nc" id="L228">        long reportStart = System.nanoTime();</span>
+        try {
+<span class="nc" id="L230">            Renderer renderer = configuration.createRenderer();</span>
+<span class="nc" id="L231">            List&lt;Renderer&gt; renderers = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L232">            renderers.add(renderer);</span>
+
+<span class="nc" id="L234">            renderer.setWriter(IOUtil.createWriter(configuration.getReportFile()));</span>
+<span class="nc" id="L235">            renderer.start();</span>
+
+<span class="nc" id="L237">            Benchmarker.mark(Benchmark.Reporting, System.nanoTime() - reportStart, 0);</span>
+
+<span class="nc" id="L239">            RuleContext ctx = new RuleContext();</span>
+<span class="nc" id="L240">            final AtomicInteger violations = new AtomicInteger(0);</span>
+<span class="nc" id="L241">            ctx.getReport().addListener(new ReportListener() {</span>
+                @Override
+                public void ruleViolationAdded(RuleViolation ruleViolation) {
+<span class="nc" id="L244">                    violations.incrementAndGet();</span>
+<span class="nc" id="L245">                }</span>
+                @Override
+                public void metricAdded(Metric metric) {
+<span class="nc" id="L248">                }</span>
+            });
+
+<span class="nc" id="L251">            processFiles(configuration, ruleSetFactory, files, ctx, renderers);</span>
+
+<span class="nc" id="L253">            reportStart = System.nanoTime();</span>
+<span class="nc" id="L254">            renderer.end();</span>
+<span class="nc" id="L255">            renderer.flush();</span>
+<span class="nc" id="L256">            return violations.get();</span>
+<span class="nc" id="L257">        } catch (Exception e) {</span>
+<span class="nc" id="L258">            String message = e.getMessage();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            if (message != null) {</span>
+<span class="nc" id="L260">                LOG.severe(message);</span>
+            } else {
+<span class="nc" id="L262">                LOG.log(Level.SEVERE, &quot;Exception during processing&quot;, e);</span>
+            }
+<span class="nc" id="L264">            LOG.log(Level.FINE, &quot;Exception during processing&quot;, e);</span>
+<span class="nc" id="L265">            LOG.info(PMDCommandLineInterface.buildUsageText());</span>
+<span class="nc" id="L266">            return 0;</span>
+        } finally {
+<span class="nc" id="L268">            Benchmarker.mark(Benchmark.Reporting, System.nanoTime() - reportStart, 0);</span>
+        }
+    }
+
+    /**
+     * Creates a new rule context, initialized with a new, empty report.
+     *
+     * @param sourceCodeFilename the source code filename
+     * @param sourceCodeFile the source code file
+     * @return the rule context
+     */
+    public static RuleContext newRuleContext(String sourceCodeFilename, File sourceCodeFile) {
+
+<span class="nc" id="L281">        RuleContext context = new RuleContext();</span>
+<span class="nc" id="L282">        context.setSourceCodeFile(sourceCodeFile);</span>
+<span class="nc" id="L283">        context.setSourceCodeFilename(sourceCodeFilename);</span>
+<span class="nc" id="L284">        context.setReport(new Report());</span>
+<span class="nc" id="L285">        return context;</span>
+    }
+
+    /**
+     * A callback that would be implemented by IDEs keeping track of PMD's
+     * progress as it evaluates a set of files.
+     * 
+     * @author Brian Remedios
+     */
+    public interface ProgressMonitor {
+        /**
+         * A status update reporting on current progress. Implementers will
+         * return true if it is to continue, false otherwise.
+         * 
+         * @param total total number of files to be analyzed
+         * @param totalDone number of files, that have been done analyzing.
+         * @return &lt;code&gt;true&lt;/code&gt; if the execution of PMD should continue, &lt;code&gt;false&lt;/code&gt; if the execution
+         * should be cancelled/terminated.
+         */
+        boolean status(int total, int totalDone);
+    }
+
+    /**
+     * An entry point that would typically be used by IDEs intent on providing
+     * ongoing feedback and the ability to terminate it at will.
+     * 
+     * @param configuration the PMD configuration to use
+     * @param ruleSetFactory ruleset factory
+     * @param files the files to analyze
+     * @param ctx the rule context to use for the execution
+     * @param monitor PMD informs about the progress through this progress monitor. It provides also
+     * the ability to terminate/cancel the execution.
+     */
+    public static void processFiles(PMDConfiguration configuration, RuleSetFactory ruleSetFactory,
+            Collection&lt;File&gt; files, RuleContext ctx, ProgressMonitor monitor) {
+
+        // TODO
+        // call the main processFiles with just the new monitor and a single
+        // logRenderer
+<span class="nc" id="L324">    }</span>
+
+    /**
+     * Run PMD on a list of files using multiple threads - if more than one is
+     * available
+     * 
+     * @param configuration
+     *            Configuration
+     * @param ruleSetFactory
+     *            RuleSetFactory
+     * @param files
+     *            List&lt;DataSource&gt;
+     * @param ctx
+     *            RuleContext
+     * @param renderers
+     *            List&lt;Renderer&gt;
+     */
+    public static void processFiles(final PMDConfiguration configuration, final RuleSetFactory ruleSetFactory,
+            final List&lt;DataSource&gt; files, final RuleContext ctx, final List&lt;Renderer&gt; renderers) {
+
+<span class="nc" id="L344">        sortFiles(configuration, files);</span>
+
+        /*
+         * Check if multithreaded support is available. ExecutorService can also
+         * be disabled if threadCount is not positive, e.g. using the
+         * &quot;-threads 0&quot; command line option.
+         */
+<span class="nc bnc" id="L351" title="All 4 branches missed.">        if (SystemUtils.MT_SUPPORTED &amp;&amp; configuration.getThreads() &gt; 0) {</span>
+<span class="nc" id="L352">            new MultiThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
+        } else {
+<span class="nc" id="L354">            new MonoThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
+        }
+<span class="nc" id="L356">    }</span>
+
+    private static void sortFiles(final PMDConfiguration configuration, final List&lt;DataSource&gt; files) {
+<span class="nc bnc" id="L359" title="All 2 branches missed.">        if (configuration.isStressTest()) {</span>
+            // randomize processing order
+<span class="nc" id="L361">            Collections.shuffle(files);</span>
+        } else {
+<span class="nc" id="L363">            final boolean useShortNames = configuration.isReportShortNames();</span>
+<span class="nc" id="L364">            final String inputPaths = configuration.getInputPaths();</span>
+<span class="nc" id="L365">            Collections.sort(files, new Comparator&lt;DataSource&gt;() {</span>
+                public int compare(DataSource left, DataSource right) {
+<span class="nc" id="L367">                    String leftString = left.getNiceFileName(useShortNames, inputPaths);</span>
+<span class="nc" id="L368">                    String rightString = right.getNiceFileName(useShortNames, inputPaths);</span>
+<span class="nc" id="L369">                    return leftString.compareTo(rightString);</span>
+                }
+            });
+        }
+<span class="nc" id="L373">    }</span>
+
+    /**
+     * Determines all the files, that should be analyzed by PMD.
+     * @param configuration contains either the file path or the DB URI, from where to load the files
+     * @param languages used to filter by file extension
+     * @return List&lt;DataSource&gt; of files
+     */
+    public static List&lt;DataSource&gt; getApplicableFiles(PMDConfiguration configuration, Set&lt;Language&gt; languages) {
+<span class="nc" id="L382">        long startFiles = System.nanoTime();</span>
+<span class="nc" id="L383">        List&lt;DataSource&gt; files = internalGetApplicableFiles(configuration, languages);</span>
+<span class="nc" id="L384">        long endFiles = System.nanoTime();</span>
+<span class="nc" id="L385">        Benchmarker.mark(Benchmark.CollectFiles, endFiles - startFiles, 0);</span>
+<span class="nc" id="L386">        return files;</span>
+    }
+
+    private static List&lt;DataSource&gt; internalGetApplicableFiles(PMDConfiguration configuration, Set&lt;Language&gt; languages) {
+<span class="nc" id="L390">        LanguageFilenameFilter fileSelector = new LanguageFilenameFilter(languages);</span>
+<span class="nc" id="L391">        List&lt;DataSource&gt; files = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L393" title="All 2 branches missed.">        if (null != configuration.getInputPaths()) {</span>
+<span class="nc" id="L394">            files.addAll(FileUtil.collectFiles(configuration.getInputPaths(), fileSelector));</span>
+        }
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">        if (null != configuration.getInputUri()) {</span>
+<span class="nc" id="L398">            String uriString = configuration.getInputUri();</span>
+            try {
+<span class="nc" id="L400">                List&lt;DataSource&gt; dataSources = getURIDataSources(uriString);</span>
+
+<span class="nc" id="L402">                files.addAll(dataSources);</span>
+<span class="nc" id="L403">            } catch (PMDException ex) {</span>
+<span class="nc" id="L404">                LOG.log(Level.SEVERE, &quot;Problem with Input URI&quot;, ex);</span>
+<span class="nc" id="L405">                throw new RuntimeException(&quot;Problem with DBURI: &quot; + uriString, ex);</span>
+<span class="nc" id="L406">            }</span>
+        }
+<span class="nc" id="L408">        return files;</span>
+    }
+
+    private static Set&lt;Language&gt; getApplicableLanguages(PMDConfiguration configuration, RuleSets ruleSets) {
+<span class="nc" id="L412">        Set&lt;Language&gt; languages = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L413">        LanguageVersionDiscoverer discoverer = configuration.getLanguageVersionDiscoverer();</span>
+
+<span class="nc bnc" id="L415" title="All 2 branches missed.">        for (Rule rule : ruleSets.getAllRules()) {</span>
+<span class="nc" id="L416">            Language language = rule.getLanguage();</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">            if (languages.contains(language)) {</span>
+<span class="nc" id="L418">                continue;</span>
+            }
+<span class="nc" id="L420">            LanguageVersion version = discoverer.getDefaultLanguageVersion(language);</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">            if (RuleSet.applies(rule, version)) {</span>
+<span class="nc" id="L422">                languages.add(language);</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">                if (LOG.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L424">                    LOG.fine(&quot;Using &quot; + language.getShortName() + &quot; version: &quot; + version.getShortName());</span>
+                }
+            }
+<span class="nc" id="L427">        }</span>
+<span class="nc" id="L428">        return languages;</span>
+    }
+
+    /**
+     * Entry to invoke PMD as command line tool
+     * 
+     * @param args command line arguments
+     */
+    public static void main(String[] args) {
+<span class="nc" id="L437">        PMDCommandLineInterface.run(args);</span>
+<span class="nc" id="L438">    }</span>
+
+    /**
+     * Parses the command line arguments and executes PMD.
+     * @param args command line arguments
+     * @return the exit code, where &lt;code&gt;0&lt;/code&gt; means successful execution, &lt;code&gt;1&lt;/code&gt; means error,
+     * &lt;code&gt;4&lt;/code&gt; means there have been violations found.
+     */
+    public static int run(String[] args) {
+<span class="nc" id="L447">        int status = 0;</span>
+<span class="nc" id="L448">        long start = System.nanoTime();</span>
+<span class="nc" id="L449">        final PMDParameters params = PMDCommandLineInterface.extractParameters(new PMDParameters(), args, &quot;pmd&quot;);</span>
+<span class="nc" id="L450">        final PMDConfiguration configuration = PMDParameters.transformParametersIntoConfiguration(params);</span>
+
+<span class="nc bnc" id="L452" title="All 2 branches missed.">        final Level logLevel = params.isDebug() ? Level.FINER : Level.INFO;</span>
+<span class="nc" id="L453">        final Handler logHandler = new ConsoleLogHandler();</span>
+<span class="nc" id="L454">        final ScopedLogHandlersManager logHandlerManager = new ScopedLogHandlersManager(logLevel, logHandler);</span>
+<span class="nc" id="L455">        final Level oldLogLevel = LOG.getLevel();</span>
+<span class="nc" id="L456">        LOG.setLevel(logLevel); // Need to do this, since the static logger has</span>
+                                // already been initialized at this point
+        try {
+<span class="nc" id="L459">            int violations = PMD.doPMD(configuration);</span>
+<span class="nc bnc" id="L460" title="All 4 branches missed.">            if (violations &gt; 0 &amp;&amp; configuration.isFailOnViolation()) {</span>
+<span class="nc" id="L461">                status = PMDCommandLineInterface.VIOLATIONS_FOUND;</span>
+            } else {
+<span class="nc" id="L463">                status = 0;</span>
+            }
+<span class="nc" id="L465">        } catch (Exception e) {</span>
+<span class="nc" id="L466">            System.out.println(PMDCommandLineInterface.buildUsageText());</span>
+<span class="nc" id="L467">            System.out.println();</span>
+<span class="nc" id="L468">            System.err.println(e.getMessage());</span>
+<span class="nc" id="L469">            status = PMDCommandLineInterface.ERROR_STATUS;</span>
+        } finally {
+<span class="nc" id="L471">            logHandlerManager.close();</span>
+<span class="nc" id="L472">            LOG.setLevel(oldLogLevel);</span>
+<span class="nc bnc" id="L473" title="All 6 branches missed.">            if (params.isBenchmark()) {</span>
+<span class="nc" id="L474">                long end = System.nanoTime();</span>
+<span class="nc" id="L475">                Benchmarker.mark(Benchmark.TotalPMD, end - start, 0);</span>
+
+<span class="nc" id="L477">                TextReport report = new TextReport(); // TODO get specified</span>
+                                                      // report format from
+                                                      // config
+<span class="nc" id="L480">                report.generate(Benchmarker.values(), System.err);</span>
+<span class="nc" id="L481">            }</span>
+        }
+<span class="nc" id="L483">        return status;</span>
+    }
+
+    /**
+     * Constant that contains always the current version of PMD.
+     */
+    public static final String VERSION;
+    /**
+     * Determines the version from maven's generated pom.properties file.
+     */
+    static {
+<span class="fc" id="L494">        String pmdVersion = null;</span>
+<span class="fc" id="L495">        InputStream stream = PMD.class.getResourceAsStream(&quot;/META-INF/maven/net.sourceforge.pmd/pmd-core/pom.properties&quot;);</span>
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">        if (stream != null) {</span>
+            try {
+<span class="nc" id="L498">                Properties properties = new Properties();</span>
+<span class="nc" id="L499">                properties.load(stream);</span>
+<span class="nc" id="L500">                pmdVersion = properties.getProperty(&quot;version&quot;);</span>
+<span class="nc" id="L501">            } catch (IOException e) {</span>
+<span class="nc" id="L502">                LOG.log(Level.FINE, &quot;Couldn't determine version of PMD&quot;, e);</span>
+<span class="nc" id="L503">            }</span>
+        }
+<span class="pc bpc" id="L505" title="1 of 2 branches missed.">        if (pmdVersion == null) {</span>
+<span class="fc" id="L506">            pmdVersion = &quot;unknown&quot;;</span>
+        }
+<span class="fc" id="L508">        VERSION = pmdVersion;</span>
+<span class="fc" id="L509">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

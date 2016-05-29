@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NonThreadSafeSingletonRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">NonThreadSafeSingletonRule.java</span></div><h1>NonThreadSafeSingletonRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTNullLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTSynchronizedStatement;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+
+public class NonThreadSafeSingletonRule extends AbstractJavaRule {
+
+<span class="fc" id="L27">    private Map&lt;String, ASTFieldDeclaration&gt; fieldDecls = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L29">    private boolean checkNonStaticMethods = true;</span>
+<span class="fc" id="L30">    private boolean checkNonStaticFields = true;</span>
+
+<span class="fc" id="L32">    private static final BooleanProperty CHECK_NON_STATIC_METHODS_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;checkNonStaticMethods&quot;,
+            &quot;Check for non-static methods.  Do not set this to false and checkNonStaticFields to true.&quot;, true, 1.0f);
+<span class="fc" id="L35">    private static final BooleanProperty CHECK_NON_STATIC_FIELDS_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;checkNonStaticFields&quot;,
+            &quot;Check for non-static fields.  Do not set this to true and checkNonStaticMethods to false.&quot;, false, 2.0f);
+
+<span class="fc" id="L39">    public NonThreadSafeSingletonRule() {</span>
+<span class="fc" id="L40">        definePropertyDescriptor(CHECK_NON_STATIC_METHODS_DESCRIPTOR);</span>
+<span class="fc" id="L41">        definePropertyDescriptor(CHECK_NON_STATIC_FIELDS_DESCRIPTOR);</span>
+<span class="fc" id="L42">    }</span>
+
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L46">        fieldDecls.clear();</span>
+<span class="fc" id="L47">        checkNonStaticMethods = getProperty(CHECK_NON_STATIC_METHODS_DESCRIPTOR);</span>
+<span class="fc" id="L48">        checkNonStaticFields = getProperty(CHECK_NON_STATIC_FIELDS_DESCRIPTOR);</span>
+<span class="fc" id="L49">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">        if (checkNonStaticFields || node.isStatic()) {</span>
+<span class="fc" id="L55">            fieldDecls.put(node.getVariableName(), node);</span>
+        }
+<span class="fc" id="L57">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+
+<span class="pc bpc" id="L63" title="1 of 6 branches missed.">        if (checkNonStaticMethods &amp;&amp; !node.isStatic() || node.isSynchronized()) {</span>
+<span class="fc" id="L64">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L67">        List&lt;ASTIfStatement&gt; ifStatements = node.findDescendantsOfType(ASTIfStatement.class);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (ASTIfStatement ifStatement : ifStatements) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            if (ifStatement.getFirstParentOfType(ASTSynchronizedStatement.class) == null) {</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                if (!ifStatement.hasDescendantOfType(ASTNullLiteral.class)) {</span>
+<span class="fc" id="L71">                    continue;</span>
+                }
+<span class="fc" id="L73">                ASTName n = ifStatement.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">                if (n == null || !fieldDecls.containsKey(n.getImage())) {</span>
+<span class="fc" id="L75">                    continue;</span>
+                }
+<span class="fc" id="L77">                List&lt;ASTAssignmentOperator&gt; assigmnents = ifStatement</span>
+                        .findDescendantsOfType(ASTAssignmentOperator.class);
+<span class="fc" id="L79">                boolean violation = false;</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">                for (int ix = 0; ix &lt; assigmnents.size(); ix++) {</span>
+<span class="fc" id="L81">                    ASTAssignmentOperator oper = assigmnents.get(ix);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                    if (!(oper.jjtGetParent() instanceof ASTStatementExpression)) {</span>
+<span class="nc" id="L83">                        continue;</span>
+                    }
+<span class="fc" id="L85">                    ASTStatementExpression expr = (ASTStatementExpression) oper.jjtGetParent();</span>
+<span class="pc bpc" id="L86" title="2 of 6 branches missed.">                    if (expr.jjtGetChild(0) instanceof ASTPrimaryExpression</span>
+                            &amp;&amp; ((ASTPrimaryExpression) expr.jjtGetChild(0)).jjtGetNumChildren() == 1
+                            &amp;&amp; ((ASTPrimaryExpression) expr.jjtGetChild(0)).jjtGetChild(0) instanceof ASTPrimaryPrefix) {
+<span class="fc" id="L89">                        ASTPrimaryPrefix pp = (ASTPrimaryPrefix) ((ASTPrimaryExpression) expr.jjtGetChild(0))</span>
+                                .jjtGetChild(0);
+<span class="fc" id="L91">                        String name = null;</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                        if (pp.usesThisModifier()) {</span>
+<span class="nc" id="L93">                            ASTPrimarySuffix priSuf = expr.getFirstDescendantOfType(ASTPrimarySuffix.class);</span>
+<span class="nc" id="L94">                            name = priSuf.getImage();</span>
+<span class="nc" id="L95">                        } else {</span>
+<span class="fc" id="L96">                            ASTName astName = (ASTName) pp.jjtGetChild(0);</span>
+<span class="fc" id="L97">                            name = astName.getImage();</span>
+                        }
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                        if (fieldDecls.containsKey(name)) {</span>
+<span class="fc" id="L100">                            violation = true;</span>
+                        }
+                    }
+                }
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                if (violation) {</span>
+<span class="fc" id="L105">                    addViolation(data, ifStatement);</span>
+                }
+            }
+<span class="fc" id="L108">        }</span>
+<span class="fc" id="L109">        return super.visit(node, data);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

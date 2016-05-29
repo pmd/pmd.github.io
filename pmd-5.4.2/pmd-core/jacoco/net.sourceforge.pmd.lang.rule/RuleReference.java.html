@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RuleReference.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">RuleReference.java</span></div><h1>RuleReference.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.RuleSetReference;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * This class represents a Rule which is a reference to Rule defined in another
+ * RuleSet. All details of the Rule are delegated to the underlying referenced
+ * Rule, but those operations which modify overridden aspects of the rule are
+ * explicitly tracked. Modification operations which set a value to the current
+ * underlying value do not override.
+ */
+public class RuleReference extends AbstractDelegateRule {
+
+    private Language language;
+    private LanguageVersion minimumLanguageVersion;
+    private LanguageVersion maximumLanguageVersion;
+    private Boolean deprecated;
+    private String name;
+    private List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors;
+    private Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertyValues;
+    private String message;
+    private String description;
+    private List&lt;String&gt; examples;
+    private String externalInfoUrl;
+    private RulePriority priority;
+    private RuleSetReference ruleSetReference;
+
+<span class="fc" id="L44">    private static final List&lt;PropertyDescriptor&lt;?&gt;&gt; EMPTY_DESCRIPTORS = new ArrayList&lt;&gt;(0);</span>
+
+    public Language getOverriddenLanguage() {
+<span class="fc" id="L47">        return language;</span>
+    }
+
+<span class="fc" id="L50">    public RuleReference() {</span>
+<span class="fc" id="L51">    }</span>
+
+<span class="fc" id="L53">    public RuleReference(Rule theRule, RuleSetReference theRuleSetReference) {</span>
+<span class="fc" id="L54">        setRule(theRule);</span>
+<span class="fc" id="L55">        ruleSetReference = theRuleSetReference;</span>
+<span class="fc" id="L56">    }</span>
+
+    @Override
+    public void setLanguage(Language language) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L62" title="1 of 4 branches missed.">        if (!isSame(language, super.getLanguage()) || this.language != null) {</span>
+<span class="fc" id="L63">            this.language = language;</span>
+<span class="fc" id="L64">            super.setLanguage(language);</span>
+        }
+<span class="fc" id="L66">    }</span>
+
+    public LanguageVersion getOverriddenMinimumLanguageVersion() {
+<span class="fc" id="L69">        return minimumLanguageVersion;</span>
+    }
+
+    @Override
+    public void setMinimumLanguageVersion(LanguageVersion minimumLanguageVersion) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">        if (!isSame(minimumLanguageVersion, super.getMinimumLanguageVersion()) || this.minimumLanguageVersion != null) {</span>
+<span class="fc" id="L77">            this.minimumLanguageVersion = minimumLanguageVersion;</span>
+<span class="fc" id="L78">            super.setMinimumLanguageVersion(minimumLanguageVersion);</span>
+        }
+<span class="fc" id="L80">    }</span>
+
+    public LanguageVersion getOverriddenMaximumLanguageVersion() {
+<span class="fc" id="L83">        return maximumLanguageVersion;</span>
+    }
+
+    @Override
+    public void setMaximumLanguageVersion(LanguageVersion maximumLanguageVersion) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L90" title="1 of 4 branches missed.">        if (!isSame(maximumLanguageVersion, super.getMaximumLanguageVersion()) || this.maximumLanguageVersion != null) {</span>
+<span class="fc" id="L91">            this.maximumLanguageVersion = maximumLanguageVersion;</span>
+<span class="fc" id="L92">            super.setMaximumLanguageVersion(maximumLanguageVersion);</span>
+        }
+<span class="fc" id="L94">    }</span>
+
+    public Boolean isOverriddenDeprecated() {
+<span class="fc" id="L97">        return deprecated;</span>
+    }
+
+    @Override
+    public boolean isDeprecated() {
+<span class="pc bpc" id="L102" title="1 of 4 branches missed.">        return deprecated != null &amp;&amp; deprecated.booleanValue();</span>
+    }
+
+    @Override
+    public void setDeprecated(boolean deprecated) {
+        // Deprecation does not propagate to the underlying Rule. It is the
+        // Rule reference itself which is being deprecated.
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        this.deprecated = deprecated ? deprecated : null;</span>
+<span class="fc" id="L110">    }</span>
+
+    public String getOverriddenName() {
+<span class="fc" id="L113">        return name;</span>
+    }
+
+    public String getOriginalName() {
+<span class="nc" id="L117">        return super.getName();</span>
+    }
+
+    @Override
+    public void setName(String name) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L124" title="1 of 4 branches missed.">        if (!isSame(name, super.getName()) || this.name != null) {</span>
+<span class="fc" id="L125">            this.name = name;</span>
+        }
+<span class="fc" id="L127">    }</span>
+
+    @Override
+    public String getName() {
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (this.name != null) {</span>
+<span class="fc" id="L132">            return this.name;</span>
+        }
+<span class="fc" id="L134">        return super.getName();</span>
+    }
+
+    public String getOverriddenMessage() {
+<span class="fc" id="L138">        return message;</span>
+    }
+
+    @Override
+    public void setMessage(String message) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L145" title="1 of 4 branches missed.">        if (!isSame(message, super.getMessage()) || this.message != null) {</span>
+<span class="fc" id="L146">            this.message = message;</span>
+<span class="fc" id="L147">            super.setMessage(message);</span>
+        }
+<span class="fc" id="L149">    }</span>
+
+    public String getOverriddenDescription() {
+<span class="fc" id="L152">        return description;</span>
+    }
+
+    @Override
+    public void setDescription(String description) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L159" title="1 of 4 branches missed.">        if (!isSame(description, super.getDescription()) || this.description != null) {</span>
+<span class="fc" id="L160">            this.description = description;</span>
+<span class="fc" id="L161">            super.setDescription(description);</span>
+        }
+<span class="fc" id="L163">    }</span>
+
+    public List&lt;String&gt; getOverriddenExamples() {
+<span class="fc" id="L166">        return examples;</span>
+    }
+
+    @Override
+    public void addExample(String example) {
+        // TODO Meaningful override of examples is hard, because they are merely
+        // a list of strings. How does one indicate override of a particular
+        // value? Via index? Rule.setExample(int, String)? But the XML format
+        // does not provide a means of overriding by index, not unless you took
+        // the position in the XML file to indicate corresponding index to
+        // override. But that means you have to override starting from index 0.
+        // This would be so much easier if examples had to have names, like
+        // properties.
+
+        // Only override if different than current values.
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (!contains(super.getExamples(), example)) {</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">            if (examples == null) {</span>
+<span class="fc" id="L183">                examples = new ArrayList&lt;&gt;(1);</span>
+            }
+            // TODO Fix later. To keep example overrides from being unbounded,
+            // we're only going to keep track of the last one.
+<span class="fc" id="L187">            examples.clear();</span>
+<span class="fc" id="L188">            examples.add(example);</span>
+<span class="fc" id="L189">            super.addExample(example);</span>
+        }
+<span class="fc" id="L191">    }</span>
+
+    public String getOverriddenExternalInfoUrl() {
+<span class="fc" id="L194">        return externalInfoUrl;</span>
+    }
+
+    @Override
+    public void setExternalInfoUrl(String externalInfoUrl) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L201" title="1 of 4 branches missed.">        if (!isSame(externalInfoUrl, super.getExternalInfoUrl()) || this.externalInfoUrl != null) {</span>
+<span class="fc" id="L202">            this.externalInfoUrl = externalInfoUrl;</span>
+<span class="fc" id="L203">            super.setExternalInfoUrl(externalInfoUrl);</span>
+        }
+<span class="fc" id="L205">    }</span>
+
+    public RulePriority getOverriddenPriority() {
+<span class="fc" id="L208">        return priority;</span>
+    }
+
+    @Override
+    public void setPriority(RulePriority priority) {
+        // Only override if different than current value, or if already
+        // overridden.
+<span class="pc bpc" id="L215" title="1 of 4 branches missed.">        if (priority != super.getPriority() || this.priority != null) {</span>
+<span class="fc" id="L216">            this.priority = priority;</span>
+<span class="fc" id="L217">            super.setPriority(priority);</span>
+        }
+<span class="fc" id="L219">    }</span>
+
+    public List&lt;PropertyDescriptor&lt;?&gt;&gt; getOverriddenPropertyDescriptors() {
+
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        return propertyDescriptors == null ? EMPTY_DESCRIPTORS : propertyDescriptors;</span>
+    }
+
+    @Override
+    public void definePropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) throws IllegalArgumentException {
+        // Define on the underlying Rule, where it is impossible to have two
+        // property descriptors with the same name. Therefore, there is no need
+        // to check if the property is already overridden at this level.
+<span class="fc" id="L231">        super.definePropertyDescriptor(propertyDescriptor);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        if (propertyDescriptors == null) {</span>
+<span class="fc" id="L233">            propertyDescriptors = new ArrayList&lt;&gt;();</span>
+        }
+<span class="fc" id="L235">        propertyDescriptors.add(propertyDescriptor);</span>
+<span class="fc" id="L236">    }</span>
+
+    public Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; getOverriddenPropertiesByPropertyDescriptor() {
+<span class="fc" id="L239">        return propertyValues;</span>
+    }
+
+    @Override
+    public &lt;T&gt; void setProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor, T value) {
+        // Only override if different than current value.
+<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (!isSame(super.getProperty(propertyDescriptor), value)) {</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">            if (propertyValues == null) {</span>
+<span class="fc" id="L247">                propertyValues = new HashMap&lt;&gt;();</span>
+            }
+<span class="fc" id="L249">            propertyValues.put(propertyDescriptor, value);</span>
+<span class="fc" id="L250">            super.setProperty(propertyDescriptor, value);</span>
+        }
+<span class="fc" id="L252">    }</span>
+
+    public RuleSetReference getRuleSetReference() {
+<span class="fc" id="L255">        return ruleSetReference;</span>
+    }
+
+    public void setRuleSetReference(RuleSetReference ruleSetReference) {
+<span class="fc" id="L259">        this.ruleSetReference = ruleSetReference;</span>
+<span class="fc" id="L260">    }</span>
+
+    private static boolean isSame(String s1, String s2) {
+<span class="fc" id="L263">        return StringUtil.isSame(s1, s2, true, false, true);</span>
+    }
+
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    private static boolean isSame(Object o1, Object o2) {
+<span class="pc bpc" id="L268" title="3 of 4 branches missed.">        if (o1 instanceof Object[] &amp;&amp; o2 instanceof Object[]) {</span>
+<span class="nc" id="L269">            return isSame((Object[]) o1, (Object[]) o2);</span>
+        }
+<span class="pc bpc" id="L271" title="1 of 8 branches missed.">        return o1 == o2 || o1 != null &amp;&amp; o2 != null &amp;&amp; o1.equals(o2);</span>
+    }
+
+    @SuppressWarnings(&quot;PMD.UnusedNullCheckInEquals&quot;)
+    // TODO: fix UnusedNullCheckInEquals rule for Arrays
+    private static boolean isSame(Object[] a1, Object[] a2) {
+<span class="nc bnc" id="L277" title="All 8 branches missed.">        return a1 == a2 || a1 != null &amp;&amp; a2 != null &amp;&amp; Arrays.equals(a1, a2);</span>
+    }
+
+    private static boolean contains(Collection&lt;String&gt; collection, String s1) {
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        for (String s2 : collection) {</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">            if (isSame(s1, s2)) {</span>
+<span class="fc" id="L283">                return true;</span>
+            }
+<span class="fc" id="L285">        }</span>
+<span class="fc" id="L286">        return false;</span>
+    }
+
+    public boolean hasDescriptor(PropertyDescriptor&lt;?&gt; descriptor) {
+<span class="nc bnc" id="L290" title="All 6 branches missed.">        return propertyDescriptors != null &amp;&amp; propertyDescriptors.contains(descriptor)</span>
+                || super.hasDescriptor(descriptor);
+    }
+
+    public boolean hasOverriddenProperty(PropertyDescriptor&lt;?&gt; descriptor) {
+<span class="nc bnc" id="L295" title="All 4 branches missed.">        return propertyValues != null &amp;&amp; propertyValues.containsKey(descriptor);</span>
+    }
+
+    public boolean usesDefaultValues() {
+
+<span class="nc" id="L300">        List&lt;PropertyDescriptor&lt;?&gt;&gt; descriptors = getOverriddenPropertyDescriptors();</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if (!descriptors.isEmpty()) {</span>
+<span class="nc" id="L302">            return false;</span>
+        }
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        for (PropertyDescriptor&lt;?&gt; desc : descriptors) {</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (!isSame(desc.defaultValue(), getProperty(desc))) {</span>
+<span class="nc" id="L307">                return false;</span>
+            }
+<span class="nc" id="L309">        }</span>
+
+<span class="nc bnc" id="L311" title="All 2 branches missed.">        if (!getRule().usesDefaultValues()) {</span>
+<span class="nc" id="L312">            return false;</span>
+        }
+
+<span class="nc" id="L315">        return true;</span>
+    }
+
+    public void useDefaultValueFor(PropertyDescriptor&lt;?&gt; desc) {
+
+        // not sure if we should go all the way through to the real thing?
+<span class="nc" id="L321">        getRule().useDefaultValueFor(desc);</span>
+
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        if (propertyValues == null) {</span>
+<span class="nc" id="L324">            return;</span>
+        }
+
+<span class="nc" id="L327">        propertyValues.remove(desc);</span>
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        if (propertyDescriptors != null) {</span>
+<span class="nc" id="L330">            propertyDescriptors.remove(desc);</span>
+        }
+<span class="nc" id="L332">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

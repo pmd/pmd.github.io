@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>IdempotentOperationsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">IdempotentOperationsRule.java</span></div><h1>IdempotentOperationsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
+import net.sourceforge.pmd.lang.java.ast.ASTExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+<span class="fc" id="L17">public class IdempotentOperationsRule extends AbstractJavaRule {</span>
+
+    @Override
+    public Object visit(ASTStatementExpression node, Object data) {
+<span class="pc bpc" id="L21" title="3 of 14 branches missed.">        if (node.jjtGetNumChildren() != 3</span>
+                || !(node.jjtGetChild(0) instanceof ASTPrimaryExpression)
+                || !(node.jjtGetChild(1) instanceof ASTAssignmentOperator)
+                || ((ASTAssignmentOperator) node.jjtGetChild(1)).isCompound()
+                || !(node.jjtGetChild(2) instanceof ASTExpression)
+                || node.jjtGetChild(0).jjtGetChild(0).jjtGetNumChildren() == 0
+                || node.jjtGetChild(2).jjtGetChild(0).jjtGetChild(0).jjtGetNumChildren() == 0
+        ) {
+<span class="fc" id="L29">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L32">        Node lhs = node.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (!(lhs instanceof ASTName)) {</span>
+<span class="nc" id="L34">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L37">        Node rhs = node.jjtGetChild(2).jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (!(rhs instanceof ASTName)) {</span>
+<span class="fc" id="L39">            return super.visit(node, data);</span>
+        }
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (!lhs.hasImageEqualTo(rhs.getImage())) {</span>
+<span class="fc" id="L43">            return super.visit(node, data);</span>
+        }
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (lhs.jjtGetParent().jjtGetParent().jjtGetNumChildren() &gt; 1) {</span>
+<span class="fc" id="L47">            Node n = lhs.jjtGetParent().jjtGetParent().jjtGetChild(1);</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">            if (n instanceof ASTPrimarySuffix &amp;&amp; ((ASTPrimarySuffix) n).isArrayDereference()) {</span>
+<span class="nc" id="L49">                return super.visit(node, data);</span>
+            }
+        }
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (rhs.jjtGetParent().jjtGetParent().jjtGetNumChildren() &gt; 1) {</span>
+<span class="fc" id="L54">            Node n = rhs.jjtGetParent().jjtGetParent().jjtGetChild(1);</span>
+<span class="pc bpc" id="L55" title="1 of 6 branches missed.">            if (n instanceof ASTPrimarySuffix &amp;&amp; ((ASTPrimarySuffix) n).isArguments() || ((ASTPrimarySuffix) n).isArrayDereference()) {</span>
+<span class="fc" id="L56">                return super.visit(node, data);</span>
+            }
+        }
+
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (lhs.findDescendantsOfType(ASTPrimarySuffix.class).size() != rhs.findDescendantsOfType(ASTPrimarySuffix.class).size()) {</span>
+<span class="nc" id="L61">            return super.visit(node, data);</span>
+        }
+
+<span class="fc" id="L64">        List&lt;ASTPrimarySuffix&gt; lhsSuffixes = lhs.jjtGetParent().jjtGetParent().findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc" id="L65">        List&lt;ASTPrimarySuffix&gt; rhsSuffixes = rhs.jjtGetParent().jjtGetParent().findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (lhsSuffixes.size() != rhsSuffixes.size()) {</span>
+<span class="fc" id="L67">            return super.visit(node, data);</span>
+        }
+
+<span class="pc bfc" id="L70" title="All 2 branches covered.">        for (int i = 0; i &lt; lhsSuffixes.size(); i++) {</span>
+<span class="fc" id="L71">            ASTPrimarySuffix l = lhsSuffixes.get(i);</span>
+<span class="fc" id="L72">            ASTPrimarySuffix r = rhsSuffixes.get(i);</span>
+
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (!l.hasImageEqualTo(r.getImage())) {</span>
+<span class="fc" id="L75">                return super.visit(node, data);</span>
+            }
+        }
+
+<span class="fc" id="L79">        addViolation(data, node);</span>
+<span class="fc" id="L80">        return super.visit(node, data);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
