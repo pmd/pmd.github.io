@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CommentDefaultAccessModifierRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.comments</a> &gt; <span class="el_source">CommentDefaultAccessModifierRule.java</span></div><h1>CommentDefaultAccessModifierRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.comments;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.AbstractJavaAccessNode;
+import net.sourceforge.pmd.lang.java.ast.Comment;
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+
+/**
+ * Check for Methods, Fields and Nested Classes that have a default access modifier
+ *
+ * @author Damián Techeira
+ */
+public class CommentDefaultAccessModifierRule extends AbstractCommentRule {
+
+<span class="fc" id="L30">	private static final StringProperty REGEX_DESCRIPTOR = new StringProperty(&quot;regex&quot;, &quot;Regular expression&quot;, &quot;&quot;, 1.0f);</span>
+	private static final String MESSAGE = &quot;To avoid mistakes add a comment &quot; +
+			&quot;at the beginning of the %s %s if you want a default access modifier&quot;;
+<span class="fc" id="L33">	private final Set&lt;Integer&gt; interestingLineNumberComments = new HashSet&lt;Integer&gt;();</span>
+
+<span class="fc" id="L35">	public CommentDefaultAccessModifierRule() {</span>
+<span class="fc" id="L36">		definePropertyDescriptor(REGEX_DESCRIPTOR);</span>
+<span class="fc" id="L37">	}</span>
+
+	public CommentDefaultAccessModifierRule(final String regex) {
+<span class="nc" id="L40">		this();</span>
+<span class="nc" id="L41">		setRegex(regex);</span>
+<span class="nc" id="L42">	}</span>
+
+	public void setRegex(final String regex) {
+<span class="nc" id="L45">		setProperty(CommentDefaultAccessModifierRule.REGEX_DESCRIPTOR, regex);</span>
+<span class="nc" id="L46">	}</span>
+
+	@Override
+	public Object visit(final ASTCompilationUnit node, final Object data) {
+<span class="fc" id="L50">		interestingLineNumberComments.clear();</span>
+<span class="fc" id="L51">		final List&lt;Comment&gt; comments = node.getComments();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">		for (final Comment comment : comments) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">			if (comment.getImage().matches(getProperty(REGEX_DESCRIPTOR).trim())) {</span>
+<span class="fc" id="L54">				interestingLineNumberComments.add(comment.getBeginLine());</span>
+			}
+<span class="fc" id="L56">		}</span>
+<span class="fc" id="L57">		return super.visit(node, data);</span>
+	}
+
+	@Override
+	public Object visit(final ASTMethodDeclaration decl, final Object data) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (shouldReport(decl)) {</span>
+<span class="fc" id="L63">			addViolationWithMessage(data, decl, String.format(MESSAGE,</span>
+					decl.getFirstChildOfType(ASTMethodDeclarator.class).getImage(), &quot;method&quot;));
+		}
+<span class="fc" id="L66">		return super.visit(decl, data);</span>
+	}
+
+	@Override
+	public Object visit(final ASTFieldDeclaration decl, final Object data) {
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		if (shouldReport(decl)) {</span>
+<span class="fc" id="L72">			addViolationWithMessage(data, decl, String.format(MESSAGE,</span>
+					decl.getFirstDescendantOfType(ASTVariableDeclaratorId.class).getImage(), &quot;field&quot;));
+		}
+<span class="fc" id="L75">		return super.visit(decl, data);</span>
+	}
+
+	@Override
+	public Object visit(final ASTClassOrInterfaceDeclaration decl, final Object data) {
+		// check for nested classes
+<span class="fc bfc" id="L81" title="All 4 branches covered.">		if (decl.isNested() &amp;&amp; shouldReport(decl)) {</span>
+<span class="fc" id="L82">			addViolationWithMessage(data, decl, String.format(MESSAGE, decl.getImage(), &quot;nested class&quot;));</span>
+		}
+<span class="fc" id="L84">		return super.visit(decl, data);</span>
+	}
+
+	private boolean shouldReport(final AbstractJavaAccessNode decl) {
+<span class="fc" id="L88">		List&lt;ASTClassOrInterfaceDeclaration&gt; parentClassOrInterface =</span>
+		        decl.getParentsOfType(ASTClassOrInterfaceDeclaration.class);
+		// ignore if is a Interface
+<span class="fc bfc" id="L91" title="All 10 branches covered.">        return (!parentClassOrInterface.isEmpty() &amp;&amp; !parentClassOrInterface.get(0).isInterface())</span>
+		// check if the field/method/nested class has a default access modifier
+		&amp;&amp; decl.isPackagePrivate()
+		// if is a default access modifier check if there is a comment in this line
+		&amp;&amp; !interestingLineNumberComments.contains(decl.getBeginLine())
+		// that it is not annotated with @VisibleForTesting
+		&amp;&amp; hasNoVisibleForTestingAnnotation(decl);
+	}
+
+    private boolean hasNoVisibleForTestingAnnotation(AbstractJavaAccessNode decl) {
+<span class="fc" id="L101">        boolean result = true;</span>
+<span class="fc" id="L102">        ASTClassOrInterfaceBodyDeclaration parent = decl.getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (parent != null) {</span>
+<span class="fc" id="L104">            List&lt;ASTAnnotation&gt; annotations = parent.findChildrenOfType(ASTAnnotation.class);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (ASTAnnotation annotation : annotations) {</span>
+<span class="fc" id="L106">                List&lt;ASTName&gt; names = annotation.findDescendantsOfType(ASTName.class);</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                for (ASTName name : names) {</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">                    if (name.hasImageEqualTo(&quot;VisibleForTesting&quot;)) {</span>
+<span class="fc" id="L109">                        result = false;</span>
+<span class="fc" id="L110">                        break;</span>
+                    }
+<span class="nc" id="L112">                }</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">                if (result == false) {</span>
+<span class="fc" id="L114">                    break;</span>
+                }
+<span class="nc" id="L116">            }</span>
+        }
+<span class="fc" id="L118">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

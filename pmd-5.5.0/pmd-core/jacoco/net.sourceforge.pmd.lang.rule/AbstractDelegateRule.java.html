@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractDelegateRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">AbstractDelegateRule.java</span></div><h1>AbstractDelegateRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.PropertySource;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.ParserOptions;
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * Base class for Rule implementations which delegate to another Rule instance.
+ */
+<span class="fc" id="L23">public abstract class AbstractDelegateRule implements Rule {</span>
+
+	private Rule rule;
+
+	public void setRule(Rule rule) {
+<span class="fc" id="L28">		this.rule = rule;</span>
+<span class="fc" id="L29">	}</span>
+
+	public Rule getRule() {
+<span class="fc" id="L32">		return rule;</span>
+	}
+
+	public Language getLanguage() {
+<span class="fc" id="L36">		return rule.getLanguage();</span>
+	}
+
+	public void setLanguage(Language language) {
+<span class="fc" id="L40">		rule.setLanguage(language);</span>
+<span class="fc" id="L41">	}</span>
+
+	public LanguageVersion getMinimumLanguageVersion() {
+<span class="fc" id="L44">		return rule.getMinimumLanguageVersion();</span>
+	}
+
+	public void setMinimumLanguageVersion(LanguageVersion minimumlanguageVersion) {
+<span class="fc" id="L48">		rule.setMinimumLanguageVersion(minimumlanguageVersion);</span>
+<span class="fc" id="L49">	}</span>
+
+	public void setMaximumLanguageVersion(LanguageVersion maximumlanguageVersion) {
+<span class="fc" id="L52">		rule.setMaximumLanguageVersion(maximumlanguageVersion);</span>
+<span class="fc" id="L53">	}</span>
+
+	public LanguageVersion getMaximumLanguageVersion() {
+<span class="fc" id="L56">		return rule.getMaximumLanguageVersion();</span>
+	}
+
+	public boolean isDeprecated() {
+<span class="nc" id="L60">		return rule.isDeprecated();</span>
+	}
+
+	/**
+	 * @see PropertySource#dysfunctionReason()
+	 */
+	public String dysfunctionReason() {
+<span class="nc" id="L67">		return rule.dysfunctionReason();</span>
+	}
+
+	public Set&lt;PropertyDescriptor&lt;?&gt;&gt; ignoredProperties() {
+<span class="nc" id="L71">		return rule.ignoredProperties();</span>
+	}
+
+	public void setDeprecated(boolean deprecated) {
+<span class="nc" id="L75">		rule.setDeprecated(deprecated);</span>
+<span class="nc" id="L76">	}</span>
+
+	public String getName() {
+<span class="fc" id="L79">		return rule.getName();</span>
+	}
+
+	public void setName(String name) {
+<span class="nc" id="L83">		rule.setName(name);</span>
+<span class="nc" id="L84">	}</span>
+
+	public String getSince() {
+<span class="nc" id="L87">		return rule.getSince();</span>
+	}
+
+	public void setSince(String since) {
+<span class="nc" id="L91">		rule.setSince(since);</span>
+<span class="nc" id="L92">	}</span>
+
+	public String getRuleClass() {
+<span class="fc" id="L95">		return rule.getRuleClass();</span>
+	}
+
+	public void setRuleClass(String ruleClass) {
+<span class="nc" id="L99">		rule.setRuleClass(ruleClass);</span>
+<span class="nc" id="L100">	}</span>
+
+	public String getRuleSetName() {
+<span class="nc" id="L103">		return rule.getRuleSetName();</span>
+	}
+
+	public void setRuleSetName(String name) {
+<span class="nc" id="L107">		rule.setRuleSetName(name);</span>
+<span class="nc" id="L108">	}</span>
+
+	public String getMessage() {
+<span class="fc" id="L111">		return rule.getMessage();</span>
+	}
+
+	public void setMessage(String message) {
+<span class="fc" id="L115">		rule.setMessage(message);</span>
+<span class="fc" id="L116">	}</span>
+
+	public String getDescription() {
+<span class="fc" id="L119">		return rule.getDescription();</span>
+	}
+
+	public void setDescription(String description) {
+<span class="fc" id="L123">		rule.setDescription(description);</span>
+<span class="fc" id="L124">	}</span>
+
+	public List&lt;String&gt; getExamples() {
+<span class="fc" id="L127">		return rule.getExamples();</span>
+	}
+
+	public void addExample(String example) {
+<span class="fc" id="L131">		rule.addExample(example);</span>
+<span class="fc" id="L132">	}</span>
+
+	public String getExternalInfoUrl() {
+<span class="fc" id="L135">		return rule.getExternalInfoUrl();</span>
+	}
+
+	public void setExternalInfoUrl(String url) {
+<span class="fc" id="L139">		rule.setExternalInfoUrl(url);</span>
+<span class="fc" id="L140">	}</span>
+
+	public RulePriority getPriority() {
+<span class="fc" id="L143">		return rule.getPriority();</span>
+	}
+
+	public void setPriority(RulePriority priority) {
+<span class="fc" id="L147">		rule.setPriority(priority);</span>
+<span class="fc" id="L148">	}</span>
+
+	public ParserOptions getParserOptions() {
+<span class="nc" id="L151">	    return rule.getParserOptions();</span>
+	}
+
+	public void definePropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) throws IllegalArgumentException {
+<span class="fc" id="L155">	    rule.definePropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L156">	}</span>
+
+	public PropertyDescriptor&lt;?&gt; getPropertyDescriptor(String name) {
+<span class="fc" id="L159">	    return rule.getPropertyDescriptor(name);</span>
+	}
+
+	public List&lt;PropertyDescriptor&lt;?&gt;&gt; getPropertyDescriptors() {
+<span class="fc" id="L163">	    return rule.getPropertyDescriptors();</span>
+	}
+
+	public &lt;T&gt; T getProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor) {
+<span class="fc" id="L167">	    return rule.getProperty(propertyDescriptor);</span>
+	}
+
+	public &lt;T&gt; void setProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor, T value) {
+<span class="fc" id="L171">	    rule.setProperty(propertyDescriptor, value);</span>
+<span class="fc" id="L172">	}</span>
+
+	public Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; getPropertiesByPropertyDescriptor() {
+<span class="fc" id="L175">	    return rule.getPropertiesByPropertyDescriptor();</span>
+	}
+
+	public void setUsesDFA() {
+<span class="nc" id="L179">		 rule.setUsesDFA();</span>
+<span class="nc" id="L180">	 }</span>
+
+	 public boolean usesDFA() {
+<span class="nc" id="L183">		 return rule.usesDFA();</span>
+	 }
+
+	 public void setUsesTypeResolution() {
+<span class="nc" id="L187">		 rule.setUsesTypeResolution();</span>
+<span class="nc" id="L188">	 }</span>
+
+	 public boolean usesTypeResolution() {
+<span class="nc" id="L191">		 return rule.usesTypeResolution();</span>
+	 }
+
+	 public boolean usesRuleChain() {
+<span class="nc" id="L195">		 return rule.usesRuleChain();</span>
+	 }
+
+	 public List&lt;String&gt; getRuleChainVisits() {
+<span class="nc" id="L199">		 return rule.getRuleChainVisits();</span>
+	 }
+
+	 public void addRuleChainVisit(Class&lt;? extends Node&gt; nodeClass) {
+<span class="nc" id="L203">		 rule.addRuleChainVisit(nodeClass);</span>
+<span class="nc" id="L204">	 }</span>
+
+	 public void addRuleChainVisit(String astNodeName) {
+<span class="nc" id="L207">		 rule.addRuleChainVisit(astNodeName);</span>
+<span class="nc" id="L208">	 }</span>
+
+	 public void start(RuleContext ctx) {
+<span class="nc" id="L211">		 rule.start(ctx);</span>
+<span class="nc" id="L212">	 }</span>
+
+	 public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="nc" id="L215">		 rule.apply(nodes, ctx);</span>
+<span class="nc" id="L216">	 }</span>
+
+	 public void end(RuleContext ctx) {
+<span class="nc" id="L219">		 rule.end(ctx);</span>
+<span class="nc" id="L220">	 }</span>
+
+    /**
+     * @see Rule#hasDescriptor(PropertyDescriptor)
+     */
+    public boolean hasDescriptor(PropertyDescriptor&lt;?&gt; descriptor) {
+<span class="nc" id="L226">    	return rule.hasDescriptor(descriptor);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

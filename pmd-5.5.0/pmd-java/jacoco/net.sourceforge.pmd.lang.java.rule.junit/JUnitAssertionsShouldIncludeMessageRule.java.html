@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JUnitAssertionsShouldIncludeMessageRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.junit</a> &gt; <span class="el_source">JUnitAssertionsShouldIncludeMessageRule.java</span></div><h1>JUnitAssertionsShouldIncludeMessageRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.junit;
+
+import net.sourceforge.pmd.lang.java.ast.ASTArguments;
+import net.sourceforge.pmd.lang.java.ast.ASTExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class JUnitAssertionsShouldIncludeMessageRule extends AbstractJUnitRule {
+
+    private class AssertionCall {
+        private final int argumentsCount;
+        private final String assertionName;
+
+<span class="fc" id="L21">        public AssertionCall(String assertionName, int argumentsCount) {</span>
+<span class="fc" id="L22">            this.argumentsCount = argumentsCount;</span>
+<span class="fc" id="L23">            this.assertionName = assertionName;</span>
+<span class="fc" id="L24">        }</span>
+
+        public void check(Object ctx, ASTArguments node) {
+<span class="fc bfc" id="L27" title="All 4 branches covered.">            if (node.getArgumentCount() == argumentsCount</span>
+                    &amp;&amp; node.jjtGetParent().jjtGetParent() instanceof ASTPrimaryExpression) {
+<span class="fc" id="L29">                ASTPrimaryExpression primary = (ASTPrimaryExpression) node.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L30" title="1 of 6 branches missed.">                if (primary.jjtGetChild(0) instanceof ASTPrimaryPrefix</span>
+                        &amp;&amp; primary.jjtGetChild(0).jjtGetNumChildren() &gt; 0
+                        &amp;&amp; primary.jjtGetChild(0).jjtGetChild(0) instanceof ASTName) {
+<span class="fc" id="L33">                    ASTName name = (ASTName) primary.jjtGetChild(0).jjtGetChild(0);</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">                    if (name.hasImageEqualTo(this.assertionName)) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                        if (isException(node)) {</span>
+<span class="fc" id="L37">                            return;</span>
+                        }
+<span class="fc" id="L39">                        JUnitAssertionsShouldIncludeMessageRule.this.addViolation(ctx, name);</span>
+                    }
+                }
+            }
+<span class="fc" id="L43">        }</span>
+
+        protected boolean isException(ASTArguments node) {
+<span class="fc" id="L46">            return false;</span>
+        }
+    }
+
+<span class="fc" id="L50">    private List&lt;AssertionCall&gt; checks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L52">    public JUnitAssertionsShouldIncludeMessageRule() {</span>
+<span class="fc" id="L53">        checks.add(new AssertionCall(&quot;assertArrayEquals&quot;, 2));</span>
+<span class="fc" id="L54">        checks.add(new AssertionCall(&quot;assertEquals&quot;, 2));</span>
+<span class="fc" id="L55">        checks.add(new AssertionCall(&quot;assertFalse&quot;, 1));</span>
+<span class="fc" id="L56">        checks.add(new AssertionCall(&quot;assertNotNull&quot;, 1));</span>
+<span class="fc" id="L57">        checks.add(new AssertionCall(&quot;assertNotSame&quot;, 2));</span>
+<span class="fc" id="L58">        checks.add(new AssertionCall(&quot;assertNull&quot;, 1));</span>
+<span class="fc" id="L59">        checks.add(new AssertionCall(&quot;assertSame&quot;, 2));</span>
+<span class="fc" id="L60">        checks.add(new AssertionCall(&quot;assertThat&quot;, 2));</span>
+<span class="fc" id="L61">        checks.add(new AssertionCall(&quot;assertTrue&quot;, 1));</span>
+<span class="fc" id="L62">        checks.add(new AssertionCall(&quot;fail&quot;, 0));</span>
+
+<span class="fc" id="L64">        checks.add(new AssertionCall(&quot;assertEquals&quot;, 3) {</span>
+            @Override
+            protected boolean isException(ASTArguments node) {
+<span class="fc" id="L67">                ASTExpression firstArgument = node.getFirstDescendantOfType(ASTExpression.class);</span>
+<span class="pc bpc" id="L68" title="1 of 4 branches missed.">                return firstArgument.getType() == null || firstArgument.getType() == String.class;</span>
+            }
+        });
+<span class="fc" id="L71">    }</span>
+
+    public Object visit(ASTArguments node, Object data) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (AssertionCall call : checks) {</span>
+<span class="fc" id="L75">            call.check(data, node);</span>
+<span class="fc" id="L76">        }</span>
+<span class="fc" id="L77">        return super.visit(node, data);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

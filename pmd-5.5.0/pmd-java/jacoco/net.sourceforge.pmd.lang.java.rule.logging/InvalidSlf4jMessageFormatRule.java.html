@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>InvalidSlf4jMessageFormatRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.logging</a> &gt; <span class="el_source">InvalidSlf4jMessageFormatRule.java</span></div><h1>InvalidSlf4jMessageFormatRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.logging;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBody;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.AbstractJavaTypeNode;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+
+import org.apache.commons.lang3.StringUtils;
+
+<span class="fc" id="L34">public class InvalidSlf4jMessageFormatRule extends AbstractJavaRule {</span>
+
+	private static final Set&lt;String&gt; LOGGER_LEVELS;
+	private static final String LOGGER_CLASS = &quot;org.slf4j.Logger&quot;;
+	static {
+<span class="fc" id="L39">		LOGGER_LEVELS = Collections.unmodifiableSet(</span>
+				new HashSet&lt;String&gt;(Arrays.asList(&quot;trace&quot;, &quot;debug&quot;, &quot;info&quot;, &quot;warn&quot;, &quot;error&quot;)));
+<span class="fc" id="L41">	}</span>
+
+	@Override
+	public Object visit(final ASTName node, final Object data) {
+<span class="fc" id="L45">		final NameDeclaration nameDeclaration = node.getNameDeclaration();</span>
+		// ignore imports or methods
+<span class="fc bfc" id="L47" title="All 4 branches covered.">		if (nameDeclaration == null || !(nameDeclaration instanceof VariableNameDeclaration)) {</span>
+<span class="fc" id="L48">			return super.visit(node, data);</span>
+		}
+
+		// ignore non slf4j logger
+<span class="fc" id="L52">		Class&lt;?&gt; type = ((VariableNameDeclaration) nameDeclaration).getType();</span>
+<span class="fc bfc" id="L53" title="All 4 branches covered.">	    if (type == null || !type.getName().equals(LOGGER_CLASS)) {</span>
+<span class="fc" id="L54">			return super.visit(node, data);</span>
+		}
+
+		// get the node that contains the logger
+<span class="fc" id="L58">		final ASTPrimaryExpression parentNode = node.getFirstParentOfType(ASTPrimaryExpression.class);</span>
+
+		// get the log level
+<span class="fc" id="L61">		final String method = parentNode.getFirstChildOfType(ASTPrimaryPrefix.class)</span>
+				.getFirstChildOfType(ASTName.class).getImage().replace(nameDeclaration.getImage() + &quot;.&quot;, &quot;&quot;);
+
+		// ignore if not a log level
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">		if (!LOGGER_LEVELS.contains(method)) {</span>
+<span class="nc" id="L66">			return super.visit(node, data);</span>
+		}
+
+		// find the arguments
+<span class="fc" id="L70">		final List&lt;ASTPrimaryExpression&gt; params = new LinkedList&lt;ASTPrimaryExpression&gt;();</span>
+<span class="fc" id="L71">		final List&lt;ASTExpression&gt; argumentList = parentNode.getFirstChildOfType(ASTPrimarySuffix.class)</span>
+				.getFirstDescendantOfType(ASTArgumentList.class).findChildrenOfType(ASTExpression.class);
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		for (final ASTExpression astExpression : argumentList) {</span>
+<span class="fc" id="L74">			params.add(astExpression.getFirstChildOfType(ASTPrimaryExpression.class));</span>
+<span class="fc" id="L75">		}</span>
+
+<span class="fc" id="L77">		final ASTPrimaryExpression messageParam = params.get(0);</span>
+		//remove the message parameter
+<span class="fc" id="L79">		params.remove(0);</span>
+<span class="fc" id="L80">		final int expectedArguments = expectedArguments(messageParam);</span>
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">		if (expectedArguments == 0) {</span>
+			// ignore if we are not expecting arguments to format the message
+<span class="nc" id="L84">			return super.visit(node, data);</span>
+		}
+
+		// Remove throwable param, since it is shown separately.
+<span class="fc" id="L88">		removeThrowableParam(params);</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">		if (params.size() &lt; expectedArguments) {</span>
+<span class="fc" id="L91">			addViolationWithMessage(data, node, &quot;Missing arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">		} else if (params.size() &gt; expectedArguments) {</span>
+<span class="fc" id="L93">			addViolationWithMessage(data, node, &quot;Too many arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
+		}
+
+<span class="fc" id="L96">		return super.visit(node, data);</span>
+	}
+
+	private void removeThrowableParam(final List&lt;ASTPrimaryExpression&gt; params) {
+<span class="fc" id="L100">		final Iterator&lt;ASTPrimaryExpression&gt; it = params.iterator();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">		while (it.hasNext()) {</span>
+<span class="fc" id="L102">			final ASTClassOrInterfaceType throwable = it.next().getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L103" title="1 of 4 branches missed.">			if (throwable != null &amp;&amp; Throwable.class.isAssignableFrom(throwable.getType())) {</span>
+<span class="fc" id="L104">				it.remove();</span>
+			}
+<span class="fc" id="L106">		}</span>
+<span class="fc" id="L107">	}</span>
+
+	private String getExpectedMessage(final List&lt;ASTPrimaryExpression&gt; params, final int expectedArguments) {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">		return &quot; expected &quot; + expectedArguments</span>
+				+ (expectedArguments &gt; 1 ? &quot; arguments &quot; : &quot; argument &quot;) + &quot;but have &quot; + params.size();
+	}
+
+	private int expectedArguments(final ASTPrimaryExpression node) {
+<span class="fc" id="L115">		int count = 0;</span>
+		// look if the logger have a literal message
+<span class="fc bfc" id="L117" title="All 2 branches covered.">		if (node.getFirstDescendantOfType(ASTLiteral.class) != null) {</span>
+<span class="fc" id="L118">			count = countPlaceholders(node);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		} else if (node.getFirstDescendantOfType(ASTName.class) != null) {</span>
+<span class="fc" id="L120">			final String variableName = node.getFirstDescendantOfType(ASTName.class).getImage();</span>
+			// look if the message is defined locally
+<span class="fc" id="L122">			final List&lt;ASTVariableDeclarator&gt; localValiables = node.getFirstParentOfType(ASTMethodDeclaration.class)</span>
+					.findDescendantsOfType(ASTVariableDeclarator.class);
+<span class="fc" id="L124">			count = getAmountOfExpectedArguments(variableName, localValiables);</span>
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">			if (count == 0) {</span>
+				// look if the message is defined in a field
+<span class="fc" id="L128">				final List&lt;ASTFieldDeclaration&gt; fieldlist = node.getFirstParentOfType(ASTClassOrInterfaceBody.class)</span>
+						.findDescendantsOfType(ASTFieldDeclaration.class);
+				// only look for ASTVariableDeclarator that are Fields
+<span class="fc" id="L131">				final List&lt;ASTVariableDeclarator&gt; fields = new LinkedList&lt;ASTVariableDeclarator&gt;();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">				for (final ASTFieldDeclaration astFieldDeclaration : fieldlist) {</span>
+<span class="fc" id="L133">					fields.add(astFieldDeclaration.getFirstChildOfType(ASTVariableDeclarator.class));</span>
+<span class="fc" id="L134">				}</span>
+<span class="fc" id="L135">				count = getAmountOfExpectedArguments(variableName, fields);</span>
+			}
+		}
+<span class="fc" id="L138">		return count;</span>
+	}
+
+	private int getAmountOfExpectedArguments(final String variableName, final List&lt;ASTVariableDeclarator&gt; variables) {
+<span class="fc bfc" id="L142" title="All 2 branches covered.">		for (final ASTVariableDeclarator astVariableDeclarator : variables) {</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">			if (astVariableDeclarator.getFirstChildOfType(ASTVariableDeclaratorId.class)</span>
+					.getImage().equals(variableName)) {
+<span class="fc" id="L145">				return countPlaceholders(astVariableDeclarator);</span>
+			}
+<span class="fc" id="L147">		}</span>
+<span class="fc" id="L148">		return 0;</span>
+	}
+
+	private int countPlaceholders(final AbstractJavaTypeNode node) {
+<span class="fc" id="L152">		return StringUtils.countMatches(node.getFirstDescendantOfType(ASTLiteral.class).getImage(), &quot;{}&quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
