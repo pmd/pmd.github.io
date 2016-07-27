@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DOMLineNumbers.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD XML and XSL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.xml.ast</a> &gt; <span class="el_source">DOMLineNumbers.java</span></div><h1>DOMLineNumbers.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.xml.ast;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
+
+import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
+
+/**
+ *
+ */
+class DOMLineNumbers {
+    private final Document document;
+    private String xmlString;
+    private SourceCodePositioner sourceCodePositioner;
+
+<span class="fc" id="L26">    public DOMLineNumbers(Document document, String xmlString) {</span>
+<span class="fc" id="L27">        this.document = document;</span>
+<span class="fc" id="L28">        this.xmlString = xmlString;</span>
+<span class="fc" id="L29">        this.sourceCodePositioner = new SourceCodePositioner(xmlString);</span>
+<span class="fc" id="L30">    }</span>
+    
+    public void determine() {
+<span class="fc" id="L33">        determineLocation(document, 0);</span>
+<span class="fc" id="L34">    }</span>
+    private int determineLocation(Node n, int index) {
+<span class="fc" id="L36">        int nextIndex = index;</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
+<span class="fc" id="L38">            nextIndex = xmlString.indexOf(&quot;&lt;!DOCTYPE&quot;, nextIndex);</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L40">            nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L42">            nextIndex = xmlString.indexOf(&quot;&lt;&quot; + n.getNodeName(), nextIndex);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
+<span class="fc" id="L44">            nextIndex = xmlString.indexOf(&quot;&lt;![CDATA[&quot;, nextIndex);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
+<span class="fc" id="L46">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
+<span class="fc" id="L47">            nextIndex = xmlString.indexOf(&quot;&lt;?&quot; + pi.getTarget(), nextIndex);</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="fc" id="L49">            String te = unexpandEntities(n, n.getNodeValue());</span>
+<span class="fc" id="L50">            int newIndex = xmlString.indexOf(te, nextIndex);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (newIndex &gt; 0) {</span>
+<span class="fc" id="L52">                nextIndex = newIndex;</span>
+            }
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ENTITY_REFERENCE_NODE) {</span>
+<span class="fc" id="L55">            nextIndex = xmlString.indexOf(&quot;&amp;&quot; + n.getNodeName() + &quot;;&quot;, nextIndex);</span>
+        }
+<span class="fc" id="L57">        setBeginLocation(n, nextIndex);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (n.hasChildNodes()) {</span>
+<span class="fc" id="L59">            NodeList childs = n.getChildNodes();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            for (int i = 0; i &lt; childs.getLength(); i++) {</span>
+<span class="fc" id="L61">                nextIndex = determineLocation(childs.item(i), nextIndex);</span>
+            }
+        }
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L65">            nextIndex += 2 + n.getNodeName().length() + 1; // &lt;/nodename&gt;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
+<span class="fc" id="L67">            Node nextSibling = n.getNextSibling();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (nextSibling.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L69">                nextIndex = xmlString.indexOf(&quot;&lt;&quot; + nextSibling.getNodeName(), nextIndex) - 1;</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            } else if (nextSibling.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L71">                nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
+            } else {
+<span class="nc" id="L73">                nextIndex = xmlString.indexOf(&quot;&gt;&quot;, nextIndex);</span>
+            }
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L76">            nextIndex += 4 + 3; // &lt;!-- and --&gt;</span>
+<span class="fc" id="L77">            nextIndex += n.getNodeValue().length();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="fc" id="L79">            String te = unexpandEntities(n, n.getNodeValue());</span>
+<span class="fc" id="L80">            nextIndex += te.length();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
+<span class="fc" id="L82">            nextIndex += &quot;&lt;![CDATA[&quot;.length() + n.getNodeValue().length() + &quot;]]&gt;&quot;.length();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
+<span class="fc" id="L84">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
+<span class="fc" id="L85">            nextIndex += &quot;&lt;?&quot;.length() + pi.getTarget().length() + &quot;?&gt;&quot;.length() + pi.getData().length();</span>
+        }
+<span class="fc" id="L87">        setEndLocation(n, nextIndex - 1);</span>
+<span class="fc" id="L88">        return nextIndex;</span>
+    }
+
+    private String unexpandEntities(Node n, String te) {
+<span class="fc" id="L92">        String result = te;</span>
+<span class="fc" id="L93">        DocumentType doctype = n.getOwnerDocument().getDoctype();</span>
+        // implicit entities
+<span class="fc" id="L95">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&amp;&quot;), &quot;&amp;amp;&quot;);</span>
+<span class="fc" id="L96">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&lt;&quot;), &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L97">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&gt;&quot;), &quot;&amp;gt;&quot;);</span>
+<span class="fc" id="L98">        result = result.replaceAll(Matcher.quoteReplacement(&quot;\&quot;&quot;), &quot;&amp;quot;&quot;);</span>
+<span class="fc" id="L99">        result = result.replaceAll(Matcher.quoteReplacement(&quot;'&quot;), &quot;&amp;apos;&quot;);</span>
+
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (doctype != null) {</span>
+<span class="fc" id="L102">            NamedNodeMap entities = doctype.getEntities();</span>
+<span class="fc" id="L103">            String internalSubset = doctype.getInternalSubset();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">            if (internalSubset == null) {</span>
+<span class="nc" id="L105">                internalSubset = &quot;&quot;;</span>
+            }
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            for (int i = 0; i &lt; entities.getLength(); i++) {</span>
+<span class="fc" id="L108">                Node item = entities.item(i);</span>
+<span class="fc" id="L109">                String entityName = item.getNodeName();</span>
+<span class="fc" id="L110">                Node firstChild = item.getFirstChild();</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                if (firstChild != null) {</span>
+<span class="nc" id="L112">                    result = result.replaceAll(Matcher.quoteReplacement(firstChild.getNodeValue()), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
+                } else {
+<span class="fc" id="L114">                    Matcher m = Pattern.compile(Matcher.quoteReplacement(&quot;&lt;!ENTITY &quot; + entityName + &quot; &quot;) + &quot;[']([^']*)[']&gt;&quot;).matcher(internalSubset);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                    if (m.find()) {</span>
+<span class="fc" id="L116">                        result = result.replaceAll(Matcher.quoteReplacement(m.group(1)), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L121">        return result;</span>
+    }
+    private void setBeginLocation(Node n, int index) {
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (n != null) {</span>
+<span class="fc" id="L125">            int line = sourceCodePositioner.lineNumberFromOffset(index);</span>
+<span class="fc" id="L126">            int column = sourceCodePositioner.columnFromOffset(line, index);</span>
+<span class="fc" id="L127">            n.setUserData(XmlNode.BEGIN_LINE, line, null);</span>
+<span class="fc" id="L128">            n.setUserData(XmlNode.BEGIN_COLUMN, column, null);</span>
+        }
+<span class="fc" id="L130">    }</span>
+    private void setEndLocation(Node n, int index) {
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (n != null) {</span>
+<span class="fc" id="L133">            int line = sourceCodePositioner.lineNumberFromOffset(index);</span>
+<span class="fc" id="L134">            int column = sourceCodePositioner.columnFromOffset(line, index);</span>
+<span class="fc" id="L135">            n.setUserData(XmlNode.END_LINE, line, null);</span>
+<span class="fc" id="L136">            n.setUserData(XmlNode.END_COLUMN, column, null);</span>
+        }
+<span class="fc" id="L138">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

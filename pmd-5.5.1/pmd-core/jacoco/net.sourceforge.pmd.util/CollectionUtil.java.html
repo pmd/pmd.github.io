@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CollectionUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util</a> &gt; <span class="el_source">CollectionUtil.java</span></div><h1>CollectionUtil.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Generic collection and array-related utility functions for java.util types. See ClassUtil 
+ * for comparable facilities for short name lookup.
+ *
+ * @author Brian Remedios
+ * @version $Revision$
+ */
+public final class CollectionUtil {
+
+    @SuppressWarnings(&quot;PMD.UnnecessaryFullyQualifiedName&quot;)
+<span class="fc" id="L26">    public static final TypeMap COLLECTION_INTERFACES_BY_NAMES = new TypeMap(new Class[] { java.util.List.class,</span>
+	    java.util.Collection.class, java.util.Map.class, java.util.Set.class, });
+
+    @SuppressWarnings({&quot;PMD.LooseCoupling&quot;, &quot;PMD.UnnecessaryFullyQualifiedName&quot;})
+<span class="fc" id="L30">    public static final TypeMap COLLECTION_CLASSES_BY_NAMES = new TypeMap(new Class[] { java.util.ArrayList.class,</span>
+	    java.util.LinkedList.class, java.util.Vector.class, java.util.HashMap.class, java.util.LinkedHashMap.class,
+	    java.util.TreeMap.class, java.util.TreeSet.class, java.util.HashSet.class, java.util.LinkedHashSet.class,
+	    java.util.Hashtable.class});
+
+<span class="nc" id="L35">    private CollectionUtil() {</span>
+<span class="nc" id="L36">    }</span>
+
+	/**
+	 * Add elements from the source to the target as long as they don't already exist there.
+	 * Return the number of items actually added.
+	 * 
+	 * @param source
+	 * @param target
+	 * @return int
+	 */
+	public static int addWithoutDuplicates(Collection&lt;String&gt; source, Collection&lt;String&gt; target) {
+		
+<span class="fc" id="L48">		int added = 0;</span>
+		
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		for (String item : source) {</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">			if (target.contains(item)) {</span>
+<span class="nc" id="L52">			    continue;</span>
+			}
+<span class="fc" id="L54">			target.add(item);</span>
+<span class="fc" id="L55">			added++;</span>
+<span class="fc" id="L56">		}</span>
+		
+<span class="fc" id="L58">		return added;</span>
+	}
+    
+    /**
+     * Returns the collection type if we recognize it by its short name.
+     *
+     * @param shortName String
+     * @return Class
+     */
+    public static Class&lt;?&gt; getCollectionTypeFor(String shortName) {
+<span class="fc" id="L68">	   Class&lt;?&gt; cls = COLLECTION_CLASSES_BY_NAMES.typeFor(shortName);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">	   if (cls != null) {</span>
+<span class="fc" id="L70">	     return cls;</span>
+	   }
+
+<span class="fc" id="L73">	   return COLLECTION_INTERFACES_BY_NAMES.typeFor(shortName);</span>
+    }
+
+    /**
+     * Return whether we can identify the typeName as a java.util collection class
+     * or interface as specified.
+     *
+     * @param typeName String
+     * @param includeInterfaces boolean
+     * @return boolean
+     */
+    public static boolean isCollectionType(String typeName, boolean includeInterfaces) {
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">	   if (COLLECTION_CLASSES_BY_NAMES.contains(typeName)) {</span>
+<span class="nc" id="L87">	     return true;</span>
+	   }
+
+<span class="nc bnc" id="L90" title="All 4 branches missed.">	   return includeInterfaces &amp;&amp; COLLECTION_INTERFACES_BY_NAMES.contains(typeName);</span>
+    }
+
+    /**
+     * Return whether we can identify the typeName as a java.util collection class
+     * or interface as specified.
+     *
+     * @param clazzType Class
+     * @param includeInterfaces boolean
+     * @return boolean
+     */
+    public static boolean isCollectionType(Class&lt;?&gt; clazzType, boolean includeInterfaces) {
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">	   if (COLLECTION_CLASSES_BY_NAMES.contains(clazzType)) {</span>
+<span class="nc" id="L104">	      return true;</span>
+	   }
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">	   return includeInterfaces &amp;&amp; COLLECTION_INTERFACES_BY_NAMES.contains(clazzType);</span>
+    }
+
+    /**
+     * Returns the items as a populated set.
+     *
+     * @param items Object[]
+     * @return Set
+     */
+    public static &lt;T&gt; Set&lt;T&gt; asSet(T[] items) {
+
+<span class="nc" id="L118">	   return new HashSet&lt;&gt;(Arrays.asList(items));</span>
+    }
+
+    /**
+     * Creates and returns a map populated with the keyValuesSets where
+     * the value held by the tuples are they key and value in that order.
+     *
+     * @param keys K[]
+     * @param values V[]
+     * @return Map
+     */
+    public static &lt;K, V&gt; Map&lt;K, V&gt; mapFrom(K[] keys, V[] values) {
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">	   if (keys.length != values.length) {</span>
+<span class="nc" id="L131">	     throw new RuntimeException(&quot;mapFrom keys and values arrays have different sizes&quot;);</span>
+	   }
+<span class="fc" id="L133">	   Map&lt;K, V&gt; map = new HashMap&lt;&gt;(keys.length);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">	   for (int i = 0; i &lt; keys.length; i++) {</span>
+<span class="fc" id="L135">	      map.put(keys[i], values[i]);</span>
+	      }
+<span class="fc" id="L137">	   return map;</span>
+    }
+
+    /**
+     * Returns a map based on the source but with the key &amp; values swapped.
+     *
+     * @param source Map
+     * @return Map
+     */
+    public static &lt;K, V&gt; Map&lt;V, K&gt; invertedMapFrom(Map&lt;K, V&gt; source) {
+<span class="fc" id="L147">	   Map&lt;V, K&gt; map = new HashMap&lt;&gt;(source.size());</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">	   for (Map.Entry&lt;K, V&gt; entry : source.entrySet()) {</span>
+<span class="fc" id="L149">	      map.put(entry.getValue(), entry.getKey());</span>
+<span class="fc" id="L150">	   }</span>
+<span class="fc" id="L151">	   return map;</span>
+    }
+
+    /**
+     * Returns true if the objects are array instances and each of their elements compares
+     * via equals as well.
+     *
+     * @param value Object
+     * @param otherValue Object
+     * @return boolean
+     */
+    public static boolean arraysAreEqual(Object value, Object otherValue) {
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">	   if (value instanceof Object[]) {</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">	      if (otherValue instanceof Object[]) {</span>
+<span class="fc" id="L165">		  return valuesAreTransitivelyEqual((Object[]) value, (Object[]) otherValue);</span>
+	      }
+<span class="nc" id="L167">	      return false;</span>
+	   } 
+<span class="nc" id="L169">	   return false;</span>
+    }
+
+    /**
+     * Returns whether the arrays are equal by examining each of their elements, even if they are
+     * arrays themselves.
+     *
+     * @param thisArray Object[]
+     * @param thatArray Object[]
+     * @return boolean
+     */
+    public static boolean valuesAreTransitivelyEqual(Object[] thisArray, Object[] thatArray) {
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">	   if (thisArray == thatArray) {</span>
+<span class="nc" id="L182">	     return true;</span>
+	   }
+<span class="pc bpc" id="L184" title="2 of 4 branches missed.">	   if (thisArray == null || thatArray == null) {</span>
+<span class="nc" id="L185">	     return false;</span>
+	   }
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">	   if (thisArray.length != thatArray.length) {</span>
+<span class="nc" id="L188">	     return false;</span>
+	   }
+<span class="fc bfc" id="L190" title="All 2 branches covered.">	   for (int i = 0; i &lt; thisArray.length; i++) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">	     if (!areEqual(thisArray[i], thatArray[i])) {</span>
+<span class="nc" id="L192">	   	 return false; // recurse if req'd</span>
+	     }
+	   }
+<span class="fc" id="L195">	   return true;</span>
+    }
+
+    /**
+     * A comprehensive isEqual method that handles nulls and arrays safely.
+     *
+     * @param value Object
+     * @param otherValue Object
+     * @return boolean
+     */
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    public static boolean areEqual(Object value, Object otherValue) {
+<span class="fc bfc" id="L207" title="All 2 branches covered.">    	if (value == otherValue) {</span>
+<span class="fc" id="L208">    	    return true;</span>
+    	}
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">    	if (value == null) {</span>
+<span class="nc" id="L211">    	    return false;</span>
+    	}
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">    	if (otherValue == null) {</span>
+<span class="nc" id="L214">    	    return false;</span>
+    	}
+
+<span class="fc bfc" id="L217" title="All 2 branches covered.">    	if (value.getClass().getComponentType() != null) {</span>
+<span class="fc" id="L218">    	    return arraysAreEqual(value, otherValue);</span>
+    	    }
+<span class="fc" id="L220">	    return value.equals(otherValue);</span>
+    }
+
+    /**
+     * Returns whether the items array is null or has zero length.
+     * @param items
+     * @return boolean
+     */
+    public static boolean isEmpty(Object[] items) {
+<span class="nc bnc" id="L229" title="All 4 branches missed.">        return items == null || items.length == 0;</span>
+    }
+    
+    /**
+     * Returns whether the items array is non-null and has
+     * at least one entry.
+     * 
+     * @param items
+     * @return boolean
+     */
+    public static boolean isNotEmpty(Object[] items) {
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        return !isEmpty(items);</span>
+    }
+
+    /**
+     * Returns true if both arrays are if both are null or have zero-length,
+     * otherwise return the false if their respective elements are not
+     * equal by position.
+     *
+     * @param &lt;T&gt;
+     * @param a
+     * @param b
+     * @return boolean
+     */
+    public static &lt;T&gt; boolean areSemanticEquals(T[] a, T[] b) {
+
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (a == null) {</span>
+<span class="nc" id="L256">            return isEmpty(b);</span>
+        }
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if (b == null) {</span>
+<span class="nc" id="L259">            return isEmpty(a);</span>
+        }
+
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        if (a.length != b.length) {</span>
+<span class="nc" id="L263">            return false;</span>
+        }
+
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        for (int i = 0; i &lt; a.length; i++) {</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">            if (!areEqual(a[i], b[i])) {</span>
+<span class="nc" id="L268">                return false;</span>
+            }
+        }
+
+<span class="nc" id="L272">        return true;</span>
+    }
+
+    /**
+     * If the newValue is already held within the values array then the values array
+     * is returned, otherwise a new array is created appending the newValue to the
+     * end.
+     *
+     * @param &lt;T&gt;
+     * @param values
+     * @param newValue
+     * @return an array containing the union of values and newValue
+     */
+    public static &lt;T&gt; T[] addWithoutDuplicates(T[] values, T newValue) {
+
+<span class="nc bnc" id="L287" title="All 2 branches missed.">        for (T value : values) {</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">            if (value.equals(newValue)) {</span>
+<span class="nc" id="L289">                return values;</span>
+            }
+        }
+
+<span class="nc" id="L293">        T[] largerOne = (T[])Array.newInstance(values.getClass().getComponentType(), values.length + 1);</span>
+<span class="nc" id="L294">        System.arraycopy(values, 0, largerOne, 0, values.length);</span>
+<span class="nc" id="L295">        largerOne[values.length] = newValue;</span>
+<span class="nc" id="L296">        return largerOne;</span>
+    }
+
+    /**
+     * Returns an array of values as a union set of the two input arrays.
+     *
+     * @param &lt;T&gt;
+     * @param values
+     * @param newValues
+     * @return the union of the two arrays
+     */
+    public static &lt;T&gt; T[] addWithoutDuplicates(T[] values, T[] newValues) {
+
+<span class="nc" id="L309">        Set&lt;T&gt; originals = new HashSet&lt;&gt;(values.length);</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        for (T value : values) {</span>
+<span class="nc" id="L311">            originals.add(value);</span>
+        }
+<span class="nc" id="L313">        List&lt;T&gt; newOnes = new ArrayList&lt;&gt;(newValues.length);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        for (T value : newValues) {</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">            if (originals.contains(value)) {</span>
+<span class="nc" id="L316">                continue;</span>
+            }
+<span class="nc" id="L318">            newOnes.add(value);</span>
+        }
+
+<span class="nc" id="L321">        T[] largerOne = (T[]) Array.newInstance(values.getClass().getComponentType(), values.length + newOnes.size());</span>
+<span class="nc" id="L322">        System.arraycopy(values, 0, largerOne, 0, values.length);</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        for (int i = values.length; i &lt; largerOne.length; i++) {</span>
+<span class="nc" id="L324">            largerOne[i] = newOnes.get(i - values.length);</span>
+        }
+<span class="nc" id="L326">        return largerOne;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

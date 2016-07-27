@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StdCyclomaticComplexityRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.complexity</a> &gt; <span class="el_source">StdCyclomaticComplexityRule.java</span></div><h1>StdCyclomaticComplexityRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.complexity;
+
+import java.util.Stack;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTBooleanExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTDoLoopStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTForEachStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTForLoopStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTIfBlockStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
+import net.sourceforge.pmd.lang.apex.ast.ASTTernaryExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTTryCatchFinallyBlockStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserEnum;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserInterface;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserTrigger;
+import net.sourceforge.pmd.lang.apex.ast.ASTWhileLoopStatement;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
+
+/**
+ * Implements the standard cyclomatic complexity rule
+ * &lt;p&gt;
+ * Standard rules: +1 for each decision point, but not including boolean
+ * operators unlike CyclomaticComplexityRule.
+ * 
+ * @author ported on Java version of Alan Hohn, based on work by Donald A.
+ *         Leckie
+ * 
+ * @since June 18, 2014
+ */
+public class StdCyclomaticComplexityRule extends AbstractApexRule {
+
+<span class="fc" id="L39">	public static final IntegerProperty REPORT_LEVEL_DESCRIPTOR = new IntegerProperty(&quot;reportLevel&quot;,</span>
+<span class="fc" id="L40">			&quot;Cyclomatic Complexity reporting threshold&quot;, 1, 30, 10, 1.0f);</span>
+
+<span class="fc" id="L42">	public static final BooleanProperty SHOW_CLASSES_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+<span class="fc" id="L43">			&quot;showClassesComplexity&quot;, &quot;Add class average violations to the report&quot;, true, 2.0f);</span>
+
+<span class="fc" id="L45">	public static final BooleanProperty SHOW_METHODS_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+<span class="fc" id="L46">			&quot;showMethodsComplexity&quot;, &quot;Add method average violations to the report&quot;, true, 3.0f);</span>
+
+	private int reportLevel;
+<span class="fc" id="L49">	private boolean showClassesComplexity = true;</span>
+<span class="fc" id="L50">	private boolean showMethodsComplexity = true;</span>
+
+	protected static class Entry {
+<span class="fc" id="L53">		private int decisionPoints = 1;</span>
+		public int highestDecisionPoints;
+		public int methodCount;
+
+<span class="fc" id="L57">		private Entry(Node node) {</span>
+<span class="fc" id="L58">		}</span>
+
+		public void bumpDecisionPoints() {
+<span class="fc" id="L61">			decisionPoints++;</span>
+<span class="fc" id="L62">		}</span>
+
+		public void bumpDecisionPoints(int size) {
+<span class="fc" id="L65">			decisionPoints += size;</span>
+<span class="fc" id="L66">		}</span>
+
+		public int getComplexityAverage() {
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">			return (double) methodCount == 0 ? 1 : (int) Math.rint((double) decisionPoints / (double) methodCount);</span>
+		}
+	}
+
+<span class="fc" id="L73">	protected Stack&lt;Entry&gt; entryStack = new Stack&lt;&gt;();</span>
+
+<span class="fc" id="L75">	public StdCyclomaticComplexityRule() {</span>
+<span class="fc" id="L76">		definePropertyDescriptor(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L77">		definePropertyDescriptor(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L78">		definePropertyDescriptor(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+
+<span class="fc" id="L80">		setProperty(CODECLIMATE_CATEGORIES, new String[]{ &quot;Complexity&quot; });</span>
+<span class="fc" id="L81">		setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 250);</span>
+<span class="fc" id="L82">		setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L83">	}</span>
+
+	@Override
+	public Object visit(ASTUserClass node, Object data) {
+<span class="fc" id="L87">		reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L88">		showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L89">		showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L90">		entryStack.push(new Entry(node));</span>
+<span class="fc" id="L91">		super.visit(node, data);</span>
+<span class="fc" id="L92">		Entry classEntry = entryStack.pop();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if (showClassesComplexity) {</span>
+<span class="pc bpc" id="L94" title="3 of 4 branches missed.">			if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="fc" id="L95">				addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+<span class="fc" id="L96">						classEntry.getComplexityAverage() + &quot; (Highest = &quot; + classEntry.highestDecisionPoints + ')' });</span>
+			}
+		}
+<span class="fc" id="L99">		return data;</span>
+	}
+	
+	@Override
+	public Object visit(ASTUserTrigger node, Object data) {
+<span class="fc" id="L104">		reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L105">		showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L106">		showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L107">		entryStack.push(new Entry(node));</span>
+<span class="fc" id="L108">		super.visit(node, data);</span>
+<span class="fc" id="L109">		Entry classEntry = entryStack.pop();</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (showClassesComplexity) {</span>
+<span class="pc bpc" id="L111" title="3 of 4 branches missed.">			if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="fc" id="L112">				addViolation(data, node, new String[] { &quot;trigger&quot;, node.getImage(),</span>
+<span class="fc" id="L113">						classEntry.getComplexityAverage() + &quot; (Highest = &quot; + classEntry.highestDecisionPoints + ')' });</span>
+			}
+		}
+<span class="fc" id="L116">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTUserInterface node, Object data) {
+<span class="fc" id="L121">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTUserEnum node, Object data) {
+<span class="nc" id="L126">		entryStack.push(new Entry(node));</span>
+<span class="nc" id="L127">		super.visit(node, data);</span>
+<span class="nc" id="L128">		Entry classEntry = entryStack.pop();</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">		if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="nc" id="L130">			addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+<span class="nc" id="L131">					classEntry.getComplexityAverage() + &quot;(Highest = &quot; + classEntry.highestDecisionPoints + ')' });</span>
+		}
+<span class="nc" id="L133">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTMethod node, Object data) {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		if (!node.getImage().matches(&quot;&lt;clinit&gt;|&lt;init&gt;|clone&quot;)) {</span>
+<span class="fc" id="L139">			entryStack.push(new Entry(node));</span>
+<span class="fc" id="L140">			super.visit(node, data);</span>
+<span class="fc" id="L141">			Entry methodEntry = entryStack.pop();</span>
+<span class="fc" id="L142">			int methodDecisionPoints = methodEntry.decisionPoints;</span>
+<span class="fc" id="L143">			Entry classEntry = entryStack.peek();</span>
+<span class="fc" id="L144">			classEntry.methodCount++;</span>
+<span class="fc" id="L145">			classEntry.bumpDecisionPoints(methodDecisionPoints);</span>
+
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">			if (methodDecisionPoints &gt; classEntry.highestDecisionPoints) {</span>
+<span class="fc" id="L148">				classEntry.highestDecisionPoints = methodDecisionPoints;</span>
+			}
+
+<span class="pc bpc" id="L151" title="1 of 4 branches missed.">			if (showMethodsComplexity &amp;&amp; methodEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">				String methodType = (node.getNode().getMethodInfo().isConstructor()) ? &quot;constructor&quot; : &quot;method&quot;;</span>
+<span class="fc" id="L153">				addViolation(data, node,</span>
+<span class="fc" id="L154">						new String[] { methodType, node.getImage(), String.valueOf(methodEntry.decisionPoints) });</span>
+			}
+		}
+<span class="fc" id="L157">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTIfBlockStatement node, Object data) {
+<span class="fc" id="L162">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L163">		super.visit(node, data);</span>
+<span class="fc" id="L164">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTTryCatchFinallyBlockStatement node, Object data) {
+<span class="nc" id="L169">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="nc" id="L170">		super.visit(node, data);</span>
+<span class="nc" id="L171">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTForLoopStatement node, Object data) {
+<span class="fc" id="L176">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L177">		super.visit(node, data);</span>
+<span class="fc" id="L178">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTForEachStatement node, Object data) {
+<span class="nc" id="L183">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="nc" id="L184">		super.visit(node, data);</span>
+<span class="nc" id="L185">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTWhileLoopStatement node, Object data) {
+<span class="fc" id="L190">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L191">		super.visit(node, data);</span>
+<span class="fc" id="L192">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTDoLoopStatement node, Object data) {
+<span class="nc" id="L197">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="nc" id="L198">		super.visit(node, data);</span>
+<span class="nc" id="L199">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTTernaryExpression node, Object data) {
+<span class="nc" id="L204">		entryStack.peek().bumpDecisionPoints();</span>
+<span class="nc" id="L205">		super.visit(node, data);</span>
+<span class="nc" id="L206">		return data;</span>
+	}
+
+	@Override
+	public Object visit(ASTBooleanExpression node, Object data) {
+<span class="fc" id="L211">		return data;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

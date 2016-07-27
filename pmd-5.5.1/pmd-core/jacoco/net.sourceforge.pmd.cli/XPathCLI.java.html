@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XPathCLI.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cli</a> &gt; <span class="el_source">XPathCLI.java</span></div><h1>XPathCLI.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cli;
+
+import java.io.File;
+import java.io.FileReader;
+import java.util.Iterator;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RuleSet;
+import net.sourceforge.pmd.RuleSets;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.SourceCodeProcessor;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.rule.XPathRule;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * To use this, do this:
+ *
+ * $ cat ~/tmp/Test.java
+ * package foo;
+ * public class Test {
+ *  private int x;
+ * }
+ * $ java net.sourceforge.pmd.util.XPathTest -xpath &quot;//FieldDeclaration&quot; -filename &quot;/home/tom/tmp/Test.java&quot;
+ * Match at line 3 column 11; package name 'foo'; variable name 'x'
+ */
+<span class="nc" id="L34">public class XPathCLI {</span>
+
+<span class="nc" id="L36">    private static final Language LANGUAGE = LanguageRegistry.getLanguage(&quot;Java&quot;);</span>
+
+    public static void main(String[] args) throws Exception {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (args.length != 4) {</span>
+<span class="nc" id="L40">            System.err.println(&quot;Wrong arguments.\n&quot;);</span>
+<span class="nc" id="L41">            System.err.println(&quot;Example:&quot;);</span>
+<span class="nc" id="L42">            System.err.println(&quot;java &quot; + XPathCLI.class.getName() + &quot; -xpath \&quot;//FieldDeclaration\&quot; -filename \&quot;/home/user/Test.java\&quot;&quot;);</span>
+<span class="nc" id="L43">            System.exit(1);</span>
+        }
+
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        String xpath = args[0].equals(&quot;-xpath&quot;) ? args[1] : args[3];</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        String filename = args[0].equals(&quot;-file&quot;) ? args[1] : args[3];</span>
+        
+<span class="nc" id="L49">        Rule rule = new XPathRule(xpath);</span>
+<span class="nc" id="L50">        rule.setMessage(&quot;Got one!&quot;);</span>
+<span class="nc" id="L51">        rule.setLanguage(LANGUAGE);</span>
+<span class="nc" id="L52">        RuleSet ruleSet = RuleSet.createFor(&quot;&quot;, rule);</span>
+
+<span class="nc" id="L54">        RuleContext ctx = PMD.newRuleContext(filename, new File(filename));</span>
+<span class="nc" id="L55">        ctx.setLanguageVersion(LANGUAGE.getDefaultVersion());</span>
+
+<span class="nc" id="L57">        PMDConfiguration config = new PMDConfiguration();</span>
+<span class="nc" id="L58">        config.setDefaultLanguageVersion(LANGUAGE.getDefaultVersion());</span>
+        
+<span class="nc" id="L60">        new SourceCodeProcessor(config).processSourceCode(new FileReader(filename), new RuleSets(ruleSet), ctx);</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (Iterator&lt;RuleViolation&gt; i = ctx.getReport().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L63">            RuleViolation rv = i.next();</span>
+<span class="nc" id="L64">            StringBuilder sb = new StringBuilder(60)</span>
+                .append(&quot;Match at line &quot;).append(rv.getBeginLine())
+                .append(&quot; column &quot;).append(rv.getBeginColumn());
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (StringUtil.isNotEmpty(rv.getPackageName())) {</span>
+<span class="nc" id="L68">                sb.append(&quot;; package name '&quot; + rv.getPackageName() + &quot;'&quot;);</span>
+            }
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (StringUtil.isNotEmpty(rv.getMethodName())) {</span>
+<span class="nc" id="L71">                sb.append(&quot;; method name '&quot; + rv.getMethodName() + &quot;'&quot;);</span>
+            }
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (StringUtil.isNotEmpty(rv.getVariableName())) {</span>
+<span class="nc" id="L74">                sb.append(&quot;; variable name '&quot; + rv.getVariableName() + &quot;'&quot;);</span>
+            }
+<span class="nc" id="L76">            System.out.println(sb.toString());</span>
+<span class="nc" id="L77">        }</span>
+<span class="nc" id="L78">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
