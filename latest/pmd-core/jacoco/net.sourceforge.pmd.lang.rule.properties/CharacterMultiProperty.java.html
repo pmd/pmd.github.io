@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CharacterMultiProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">CharacterMultiProperty.java</span></div><h1>CharacterMultiProperty.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.properties;
+
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptorFactory;
+import net.sourceforge.pmd.lang.rule.properties.factories.BasicPropertyDescriptorFactory;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * Defines a property type that supports multiple Character values.
+ * 
+ * @author Brian Remedios
+ */
+public class CharacterMultiProperty extends AbstractProperty&lt;Character[]&gt; {
+
+<span class="fc" id="L19">    public static final PropertyDescriptorFactory FACTORY = new BasicPropertyDescriptorFactory&lt;CharacterMultiProperty&gt;(</span>
+<span class="fc" id="L20">            Character[].class) {</span>
+
+        public CharacterMultiProperty createWith(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L23">            char delimiter = delimiterIn(valuesById);</span>
+<span class="fc" id="L24">            return new CharacterMultiProperty(nameIn(valuesById), descriptionIn(valuesById), charsIn(</span>
+                    defaultValueIn(valuesById), delimiter), 0.0f, delimiter);
+        }
+    };
+
+    /**
+     * Constructor for CharacterProperty.
+     * 
+     * @param theName String
+     * @param theDescription String
+     * @param theDefaults char[]
+     * @param theUIOrder float
+     * @param delimiter char
+     * @throws IllegalArgumentException
+     */
+    public CharacterMultiProperty(String theName, String theDescription, Character[] theDefaults, float theUIOrder,
+            char delimiter) {
+<span class="fc" id="L41">        super(theName, theDescription, theDefaults, theUIOrder, delimiter);</span>
+
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if (theDefaults != null) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            for (int i = 0; i &lt; theDefaults.length; i++) {</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">                if (theDefaults[i].charValue() == delimiter) {</span>
+<span class="nc" id="L46">                    throw new IllegalArgumentException(&quot;Cannot include the delimiter in the set of defaults&quot;);</span>
+                }
+            }
+        }
+<span class="fc" id="L50">    }</span>
+
+    /**
+     * @return Class
+     * @see net.sourceforge.pmd.PropertyDescriptor#type()
+     */
+    public Class&lt;Character[]&gt; type() {
+<span class="fc" id="L57">        return Character[].class;</span>
+    }
+
+    /**
+     * @param valueString String
+     * @return Object
+     * @throws IllegalArgumentException
+     * @see net.sourceforge.pmd.PropertyDescriptor#valueFrom(String)
+     */
+    public Character[] valueFrom(String valueString) throws IllegalArgumentException {
+<span class="fc" id="L67">        String[] values = StringUtil.substringsOf(valueString, multiValueDelimiter());</span>
+
+<span class="fc" id="L69">        Character[] chars = new Character[values.length];</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="fc" id="L71">            chars[i] = Character.valueOf(values[i].charAt(0));</span>
+        }
+<span class="fc" id="L73">        return chars;</span>
+    }
+
+    /**
+     * @return boolean
+     * @see net.sourceforge.pmd.PropertyDescriptor#isMultiValue()
+     */
+    @Override
+    public boolean isMultiValue() {
+<span class="fc" id="L82">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

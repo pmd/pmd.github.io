@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XSLTRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">XSLTRenderer.java</span></div><h1>XSLTRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.renderers;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+/**
+ * Renderer to XML format with a XSL Transformation applied.
+ * 
+ * @author Romain Pelisse, belaran@gmail.com
+ */
+public class XSLTRenderer extends XMLRenderer {
+
+    public static final String NAME = &quot;xslt&quot;;
+
+<span class="fc" id="L42">    public static final StringProperty XSLT_FILENAME = new StringProperty(&quot;xsltFilename&quot;, &quot;The XSLT file name.&quot;, null, 0);</span>
+
+    private Transformer transformer;
+<span class="fc" id="L45">    private String xsltFilename = &quot;/pmd-nicerhtml.xsl&quot;;</span>
+    private Writer outputWriter;
+
+    public XSLTRenderer() {
+<span class="fc" id="L49">	super();</span>
+<span class="fc" id="L50">	setName(NAME);</span>
+<span class="fc" id="L51">	setDescription(&quot;XML with a XSL Transformation applied.&quot;);</span>
+<span class="fc" id="L52">	definePropertyDescriptor(XSLT_FILENAME);</span>
+<span class="fc" id="L53">    }</span>
+
+<span class="nc" id="L55">    public String defaultFileExtension() { return &quot;xsl&quot;; }</span>
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void start() throws IOException {
+<span class="fc" id="L62">	String xsltFilenameProperty = getProperty(XSLT_FILENAME);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">	if (xsltFilenameProperty != null) {</span>
+<span class="nc" id="L64">	    File file = new File(xsltFilenameProperty);</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">	    if (file.exists() &amp;&amp; file.canRead()) {</span>
+<span class="nc" id="L66">		this.xsltFilename = xsltFilenameProperty;</span>
+	    }
+	}
+
+	// We keep the inital writer to put the final html output
+<span class="fc" id="L71">	this.outputWriter = getWriter();</span>
+	// We use a new one to store the XML...
+<span class="fc" id="L73">	Writer w = new StringWriter();</span>
+<span class="fc" id="L74">	setWriter(w);</span>
+	// If don't find the xsl no need to bother doing the all report,
+	// so we check this here...
+<span class="fc" id="L77">	InputStream xslt = null;</span>
+<span class="fc" id="L78">	File file = new File(this.xsltFilename);</span>
+<span class="pc bpc" id="L79" title="3 of 4 branches missed.">	if (file.exists() &amp;&amp; file.canRead()) {</span>
+<span class="nc" id="L80">	    xslt = new FileInputStream(file);</span>
+	} else {
+<span class="fc" id="L82">	    xslt = this.getClass().getResourceAsStream(this.xsltFilename);</span>
+	}
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">	if (xslt == null) {</span>
+<span class="nc" id="L85">	    throw new FileNotFoundException(&quot;Can't file XSLT sheet :&quot; + this.xsltFilename);</span>
+	}
+<span class="fc" id="L87">	this.prepareTransformer(xslt);</span>
+	// Now we build the XML file
+<span class="fc" id="L89">	super.start();</span>
+<span class="fc" id="L90">    }</span>
+
+    /**
+     * Prepare the transformer, doing the proper &quot;building&quot;...
+     *
+     * @param xslt The stylesheet provided as an InputStream
+     */
+    private void prepareTransformer(InputStream xslt) {
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">	if (xslt != null) {</span>
+	    try {
+		//Get a TransformerFactory object
+<span class="fc" id="L101">		TransformerFactory factory = TransformerFactory.newInstance();</span>
+<span class="fc" id="L102">		StreamSource src = new StreamSource(xslt);</span>
+		//Get an XSL Transformer object
+<span class="fc" id="L104">		this.transformer = factory.newTransformer(src);</span>
+<span class="nc" id="L105">	    } catch (TransformerConfigurationException e) {</span>
+<span class="nc" id="L106">		e.printStackTrace();</span>
+<span class="fc" id="L107">	    }</span>
+	}
+<span class="fc" id="L109">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void end() throws IOException {
+	// First we finish the XML report
+<span class="fc" id="L117">	super.end();</span>
+	// Now we transform it using XSLT
+<span class="fc" id="L119">	Writer writer = super.getWriter();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">	if (writer instanceof StringWriter) {</span>
+<span class="fc" id="L121">	    StringWriter w = (StringWriter) writer;</span>
+<span class="fc" id="L122">	    StringBuffer buffer = w.getBuffer();</span>
+<span class="fc" id="L123">	    Document doc = this.getDocument(buffer.toString());</span>
+<span class="fc" id="L124">	    this.transform(doc);</span>
+<span class="fc" id="L125">	} else {</span>
+	    // Should not happen !
+<span class="nc" id="L127">	    throw new RuntimeException(&quot;Wrong writer&quot;);</span>
+	}
+
+<span class="fc" id="L130">    }</span>
+
+    private void transform(Document doc) {
+<span class="fc" id="L133">	DOMSource source = new DOMSource(doc);</span>
+<span class="fc" id="L134">	this.setWriter(new StringWriter());</span>
+<span class="fc" id="L135">	StreamResult result = new StreamResult(this.outputWriter);</span>
+	try {
+<span class="fc" id="L137">	    transformer.transform(source, result);</span>
+<span class="nc" id="L138">	} catch (TransformerException e) {</span>
+<span class="nc" id="L139">	    e.printStackTrace();</span>
+<span class="fc" id="L140">	}</span>
+<span class="fc" id="L141">    }</span>
+
+    private Document getDocument(String xml) {
+	try {
+<span class="fc" id="L145">	    DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+<span class="fc" id="L146">	    return parser.parse(new InputSource(new StringReader(xml)));</span>
+<span class="nc" id="L147">	} catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L148">	    e.printStackTrace();</span>
+<span class="nc" id="L149">	} catch (SAXException e) {</span>
+<span class="nc" id="L150">	    e.printStackTrace();</span>
+<span class="nc" id="L151">	} catch (IOException e) {</span>
+<span class="nc" id="L152">	    e.printStackTrace();</span>
+<span class="nc" id="L153">	}</span>
+<span class="nc" id="L154">	return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

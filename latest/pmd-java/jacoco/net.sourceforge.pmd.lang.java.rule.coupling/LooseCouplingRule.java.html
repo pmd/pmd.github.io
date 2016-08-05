@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LooseCouplingRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.coupling</a> &gt; <span class="el_source">LooseCouplingRule.java</span></div><h1>LooseCouplingRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.coupling;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTMarkerAnnotation;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTResultType;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.util.CollectionUtil;
+
+<span class="fc" id="L18">public class LooseCouplingRule extends AbstractJavaRule {</span>
+
+	// TODO - these should be brought in via external properties
+//    private static final Set implClassNames = CollectionUtil.asSet( new Object[] {
+//    	&quot;ArrayList&quot;, &quot;HashSet&quot;, &quot;HashMap&quot;, &quot;LinkedHashMap&quot;, &quot;LinkedHashSet&quot;, &quot;TreeSet&quot;, &quot;TreeMap&quot;, &quot;Vector&quot;,
+//    	&quot;java.util.ArrayList&quot;, &quot;java.util.HashSet&quot;, &quot;java.util.HashMap&quot;,
+//    	&quot;java.util.LinkedHashMap&quot;, &quot;java.util.LinkedHashSet&quot;, &quot;java.util.TreeSet&quot;,
+//    	&quot;java.util.TreeMap&quot;, &quot;java.util.Vector&quot; 
+//    	});
+
+    public Object visit(ASTClassOrInterfaceType node, Object data) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (methodHasOverride(node)) {</span>
+<span class="fc" id="L30">            return data;</span>
+        }
+<span class="fc" id="L32">        Node parent = node.getNthParent(3);</span>
+<span class="fc" id="L33">        String typeName = node.getImage();</span>
+<span class="fc bfc" id="L34" title="All 8 branches covered.">        if (CollectionUtil.isCollectionType(typeName, false) &amp;&amp; (parent instanceof ASTFieldDeclaration || parent instanceof ASTFormalParameter || parent instanceof ASTResultType)) {</span>
+<span class="fc" id="L35">            addViolation(data, node, typeName);</span>
+        }
+<span class="fc" id="L37">        return data;</span>
+    }
+
+    private boolean methodHasOverride(Node node) {
+<span class="fc" id="L41">        ASTClassOrInterfaceBodyDeclaration method = node.getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);</span>
+<span class="pc bpc" id="L42" title="1 of 6 branches missed.">        if (method != null &amp;&amp; method.jjtGetNumChildren() &gt; 0 &amp;&amp; method.jjtGetChild(0) instanceof ASTAnnotation) {</span>
+<span class="fc" id="L43">            ASTMarkerAnnotation marker = method.getFirstDescendantOfType(ASTMarkerAnnotation.class);</span>
+<span class="pc bpc" id="L44" title="1 of 4 branches missed.">            if (marker != null &amp;&amp; marker.getFirstChildOfType(ASTName.class) != null) {</span>
+<span class="fc" id="L45">                ASTName name = marker.getFirstChildOfType(ASTName.class);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">                if (&quot;Override&quot;.equals(name.getImage())) {</span>
+<span class="fc" id="L47">                    return true;</span>
+                }
+            }
+        }
+<span class="fc" id="L51">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

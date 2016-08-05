@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DoubleMultiProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">DoubleMultiProperty.java</span></div><h1>DoubleMultiProperty.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.properties;
+
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptorFactory;
+import net.sourceforge.pmd.lang.rule.properties.factories.BasicPropertyDescriptorFactory;
+
+/**
+ * Defines a property type that supports multiple double-type property values
+ * within an upper and lower boundary.
+ * 
+ * @author Brian Remedios
+ */
+public class DoubleMultiProperty extends AbstractMultiNumericProperty&lt;Double[]&gt; {
+
+<span class="fc" id="L19">    public static final PropertyDescriptorFactory FACTORY = new BasicPropertyDescriptorFactory&lt;DoubleMultiProperty&gt;(</span>
+<span class="fc" id="L20">            Double[].class, NUMBER_FIELD_TYPES_BY_KEY) {</span>
+
+        public DoubleMultiProperty createWith(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L23">            String[] minMax = minMaxFrom(valuesById);</span>
+<span class="fc" id="L24">            char delimiter = delimiterIn(valuesById, DEFAULT_NUMERIC_DELIMITER);</span>
+<span class="fc" id="L25">            Double[] defaultValues = doublesIn(numericDefaultValueIn(valuesById), delimiter);</span>
+<span class="fc" id="L26">            return new DoubleMultiProperty(nameIn(valuesById), descriptionIn(valuesById),</span>
+                    Double.parseDouble(minMax[0]), Double.parseDouble(minMax[1]), defaultValues, 0f);
+        }
+    };
+
+    /**
+     * Constructor for DoubleProperty.
+     * 
+     * @param theName String
+     * @param theDescription String
+     * @param min Double
+     * @param max Double
+     * @param defaultValues Double[]
+     * @param theUIOrder float
+     */
+    public DoubleMultiProperty(String theName, String theDescription, Double min, Double max, Double[] defaultValues,
+            float theUIOrder) {
+<span class="fc" id="L43">        super(theName, theDescription, min, max, defaultValues, theUIOrder);</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * @return Class
+     * @see net.sourceforge.pmd.PropertyDescriptor#type()
+     */
+    public Class&lt;Double[]&gt; type() {
+<span class="fc" id="L51">        return Double[].class;</span>
+    }
+
+    /**
+     * @param value String
+     * @return Object
+     */
+    protected Object createFrom(String value) {
+<span class="fc" id="L59">        return Double.valueOf(value);</span>
+    }
+
+    /**
+     * @param size int
+     * @return Object[]
+     */
+    protected Object[] arrayFor(int size) {
+<span class="fc" id="L67">        return new Double[size];</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
