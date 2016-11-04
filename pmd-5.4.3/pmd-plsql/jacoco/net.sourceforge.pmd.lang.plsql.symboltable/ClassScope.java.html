@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClassScope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">ClassScope.java</span></div><h1>ClassScope.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.plsql.ast.ASTName;
+import net.sourceforge.pmd.lang.plsql.ast.AbstractPLSQLNode;
+import net.sourceforge.pmd.lang.symboltable.AbstractScope;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+public class ClassScope extends AbstractScope {
+<span class="fc" id="L22">    private final static Logger LOGGER = Logger.getLogger(ClassScope.class.getName());</span>
+
+    // FIXME - this breaks given sufficiently nested code
+<span class="fc" id="L25">    private static ThreadLocal&lt;Integer&gt; anonymousInnerClassCounter = new ThreadLocal&lt;Integer&gt;() {</span>
+        protected Integer initialValue() {
+<span class="nc" id="L27">            return Integer.valueOf(1);</span>
+        }
+    };
+
+    private String className;
+
+<span class="fc" id="L33">    public ClassScope(String className) {</span>
+<span class="fc" id="L34">        this.className = AbstractPLSQLNode.getCanonicalImage(className);</span>
+<span class="fc" id="L35">        anonymousInnerClassCounter.set(Integer.valueOf(1));</span>
+<span class="fc" id="L36">    }</span>
+
+    /**
+     * This is only for anonymous inner classes
+     * &lt;p/&gt;
+     * FIXME - should have name like Foo$1, not Anonymous$1 to get this working
+     * right, the parent scope needs to be passed in when instantiating a
+     * ClassScope
+     */
+<span class="nc" id="L45">    public ClassScope() {</span>
+        // this.className = getParent().getEnclosingClassScope().getClassName()
+        // + &quot;$&quot; + String.valueOf(anonymousInnerClassCounter);
+<span class="nc" id="L48">        int v = anonymousInnerClassCounter.get().intValue();</span>
+<span class="nc" id="L49">        this.className = &quot;Anonymous$&quot; + v;</span>
+<span class="nc" id="L50">        anonymousInnerClassCounter.set(v + 1);</span>
+<span class="nc" id="L51">    }</span>
+
+    @Override
+    public void addDeclaration(NameDeclaration declaration) {
+<span class="pc bpc" id="L55" title="3 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
+<span class="nc" id="L56">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
+        }
+<span class="fc" id="L58">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L59">    }</span>
+
+    @Override
+    public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occ) {
+<span class="nc" id="L63">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence) occ;</span>
+<span class="nc" id="L64">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(occurrence);</span>
+<span class="nc" id="L65">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L68">                List&lt;NameOccurrence&gt; nameOccurrences = methodNames.get(decl);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
+                    // TODO may be a class name: Foo.this.super();
+                } else {
+<span class="nc" id="L72">                    nameOccurrences.add(occurrence);</span>
+<span class="nc" id="L73">                    Node n = occurrence.getLocation();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
+<span class="nc" id="L75">                        ((ASTName) n).setNameDeclaration(decl);</span>
+                    } // TODO what to do with PrimarySuffix case?
+                }
+<span class="nc" id="L78">            }</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        } else if (!declarations.isEmpty() &amp;&amp; !occurrence.isThisOrSuper()) {</span>
+<span class="nc" id="L80">            Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L82">                List&lt;NameOccurrence&gt; nameOccurrences = variableNames.get(decl);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
+                    // TODO may be a class name
+                } else {
+<span class="nc" id="L86">                    nameOccurrences.add(occurrence);</span>
+<span class="nc" id="L87">                    Node n = occurrence.getLocation();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
+<span class="nc" id="L89">                        ((ASTName) n).setNameDeclaration(decl);</span>
+                    } // TODO what to do with PrimarySuffix case?
+                }
+<span class="nc" id="L92">            }</span>
+        }
+<span class="nc" id="L94">        return declarations;</span>
+    }
+
+    public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
+<span class="nc" id="L98">        return getDeclarations(VariableNameDeclaration.class);</span>
+    }
+
+    public Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; getMethodDeclarations() {
+<span class="nc" id="L102">        return getDeclarations(MethodNameDeclaration.class);</span>
+    }
+
+    public Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; getClassDeclarations() {
+<span class="nc" id="L106">        return getDeclarations(ClassNameDeclaration.class);</span>
+    }
+
+    public ClassScope getEnclosingClassScope() {
+<span class="nc" id="L110">        return this;</span>
+    }
+
+    public String getClassName() {
+<span class="nc" id="L114">        return this.className;</span>
+    }
+
+    protected Set&lt;NameDeclaration&gt; findVariableHere(PLSQLNameOccurrence occurrence) {
+<span class="nc" id="L118">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L119">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
+<span class="nc" id="L120">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">        if (occurrence.isThisOrSuper() || occurrence.getImage().equals(className)) {</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">            if (variableDeclarations.isEmpty() &amp;&amp; methodDeclarations.isEmpty()) {</span>
+                // this could happen if you do this:
+                // public class Foo {
+                // private String x = super.toString();
+                // }
+<span class="nc" id="L127">                return result;</span>
+            }
+            // return any name declaration, since all we really want is to get
+            // the scope
+            // for example, if there's a
+            // public class Foo {
+            // private static final int X = 2;
+            // private int y = Foo.X;
+            // }
+            // we'll look up Foo just to get a handle to the class scope
+            // and then we'll look up X.
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (!variableDeclarations.isEmpty()) {</span>
+<span class="nc" id="L139">                result.add(variableDeclarations.keySet().iterator().next());</span>
+<span class="nc" id="L140">                return result;</span>
+            }
+<span class="nc" id="L142">            result.add(methodDeclarations.keySet().iterator().next());</span>
+<span class="nc" id="L143">            return result;</span>
+        }
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                if (mnd.getImage().equals(occurrence.getImage())) {</span>
+<span class="nc" id="L149">                    int args = occurrence.getArgumentCount();</span>
+<span class="nc bnc" id="L150" title="All 6 branches missed.">                    if (args == mnd.getParameterCount() || mnd.isVarargs() &amp;&amp; args &gt;= mnd.getParameterCount() - 1) {</span>
+                        // FIXME if several methods have the same name
+                        // and parameter count, only one will get caught here
+                        // we need to make some attempt at type lookup and
+                        // discrimination
+                        // or, failing that, mark this as a usage of all those
+                        // methods
+<span class="nc" id="L157">                        result.add(mnd);</span>
+                    }
+                }
+<span class="nc" id="L160">            }</span>
+<span class="nc" id="L161">            return result;</span>
+        }
+
+<span class="nc" id="L164">        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L165">        images.add(occurrence.getImage());</span>
+
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (null == occurrence.getImage()) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L169">                LOGGER.finest(&quot;occurrence==&quot; + occurrence.toString() + &quot;with Argumanet Count == &quot;</span>
+                        + occurrence.getArgumentCount() + &quot; for className=&quot; + className);
+            }
+        }
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (occurrence.getImage().startsWith(className)) {</span>
+<span class="nc" id="L175">            images.add(clipClassName(occurrence.getImage()));</span>
+        }
+<span class="nc" id="L177">        ImageFinderFunction finder = new ImageFinderFunction(images);</span>
+<span class="nc" id="L178">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (finder.getDecl() != null) {</span>
+<span class="nc" id="L180">            result.add(finder.getDecl());</span>
+        }
+<span class="nc" id="L182">        return result;</span>
+    }
+
+    public String toString() {
+<span class="nc" id="L186">        String res = &quot;ClassScope (&quot; + className + &quot;): &quot;;</span>
+<span class="nc" id="L187">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classNames = getClassDeclarations();</span>
+<span class="nc" id="L188">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
+<span class="nc" id="L189">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (!classNames.isEmpty()) {</span>
+<span class="nc" id="L191">            res += &quot;(&quot; + classNames.keySet() + &quot;)&quot;;</span>
+        }
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (!methodNames.isEmpty()) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodNames.keySet()) {</span>
+<span class="nc" id="L195">                res += mnd.toString();</span>
+<span class="nc" id="L196">                int usages = methodNames.get(mnd).size();</span>
+<span class="nc" id="L197">                res += &quot;(begins at line &quot; + mnd.getNode().getBeginLine() + &quot;, &quot; + usages + &quot; usages)&quot;;</span>
+<span class="nc" id="L198">                res += &quot;,&quot;;</span>
+<span class="nc" id="L199">            }</span>
+        }
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (!variableNames.isEmpty()) {</span>
+<span class="nc" id="L202">            res += &quot;(&quot; + variableNames.keySet() + &quot;)&quot;;</span>
+        }
+<span class="nc" id="L204">        return res;</span>
+    }
+
+    private String clipClassName(String s) {
+<span class="nc" id="L208">        return s.substring(s.indexOf('.') + 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

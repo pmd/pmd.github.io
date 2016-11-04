@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CloneMethodMustImplementCloneable.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.typeresolution.rules</a> &gt; <span class="el_source">CloneMethodMustImplementCloneable.java</span></div><h1>CloneMethodMustImplementCloneable.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.typeresolution.rules;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTBlock;
+import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTExtendsList;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameters;
+import net.sourceforge.pmd.lang.java.ast.ASTImplementsList;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+/**
+ * The method clone() should only be implemented if the class implements the
+ * Cloneable interface with the exception of a final method that only throws
+ * CloneNotSupportedException. This version uses PMD's type resolution
+ * facilities, and can detect if the class implements or extends a Cloneable
+ * class
+ *
+ * @author acaplan
+ */
+<span class="fc" id="L33">public class CloneMethodMustImplementCloneable extends AbstractJavaRule {</span>
+
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (extendsOrImplementsCloneable(node)) {</span>
+<span class="fc" id="L38">            return data;</span>
+        }
+<span class="fc" id="L40">        return super.visit(node, data);</span>
+    }
+
+    private boolean extendsOrImplementsCloneable(ASTClassOrInterfaceDeclaration node) {
+<span class="fc" id="L44">        ASTImplementsList impl = node.getFirstChildOfType(ASTImplementsList.class);</span>
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">        if (impl != null &amp;&amp; impl.jjtGetParent().equals(node)) {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            for (int ix = 0; ix &lt; impl.jjtGetNumChildren(); ix++) {</span>
+<span class="fc" id="L47">                Node child = impl.jjtGetChild(ix);</span>
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">                if (child.getClass() != ASTClassOrInterfaceType.class) {</span>
+<span class="fc" id="L50">                    continue;</span>
+                }
+
+<span class="fc" id="L53">                ASTClassOrInterfaceType type = (ASTClassOrInterfaceType) child;</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                if (type.getType() == null) {</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                    if (&quot;Cloneable&quot;.equals(type.getImage())) {</span>
+<span class="nc" id="L56">                        return true;</span>
+                    }
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                } else if (type.getType().equals(Cloneable.class)) {</span>
+<span class="fc" id="L59">                    return true;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">                } else if (Cloneable.class.isAssignableFrom(type.getType())) {</span>
+<span class="nc" id="L61">                    return true;</span>
+                } else {
+<span class="nc" id="L63">                    List&lt;Class&lt;?&gt;&gt; implementors = Arrays.asList(type.getType().getInterfaces());</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                    if (implementors.contains(Cloneable.class)) {</span>
+<span class="nc" id="L65">                        return true;</span>
+                    }
+                }
+            }
+        }
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">        if (node.jjtGetNumChildren() != 0 &amp;&amp; node.jjtGetChild(0) instanceof ASTExtendsList) {</span>
+<span class="fc" id="L71">            ASTClassOrInterfaceType type = (ASTClassOrInterfaceType) node.jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc" id="L72">            Class&lt;?&gt; clazz = type.getType();</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">            if (clazz != null &amp;&amp; clazz.equals(Cloneable.class)) {</span>
+<span class="fc" id="L74">                return true;</span>
+            }
+<span class="pc bpc" id="L76" title="2 of 4 branches missed.">            while (clazz != null &amp;&amp; !Object.class.equals(clazz)) {</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">                if (Arrays.asList(clazz.getInterfaces()).contains(Cloneable.class)) {</span>
+<span class="fc" id="L78">                    return true;</span>
+                }
+<span class="nc" id="L80">                clazz = clazz.getSuperclass();</span>
+            }
+        }
+<span class="fc" id="L83">        return false;</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L88">        ASTClassOrInterfaceDeclaration classOrInterface = node.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L89" title="All 6 branches covered.">        if (classOrInterface != null &amp;&amp; //Don't analyze enums, which cannot subclass clone()</span>
+            (node.isFinal() || classOrInterface.isFinal())) {
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">            if (node.findDescendantsOfType(ASTBlock.class).size() == 1) {</span>
+<span class="fc" id="L92">                List&lt;ASTBlockStatement&gt; blocks = node.findDescendantsOfType(ASTBlockStatement.class);</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                if (blocks.size() == 1) {</span>
+<span class="fc" id="L94">                    ASTBlockStatement block = blocks.get(0);</span>
+<span class="fc" id="L95">                    ASTClassOrInterfaceType type = block.getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L96" title="4 of 8 branches missed.">                    if (type != null &amp;&amp; type.getType() != null &amp;&amp; type.getNthParent(9).equals(node)</span>
+                            &amp;&amp; type.getType().equals(CloneNotSupportedException.class)) {
+<span class="fc" id="L98">                        return data;</span>
+<span class="nc bnc" id="L99" title="All 6 branches missed.">                    } else if (type != null &amp;&amp; type.getType() == null</span>
+                            &amp;&amp; &quot;CloneNotSupportedException&quot;.equals(type.getImage())) {
+<span class="nc" id="L101">                        return data;</span>
+                    }
+                }
+            }
+        }
+
+        // Now check other whether implemented or extended classes are defined inside the same file
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (classOrInterface != null) {</span>
+<span class="fc" id="L109">            Set&lt;String&gt; classesNames = determineTopLevelCloneableClasses(classOrInterface);</span>
+
+<span class="fc" id="L111">            ASTImplementsList implementsList = classOrInterface.getFirstChildOfType(ASTImplementsList.class);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (implementsList != null) {</span>
+<span class="fc" id="L113">                List&lt;ASTClassOrInterfaceType&gt; types = implementsList.findChildrenOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                for (ASTClassOrInterfaceType t : types) {</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                    if (classesNames.contains(t.getImage())) {</span>
+<span class="fc" id="L116">                        return data;</span>
+                    }
+<span class="nc" id="L118">                }</span>
+            }
+
+<span class="fc" id="L121">            ASTExtendsList extendsList = classOrInterface.getFirstChildOfType(ASTExtendsList.class);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if (extendsList != null) {</span>
+<span class="nc" id="L123">                ASTClassOrInterfaceType type = extendsList.getFirstChildOfType(ASTClassOrInterfaceType.class);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">                if (classesNames.contains(type.getImage())) {</span>
+<span class="nc" id="L125">                    return data;</span>
+                }
+            }
+        }
+
+<span class="fc" id="L130">        return super.visit(node, data);</span>
+    }
+
+    /**
+     * Determines all the class/interface declarations inside this compilation unit,
+     * which implement Cloneable
+     * @param currentClass the node of the class, that is currently analyzed (inside this compilation unit)
+     * @return a Set of class/interface names
+     */
+    private Set&lt;String&gt; determineTopLevelCloneableClasses(ASTClassOrInterfaceDeclaration currentClass) {
+<span class="fc" id="L140">        List&lt;ASTClassOrInterfaceDeclaration&gt; classes = currentClass.getFirstParentOfType(ASTCompilationUnit.class)</span>
+                .findDescendantsOfType(ASTClassOrInterfaceDeclaration.class);
+<span class="fc" id="L142">        Set&lt;String&gt; classesNames = new HashSet&lt;String&gt;();</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        for (ASTClassOrInterfaceDeclaration c : classes) {</span>
+<span class="pc bpc" id="L144" title="1 of 4 branches missed.">            if (c != currentClass &amp;&amp; extendsOrImplementsCloneable(c)) {</span>
+<span class="fc" id="L145">                classesNames.add(c.getImage());</span>
+            }
+<span class="fc" id="L147">        }</span>
+<span class="fc" id="L148">        return classesNames;</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclarator node, Object data) {
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (!&quot;clone&quot;.equals(node.getImage())) {</span>
+<span class="fc" id="L154">            return data;</span>
+        }
+<span class="fc" id="L156">        int countParams = ((ASTFormalParameters) node.jjtGetChild(0)).jjtGetNumChildren();</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (countParams != 0) {</span>
+<span class="fc" id="L158">            return data;</span>
+        }
+<span class="fc" id="L160">        addViolation(data, node);</span>
+<span class="fc" id="L161">        return data;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

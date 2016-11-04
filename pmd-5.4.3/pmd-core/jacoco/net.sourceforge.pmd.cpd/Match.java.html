@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Match.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">Match.java</span></div><h1>Match.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import net.sourceforge.pmd.PMD;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Match implements Comparable&lt;Match&gt; {
+
+    private int tokenCount;
+<span class="fc" id="L16">    private Set&lt;Mark&gt; markSet = new TreeSet&lt;&gt;();</span>
+    private String label;
+    
+<span class="fc" id="L19">    public static final Comparator&lt;Match&gt; MATCHES_COMPARATOR = new Comparator&lt;Match&gt;() {</span>
+    	public int compare(Match ma, Match mb) {
+<span class="nc" id="L21">    		return mb.getMarkCount() - ma.getMarkCount();</span>
+    	}
+    };
+    
+<span class="fc" id="L25">    public static final Comparator&lt;Match&gt; LINES_COMPARATOR = new Comparator&lt;Match&gt;() {</span>
+    	public int compare(Match ma, Match mb) {
+<span class="nc" id="L27">    		return mb.getLineCount() - ma.getLineCount();</span>
+    	}
+    };
+    
+<span class="fc" id="L31">    public static final Comparator&lt;Match&gt; LABEL_COMPARATOR = new Comparator&lt;Match&gt;() {</span>
+    	public int compare(Match ma, Match mb) {
+<span class="nc bnc" id="L33" title="All 2 branches missed.">    		if (ma.getLabel() == null) {</span>
+<span class="nc" id="L34">    		    return 1;</span>
+    		}
+<span class="nc bnc" id="L36" title="All 2 branches missed.">    		if (mb.getLabel() == null) {</span>
+<span class="nc" id="L37">    		    return -1;</span>
+    		}
+<span class="nc" id="L39">    		return mb.getLabel().compareTo(ma.getLabel());</span>
+    	}
+    };
+    
+<span class="fc" id="L43">    public static final Comparator&lt;Match&gt; LENGTH_COMPARATOR = new Comparator&lt;Match&gt;() {</span>
+        public int compare(Match ma, Match mb) {
+<span class="nc" id="L45">            return mb.getLineCount() - ma.getLineCount();</span>
+        }
+    };
+
+<span class="fc" id="L49">    public Match(int tokenCount, Mark first, Mark second) {</span>
+<span class="fc" id="L50">        markSet.add(first);</span>
+<span class="fc" id="L51">        markSet.add(second);</span>
+<span class="fc" id="L52">        this.tokenCount = tokenCount;</span>
+<span class="fc" id="L53">    }</span>
+
+    public Match(int tokenCount, TokenEntry first, TokenEntry second) {
+<span class="fc" id="L56">        this(tokenCount, new Mark(first), new Mark(second));</span>
+<span class="fc" id="L57">    }</span>
+
+    public int getMarkCount() {
+<span class="fc" id="L60">        return markSet.size();</span>
+    }
+
+    public int getLineCount() {
+<span class="fc" id="L64">        return getMark(0).getLineCount();</span>
+    }
+
+    public int getTokenCount() {
+<span class="fc" id="L68">        return this.tokenCount;</span>
+    }
+
+    public String getSourceCodeSlice() {
+<span class="fc" id="L72">        return this.getMark(0).getSourceCodeSlice();</span>
+    }
+
+    public Iterator&lt;Mark&gt; iterator() {
+<span class="fc" id="L76">        return markSet.iterator();</span>
+    }
+
+    public int compareTo(Match other) {
+<span class="fc" id="L80">        int diff = other.getTokenCount() - getTokenCount();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (diff != 0) {</span>
+<span class="fc" id="L82">            return diff;</span>
+        }
+<span class="fc" id="L84">        return getFirstMark().compareTo(other.getFirstMark());</span>
+    }
+
+    public Mark getFirstMark() {
+<span class="fc" id="L88">        return getMark(0);</span>
+    }
+
+    public Mark getSecondMark() {
+<span class="nc" id="L92">        return getMark(1);</span>
+    }
+
+    public String toString() {
+<span class="nc" id="L96">        return &quot;Match: &quot; + PMD.EOL + &quot;tokenCount = &quot; + tokenCount + PMD.EOL + &quot;marks = &quot; + markSet.size();</span>
+    }
+
+    public Set&lt;Mark&gt; getMarkSet() {
+<span class="nc" id="L100">        return markSet;</span>
+    }
+
+    public int getEndIndex() {
+<span class="nc" id="L104">        return getMark(0).getToken().getIndex() + getTokenCount() - 1;</span>
+    }
+
+    public void setMarkSet(Set&lt;Mark&gt; markSet) {
+<span class="nc" id="L108">        this.markSet = markSet;</span>
+<span class="nc" id="L109">    }</span>
+
+    public void setLabel(String aLabel) {
+<span class="nc" id="L112">    	label = aLabel;</span>
+<span class="nc" id="L113">    }</span>
+    
+    public String getLabel() {
+<span class="nc" id="L116">    	return label;</span>
+    }
+    
+    public void addTokenEntry(TokenEntry entry){
+<span class="fc" id="L120">        markSet.add(new Mark(entry));                </span>
+<span class="fc" id="L121">    }</span>
+    
+    private Mark getMark(int index) {
+<span class="fc" id="L124">        Mark result = null;</span>
+<span class="fc" id="L125">        int i = 0;</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">        for (Iterator&lt;Mark&gt; it = markSet.iterator(); it.hasNext() &amp;&amp; i &lt; index + 1; ){            </span>
+<span class="fc" id="L127">            result = it.next();</span>
+<span class="fc" id="L128">            i++;</span>
+        }
+<span class="fc" id="L130">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractLanguageVersionTest.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">AbstractLanguageVersionTest.java</span></div><h1>AbstractLanguageVersionTest.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import static org.junit.Assert.assertEquals;
+import net.sourceforge.pmd.ant.SourceLanguage;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+/**
+ * Base test class for {@link LanguageVersion} implementations.
+ * &lt;br&gt;Each language implementation should subclass this and provide a data method.
+ * &lt;pre&gt;
+ * @Parameters
+ *     public static Collection&lt;Object[]&gt; data() {
+ *       return Arrays.asList(new Object[][] {
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.1&quot;,
+ *              LanguageRegistry.getLanguage(MyLanguageModule.NAME).getVersion(&quot;1.1&quot;) },
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.2&quot;,
+ *              LanguageRegistry.getLanguage(MyLanguageModule.NAME).getVersion(&quot;1.2&quot;) },
+ *
+ *            // doesn't exist
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.3&quot;,
+ *              null }
+ *       });
+ * &lt;/pre&gt;
+ * For the parameters, see the constructor {@link #AbstractLanguageVersionTest(String, String, String, LanguageVersion)}.
+ */
+@RunWith(Parameterized.class)
+public class AbstractLanguageVersionTest {
+
+    private String name;
+    private String version;
+    private String terseName;
+    private LanguageVersion expected;
+
+    /**
+     * Creates a new {@link AbstractLanguageVersionTest}
+     * @param name the name under which the language module is registered
+     * @param terseName the terse name under which the language module is registered
+     * @param version the specific version of the language version
+     * @param expected the expected {@link LanguageVersion} instance
+     */
+<span class="nc" id="L50">    public AbstractLanguageVersionTest(String name, String terseName, String version, LanguageVersion expected) {</span>
+<span class="nc" id="L51">        this.name = name;</span>
+<span class="nc" id="L52">        this.version = version;</span>
+<span class="nc" id="L53">        this.terseName = terseName;</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (version != null &amp;&amp; !version.isEmpty()) {</span>
+<span class="nc" id="L55">            this.terseName += &quot; &quot; + version;</span>
+        }
+<span class="nc" id="L57">        this.expected = expected;</span>
+<span class="nc" id="L58">    }</span>
+
+    /**
+     * Checks that the expected {@link LanguageVersion} can be found by the combination of
+     * {@link #terseName} and {@link #version}.
+     */
+    @Test
+    public void testGetLanguageVersionForTerseName() {
+<span class="nc" id="L66">        assertEquals(expected, LanguageRegistry.findLanguageVersionByTerseName(terseName));</span>
+<span class="nc" id="L67">    }</span>
+
+    /**
+     * Checks that the expected {@link LanguageVersion} can be found via {@link #name} and {@link #version}.
+     */
+    @Test
+    public void testFindVersionsForLanguageNameAndVersion() {
+<span class="nc" id="L74">        SourceLanguage sourceLanguage = new SourceLanguage();</span>
+<span class="nc" id="L75">        sourceLanguage.setName(name);</span>
+<span class="nc" id="L76">        sourceLanguage.setVersion(version);</span>
+
+<span class="nc" id="L78">        Language language = LanguageRegistry.getLanguage(sourceLanguage.getName());</span>
+<span class="nc" id="L79">        LanguageVersion languageVersion = null;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if(language != null) {</span>
+<span class="nc" id="L81">            languageVersion = language.getVersion(sourceLanguage.getVersion());</span>
+        }
+
+<span class="nc" id="L84">        assertEquals(expected, languageVersion);</span>
+<span class="nc" id="L85">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

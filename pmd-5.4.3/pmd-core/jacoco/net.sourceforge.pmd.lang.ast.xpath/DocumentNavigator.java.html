@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DocumentNavigator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ast.xpath</a> &gt; <span class="el_source">DocumentNavigator.java</span></div><h1>DocumentNavigator.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ast.xpath;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.RootNode;
+
+import org.jaxen.DefaultNavigator;
+import org.jaxen.XPath;
+import org.jaxen.util.SingleObjectIterator;
+
+/**
+ * @author daniels
+ */
+<span class="fc" id="L19">public class DocumentNavigator extends DefaultNavigator {</span>
+
+<span class="fc" id="L21">    private final static Iterator&lt;Node&gt; EMPTY_ITERATOR = new ArrayList&lt;Node&gt;().iterator();</span>
+
+    public String getAttributeName(Object arg0) {
+<span class="nc" id="L24">	return ((Attribute) arg0).getName();</span>
+    }
+
+    public String getAttributeNamespaceUri(Object arg0) {
+<span class="nc" id="L28">	return &quot;&quot;;</span>
+    }
+
+    public String getAttributeQName(Object arg0) {
+<span class="nc" id="L32">	return ((Attribute) arg0).getName();</span>
+    }
+
+    public String getAttributeStringValue(Object arg0) {
+<span class="nc" id="L36">	return ((Attribute) arg0).getStringValue();</span>
+    }
+
+    public String getCommentStringValue(Object arg0) {
+<span class="nc" id="L40">	return &quot;&quot;;</span>
+    }
+
+    public String getElementName(Object node) {
+<span class="fc" id="L44">	return node.toString();</span>
+    }
+
+    public String getElementNamespaceUri(Object arg0) {
+<span class="nc" id="L48">	return &quot;&quot;;</span>
+    }
+
+    public String getElementQName(Object arg0) {
+<span class="nc" id="L52">	return getElementName(arg0);</span>
+    }
+
+    public String getElementStringValue(Object arg0) {
+<span class="nc" id="L56">	return &quot;&quot;;</span>
+    }
+
+    public String getNamespacePrefix(Object arg0) {
+<span class="nc" id="L60">	return &quot;&quot;;</span>
+    }
+
+    public String getNamespaceStringValue(Object arg0) {
+<span class="nc" id="L64">	return &quot;&quot;;</span>
+    }
+
+    public String getTextStringValue(Object arg0) {
+<span class="nc" id="L68">	return &quot;&quot;;</span>
+    }
+
+    public boolean isAttribute(Object arg0) {
+<span class="nc" id="L72">	return arg0 instanceof Attribute;</span>
+    }
+
+    public boolean isComment(Object arg0) {
+<span class="nc" id="L76">	return false;</span>
+    }
+
+    public boolean isDocument(Object arg0) {
+<span class="fc" id="L80">	return arg0 instanceof RootNode;</span>
+    }
+
+    public boolean isElement(Object arg0) {
+<span class="nc" id="L84">	return arg0 instanceof Node;</span>
+    }
+
+    public boolean isNamespace(Object arg0) {
+<span class="nc" id="L88">	return false;</span>
+    }
+
+    public boolean isProcessingInstruction(Object arg0) {
+<span class="nc" id="L92">	return false;</span>
+    }
+
+    public boolean isText(Object arg0) {
+<span class="nc" id="L96">	return false;</span>
+    }
+
+    public XPath parseXPath(String arg0) {
+<span class="nc" id="L100">	return null;</span>
+    }
+
+    @Override
+    public Object getParentNode(Object arg0) {
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (arg0 instanceof Node) {</span>
+<span class="fc" id="L106">            return ((Node) arg0).jjtGetParent();</span>
+        }
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        if (arg0 instanceof Attribute) {</span>
+<span class="nc" id="L109">            return ((Attribute) arg0).getParent();</span>
+        }
+        // can't navigate to parent node...
+<span class="nc" id="L112">        return null;</span>
+    }
+
+    @Override
+    public Iterator&lt;Attribute&gt; getAttributeAxisIterator(Object arg0) {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">	if (arg0 instanceof AttributeNode) {</span>
+<span class="nc" id="L118">	    return ((AttributeNode) arg0).getAttributeIterator();</span>
+	} else {
+<span class="fc" id="L120">	    return new AttributeAxisIterator((Node) arg0);</span>
+	}
+    }
+
+    /**
+     * Get an iterator over all of this node's children.
+     *
+     * @param contextNode The context node for the child axis.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getChildAxisIterator(Object contextNode) {
+<span class="fc" id="L132">	return new NodeIterator((Node) contextNode) {</span>
+	    @Override
+	    protected Node getFirstNode(Node node) {
+<span class="fc" id="L135">		return getFirstChild(node);</span>
+	    }
+
+	    @Override
+	    protected Node getNextNode(Node node) {
+<span class="nc" id="L140">		return getNextSibling(node);</span>
+	    }
+	};
+    }
+
+    /**
+     * Get a (single-member) iterator over this node's parent.
+     *
+     * @param contextNode the context node for the parent axis.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getParentAxisIterator(Object contextNode) {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">	if (isAttribute(contextNode)) {</span>
+<span class="nc" id="L154">	    return new SingleObjectIterator(((Attribute) contextNode).getParent());</span>
+	}
+<span class="nc" id="L156">	Node parent = ((Node) contextNode).jjtGetParent();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">	if (parent != null) {</span>
+<span class="nc" id="L158">	    return new SingleObjectIterator(parent);</span>
+	} else {
+<span class="nc" id="L160">	    return EMPTY_ITERATOR;</span>
+	}
+    }
+
+    /**
+     * Get an iterator over all following siblings.
+     *
+     * @param contextNode the context node for the sibling iterator.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getFollowingSiblingAxisIterator(Object contextNode) {
+<span class="nc" id="L172">	return new NodeIterator((Node) contextNode) {</span>
+	    @Override
+	    protected Node getFirstNode(Node node) {
+<span class="nc" id="L175">		return getNextNode(node);</span>
+	    }
+
+	    @Override
+	    protected Node getNextNode(Node node) {
+<span class="nc" id="L180">		return getNextSibling(node);</span>
+	    }
+	};
+    }
+
+    /**
+     * Get an iterator over all preceding siblings.
+     *
+     * @param contextNode The context node for the preceding sibling axis.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getPrecedingSiblingAxisIterator(Object contextNode) {
+<span class="nc" id="L193">	return new NodeIterator((Node) contextNode) {</span>
+	    @Override
+	    protected Node getFirstNode(Node node) {
+<span class="nc" id="L196">		return getNextNode(node);</span>
+	    }
+
+	    @Override
+	    protected Node getNextNode(Node node) {
+<span class="nc" id="L201">		return getPreviousSibling(node);</span>
+	    }
+	};
+    }
+
+    /**
+     * Get an iterator over all following nodes, depth-first.
+     *
+     * @param contextNode The context node for the following axis.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getFollowingAxisIterator(Object contextNode) {
+<span class="nc" id="L214">	return new NodeIterator((Node) contextNode) {</span>
+	    @Override
+	    protected Node getFirstNode(Node node) {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (node == null) {</span>
+<span class="nc" id="L218">		    return null;</span>
+		} else {
+<span class="nc" id="L220">		    Node sibling = getNextSibling(node);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		    if (sibling == null) {</span>
+<span class="nc" id="L222">			return getFirstNode(node.jjtGetParent());</span>
+		    } else {
+<span class="nc" id="L224">			return sibling;</span>
+		    }
+		}
+	    }
+
+	    @Override
+	    protected Node getNextNode(Node node) {
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (node == null) {</span>
+<span class="nc" id="L232">		    return null;</span>
+		} else {
+<span class="nc" id="L234">		    Node n = getFirstChild(node);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		    if (n == null) {</span>
+<span class="nc" id="L236">			n = getNextSibling(node);</span>
+		    }
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		    if (n == null) {</span>
+<span class="nc" id="L239">			return getFirstNode(node.jjtGetParent());</span>
+		    } else {
+<span class="nc" id="L241">			return n;</span>
+		    }
+		}
+	    }
+	};
+    }
+
+    /**
+     * Get an iterator over all preceding nodes, depth-first.
+     *
+     * @param contextNode The context node for the preceding axis.
+     * @return A possibly-empty iterator (not null).
+     */
+    @Override
+    public Iterator&lt;Node&gt; getPrecedingAxisIterator(Object contextNode) {
+<span class="nc" id="L256">	return new NodeIterator((Node) contextNode) {</span>
+	    @Override
+	    protected Node getFirstNode(Node node) {
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (node == null) {</span>
+<span class="nc" id="L260">		    return null;</span>
+		} else {
+<span class="nc" id="L262">		    Node sibling = getPreviousSibling(node);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		    if (sibling == null) {</span>
+<span class="nc" id="L264">			return getFirstNode(node.jjtGetParent());</span>
+		    } else {
+<span class="nc" id="L266">			return sibling;</span>
+		    }
+		}
+	    }
+
+	    @Override
+	    protected Node getNextNode(Node node) {
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		if (node == null) {</span>
+<span class="nc" id="L274">		    return null;</span>
+		} else {
+<span class="nc" id="L276">		    Node n = getLastChild(node);</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		    if (n == null) {</span>
+<span class="nc" id="L278">			n = getPreviousSibling(node);</span>
+		    }
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		    if (n == null) {</span>
+<span class="nc" id="L281">			return getFirstNode(node.jjtGetParent());</span>
+		    } else {
+<span class="nc" id="L283">			return n;</span>
+		    }
+		}
+	    }
+	};
+    }
+
+    @Override
+    public Object getDocumentNode(Object contextNode) {
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        if (isDocument(contextNode)) {</span>
+<span class="fc" id="L293">            return contextNode;</span>
+        }
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if (null == contextNode) {</span>
+<span class="fc" id="L296">            throw new RuntimeException(&quot;contextNode may not be null&quot;);</span>
+        }
+<span class="fc" id="L298">        return getDocumentNode(getParentNode(contextNode));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
