@@ -47,7 +47,7 @@ public final class PMDASMClassLoader extends ClassLoader {
     private PMDASMClassLoader(ClassLoader parent) {
 <span class="fc" id="L48">        super(parent);</span>
 <span class="fc" id="L49">    }</span>
-
+    
     /**
      * A new PMDASMClassLoader is created for each compilation unit, this method
      * allows to reuse the same PMDASMClassLoader across all the compilation
@@ -81,32 +81,44 @@ public final class PMDASMClassLoader extends ClassLoader {
         }
     }
 
-    public synchronized Map&lt;String, String&gt; getImportedClasses(String name) throws ClassNotFoundException {
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (dontBother.containsValue(name)) {</span>
-<span class="nc" id="L86">            throw new ClassNotFoundException(name);</span>
-        }
-<span class="pc" id="L88">        try (InputStream classResource = getResourceAsStream(name.replace('.', '/') + &quot;.class&quot;)) {</span>
-<span class="fc" id="L89">            ClassReader reader = new ClassReader(classResource);</span>
-<span class="fc" id="L90">            PMDASMVisitor asmVisitor = new PMDASMVisitor(name);</span>
-<span class="fc" id="L91">            reader.accept(asmVisitor, 0);</span>
+    /**
+     * Checks if the class loader could resolve a given class name
+     * (ie: it doesn't know for sure it will fail).
+     * Notice, that the ability to resolve a class does not imply
+     * that the class will actually be found and resolved.
+     * @param name the name of the class
+     * @return whether the class can be resolved
+     */
+    public boolean couldResolve(String name) {
+<span class="fc bfc" id="L93" title="All 2 branches covered.">    	return !dontBother.containsKey(name);</span>
+    }
 
-<span class="fc" id="L93">            List&lt;String&gt; inner = asmVisitor.getInnerClasses();</span>
-<span class="pc bpc" id="L94" title="1 of 4 branches missed.">            if (inner != null &amp;&amp; !inner.isEmpty()) {</span>
-<span class="fc" id="L95">                inner = new ArrayList&lt;&gt;(inner); // to avoid</span>
+    public synchronized Map&lt;String, String&gt; getImportedClasses(String name) throws ClassNotFoundException {
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (dontBother.containsValue(name)) {</span>
+<span class="nc" id="L98">            throw new ClassNotFoundException(name);</span>
+        }
+<span class="pc" id="L100">        try (InputStream classResource = getResourceAsStream(name.replace('.', '/') + &quot;.class&quot;)) {</span>
+<span class="fc" id="L101">            ClassReader reader = new ClassReader(classResource);</span>
+<span class="fc" id="L102">            PMDASMVisitor asmVisitor = new PMDASMVisitor(name);</span>
+<span class="fc" id="L103">            reader.accept(asmVisitor, 0);</span>
+
+<span class="fc" id="L105">            List&lt;String&gt; inner = asmVisitor.getInnerClasses();</span>
+<span class="pc bpc" id="L106" title="1 of 4 branches missed.">            if (inner != null &amp;&amp; !inner.isEmpty()) {</span>
+<span class="fc" id="L107">                inner = new ArrayList&lt;&gt;(inner); // to avoid</span>
                                                       // ConcurrentModificationException
-<span class="fc bfc" id="L97" title="All 2 branches covered.">                for (String str : inner) {</span>
-<span class="pc" id="L98">                    try (InputStream innerClassStream = getResourceAsStream(str.replace('.', '/') + &quot;.class&quot;)){</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                        if (innerClassStream != null) {</span>
-<span class="fc" id="L100">                            reader = new ClassReader(innerClassStream);</span>
-<span class="fc" id="L101">                            reader.accept(asmVisitor, 0);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">                for (String str : inner) {</span>
+<span class="pc" id="L110">                    try (InputStream innerClassStream = getResourceAsStream(str.replace('.', '/') + &quot;.class&quot;)){</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                        if (innerClassStream != null) {</span>
+<span class="fc" id="L112">                            reader = new ClassReader(innerClassStream);</span>
+<span class="fc" id="L113">                            reader.accept(asmVisitor, 0);</span>
                         }
-<span class="pc bpc" id="L103" title="6 of 8 branches missed.">                    }</span>
-<span class="fc" id="L104">                }</span>
+<span class="pc bpc" id="L115" title="6 of 8 branches missed.">                    }</span>
+<span class="fc" id="L116">                }</span>
             }
-<span class="fc" id="L106">            return asmVisitor.getPackages();</span>
-<span class="pc bpc" id="L107" title="6 of 8 branches missed.">        } catch (IOException e) {</span>
-<span class="nc" id="L108">            dontBother.put(name, Boolean.TRUE);</span>
-<span class="nc" id="L109">            throw new ClassNotFoundException(name, e);</span>
+<span class="fc" id="L118">            return asmVisitor.getPackages();</span>
+<span class="pc bpc" id="L119" title="6 of 8 branches missed.">        } catch (IOException e) {</span>
+<span class="nc" id="L120">            dontBother.put(name, Boolean.TRUE);</span>
+<span class="nc" id="L121">            throw new ClassNotFoundException(name, e);</span>
         }
     }
 }

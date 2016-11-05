@@ -224,214 +224,216 @@
 <a class="jxr_linenumber" name="L216" href="#L216">216</a>             ctx.setIgnoreExceptions(false);
 <a class="jxr_linenumber" name="L217" href="#L217">217</a>             RuleSet rules = <strong class="jxr_keyword">new</strong> RuleSet();
 <a class="jxr_linenumber" name="L218" href="#L218">218</a>             rules.addRule(rule);
-<a class="jxr_linenumber" name="L219" href="#L219">219</a>             p.getSourceCodeProcessor().processSourceCode(<strong class="jxr_keyword">new</strong> StringReader(code), <strong class="jxr_keyword">new</strong> RuleSets(rules), ctx);
-<a class="jxr_linenumber" name="L220" href="#L220">220</a>         } <strong class="jxr_keyword">catch</strong> (Exception e) {
-<a class="jxr_linenumber" name="L221" href="#L221">221</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(e);
-<a class="jxr_linenumber" name="L222" href="#L222">222</a>         }
-<a class="jxr_linenumber" name="L223" href="#L223">223</a>     }
-<a class="jxr_linenumber" name="L224" href="#L224">224</a> 
-<a class="jxr_linenumber" name="L225" href="#L225">225</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> runTestFromString(<a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a> test, Rule rule, Report report) {
-<a class="jxr_linenumber" name="L226" href="#L226">226</a>         runTestFromString(test.getCode(), rule, report, test.getLanguageVersion(), test.isUseAuxClasspath());
-<a class="jxr_linenumber" name="L227" href="#L227">227</a>     }
-<a class="jxr_linenumber" name="L228" href="#L228">228</a> 
-<a class="jxr_linenumber" name="L229" href="#L229">229</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L230" href="#L230">230</a> <em class="jxr_javadoccomment">     * getResourceAsStream tries to find the XML file in weird locations if the</em>
-<a class="jxr_linenumber" name="L231" href="#L231">231</a> <em class="jxr_javadoccomment">     * ruleName includes the package, so we strip it here.</em>
-<a class="jxr_linenumber" name="L232" href="#L232">232</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L233" href="#L233">233</a>     <strong class="jxr_keyword">protected</strong> String getCleanRuleName(Rule rule) {
-<a class="jxr_linenumber" name="L234" href="#L234">234</a>         String fullClassName = rule.getClass().getName();
-<a class="jxr_linenumber" name="L235" href="#L235">235</a>         <strong class="jxr_keyword">if</strong> (fullClassName.equals(rule.getName())) {
-<a class="jxr_linenumber" name="L236" href="#L236">236</a>             <em class="jxr_comment">//We got the full class name, so we'll use the stripped name instead</em>
-<a class="jxr_linenumber" name="L237" href="#L237">237</a>             String packageName = rule.getClass().getPackage().getName();
-<a class="jxr_linenumber" name="L238" href="#L238">238</a>             <strong class="jxr_keyword">return</strong> fullClassName.substring(packageName.length()+1);
-<a class="jxr_linenumber" name="L239" href="#L239">239</a>         } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L240" href="#L240">240</a>             <strong class="jxr_keyword">return</strong> rule.getName();  <em class="jxr_comment">//Test is using findRule, smart!</em>
-<a class="jxr_linenumber" name="L241" href="#L241">241</a>         }
-<a class="jxr_linenumber" name="L242" href="#L242">242</a>     }
-<a class="jxr_linenumber" name="L243" href="#L243">243</a> 
-<a class="jxr_linenumber" name="L244" href="#L244">244</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L245" href="#L245">245</a> <em class="jxr_javadoccomment">     * Extract a set of tests from an XML file. The file should be</em>
-<a class="jxr_linenumber" name="L246" href="#L246">246</a> <em class="jxr_javadoccomment">     * ./xml/RuleName.xml relative to the test class. The format is defined in</em>
-<a class="jxr_linenumber" name="L247" href="#L247">247</a> <em class="jxr_javadoccomment">     * test-data.xsd.</em>
-<a class="jxr_linenumber" name="L248" href="#L248">248</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L249" href="#L249">249</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule) {
-<a class="jxr_linenumber" name="L250" href="#L250">250</a>         String testsFileName = getCleanRuleName(rule);
-<a class="jxr_linenumber" name="L251" href="#L251">251</a> 
-<a class="jxr_linenumber" name="L252" href="#L252">252</a>         <strong class="jxr_keyword">return</strong> extractTestsFromXml(rule, testsFileName);
-<a class="jxr_linenumber" name="L253" href="#L253">253</a>     }
-<a class="jxr_linenumber" name="L254" href="#L254">254</a> 
-<a class="jxr_linenumber" name="L255" href="#L255">255</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule, String testsFileName) {
-<a class="jxr_linenumber" name="L256" href="#L256">256</a>         <strong class="jxr_keyword">return</strong> extractTestsFromXml(rule, testsFileName, <span class="jxr_string">"xml/"</span>);
-<a class="jxr_linenumber" name="L257" href="#L257">257</a>     }
-<a class="jxr_linenumber" name="L258" href="#L258">258</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L259" href="#L259">259</a> <em class="jxr_javadoccomment">     * Extract a set of tests from an XML file with the given name. The file should be</em>
-<a class="jxr_linenumber" name="L260" href="#L260">260</a> <em class="jxr_javadoccomment">     * ./xml/[testsFileName].xml relative to the test class. The format is defined in</em>
-<a class="jxr_linenumber" name="L261" href="#L261">261</a> <em class="jxr_javadoccomment">     * test-data.xsd.</em>
-<a class="jxr_linenumber" name="L262" href="#L262">262</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L263" href="#L263">263</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule, String testsFileName, String baseDirectory) {
-<a class="jxr_linenumber" name="L264" href="#L264">264</a>         String testXmlFileName = baseDirectory + testsFileName + <span class="jxr_string">".xml"</span>;
-<a class="jxr_linenumber" name="L265" href="#L265">265</a>         InputStream inputStream = getClass().getResourceAsStream(testXmlFileName);
-<a class="jxr_linenumber" name="L266" href="#L266">266</a>         <strong class="jxr_keyword">if</strong> (inputStream == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L267" href="#L267">267</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't find "</span> + testXmlFileName);
-<a class="jxr_linenumber" name="L268" href="#L268">268</a>         }
-<a class="jxr_linenumber" name="L269" href="#L269">269</a> 
-<a class="jxr_linenumber" name="L270" href="#L270">270</a>         Document doc;
-<a class="jxr_linenumber" name="L271" href="#L271">271</a>         <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L272" href="#L272">272</a>             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-<a class="jxr_linenumber" name="L273" href="#L273">273</a>             doc = builder.parse(inputStream);
-<a class="jxr_linenumber" name="L274" href="#L274">274</a>         } <strong class="jxr_keyword">catch</strong> (ParserConfigurationException pce) {
-<a class="jxr_linenumber" name="L275" href="#L275">275</a>             pce.printStackTrace();
-<a class="jxr_linenumber" name="L276" href="#L276">276</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + pce.getMessage());
-<a class="jxr_linenumber" name="L277" href="#L277">277</a>         } <strong class="jxr_keyword">catch</strong> (FactoryConfigurationError fce) {
-<a class="jxr_linenumber" name="L278" href="#L278">278</a>             fce.printStackTrace();
-<a class="jxr_linenumber" name="L279" href="#L279">279</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + fce.getMessage());
-<a class="jxr_linenumber" name="L280" href="#L280">280</a>         } <strong class="jxr_keyword">catch</strong> (IOException ioe) {
-<a class="jxr_linenumber" name="L281" href="#L281">281</a>             ioe.printStackTrace();
-<a class="jxr_linenumber" name="L282" href="#L282">282</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + ioe.getMessage());
-<a class="jxr_linenumber" name="L283" href="#L283">283</a>         } <strong class="jxr_keyword">catch</strong> (SAXException se) {
-<a class="jxr_linenumber" name="L284" href="#L284">284</a>             se.printStackTrace();
-<a class="jxr_linenumber" name="L285" href="#L285">285</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + se.getMessage());
-<a class="jxr_linenumber" name="L286" href="#L286">286</a>         }
-<a class="jxr_linenumber" name="L287" href="#L287">287</a> 
-<a class="jxr_linenumber" name="L288" href="#L288">288</a>         <strong class="jxr_keyword">return</strong> parseTests(rule, doc);
-<a class="jxr_linenumber" name="L289" href="#L289">289</a>     }
-<a class="jxr_linenumber" name="L290" href="#L290">290</a> 
-<a class="jxr_linenumber" name="L291" href="#L291">291</a>     <strong class="jxr_keyword">private</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] parseTests(Rule rule, Document doc) {
-<a class="jxr_linenumber" name="L292" href="#L292">292</a>         Element root = doc.getDocumentElement();
-<a class="jxr_linenumber" name="L293" href="#L293">293</a>         NodeList testCodes = root.getElementsByTagName(<span class="jxr_string">"test-code"</span>);
-<a class="jxr_linenumber" name="L294" href="#L294">294</a> 
-<a class="jxr_linenumber" name="L295" href="#L295">295</a>         <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] tests = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[testCodes.getLength()];
-<a class="jxr_linenumber" name="L296" href="#L296">296</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; testCodes.getLength(); i++) {
-<a class="jxr_linenumber" name="L297" href="#L297">297</a>             Element testCode = (Element)testCodes.item(i);
-<a class="jxr_linenumber" name="L298" href="#L298">298</a> 
-<a class="jxr_linenumber" name="L299" href="#L299">299</a>             <strong class="jxr_keyword">boolean</strong> reinitializeRule = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L300" href="#L300">300</a>             Node reinitializeRuleAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"reinitializeRule"</span>);
-<a class="jxr_linenumber" name="L301" href="#L301">301</a>             <strong class="jxr_keyword">if</strong> (reinitializeRuleAttribute != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L302" href="#L302">302</a>                 String reinitializeRuleValue = reinitializeRuleAttribute.getNodeValue();
-<a class="jxr_linenumber" name="L303" href="#L303">303</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(reinitializeRuleValue) ||
-<a class="jxr_linenumber" name="L304" href="#L304">304</a>                         <span class="jxr_string">"0"</span>.equalsIgnoreCase(reinitializeRuleValue)) {
-<a class="jxr_linenumber" name="L305" href="#L305">305</a>                     reinitializeRule = false;
-<a class="jxr_linenumber" name="L306" href="#L306">306</a>                 }
-<a class="jxr_linenumber" name="L307" href="#L307">307</a>             }
-<a class="jxr_linenumber" name="L308" href="#L308">308</a> 
-<a class="jxr_linenumber" name="L309" href="#L309">309</a>             <strong class="jxr_keyword">boolean</strong> isRegressionTest = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L310" href="#L310">310</a>             Node regressionTestAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"regressionTest"</span>);
-<a class="jxr_linenumber" name="L311" href="#L311">311</a>             <strong class="jxr_keyword">if</strong> (regressionTestAttribute != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L312" href="#L312">312</a>                 String reinitializeRuleValue = regressionTestAttribute.getNodeValue();
-<a class="jxr_linenumber" name="L313" href="#L313">313</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(reinitializeRuleValue)) {
-<a class="jxr_linenumber" name="L314" href="#L314">314</a>                     isRegressionTest = false;
-<a class="jxr_linenumber" name="L315" href="#L315">315</a>                 }
-<a class="jxr_linenumber" name="L316" href="#L316">316</a>             }
-<a class="jxr_linenumber" name="L317" href="#L317">317</a> 
-<a class="jxr_linenumber" name="L318" href="#L318">318</a>             <strong class="jxr_keyword">boolean</strong> isUseAuxClasspath = <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L319" href="#L319">319</a>             Node useAuxClasspathAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"useAuxClasspath"</span>);
-<a class="jxr_linenumber" name="L320" href="#L320">320</a>             <strong class="jxr_keyword">if</strong> (useAuxClasspathAttribute != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L321" href="#L321">321</a>                 String useAuxClasspathValue = useAuxClasspathAttribute.getNodeValue();
-<a class="jxr_linenumber" name="L322" href="#L322">322</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(useAuxClasspathValue)) {
-<a class="jxr_linenumber" name="L323" href="#L323">323</a>                     isUseAuxClasspath = false;
-<a class="jxr_linenumber" name="L324" href="#L324">324</a>                 }
-<a class="jxr_linenumber" name="L325" href="#L325">325</a>             }
-<a class="jxr_linenumber" name="L326" href="#L326">326</a> 
-<a class="jxr_linenumber" name="L327" href="#L327">327</a>             NodeList ruleProperties = testCode.getElementsByTagName(<span class="jxr_string">"rule-property"</span>);
-<a class="jxr_linenumber" name="L328" href="#L328">328</a>             Properties properties = <strong class="jxr_keyword">new</strong> Properties();
-<a class="jxr_linenumber" name="L329" href="#L329">329</a>             <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; ruleProperties.getLength(); j++) {
-<a class="jxr_linenumber" name="L330" href="#L330">330</a>                 Node ruleProperty = ruleProperties.item(j);
-<a class="jxr_linenumber" name="L331" href="#L331">331</a>                 String propertyName = ruleProperty.getAttributes().getNamedItem(<span class="jxr_string">"name"</span>).getNodeValue();
-<a class="jxr_linenumber" name="L332" href="#L332">332</a>                 properties.setProperty(propertyName, parseTextNode(ruleProperty));
-<a class="jxr_linenumber" name="L333" href="#L333">333</a>             }
-<a class="jxr_linenumber" name="L334" href="#L334">334</a> 
-<a class="jxr_linenumber" name="L335" href="#L335">335</a>             NodeList expectedMessagesNodes = testCode.getElementsByTagName(<span class="jxr_string">"expected-messages"</span>);
-<a class="jxr_linenumber" name="L336" href="#L336">336</a>             List&lt;String&gt; messages = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
-<a class="jxr_linenumber" name="L337" href="#L337">337</a>             <strong class="jxr_keyword">if</strong> (expectedMessagesNodes != <strong class="jxr_keyword">null</strong> &amp;&amp; expectedMessagesNodes.getLength() &gt; 0) {
-<a class="jxr_linenumber" name="L338" href="#L338">338</a>                 Element item = (Element)expectedMessagesNodes.item(0);
-<a class="jxr_linenumber" name="L339" href="#L339">339</a>                 NodeList messagesNodes = item.getElementsByTagName(<span class="jxr_string">"message"</span>);
-<a class="jxr_linenumber" name="L340" href="#L340">340</a>                 <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; messagesNodes.getLength(); j++) {
-<a class="jxr_linenumber" name="L341" href="#L341">341</a>                     messages.add(parseTextNode(messagesNodes.item(j)));
-<a class="jxr_linenumber" name="L342" href="#L342">342</a>                 }
-<a class="jxr_linenumber" name="L343" href="#L343">343</a>             }
-<a class="jxr_linenumber" name="L344" href="#L344">344</a> 
-<a class="jxr_linenumber" name="L345" href="#L345">345</a>             NodeList expectedLineNumbersNodes = testCode.getElementsByTagName(<span class="jxr_string">"expected-linenumbers"</span>);
-<a class="jxr_linenumber" name="L346" href="#L346">346</a>             List&lt;Integer&gt; expectedLineNumbers = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
-<a class="jxr_linenumber" name="L347" href="#L347">347</a>             <strong class="jxr_keyword">if</strong> (expectedLineNumbersNodes != <strong class="jxr_keyword">null</strong> &amp;&amp; expectedLineNumbersNodes.getLength() &gt; 0) {
-<a class="jxr_linenumber" name="L348" href="#L348">348</a>                 Element item = (Element)expectedLineNumbersNodes.item(0);
-<a class="jxr_linenumber" name="L349" href="#L349">349</a>                 String numbers = item.getTextContent();
-<a class="jxr_linenumber" name="L350" href="#L350">350</a>                 <strong class="jxr_keyword">for</strong> (String n : numbers.split(<span class="jxr_string">" *, *"</span>)) {
-<a class="jxr_linenumber" name="L351" href="#L351">351</a>                     expectedLineNumbers.add(Integer.valueOf(n));
-<a class="jxr_linenumber" name="L352" href="#L352">352</a>                 }
-<a class="jxr_linenumber" name="L353" href="#L353">353</a>             }
-<a class="jxr_linenumber" name="L354" href="#L354">354</a> 
-<a class="jxr_linenumber" name="L355" href="#L355">355</a>             String code = getNodeValue(testCode, <span class="jxr_string">"code"</span>, false);
-<a class="jxr_linenumber" name="L356" href="#L356">356</a>             <strong class="jxr_keyword">if</strong> (code == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L357" href="#L357">357</a>                 <em class="jxr_comment">//Should have a coderef</em>
-<a class="jxr_linenumber" name="L358" href="#L358">358</a>                 NodeList coderefs = testCode.getElementsByTagName(<span class="jxr_string">"code-ref"</span>);
-<a class="jxr_linenumber" name="L359" href="#L359">359</a>                 <strong class="jxr_keyword">if</strong> (coderefs.getLength()==0) {
-<a class="jxr_linenumber" name="L360" href="#L360">360</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Required tag is missing from the test-xml. Supply either a code or a code-ref tag"</span>);
-<a class="jxr_linenumber" name="L361" href="#L361">361</a>                 }
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>                 Node coderef = coderefs.item(0);
-<a class="jxr_linenumber" name="L363" href="#L363">363</a>                 String referenceId = coderef.getAttributes().getNamedItem(<span class="jxr_string">"id"</span>).getNodeValue();
-<a class="jxr_linenumber" name="L364" href="#L364">364</a>                 NodeList codeFragments = root.getElementsByTagName(<span class="jxr_string">"code-fragment"</span>);
-<a class="jxr_linenumber" name="L365" href="#L365">365</a>                 <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; codeFragments.getLength(); j++) {
-<a class="jxr_linenumber" name="L366" href="#L366">366</a>                     String fragmentId = codeFragments.item(j).getAttributes().getNamedItem(<span class="jxr_string">"id"</span>).getNodeValue();
-<a class="jxr_linenumber" name="L367" href="#L367">367</a>                     <strong class="jxr_keyword">if</strong> (referenceId.equals(fragmentId)) {
-<a class="jxr_linenumber" name="L368" href="#L368">368</a>                         code = parseTextNode(codeFragments.item(j));
-<a class="jxr_linenumber" name="L369" href="#L369">369</a>                     }
-<a class="jxr_linenumber" name="L370" href="#L370">370</a>                 }
-<a class="jxr_linenumber" name="L371" href="#L371">371</a> 
-<a class="jxr_linenumber" name="L372" href="#L372">372</a>                 <strong class="jxr_keyword">if</strong> (code==<strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L373" href="#L373">373</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"No matching code fragment found for coderef"</span>);
-<a class="jxr_linenumber" name="L374" href="#L374">374</a>                 }
-<a class="jxr_linenumber" name="L375" href="#L375">375</a>             }
-<a class="jxr_linenumber" name="L376" href="#L376">376</a> 
-<a class="jxr_linenumber" name="L377" href="#L377">377</a>             String description = getNodeValue(testCode, <span class="jxr_string">"description"</span>, <strong class="jxr_keyword">true</strong>);
-<a class="jxr_linenumber" name="L378" href="#L378">378</a>             <strong class="jxr_keyword">int</strong> expectedProblems = Integer.parseInt(getNodeValue(testCode, <span class="jxr_string">"expected-problems"</span>, <strong class="jxr_keyword">true</strong>));
-<a class="jxr_linenumber" name="L379" href="#L379">379</a> 
-<a class="jxr_linenumber" name="L380" href="#L380">380</a>             String languageVersionString = getNodeValue(testCode, <span class="jxr_string">"source-type"</span>, false);
-<a class="jxr_linenumber" name="L381" href="#L381">381</a>             <strong class="jxr_keyword">if</strong> (languageVersionString == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L382" href="#L382">382</a>                 tests[i] = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>(code, description, expectedProblems, rule);
-<a class="jxr_linenumber" name="L383" href="#L383">383</a>             } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L384" href="#L384">384</a>             	LanguageVersion languageVersion = LanguageRegistry.findLanguageVersionByTerseName(languageVersionString);
-<a class="jxr_linenumber" name="L385" href="#L385">385</a>                 <strong class="jxr_keyword">if</strong> (languageVersion != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L386" href="#L386">386</a>                     tests[i] = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>(code, description, expectedProblems, rule, languageVersion);
-<a class="jxr_linenumber" name="L387" href="#L387">387</a>                 } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L388" href="#L388">388</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Unknown LanguageVersion for test: "</span> + languageVersionString);
-<a class="jxr_linenumber" name="L389" href="#L389">389</a>                 }
-<a class="jxr_linenumber" name="L390" href="#L390">390</a>             }
-<a class="jxr_linenumber" name="L391" href="#L391">391</a>             tests[i].setReinitializeRule(reinitializeRule);
-<a class="jxr_linenumber" name="L392" href="#L392">392</a>             tests[i].setRegressionTest(isRegressionTest);
-<a class="jxr_linenumber" name="L393" href="#L393">393</a>             tests[i].setUseAuxClasspath(isUseAuxClasspath);
-<a class="jxr_linenumber" name="L394" href="#L394">394</a>             tests[i].setExpectedMessages(messages);
-<a class="jxr_linenumber" name="L395" href="#L395">395</a>             tests[i].setExpectedLineNumbers(expectedLineNumbers);
-<a class="jxr_linenumber" name="L396" href="#L396">396</a>             tests[i].setProperties(properties);
-<a class="jxr_linenumber" name="L397" href="#L397">397</a>             tests[i].setNumberInDocument(i);
-<a class="jxr_linenumber" name="L398" href="#L398">398</a>         }
-<a class="jxr_linenumber" name="L399" href="#L399">399</a>         <strong class="jxr_keyword">return</strong> tests;
-<a class="jxr_linenumber" name="L400" href="#L400">400</a>     }
-<a class="jxr_linenumber" name="L401" href="#L401">401</a> 
-<a class="jxr_linenumber" name="L402" href="#L402">402</a>     <strong class="jxr_keyword">private</strong> String getNodeValue(Element parentElm, String nodeName, <strong class="jxr_keyword">boolean</strong> required) {
-<a class="jxr_linenumber" name="L403" href="#L403">403</a>         NodeList nodes = parentElm.getElementsByTagName(nodeName);
-<a class="jxr_linenumber" name="L404" href="#L404">404</a>         <strong class="jxr_keyword">if</strong> (nodes == <strong class="jxr_keyword">null</strong> || nodes.getLength() == 0) {
-<a class="jxr_linenumber" name="L405" href="#L405">405</a>             <strong class="jxr_keyword">if</strong> (required) {
-<a class="jxr_linenumber" name="L406" href="#L406">406</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Required tag is missing from the test-xml: "</span> + nodeName);
-<a class="jxr_linenumber" name="L407" href="#L407">407</a>             } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L408" href="#L408">408</a>                 <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
-<a class="jxr_linenumber" name="L409" href="#L409">409</a>             }
-<a class="jxr_linenumber" name="L410" href="#L410">410</a>         }
-<a class="jxr_linenumber" name="L411" href="#L411">411</a>         Node node = nodes.item(0);
-<a class="jxr_linenumber" name="L412" href="#L412">412</a>         <strong class="jxr_keyword">return</strong> parseTextNode(node);
-<a class="jxr_linenumber" name="L413" href="#L413">413</a>     }
-<a class="jxr_linenumber" name="L414" href="#L414">414</a> 
-<a class="jxr_linenumber" name="L415" href="#L415">415</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> String parseTextNode(Node exampleNode) {
-<a class="jxr_linenumber" name="L416" href="#L416">416</a>         StringBuffer buffer = <strong class="jxr_keyword">new</strong> StringBuffer();
-<a class="jxr_linenumber" name="L417" href="#L417">417</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; exampleNode.getChildNodes().getLength(); i++) {
-<a class="jxr_linenumber" name="L418" href="#L418">418</a>             Node node = exampleNode.getChildNodes().item(i);
-<a class="jxr_linenumber" name="L419" href="#L419">419</a>             <strong class="jxr_keyword">if</strong> (node.getNodeType() == Node.CDATA_SECTION_NODE
-<a class="jxr_linenumber" name="L420" href="#L420">420</a>                     || node.getNodeType() == Node.TEXT_NODE) {
-<a class="jxr_linenumber" name="L421" href="#L421">421</a>                 buffer.append(node.getNodeValue());
-<a class="jxr_linenumber" name="L422" href="#L422">422</a>             }
-<a class="jxr_linenumber" name="L423" href="#L423">423</a>         }
-<a class="jxr_linenumber" name="L424" href="#L424">424</a>         <strong class="jxr_keyword">return</strong> buffer.toString().trim();
-<a class="jxr_linenumber" name="L425" href="#L425">425</a>     }
-<a class="jxr_linenumber" name="L426" href="#L426">426</a> }
+<a class="jxr_linenumber" name="L219" href="#L219">219</a>             rules.start(ctx);
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>             p.getSourceCodeProcessor().processSourceCode(<strong class="jxr_keyword">new</strong> StringReader(code), <strong class="jxr_keyword">new</strong> RuleSets(rules), ctx);
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>             rules.end(ctx);
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>         } <strong class="jxr_keyword">catch</strong> (Exception e) {
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(e);
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>         }
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>     }
+<a class="jxr_linenumber" name="L226" href="#L226">226</a> 
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> runTestFromString(<a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a> test, Rule rule, Report report) {
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>         runTestFromString(test.getCode(), rule, report, test.getLanguageVersion(), test.isUseAuxClasspath());
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>     }
+<a class="jxr_linenumber" name="L230" href="#L230">230</a> 
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L232" href="#L232">232</a> <em class="jxr_javadoccomment">     * getResourceAsStream tries to find the XML file in weird locations if the</em>
+<a class="jxr_linenumber" name="L233" href="#L233">233</a> <em class="jxr_javadoccomment">     * ruleName includes the package, so we strip it here.</em>
+<a class="jxr_linenumber" name="L234" href="#L234">234</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>     <strong class="jxr_keyword">protected</strong> String getCleanRuleName(Rule rule) {
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>         String fullClassName = rule.getClass().getName();
+<a class="jxr_linenumber" name="L237" href="#L237">237</a>         <strong class="jxr_keyword">if</strong> (fullClassName.equals(rule.getName())) {
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>             <em class="jxr_comment">//We got the full class name, so we'll use the stripped name instead</em>
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>             String packageName = rule.getClass().getPackage().getName();
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>             <strong class="jxr_keyword">return</strong> fullClassName.substring(packageName.length()+1);
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>         } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>             <strong class="jxr_keyword">return</strong> rule.getName();  <em class="jxr_comment">//Test is using findRule, smart!</em>
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>         }
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>     }
+<a class="jxr_linenumber" name="L245" href="#L245">245</a> 
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L247" href="#L247">247</a> <em class="jxr_javadoccomment">     * Extract a set of tests from an XML file. The file should be</em>
+<a class="jxr_linenumber" name="L248" href="#L248">248</a> <em class="jxr_javadoccomment">     * ./xml/RuleName.xml relative to the test class. The format is defined in</em>
+<a class="jxr_linenumber" name="L249" href="#L249">249</a> <em class="jxr_javadoccomment">     * test-data.xsd.</em>
+<a class="jxr_linenumber" name="L250" href="#L250">250</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule) {
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>         String testsFileName = getCleanRuleName(rule);
+<a class="jxr_linenumber" name="L253" href="#L253">253</a> 
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>         <strong class="jxr_keyword">return</strong> extractTestsFromXml(rule, testsFileName);
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>     }
+<a class="jxr_linenumber" name="L256" href="#L256">256</a> 
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule, String testsFileName) {
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>         <strong class="jxr_keyword">return</strong> extractTestsFromXml(rule, testsFileName, <span class="jxr_string">"xml/"</span>);
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>     }
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L261" href="#L261">261</a> <em class="jxr_javadoccomment">     * Extract a set of tests from an XML file with the given name. The file should be</em>
+<a class="jxr_linenumber" name="L262" href="#L262">262</a> <em class="jxr_javadoccomment">     * ./xml/[testsFileName].xml relative to the test class. The format is defined in</em>
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> <em class="jxr_javadoccomment">     * test-data.xsd.</em>
+<a class="jxr_linenumber" name="L264" href="#L264">264</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>     <strong class="jxr_keyword">public</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] extractTestsFromXml(Rule rule, String testsFileName, String baseDirectory) {
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>         String testXmlFileName = baseDirectory + testsFileName + <span class="jxr_string">".xml"</span>;
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         InputStream inputStream = getClass().getResourceAsStream(testXmlFileName);
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>         <strong class="jxr_keyword">if</strong> (inputStream == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't find "</span> + testXmlFileName);
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>         }
+<a class="jxr_linenumber" name="L271" href="#L271">271</a> 
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>         Document doc;
+<a class="jxr_linenumber" name="L273" href="#L273">273</a>         <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>             doc = builder.parse(inputStream);
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>         } <strong class="jxr_keyword">catch</strong> (ParserConfigurationException pce) {
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>             pce.printStackTrace();
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + pce.getMessage());
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>         } <strong class="jxr_keyword">catch</strong> (FactoryConfigurationError fce) {
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>             fce.printStackTrace();
+<a class="jxr_linenumber" name="L281" href="#L281">281</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + fce.getMessage());
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>         } <strong class="jxr_keyword">catch</strong> (IOException ioe) {
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>             ioe.printStackTrace();
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + ioe.getMessage());
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>         } <strong class="jxr_keyword">catch</strong> (SAXException se) {
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>             se.printStackTrace();
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Couldn't parse "</span> + testXmlFileName + <span class="jxr_string">", due to: "</span> + se.getMessage());
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>         }
+<a class="jxr_linenumber" name="L289" href="#L289">289</a> 
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>         <strong class="jxr_keyword">return</strong> parseTests(rule, doc);
+<a class="jxr_linenumber" name="L291" href="#L291">291</a>     }
+<a class="jxr_linenumber" name="L292" href="#L292">292</a> 
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>     <strong class="jxr_keyword">private</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] parseTests(Rule rule, Document doc) {
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>         Element root = doc.getDocumentElement();
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>         NodeList testCodes = root.getElementsByTagName(<span class="jxr_string">"test-code"</span>);
+<a class="jxr_linenumber" name="L296" href="#L296">296</a> 
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>         <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[] tests = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>[testCodes.getLength()];
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; testCodes.getLength(); i++) {
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>             Element testCode = (Element)testCodes.item(i);
+<a class="jxr_linenumber" name="L300" href="#L300">300</a> 
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>             <strong class="jxr_keyword">boolean</strong> reinitializeRule = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L302" href="#L302">302</a>             Node reinitializeRuleAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"reinitializeRule"</span>);
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>             <strong class="jxr_keyword">if</strong> (reinitializeRuleAttribute != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>                 String reinitializeRuleValue = reinitializeRuleAttribute.getNodeValue();
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(reinitializeRuleValue) ||
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>                         <span class="jxr_string">"0"</span>.equalsIgnoreCase(reinitializeRuleValue)) {
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>                     reinitializeRule = false;
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>                 }
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>             }
+<a class="jxr_linenumber" name="L310" href="#L310">310</a> 
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>             <strong class="jxr_keyword">boolean</strong> isRegressionTest = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>             Node regressionTestAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"regressionTest"</span>);
+<a class="jxr_linenumber" name="L313" href="#L313">313</a>             <strong class="jxr_keyword">if</strong> (regressionTestAttribute != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>                 String reinitializeRuleValue = regressionTestAttribute.getNodeValue();
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(reinitializeRuleValue)) {
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>                     isRegressionTest = false;
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>                 }
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>             }
+<a class="jxr_linenumber" name="L319" href="#L319">319</a> 
+<a class="jxr_linenumber" name="L320" href="#L320">320</a>             <strong class="jxr_keyword">boolean</strong> isUseAuxClasspath = <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>             Node useAuxClasspathAttribute = testCode.getAttributes().getNamedItem(<span class="jxr_string">"useAuxClasspath"</span>);
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>             <strong class="jxr_keyword">if</strong> (useAuxClasspathAttribute != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L323" href="#L323">323</a>                 String useAuxClasspathValue = useAuxClasspathAttribute.getNodeValue();
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>                 <strong class="jxr_keyword">if</strong> (<span class="jxr_string">"false"</span>.equalsIgnoreCase(useAuxClasspathValue)) {
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>                     isUseAuxClasspath = false;
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>                 }
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>             }
+<a class="jxr_linenumber" name="L328" href="#L328">328</a> 
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>             NodeList ruleProperties = testCode.getElementsByTagName(<span class="jxr_string">"rule-property"</span>);
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>             Properties properties = <strong class="jxr_keyword">new</strong> Properties();
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>             <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; ruleProperties.getLength(); j++) {
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>                 Node ruleProperty = ruleProperties.item(j);
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>                 String propertyName = ruleProperty.getAttributes().getNamedItem(<span class="jxr_string">"name"</span>).getNodeValue();
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>                 properties.setProperty(propertyName, parseTextNode(ruleProperty));
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>             }
+<a class="jxr_linenumber" name="L336" href="#L336">336</a> 
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>             NodeList expectedMessagesNodes = testCode.getElementsByTagName(<span class="jxr_string">"expected-messages"</span>);
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>             List&lt;String&gt; messages = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>             <strong class="jxr_keyword">if</strong> (expectedMessagesNodes != <strong class="jxr_keyword">null</strong> &amp;&amp; expectedMessagesNodes.getLength() &gt; 0) {
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>                 Element item = (Element)expectedMessagesNodes.item(0);
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>                 NodeList messagesNodes = item.getElementsByTagName(<span class="jxr_string">"message"</span>);
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>                 <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; messagesNodes.getLength(); j++) {
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>                     messages.add(parseTextNode(messagesNodes.item(j)));
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>                 }
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>             }
+<a class="jxr_linenumber" name="L346" href="#L346">346</a> 
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>             NodeList expectedLineNumbersNodes = testCode.getElementsByTagName(<span class="jxr_string">"expected-linenumbers"</span>);
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>             List&lt;Integer&gt; expectedLineNumbers = <strong class="jxr_keyword">new</strong> ArrayList&lt;&gt;();
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>             <strong class="jxr_keyword">if</strong> (expectedLineNumbersNodes != <strong class="jxr_keyword">null</strong> &amp;&amp; expectedLineNumbersNodes.getLength() &gt; 0) {
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>                 Element item = (Element)expectedLineNumbersNodes.item(0);
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>                 String numbers = item.getTextContent();
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>                 <strong class="jxr_keyword">for</strong> (String n : numbers.split(<span class="jxr_string">" *, *"</span>)) {
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>                     expectedLineNumbers.add(Integer.valueOf(n));
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>                 }
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>             }
+<a class="jxr_linenumber" name="L356" href="#L356">356</a> 
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>             String code = getNodeValue(testCode, <span class="jxr_string">"code"</span>, false);
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>             <strong class="jxr_keyword">if</strong> (code == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>                 <em class="jxr_comment">//Should have a coderef</em>
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>                 NodeList coderefs = testCode.getElementsByTagName(<span class="jxr_string">"code-ref"</span>);
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>                 <strong class="jxr_keyword">if</strong> (coderefs.getLength()==0) {
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Required tag is missing from the test-xml. Supply either a code or a code-ref tag"</span>);
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>                 }
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>                 Node coderef = coderefs.item(0);
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>                 String referenceId = coderef.getAttributes().getNamedItem(<span class="jxr_string">"id"</span>).getNodeValue();
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>                 NodeList codeFragments = root.getElementsByTagName(<span class="jxr_string">"code-fragment"</span>);
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>                 <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> j = 0; j &lt; codeFragments.getLength(); j++) {
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>                     String fragmentId = codeFragments.item(j).getAttributes().getNamedItem(<span class="jxr_string">"id"</span>).getNodeValue();
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>                     <strong class="jxr_keyword">if</strong> (referenceId.equals(fragmentId)) {
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>                         code = parseTextNode(codeFragments.item(j));
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>                     }
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>                 }
+<a class="jxr_linenumber" name="L373" href="#L373">373</a> 
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>                 <strong class="jxr_keyword">if</strong> (code==<strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"No matching code fragment found for coderef"</span>);
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>                 }
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>             }
+<a class="jxr_linenumber" name="L378" href="#L378">378</a> 
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>             String description = getNodeValue(testCode, <span class="jxr_string">"description"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>             <strong class="jxr_keyword">int</strong> expectedProblems = Integer.parseInt(getNodeValue(testCode, <span class="jxr_string">"expected-problems"</span>, <strong class="jxr_keyword">true</strong>));
+<a class="jxr_linenumber" name="L381" href="#L381">381</a> 
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>             String languageVersionString = getNodeValue(testCode, <span class="jxr_string">"source-type"</span>, false);
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>             <strong class="jxr_keyword">if</strong> (languageVersionString == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>                 tests[i] = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>(code, description, expectedProblems, rule);
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>             } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>             	LanguageVersion languageVersion = LanguageRegistry.findLanguageVersionByTerseName(languageVersionString);
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>                 <strong class="jxr_keyword">if</strong> (languageVersion != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>                     tests[i] = <strong class="jxr_keyword">new</strong> <a href="../../../../net/sourceforge/pmd/testframework/TestDescriptor.html">TestDescriptor</a>(code, description, expectedProblems, rule, languageVersion);
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>                 } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>                     <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Unknown LanguageVersion for test: "</span> + languageVersionString);
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>                 }
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>             }
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>             tests[i].setReinitializeRule(reinitializeRule);
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>             tests[i].setRegressionTest(isRegressionTest);
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>             tests[i].setUseAuxClasspath(isUseAuxClasspath);
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>             tests[i].setExpectedMessages(messages);
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>             tests[i].setExpectedLineNumbers(expectedLineNumbers);
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>             tests[i].setProperties(properties);
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>             tests[i].setNumberInDocument(i);
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>         }
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>         <strong class="jxr_keyword">return</strong> tests;
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>     }
+<a class="jxr_linenumber" name="L403" href="#L403">403</a> 
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>     <strong class="jxr_keyword">private</strong> String getNodeValue(Element parentElm, String nodeName, <strong class="jxr_keyword">boolean</strong> required) {
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>         NodeList nodes = parentElm.getElementsByTagName(nodeName);
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>         <strong class="jxr_keyword">if</strong> (nodes == <strong class="jxr_keyword">null</strong> || nodes.getLength() == 0) {
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>             <strong class="jxr_keyword">if</strong> (required) {
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(<span class="jxr_string">"Required tag is missing from the test-xml: "</span> + nodeName);
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>             } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>                 <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>             }
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>         }
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>         Node node = nodes.item(0);
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>         <strong class="jxr_keyword">return</strong> parseTextNode(node);
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>     }
+<a class="jxr_linenumber" name="L416" href="#L416">416</a> 
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> String parseTextNode(Node exampleNode) {
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>         StringBuffer buffer = <strong class="jxr_keyword">new</strong> StringBuffer();
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = 0; i &lt; exampleNode.getChildNodes().getLength(); i++) {
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>             Node node = exampleNode.getChildNodes().item(i);
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>             <strong class="jxr_keyword">if</strong> (node.getNodeType() == Node.CDATA_SECTION_NODE
+<a class="jxr_linenumber" name="L422" href="#L422">422</a>                     || node.getNodeType() == Node.TEXT_NODE) {
+<a class="jxr_linenumber" name="L423" href="#L423">423</a>                 buffer.append(node.getNodeValue());
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>             }
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>         }
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>         <strong class="jxr_keyword">return</strong> buffer.toString().trim();
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>     }
+<a class="jxr_linenumber" name="L428" href="#L428">428</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2002&#x2013;2016 <a href="http://pmd.sourceforge.net/">InfoEther</a>. All rights reserved.</div>

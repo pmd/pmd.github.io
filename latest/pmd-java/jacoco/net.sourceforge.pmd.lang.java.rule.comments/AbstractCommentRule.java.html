@@ -186,43 +186,45 @@ public abstract class AbstractCommentRule extends AbstractJavaRule {
                 &amp;&amp; n1.getEndColumn() &lt; n2.getEndColumn());
 <span class="fc bfc" id="L187" title="All 2 branches covered.">        boolean isNotSameClass = node.getFirstParentOfType(ASTClassOrInterfaceBody.class) != n2</span>
                 .getFirstParentOfType(ASTClassOrInterfaceBody.class);
-<span class="fc bfc" id="L189" title="All 4 branches covered.">        return isNotWithinNode2 || isNotSameClass;</span>
+<span class="pc bpc" id="L189" title="1 of 6 branches missed.">        boolean isNodeWithinNode2 = (node.getEndLine() &lt; n2.getEndLine() || node.getEndLine() == n2.getEndLine()</span>
+                &amp;&amp; node.getEndColumn() &lt; n2.getEndColumn());
+<span class="fc bfc" id="L191" title="All 6 branches covered.">        return isNotWithinNode2 || isNotSameClass || isNodeWithinNode2;</span>
     }
 
     private boolean isCommentBefore(FormalComment n1, Node n2) {
-<span class="pc bpc" id="L193" title="2 of 6 branches missed.">        return n1.getEndLine() &lt; n2.getBeginLine() || n1.getEndLine() == n2.getBeginLine()</span>
+<span class="pc bpc" id="L195" title="2 of 6 branches missed.">        return n1.getEndLine() &lt; n2.getBeginLine() || n1.getEndLine() == n2.getBeginLine()</span>
                 &amp;&amp; n1.getEndColumn() &lt; n2.getBeginColumn();
     }
 
     protected SortedMap&lt;Integer, Node&gt; orderedCommentsAndDeclarations(ASTCompilationUnit cUnit) {
 
-<span class="fc" id="L199">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L201">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = new TreeMap&lt;&gt;();</span>
 
-<span class="fc" id="L201">        List&lt;ASTClassOrInterfaceDeclaration&gt; packageDecl = cUnit</span>
+<span class="fc" id="L203">        List&lt;ASTClassOrInterfaceDeclaration&gt; packageDecl = cUnit</span>
                 .findDescendantsOfType(ASTClassOrInterfaceDeclaration.class);
-<span class="fc" id="L203">        addDeclarations(itemsByLineNumber, packageDecl);</span>
+<span class="fc" id="L205">        addDeclarations(itemsByLineNumber, packageDecl);</span>
 
-<span class="fc" id="L205">        addDeclarations(itemsByLineNumber, cUnit.getComments());</span>
+<span class="fc" id="L207">        addDeclarations(itemsByLineNumber, cUnit.getComments());</span>
 
-<span class="fc" id="L207">        List&lt;ASTFieldDeclaration&gt; fields = cUnit.findDescendantsOfType(ASTFieldDeclaration.class);</span>
-<span class="fc" id="L208">        addDeclarations(itemsByLineNumber, fields);</span>
+<span class="fc" id="L209">        List&lt;ASTFieldDeclaration&gt; fields = cUnit.findDescendantsOfType(ASTFieldDeclaration.class);</span>
+<span class="fc" id="L210">        addDeclarations(itemsByLineNumber, fields);</span>
 
-<span class="fc" id="L210">        List&lt;ASTMethodDeclaration&gt; methods = cUnit.findDescendantsOfType(ASTMethodDeclaration.class);</span>
-<span class="fc" id="L211">        addDeclarations(itemsByLineNumber, methods);</span>
+<span class="fc" id="L212">        List&lt;ASTMethodDeclaration&gt; methods = cUnit.findDescendantsOfType(ASTMethodDeclaration.class);</span>
+<span class="fc" id="L213">        addDeclarations(itemsByLineNumber, methods);</span>
 
-<span class="fc" id="L213">        List&lt;ASTConstructorDeclaration&gt; constructors = cUnit.findDescendantsOfType(ASTConstructorDeclaration.class);</span>
-<span class="fc" id="L214">        addDeclarations(itemsByLineNumber, constructors);</span>
+<span class="fc" id="L215">        List&lt;ASTConstructorDeclaration&gt; constructors = cUnit.findDescendantsOfType(ASTConstructorDeclaration.class);</span>
+<span class="fc" id="L216">        addDeclarations(itemsByLineNumber, constructors);</span>
 
-<span class="fc" id="L216">        List&lt;ASTEnumDeclaration&gt; enumDecl = cUnit.findDescendantsOfType(ASTEnumDeclaration.class);</span>
-<span class="fc" id="L217">        addDeclarations(itemsByLineNumber, enumDecl);</span>
+<span class="fc" id="L218">        List&lt;ASTEnumDeclaration&gt; enumDecl = cUnit.findDescendantsOfType(ASTEnumDeclaration.class);</span>
+<span class="fc" id="L219">        addDeclarations(itemsByLineNumber, enumDecl);</span>
 
-<span class="fc" id="L219">        return itemsByLineNumber;</span>
+<span class="fc" id="L221">        return itemsByLineNumber;</span>
     }
 
     private void addDeclarations(SortedMap&lt;Integer, Node&gt; map, List&lt;? extends Node&gt; nodes) {
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        for (Node node : nodes) {</span>
-<span class="fc" id="L224">            map.put((node.getBeginLine() &lt;&lt; 16) + node.getBeginColumn(), node);</span>
-<span class="fc" id="L225">        }</span>
-<span class="fc" id="L226">    }</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        for (Node node : nodes) {</span>
+<span class="fc" id="L226">            map.put((node.getBeginLine() &lt;&lt; 16) + node.getBeginColumn(), node);</span>
+<span class="fc" id="L227">        }</span>
+<span class="fc" id="L228">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

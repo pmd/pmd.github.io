@@ -32,9 +32,7 @@ import net.sourceforge.pmd.util.CollectionUtil;
      * @return a copy of the property descriptors.
      */
     protected List&lt;PropertyDescriptor&lt;?&gt;&gt; copyPropertyDescriptors() {
-<span class="nc" id="L35">        List&lt;PropertyDescriptor&lt;?&gt;&gt; copy = new ArrayList&lt;&gt;(propertyDescriptors.size());</span>
-<span class="nc" id="L36">        copy.addAll(propertyDescriptors);</span>
-<span class="nc" id="L37">        return copy;</span>
+<span class="nc" id="L35">        return new ArrayList&lt;&gt;(propertyDescriptors);</span>
     }
 
     /**
@@ -43,17 +41,14 @@ import net.sourceforge.pmd.util.CollectionUtil;
      * @return a copy of the values
      */
     protected Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; copyPropertyValues() {
-<span class="nc" id="L46">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; copy = new HashMap&lt;&gt;(</span>
-                propertyValuesByDescriptor.size());
-<span class="nc" id="L48">        copy.putAll(propertyValuesByDescriptor);</span>
-<span class="nc" id="L49">        return copy;</span>
+<span class="nc" id="L44">        return new HashMap&lt;&gt;(propertyValuesByDescriptor);</span>
     }
 
     /**
      * {@inheritDoc}
      */
     public Set&lt;PropertyDescriptor&lt;?&gt;&gt; ignoredProperties() {
-<span class="nc" id="L56">        return Collections.emptySet();</span>
+<span class="nc" id="L51">        return Collections.emptySet();</span>
     }
 
     /**
@@ -61,16 +56,16 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     public void definePropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
         // Check to ensure the property does not already exist.
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; descriptor : propertyDescriptors) {</span>
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (descriptor.name().equals(propertyDescriptor.name())) {</span>
-<span class="nc" id="L66">                throw new IllegalArgumentException(&quot;There is already a PropertyDescriptor with name '&quot;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; descriptor : propertyDescriptors) {</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            if (descriptor.name().equals(propertyDescriptor.name())) {</span>
+<span class="nc" id="L61">                throw new IllegalArgumentException(&quot;There is already a PropertyDescriptor with name '&quot;</span>
                         + propertyDescriptor.name() + &quot;' defined on Rule &quot; + getName() + &quot;.&quot;);
             }
-<span class="fc" id="L69">        }</span>
-<span class="fc" id="L70">        propertyDescriptors.add(propertyDescriptor);</span>
+<span class="fc" id="L64">        }</span>
+<span class="fc" id="L65">        propertyDescriptors.add(propertyDescriptor);</span>
         // Sort in UI order
-<span class="fc" id="L72">        Collections.sort(propertyDescriptors);</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L67">        Collections.sort(propertyDescriptors);</span>
+<span class="fc" id="L68">    }</span>
 
     /**
      * Gets the name of the property source. This is e.g. the rule name or the report name.
@@ -83,12 +78,12 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     @Override
     public PropertyDescriptor&lt;?&gt; getPropertyDescriptor(String name) {
-<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : propertyDescriptors) {</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (name.equals(propertyDescriptor.name())) {</span>
-<span class="fc" id="L88">                return propertyDescriptor;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : propertyDescriptors) {</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            if (name.equals(propertyDescriptor.name())) {</span>
+<span class="fc" id="L83">                return propertyDescriptor;</span>
             }
-<span class="fc" id="L90">        }</span>
-<span class="fc" id="L91">        return null;</span>
+<span class="fc" id="L85">        }</span>
+<span class="fc" id="L86">        return null;</span>
     }
 
     /**
@@ -97,11 +92,11 @@ import net.sourceforge.pmd.util.CollectionUtil;
     @Override
     public boolean hasDescriptor(PropertyDescriptor&lt;?&gt; descriptor) {
 
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (propertyValuesByDescriptor.isEmpty()) {</span>
-<span class="fc" id="L101">            propertyValuesByDescriptor = getPropertiesByPropertyDescriptor();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (propertyValuesByDescriptor.isEmpty()) {</span>
+<span class="fc" id="L96">            propertyValuesByDescriptor = getPropertiesByPropertyDescriptor();</span>
         }
 
-<span class="fc" id="L104">        return propertyValuesByDescriptor.containsKey(descriptor);</span>
+<span class="fc" id="L99">        return propertyValuesByDescriptor.containsKey(descriptor);</span>
     }
 
     /**
@@ -109,7 +104,7 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     @Override
     public List&lt;PropertyDescriptor&lt;?&gt;&gt; getPropertyDescriptors() {
-<span class="fc" id="L112">        return propertyDescriptors;</span>
+<span class="fc" id="L107">        return propertyDescriptors;</span>
     }
 
     /**
@@ -117,14 +112,14 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     @Override
     public &lt;T&gt; T getProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor) {
-<span class="fc" id="L120">        checkValidPropertyDescriptor(propertyDescriptor);</span>
-<span class="fc" id="L121">        T result = propertyDescriptor.defaultValue();</span>
-<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (propertyValuesByDescriptor.containsKey(propertyDescriptor)) {</span>
+<span class="fc" id="L115">        checkValidPropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L116">        T result = propertyDescriptor.defaultValue();</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (propertyValuesByDescriptor.containsKey(propertyDescriptor)) {</span>
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L124">            T value = (T) propertyValuesByDescriptor.get(propertyDescriptor);</span>
-<span class="fc" id="L125">            result = value;</span>
+<span class="fc" id="L119">            T value = (T) propertyValuesByDescriptor.get(propertyDescriptor);</span>
+<span class="fc" id="L120">            result = value;</span>
         }
-<span class="fc" id="L127">        return result;</span>
+<span class="fc" id="L122">        return result;</span>
     }
 
     /**
@@ -132,39 +127,39 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     @Override
     public &lt;T&gt; void setProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor, T value) {
-<span class="fc" id="L135">        checkValidPropertyDescriptor(propertyDescriptor);</span>
-<span class="fc" id="L136">        propertyValuesByDescriptor.put(propertyDescriptor, value);</span>
-<span class="fc" id="L137">    }</span>
+<span class="fc" id="L130">        checkValidPropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L131">        propertyValuesByDescriptor.put(propertyDescriptor, value);</span>
+<span class="fc" id="L132">    }</span>
 
     private void checkValidPropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (!propertyDescriptors.contains(propertyDescriptor)) {</span>
-<span class="nc" id="L141">            throw new IllegalArgumentException(&quot;Property descriptor not defined for Rule &quot; + getName() + &quot;: &quot;</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (!propertyDescriptors.contains(propertyDescriptor)) {</span>
+<span class="nc" id="L136">            throw new IllegalArgumentException(&quot;Property descriptor not defined for Rule &quot; + getName() + &quot;: &quot;</span>
                     + propertyDescriptor);
         }
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L139">    }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; getPropertiesByPropertyDescriptor() {
-<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        if (propertyDescriptors.isEmpty()) {</span>
-<span class="nc" id="L152">            return Collections.emptyMap();</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (propertyDescriptors.isEmpty()) {</span>
+<span class="nc" id="L147">            return Collections.emptyMap();</span>
         }
 
-<span class="fc" id="L155">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor = new HashMap&lt;&gt;(</span>
+<span class="fc" id="L150">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor = new HashMap&lt;&gt;(</span>
                 propertyDescriptors.size());
         // Fill with existing explicitly values
-<span class="fc" id="L158">        propertiesByPropertyDescriptor.putAll(this.propertyValuesByDescriptor);</span>
+<span class="fc" id="L153">        propertiesByPropertyDescriptor.putAll(this.propertyValuesByDescriptor);</span>
 
         // Add default values for anything not yet set
-<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : this.propertyDescriptors) {</span>
-<span class="fc bfc" id="L162" title="All 2 branches covered.">            if (!propertiesByPropertyDescriptor.containsKey(propertyDescriptor)) {</span>
-<span class="fc" id="L163">                propertiesByPropertyDescriptor.put(propertyDescriptor, propertyDescriptor.defaultValue());</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : this.propertyDescriptors) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (!propertiesByPropertyDescriptor.containsKey(propertyDescriptor)) {</span>
+<span class="fc" id="L158">                propertiesByPropertyDescriptor.put(propertyDescriptor, propertyDescriptor.defaultValue());</span>
             }
-<span class="fc" id="L165">        }</span>
+<span class="fc" id="L160">        }</span>
 
-<span class="fc" id="L167">        return propertiesByPropertyDescriptor;</span>
+<span class="fc" id="L162">        return propertiesByPropertyDescriptor;</span>
     }
 
     /**
@@ -173,21 +168,21 @@ import net.sourceforge.pmd.util.CollectionUtil;
     @Override
     public boolean usesDefaultValues() {
 
-<span class="nc" id="L176">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; valuesByProperty = getPropertiesByPropertyDescriptor();</span>
-<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (valuesByProperty.isEmpty()) {</span>
-<span class="nc" id="L178">            return true;</span>
+<span class="nc" id="L171">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; valuesByProperty = getPropertiesByPropertyDescriptor();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (valuesByProperty.isEmpty()) {</span>
+<span class="nc" id="L173">            return true;</span>
         }
 
-<span class="nc" id="L181">        Iterator&lt;Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt;&gt; iter = valuesByProperty.entrySet().iterator();</span>
+<span class="nc" id="L176">        Iterator&lt;Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt;&gt; iter = valuesByProperty.entrySet().iterator();</span>
 
-<span class="nc bnc" id="L183" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
-<span class="nc" id="L184">            Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry = iter.next();</span>
-<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (!CollectionUtil.areEqual(entry.getKey().defaultValue(), entry.getValue())) {</span>
-<span class="nc" id="L186">                return false;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
+<span class="nc" id="L179">            Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry = iter.next();</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">            if (!CollectionUtil.areEqual(entry.getKey().defaultValue(), entry.getValue())) {</span>
+<span class="nc" id="L181">                return false;</span>
             }
-<span class="nc" id="L188">        }</span>
+<span class="nc" id="L183">        }</span>
 
-<span class="nc" id="L190">        return true;</span>
+<span class="nc" id="L185">        return true;</span>
     }
 
     /**
@@ -195,15 +190,15 @@ import net.sourceforge.pmd.util.CollectionUtil;
      */
     @Override
     public void useDefaultValueFor(PropertyDescriptor&lt;?&gt; desc) {
-<span class="nc" id="L198">        propertyValuesByDescriptor.remove(desc);</span>
-<span class="nc" id="L199">    }</span>
+<span class="nc" id="L193">        propertyValuesByDescriptor.remove(desc);</span>
+<span class="nc" id="L194">    }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public String dysfunctionReason() {
-<span class="fc" id="L206">        return null;</span>
+<span class="fc" id="L201">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

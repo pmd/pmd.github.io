@@ -4,179 +4,120 @@
 package net.sourceforge.pmd.lang.java.rule.unusedcode;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import net.sourceforge.pmd.lang.ast.Node;
-import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBody;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumBody;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumConstant;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
-import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTName;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
 import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
 import net.sourceforge.pmd.lang.java.ast.AccessNode;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
-import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.rule.AbstractLombokAwareRule;
 import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
-<span class="fc" id="L33">public class UnusedPrivateFieldRule extends AbstractJavaRule {</span>
-
-<span class="fc" id="L35">    private boolean lombokImported = false;</span>
-    private static final String LOMBOK_PACKAGE = &quot;lombok&quot;;
-<span class="fc" id="L37">    private static final Set&lt;String&gt; LOMBOK_ANNOTATIONS = new HashSet&lt;&gt;();</span>
-    static {
-<span class="fc" id="L39">        LOMBOK_ANNOTATIONS.add(&quot;Data&quot;);</span>
-<span class="fc" id="L40">        LOMBOK_ANNOTATIONS.add(&quot;Getter&quot;);</span>
-<span class="fc" id="L41">        LOMBOK_ANNOTATIONS.add(&quot;Setter&quot;);</span>
-<span class="fc" id="L42">        LOMBOK_ANNOTATIONS.add(&quot;Value&quot;);</span>
-<span class="fc" id="L43">        LOMBOK_ANNOTATIONS.add(&quot;RequiredArgsConstructor&quot;);</span>
-<span class="fc" id="L44">        LOMBOK_ANNOTATIONS.add(&quot;AllArgsConstructor&quot;);</span>
-<span class="fc" id="L45">        LOMBOK_ANNOTATIONS.add(&quot;Builder&quot;);</span>
-<span class="fc" id="L46">    }</span>
-
-    @Override
-    public Object visit(ASTCompilationUnit node, Object data) {
-<span class="fc" id="L50">        lombokImported = false;</span>
-<span class="fc" id="L51">        return super.visit(node, data);</span>
-    }
-
-    @Override
-    public Object visit(ASTImportDeclaration node, Object data) {
-<span class="fc" id="L56">        ASTName name = node.getFirstChildOfType(ASTName.class);</span>
-<span class="pc bpc" id="L57" title="3 of 8 branches missed.">        if (!lombokImported &amp;&amp; name != null &amp;&amp; name.getImage() != null &amp; name.getImage().startsWith(LOMBOK_PACKAGE)) {</span>
-<span class="fc" id="L58">            lombokImported = true;</span>
-        }
-<span class="fc" id="L60">        return super.visit(node, data);</span>
-    }
+<span class="fc" id="L27">public class UnusedPrivateFieldRule extends AbstractLombokAwareRule {</span>
 
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc" id="L65">        boolean classHasLombok = hasLombokAnnotation(node);</span>
+<span class="fc" id="L31">        boolean classHasLombok = hasLombokAnnotation(node);</span>
 
-<span class="fc" id="L67">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = node.getScope().getDeclarations(</span>
+<span class="fc" id="L33">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = node.getScope().getDeclarations(</span>
                 VariableNameDeclaration.class);
-<span class="fc bfc" id="L69" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
-<span class="fc" id="L70">            VariableNameDeclaration decl = entry.getKey();</span>
-<span class="fc" id="L71">            AccessNode accessNodeParent = decl.getAccessNodeParent();</span>
-<span class="fc bfc" id="L72" title="All 8 branches covered.">            if (!accessNodeParent.isPrivate() || isOK(decl.getImage()) || classHasLombok || hasLombokAnnotation(accessNodeParent)) {</span>
-<span class="fc" id="L73">                continue;</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
+<span class="fc" id="L36">            VariableNameDeclaration decl = entry.getKey();</span>
+<span class="fc" id="L37">            AccessNode accessNodeParent = decl.getAccessNodeParent();</span>
+<span class="fc bfc" id="L38" title="All 8 branches covered.">            if (!accessNodeParent.isPrivate() || isOK(decl.getImage()) || classHasLombok || hasLombokAnnotation(accessNodeParent)) {</span>
+<span class="fc" id="L39">                continue;</span>
             }
-<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (!actuallyUsed(entry.getValue())) {</span>
-<span class="fc bfc" id="L76" title="All 4 branches covered.">                if (!usedInOuterClass(node, decl) &amp;&amp; !usedInOuterEnum(node, decl)) {</span>
-<span class="fc" id="L77">                    addViolation(data, decl.getNode(), decl.getImage());</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            if (!actuallyUsed(entry.getValue())) {</span>
+<span class="fc bfc" id="L42" title="All 4 branches covered.">                if (!usedInOuterClass(node, decl) &amp;&amp; !usedInOuterEnum(node, decl)) {</span>
+<span class="fc" id="L43">                    addViolation(data, decl.getNode(), decl.getImage());</span>
                 }
             }
-<span class="fc" id="L80">        }</span>
-<span class="fc" id="L81">        return super.visit(node, data);</span>
-    }
-
-    private boolean hasLombokAnnotation(Node node) {
-<span class="fc" id="L85">        boolean result = false;</span>
-<span class="fc" id="L86">        Node parent = node.jjtGetParent();</span>
-<span class="fc" id="L87">        List&lt;ASTAnnotation&gt; annotations = parent.findChildrenOfType(ASTAnnotation.class);</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (ASTAnnotation annotation : annotations) {</span>
-<span class="fc" id="L89">            ASTName name = annotation.getFirstDescendantOfType(ASTName.class);</span>
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            if (name != null) {</span>
-<span class="fc" id="L91">                String annotationName = name.getImage();</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">                if (lombokImported) {</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">                    if (LOMBOK_ANNOTATIONS.contains(annotationName)) {</span>
-<span class="fc" id="L94">                        result = true;</span>
-                    }
-                } else {
-<span class="fc bfc" id="L97" title="All 2 branches covered.">                    if (annotationName.startsWith(LOMBOK_PACKAGE + &quot;.&quot;)) {</span>
-<span class="fc" id="L98">                        String shortName = annotationName.substring(LOMBOK_PACKAGE.length() + 1);</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                        if (LOMBOK_ANNOTATIONS.contains(shortName)) {</span>
-<span class="fc" id="L100">                            result = true;</span>
-                        }
-                    }
-                }
-            }
-<span class="fc" id="L105">        }</span>
-<span class="fc" id="L106">        return result;</span>
+<span class="fc" id="L46">        }</span>
+<span class="fc" id="L47">        return super.visit(node, data);</span>
     }
 
     private boolean usedInOuterEnum(ASTClassOrInterfaceDeclaration node, NameDeclaration decl) {
-<span class="fc" id="L110">        List&lt;ASTEnumDeclaration&gt; outerEnums = node.getParentsOfType(ASTEnumDeclaration.class);</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (ASTEnumDeclaration outerEnum : outerEnums) {</span>
-<span class="fc" id="L112">            ASTEnumBody enumBody = outerEnum.getFirstChildOfType(ASTEnumBody.class);</span>
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (usedInOuter(decl, enumBody)) {</span>
-<span class="fc" id="L114">                return true;</span>
+<span class="fc" id="L51">        List&lt;ASTEnumDeclaration&gt; outerEnums = node.getParentsOfType(ASTEnumDeclaration.class);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (ASTEnumDeclaration outerEnum : outerEnums) {</span>
+<span class="fc" id="L53">            ASTEnumBody enumBody = outerEnum.getFirstChildOfType(ASTEnumBody.class);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            if (usedInOuter(decl, enumBody)) {</span>
+<span class="fc" id="L55">                return true;</span>
             }
-<span class="nc" id="L116">        }</span>
-<span class="fc" id="L117">        return false;</span>
+<span class="nc" id="L57">        }</span>
+<span class="fc" id="L58">        return false;</span>
     }
 
     /**
      * Find out whether the variable is used in an outer class
      */
     private boolean usedInOuterClass(ASTClassOrInterfaceDeclaration node, NameDeclaration decl) {
-<span class="fc" id="L124">        List&lt;ASTClassOrInterfaceDeclaration&gt; outerClasses = node.getParentsOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L125" title="All 2 branches covered.">        for (ASTClassOrInterfaceDeclaration outerClass : outerClasses) {</span>
-<span class="fc" id="L126">            ASTClassOrInterfaceBody classOrInterfaceBody = outerClass.getFirstChildOfType(ASTClassOrInterfaceBody.class);</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">            if (usedInOuter(decl, classOrInterfaceBody)) {</span>
-<span class="fc" id="L128">                return true;</span>
+<span class="fc" id="L65">        List&lt;ASTClassOrInterfaceDeclaration&gt; outerClasses = node.getParentsOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (ASTClassOrInterfaceDeclaration outerClass : outerClasses) {</span>
+<span class="fc" id="L67">            ASTClassOrInterfaceBody classOrInterfaceBody = outerClass.getFirstChildOfType(ASTClassOrInterfaceBody.class);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (usedInOuter(decl, classOrInterfaceBody)) {</span>
+<span class="fc" id="L69">                return true;</span>
             }
-<span class="fc" id="L130">        }</span>
-<span class="fc" id="L131">        return false;</span>
+<span class="fc" id="L71">        }</span>
+<span class="fc" id="L72">        return false;</span>
     }
 
     private boolean usedInOuter(NameDeclaration decl, JavaNode body) {
-<span class="fc" id="L135">        List&lt;ASTClassOrInterfaceBodyDeclaration&gt; classOrInterfaceBodyDeclarations = body</span>
+<span class="fc" id="L76">        List&lt;ASTClassOrInterfaceBodyDeclaration&gt; classOrInterfaceBodyDeclarations = body</span>
                 .findChildrenOfType(ASTClassOrInterfaceBodyDeclaration.class);
-<span class="fc" id="L137">        List&lt;ASTEnumConstant&gt; enumConstants = body</span>
+<span class="fc" id="L78">        List&lt;ASTEnumConstant&gt; enumConstants = body</span>
                 .findChildrenOfType(ASTEnumConstant.class);
-<span class="fc" id="L139">        List&lt;JavaNode&gt; nodes = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L140">        nodes.addAll(classOrInterfaceBodyDeclarations);</span>
-<span class="fc" id="L141">        nodes.addAll(enumConstants);</span>
+<span class="fc" id="L80">        List&lt;JavaNode&gt; nodes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L81">        nodes.addAll(classOrInterfaceBodyDeclarations);</span>
+<span class="fc" id="L82">        nodes.addAll(enumConstants);</span>
 
-<span class="fc bfc" id="L143" title="All 2 branches covered.">        for (JavaNode node : nodes) {</span>
-<span class="fc" id="L144">            List&lt;ASTPrimarySuffix&gt; primarySuffixes = node.findDescendantsOfType(ASTPrimarySuffix.class);</span>
-<span class="fc bfc" id="L145" title="All 2 branches covered.">            for (ASTPrimarySuffix primarySuffix : primarySuffixes) {</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                if (decl.getImage().equals(primarySuffix.getImage())) {</span>
-<span class="nc" id="L147">                    return true; // No violation</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (JavaNode node : nodes) {</span>
+<span class="fc" id="L85">            List&lt;ASTPrimarySuffix&gt; primarySuffixes = node.findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            for (ASTPrimarySuffix primarySuffix : primarySuffixes) {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                if (decl.getImage().equals(primarySuffix.getImage())) {</span>
+<span class="nc" id="L88">                    return true; // No violation</span>
                 }
-<span class="fc" id="L149">            }</span>
+<span class="fc" id="L90">            }</span>
 
-<span class="fc" id="L151">            List&lt;ASTPrimaryPrefix&gt; primaryPrefixes = node.findDescendantsOfType(ASTPrimaryPrefix.class);</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">            for (ASTPrimaryPrefix primaryPrefix : primaryPrefixes) {</span>
-<span class="fc" id="L153">                ASTName name = primaryPrefix.getFirstDescendantOfType(ASTName.class);</span>
+<span class="fc" id="L92">            List&lt;ASTPrimaryPrefix&gt; primaryPrefixes = node.findDescendantsOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            for (ASTPrimaryPrefix primaryPrefix : primaryPrefixes) {</span>
+<span class="fc" id="L94">                ASTName name = primaryPrefix.getFirstDescendantOfType(ASTName.class);</span>
 
-<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (name != null) {</span>
-<span class="fc bfc" id="L156" title="All 2 branches covered.">                    for (String id : name.getImage().split(&quot;\\.&quot;)) {</span>
-<span class="fc bfc" id="L157" title="All 2 branches covered.">                        if (id.equals(decl.getImage())) {</span>
-<span class="fc" id="L158">                            return true; // No violation</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                if (name != null) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                    for (String id : name.getImage().split(&quot;\\.&quot;)) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                        if (id.equals(decl.getImage())) {</span>
+<span class="fc" id="L99">                            return true; // No violation</span>
                         }
                     }
                 }
-<span class="fc" id="L162">            }</span>
-<span class="fc" id="L163">        }</span>
-<span class="fc" id="L164">        return false;</span>
+<span class="fc" id="L103">            }</span>
+<span class="fc" id="L104">        }</span>
+<span class="fc" id="L105">        return false;</span>
     }
 
     private boolean actuallyUsed(List&lt;NameOccurrence&gt; usages) {
-<span class="fc bfc" id="L168" title="All 2 branches covered.">        for (NameOccurrence nameOccurrence : usages) {</span>
-<span class="fc" id="L169">            JavaNameOccurrence jNameOccurrence = (JavaNameOccurrence) nameOccurrence;</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            if (!jNameOccurrence.isOnLeftHandSide()) {</span>
-<span class="fc" id="L171">                return true;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (NameOccurrence nameOccurrence : usages) {</span>
+<span class="fc" id="L110">            JavaNameOccurrence jNameOccurrence = (JavaNameOccurrence) nameOccurrence;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (!jNameOccurrence.isOnLeftHandSide()) {</span>
+<span class="fc" id="L112">                return true;</span>
             }
-<span class="fc" id="L173">        }</span>
+<span class="fc" id="L114">        }</span>
 
-<span class="fc" id="L175">        return false;</span>
+<span class="fc" id="L116">        return false;</span>
     }
 
     private boolean isOK(String image) {
-<span class="pc bpc" id="L179" title="2 of 6 branches missed.">        return image.equals(&quot;serialVersionUID&quot;) || image.equals(&quot;serialPersistentFields&quot;) || image.equals(&quot;IDENT&quot;);</span>
+<span class="pc bpc" id="L120" title="2 of 6 branches missed.">        return image.equals(&quot;serialVersionUID&quot;) || image.equals(&quot;serialPersistentFields&quot;) || image.equals(&quot;IDENT&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

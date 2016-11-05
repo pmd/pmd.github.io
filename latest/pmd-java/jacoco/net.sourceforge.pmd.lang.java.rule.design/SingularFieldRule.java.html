@@ -19,16 +19,16 @@ import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTSynchronizedStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
-import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
-import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+import net.sourceforge.pmd.lang.java.rule.AbstractLombokAwareRule;
 import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
 /**
  * @author Eric Olander
  * @author Wouter Zelle
  * @since Created on April 17, 2005, 9:49 PM
  */
-public class SingularFieldRule extends AbstractJavaRule {
+public class SingularFieldRule extends AbstractLombokAwareRule {
 
 	/**
 	 * Restore old behavior by setting both properties to true, which will result in many false positives
@@ -42,14 +42,14 @@ public class SingularFieldRule extends AbstractJavaRule {
 <span class="fc" id="L42">	definePropertyDescriptor(CHECK_INNER_CLASSES);</span>
 <span class="fc" id="L43">	definePropertyDescriptor(DISALLOW_NOT_ASSIGNMENT);</span>
 <span class="fc" id="L44">    }</span>
-    
+
     @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
     @Override
     public Object visit(ASTFieldDeclaration node, Object data) {
 <span class="fc" id="L49">    	boolean checkInnerClasses = getProperty(CHECK_INNER_CLASSES);</span>
 <span class="fc" id="L50">    	boolean disallowNotAssignment = getProperty(DISALLOW_NOT_ASSIGNMENT);</span>
 
-<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (node.isPrivate() &amp;&amp; !node.isStatic()) {</span>
+<span class="fc bfc" id="L52" title="All 8 branches covered.">        if (node.isPrivate() &amp;&amp; !node.isStatic()  &amp;&amp; !hasClassLombokAnnotation() &amp;&amp; !hasLombokAnnotation(node)) {</span>
 <span class="fc bfc" id="L53" title="All 2 branches covered.">            for (ASTVariableDeclarator declarator: node.findChildrenOfType(ASTVariableDeclarator.class)) {</span>
 <span class="fc" id="L54">        	ASTVariableDeclaratorId declaration = (ASTVariableDeclaratorId) declarator.jjtGetChild(0);</span>
 <span class="fc" id="L55">                List&lt;NameOccurrence&gt; usages = declaration.getUsages();</span>

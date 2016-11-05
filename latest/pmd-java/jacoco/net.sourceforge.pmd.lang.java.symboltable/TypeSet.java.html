@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.sourceforge.pmd.lang.java.typeresolution.PMDASMClassLoader;
 import net.sourceforge.pmd.util.ClasspathClassLoader;
@@ -21,35 +22,35 @@ public class TypeSet {
     private final PMDASMClassLoader pmdClassLoader;
     private boolean hasAuxclasspath;
     private String pkg;
-<span class="fc" id="L24">    private Set&lt;String&gt; imports = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L25">    private List&lt;Resolver&gt; resolvers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L25">    private Set&lt;String&gt; imports = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L26">    private List&lt;Resolver&gt; resolvers = new ArrayList&lt;&gt;();</span>
 
     /**
      * The {@link TypeSet} provides type resolution for the symbol facade.
      */
     public TypeSet() {
-<span class="fc" id="L31">        this(TypeSet.class.getClassLoader());</span>
-<span class="fc" id="L32">    }</span>
+<span class="fc" id="L32">        this(TypeSet.class.getClassLoader());</span>
+<span class="fc" id="L33">    }</span>
 
     /**
      * The {@link TypeSet} provides type resolution for the symbol facade.
      * @param classLoader the class loader to use to search classes (could be an auxiliary class path)
      */
-<span class="fc" id="L38">    public TypeSet(ClassLoader classLoader) {</span>
-<span class="fc" id="L39">        ClassLoader cl = classLoader;</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (cl == null) {</span>
-<span class="fc" id="L41">            cl = TypeSet.class.getClassLoader();</span>
+<span class="fc" id="L39">    public TypeSet(ClassLoader classLoader) {</span>
+<span class="fc" id="L40">        ClassLoader cl = classLoader;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        if (cl == null) {</span>
+<span class="fc" id="L42">            cl = TypeSet.class.getClassLoader();</span>
         }
-<span class="fc" id="L43">        hasAuxclasspath = cl instanceof ClasspathClassLoader;</span>
-<span class="fc" id="L44">        pmdClassLoader = PMDASMClassLoader.getInstance(cl);</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L44">        hasAuxclasspath = cl instanceof ClasspathClassLoader;</span>
+<span class="fc" id="L45">        pmdClassLoader = PMDASMClassLoader.getInstance(cl);</span>
+<span class="fc" id="L46">    }</span>
 
     /**
      * Whether the classloader is using the auxclasspath or not.
      * @return &lt;code&gt;true&lt;/code&gt; if the classloader is using the auxclasspath feature
      */
     public boolean hasAuxclasspath() {
-<span class="fc" id="L52">        return hasAuxclasspath;</span>
+<span class="fc" id="L53">        return hasAuxclasspath;</span>
     }
 
     /**
@@ -67,6 +68,15 @@ public class TypeSet {
          * @throws ClassNotFoundException if the class couldn't be found
          */
         Class&lt;?&gt; resolve(String name) throws ClassNotFoundException;
+
+        /**
+         * Checks if the given class could be resolved by this resolver.
+         * Notice, that a resolver's ability to resolve a class does not imply
+         * that the class will actually be found and resolved.
+         * @param name the name of the class, might be fully classified or not.
+         * @return whether the class can be resolved
+         */
+        boolean couldResolve(String name);
     }
 
     /**
@@ -76,13 +86,22 @@ public class TypeSet {
     public abstract static class AbstractResolver implements Resolver {
         /** the class loader. */
         protected final PMDASMClassLoader pmdClassLoader;
+
         /**
          * Creates a new AbstractResolver that uses the given class loader.
          * @param pmdClassLoader the class loader to use
          */
-<span class="fc" id="L83">        public AbstractResolver(PMDASMClassLoader pmdClassLoader) {</span>
-<span class="fc" id="L84">            this.pmdClassLoader = pmdClassLoader;</span>
-<span class="fc" id="L85">        }</span>
+<span class="fc" id="L94">        public AbstractResolver(final PMDASMClassLoader pmdClassLoader) {</span>
+<span class="fc" id="L95">            this.pmdClassLoader = pmdClassLoader;</span>
+<span class="fc" id="L96">        }</span>
+
+        public boolean couldResolve(final String name) {
+            /*
+             * Resolvers based on this one, will attempt to load the class from
+             * the class loader, so ask him
+             */
+<span class="fc" id="L103">            return pmdClassLoader.couldResolve(name);</span>
+        }
     }
 
     /**
@@ -90,27 +109,44 @@ public class TypeSet {
      * explicit import statements.
      */
     public static class ExplicitImportResolver extends AbstractResolver {
-        private Set&lt;String&gt; importStmts;
+        private Map&lt;String, String&gt; importStmts;
+
         /**
          * Creates a new {@link ExplicitImportResolver}.
          * @param pmdClassLoader the class loader to use.
          * @param importStmts the import statements
          */
         public ExplicitImportResolver(PMDASMClassLoader pmdClassLoader, Set&lt;String&gt; importStmts) {
-<span class="fc" id="L100">            super(pmdClassLoader);</span>
-<span class="fc" id="L101">            this.importStmts = importStmts;</span>
-<span class="fc" id="L102">        }</span>
+<span class="fc" id="L120">            super(pmdClassLoader);</span>
+            
+            // unfold imports, to store both FQ and unqualified names mapped to the FQ name
+<span class="fc" id="L123">            this.importStmts = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            for (final String stmt : importStmts) {</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                if (stmt.endsWith(&quot;*&quot;)) {</span>
+<span class="fc" id="L126">                    continue;</span>
+                }
+
+<span class="fc" id="L129">                this.importStmts.put(stmt, stmt);</span>
+<span class="fc" id="L130">                final int lastDotIdx = stmt.lastIndexOf('.');</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                if (lastDotIdx != -1) {</span>
+<span class="fc" id="L132">                    this.importStmts.put(stmt.substring(lastDotIdx + 1), stmt);</span>
+                }
+<span class="fc" id="L134">            }</span>
+<span class="fc" id="L135">        }</span>
+
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (name == null) {</span>
-<span class="fc" id="L106">                throw new ClassNotFoundException();</span>
+<span class="fc" id="L139">            final String fqName = importStmts.get(name);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            if (fqName != null) {</span>
+<span class="fc" id="L141">                return pmdClassLoader.loadClass(fqName);</span>
             }
-<span class="fc bfc" id="L108" title="All 2 branches covered.">            for (String importStmt : importStmts) {</span>
-<span class="fc bfc" id="L109" title="All 2 branches covered.">                if (importStmt.endsWith(name)) {</span>
-<span class="fc" id="L110">                    return pmdClassLoader.loadClass(importStmt);</span>
-                }
-<span class="fc" id="L112">            }</span>
-<span class="fc" id="L113">            throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+
+<span class="fc" id="L144">            throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L149">            return importStmts.containsKey(name);</span>
         }
     }
 
@@ -119,18 +155,25 @@ public class TypeSet {
      */
     public static class CurrentPackageResolver extends AbstractResolver {
         private String pkg;
+
         /**
          * Creates a new {@link CurrentPackageResolver}
          * @param pmdClassLoader the class loader to use
          * @param pkg the package name
          */
         public CurrentPackageResolver(PMDASMClassLoader pmdClassLoader, String pkg) {
-<span class="fc" id="L128">            super(pmdClassLoader);</span>
-<span class="fc" id="L129">            this.pkg = pkg;</span>
-<span class="fc" id="L130">        }</span>
+<span class="fc" id="L165">            super(pmdClassLoader);</span>
+<span class="fc" id="L166">            this.pkg = pkg;</span>
+<span class="fc" id="L167">        }</span>
+
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc" id="L133">            return pmdClassLoader.loadClass(pkg + '.' + name);</span>
+<span class="fc" id="L171">            return pmdClassLoader.loadClass(pkg + '.' + name);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L176">        	return super.couldResolve(pkg + '.' + name);</span>
         }
     }
 
@@ -139,16 +182,41 @@ public class TypeSet {
      */
     // TODO cite the JLS section on implicit imports
     public static class ImplicitImportResolver extends AbstractResolver {
+        /*
+         * They aren't so many to bother about memory, but are used all the time,
+         * so we worry about performance. On average, you can expect this cache to have ~90% hit ratio
+         * unless abusing star imports (import on demand)
+         */
+<span class="fc" id="L190">        private static final ConcurrentHashMap&lt;String, Class&lt;?&gt;&gt; CLASS_CACHE = new ConcurrentHashMap&lt;&gt;();</span>
+
         /**
          * Creates a {@link ImplicitImportResolver}
          * @param pmdClassLoader the class loader
          */
         public ImplicitImportResolver(PMDASMClassLoader pmdClassLoader) {
-<span class="fc" id="L147">            super(pmdClassLoader);</span>
-<span class="fc" id="L148">        }</span>
+<span class="fc" id="L197">            super(pmdClassLoader);</span>
+<span class="fc" id="L198">        }</span>
+
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc" id="L151">            return pmdClassLoader.loadClass(&quot;java.lang.&quot; + name);</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L203">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc" id="L206">            Class&lt;?&gt; clazz = CLASS_CACHE.get(name);</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            if (clazz != null) {</span>
+<span class="fc" id="L208">                return clazz;</span>
+            }
+
+<span class="fc" id="L211">            clazz = pmdClassLoader.loadClass(&quot;java.lang.&quot; + name);</span>
+<span class="fc" id="L212">            CLASS_CACHE.putIfAbsent(name, clazz);</span>
+
+<span class="fc" id="L214">            return clazz;</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L219">        	return super.couldResolve(&quot;java.lang.&quot; + name);</span>
         }
     }
 
@@ -163,22 +231,47 @@ public class TypeSet {
          * @param importStmts the import statements
          */
         public ImportOnDemandResolver(PMDASMClassLoader pmdClassLoader, Set&lt;String&gt; importStmts) {
-<span class="fc" id="L166">            super(pmdClassLoader);</span>
-<span class="fc" id="L167">            this.importStmts = importStmts;</span>
-<span class="fc" id="L168">        }</span>
+<span class="fc" id="L234">            super(pmdClassLoader);</span>
+<span class="fc" id="L235">            this.importStmts = importStmts;</span>
+<span class="fc" id="L236">        }</span>
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc bfc" id="L171" title="All 2 branches covered.">            for (String importStmt : importStmts) {</span>
-<span class="fc bfc" id="L172" title="All 2 branches covered.">                if (importStmt.endsWith(&quot;*&quot;)) {</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L240">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc bfc" id="L243" title="All 2 branches covered.">            for (String importStmt : importStmts) {</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">                if (importStmt.endsWith(&quot;*&quot;)) {</span>
                     try {
-<span class="fc" id="L174">                        String importPkg = importStmt.substring(0, importStmt.indexOf('*') - 1);</span>
-<span class="fc" id="L175">                        return pmdClassLoader.loadClass(importPkg + '.' + name);</span>
-<span class="fc" id="L176">                    } catch (ClassNotFoundException cnfe) {</span>
+<span class="fc" id="L246">                        String fqClassName = new StringBuilder(importStmt.length() + name.length())</span>
+                            .append(importStmt)
+                            .replace(importStmt.length() - 1, importStmt.length(), name)
+                            .toString();
+<span class="fc" id="L250">                        return pmdClassLoader.loadClass(fqClassName);</span>
+<span class="fc" id="L251">                    } catch (ClassNotFoundException cnfe) {</span>
                         // ignored as the class could be imported with the next on demand import...
                     }
                 }
-<span class="fc" id="L180">            }</span>
-<span class="fc" id="L181">            throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+<span class="fc" id="L255">            }</span>
+<span class="fc" id="L256">            throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc bfc" id="L261" title="All 2 branches covered.">        	for (String importStmt : importStmts) {</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                if (importStmt.endsWith(&quot;*&quot;)) {</span>
+<span class="fc" id="L263">                    String fqClassName = new StringBuilder(importStmt.length() + name.length())</span>
+                        .append(importStmt)
+                        .replace(importStmt.length() - 1, importStmt.length(), name)
+                        .toString();
+                    // can any class be resolved / was never attempted?
+<span class="fc bfc" id="L268" title="All 2 branches covered.">                    if (super.couldResolve(fqClassName)) {</span>
+<span class="fc" id="L269">                    	return true;</span>
+                    }
+                }
+<span class="fc" id="L272">        	}</span>
+
+<span class="fc" id="L274">        	return false;</span>
         }
     }
 
@@ -186,40 +279,51 @@ public class TypeSet {
      * Resolver that resolves primitive types such as int or double.
      */
     public static class PrimitiveTypeResolver implements Resolver {
-<span class="fc" id="L189">        private Map&lt;String, Class&lt;?&gt;&gt; primitiveTypes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L282">        private Map&lt;String, Class&lt;?&gt;&gt; primitiveTypes = new HashMap&lt;&gt;();</span>
         /**
          * Creates a new {@link PrimitiveTypeResolver}.
          */
         @SuppressWarnings(&quot;PMD.AvoidUsingShortType&quot;)
-<span class="fc" id="L194">        public PrimitiveTypeResolver() {</span>
-<span class="fc" id="L195">            primitiveTypes.put(&quot;int&quot;, int.class);</span>
-<span class="fc" id="L196">            primitiveTypes.put(&quot;float&quot;, float.class);</span>
-<span class="fc" id="L197">            primitiveTypes.put(&quot;double&quot;, double.class);</span>
-<span class="fc" id="L198">            primitiveTypes.put(&quot;long&quot;, long.class);</span>
-<span class="fc" id="L199">            primitiveTypes.put(&quot;boolean&quot;, boolean.class);</span>
-<span class="fc" id="L200">            primitiveTypes.put(&quot;byte&quot;, byte.class);</span>
-<span class="fc" id="L201">            primitiveTypes.put(&quot;short&quot;, short.class);</span>
-<span class="fc" id="L202">            primitiveTypes.put(&quot;char&quot;, char.class);</span>
-<span class="fc" id="L203">        }</span>
+<span class="fc" id="L287">        public PrimitiveTypeResolver() {</span>
+<span class="fc" id="L288">            primitiveTypes.put(&quot;int&quot;, int.class);</span>
+<span class="fc" id="L289">            primitiveTypes.put(&quot;float&quot;, float.class);</span>
+<span class="fc" id="L290">            primitiveTypes.put(&quot;double&quot;, double.class);</span>
+<span class="fc" id="L291">            primitiveTypes.put(&quot;long&quot;, long.class);</span>
+<span class="fc" id="L292">            primitiveTypes.put(&quot;boolean&quot;, boolean.class);</span>
+<span class="fc" id="L293">            primitiveTypes.put(&quot;byte&quot;, byte.class);</span>
+<span class="fc" id="L294">            primitiveTypes.put(&quot;short&quot;, short.class);</span>
+<span class="fc" id="L295">            primitiveTypes.put(&quot;char&quot;, char.class);</span>
+<span class="fc" id="L296">        }</span>
+
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc bfc" id="L206" title="All 2 branches covered.">            if (!primitiveTypes.containsKey(name)) {</span>
-<span class="fc" id="L207">                throw new ClassNotFoundException(name);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">            if (!primitiveTypes.containsKey(name)) {</span>
+<span class="fc" id="L301">                throw new ClassNotFoundException(name);</span>
             }
-<span class="fc" id="L209">            return primitiveTypes.get(name);</span>
+<span class="fc" id="L303">            return primitiveTypes.get(name);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L308">            return primitiveTypes.containsKey(name);</span>
         }
     }
 
     /**
      * Resolver that resolves the &quot;void&quot; type.
      */
-<span class="fc" id="L216">    public static class VoidResolver implements Resolver {</span>
+<span class="fc" id="L315">    public static class VoidResolver implements Resolver {</span>
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc bfc" id="L219" title="All 2 branches covered.">            if (&quot;void&quot;.equals(name)) {</span>
-<span class="fc" id="L220">                return void.class;</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">            if (&quot;void&quot;.equals(name)) {</span>
+<span class="fc" id="L319">                return void.class;</span>
             }
-<span class="fc" id="L222">            throw new ClassNotFoundException(name);</span>
+<span class="fc" id="L321">            throw new ClassNotFoundException(name);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L326">            return &quot;void&quot;.equals(name);</span>
         }
     }
 
@@ -233,23 +337,24 @@ public class TypeSet {
          * @param pmdClassLoader the class loader to use
          */
         public FullyQualifiedNameResolver(PMDASMClassLoader pmdClassLoader) {
-<span class="fc" id="L236">            super(pmdClassLoader);</span>
-<span class="fc" id="L237">        }</span>
+<span class="fc" id="L340">            super(pmdClassLoader);</span>
+<span class="fc" id="L341">        }</span>
+
         @Override
         public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
-<span class="fc bfc" id="L240" title="All 2 branches covered.">            if (name == null) {</span>
-<span class="fc" id="L241">                throw new ClassNotFoundException();</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L346">                throw new ClassNotFoundException();</span>
             }
-<span class="fc" id="L243">            return pmdClassLoader.loadClass(name);</span>
+<span class="fc" id="L348">            return pmdClassLoader.loadClass(name);</span>
         }
     }
 
     public void setASTCompilationUnitPackage(String pkg) {
-<span class="fc" id="L248">        this.pkg = pkg;</span>
-<span class="fc" id="L249">    }</span>
+<span class="fc" id="L353">        this.pkg = pkg;</span>
+<span class="fc" id="L354">    }</span>
 
     public String getASTCompilationUnitPackage() {
-<span class="fc" id="L252">        return pkg;</span>
+<span class="fc" id="L357">        return pkg;</span>
     }
 
     /**
@@ -257,15 +362,15 @@ public class TypeSet {
      * @param importString the import to add
      */
     public void addImport(String importString) {
-<span class="fc" id="L260">        imports.add(importString);</span>
-<span class="fc" id="L261">    }</span>
+<span class="fc" id="L365">        imports.add(importString);</span>
+<span class="fc" id="L366">    }</span>
 
     public int getImportsCount() {
-<span class="fc" id="L264">        return imports.size();</span>
+<span class="fc" id="L369">        return imports.size();</span>
     }
 
     public Set&lt;String&gt; getExplicitImports() {
-<span class="fc" id="L268">        return imports;</span>
+<span class="fc" id="L373">        return imports;</span>
     }
 
     /**
@@ -277,29 +382,31 @@ public class TypeSet {
     public Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
         // we don't build the resolvers until now since we first want to get all
         // the imports
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        if (resolvers.isEmpty()) {</span>
-<span class="fc" id="L281">            buildResolvers();</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if (resolvers.isEmpty()) {</span>
+<span class="fc" id="L386">            buildResolvers();</span>
         }
 
-<span class="fc bfc" id="L284" title="All 2 branches covered.">        for (Resolver resolver : resolvers) {</span>
-            try {
-<span class="fc" id="L286">                return resolver.resolve(name);</span>
-<span class="fc" id="L287">            } catch (ClassNotFoundException cnfe) {</span>
-                // ignored, maybe another resolver will find the class
+<span class="fc bfc" id="L389" title="All 2 branches covered.">        for (final Resolver resolver : resolvers) {</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            if (resolver.couldResolve(name)) {</span>
+                try {
+<span class="fc" id="L392">                    return resolver.resolve(name);</span>
+<span class="fc" id="L393">                } catch (ClassNotFoundException cnfe) {</span>
+                    // ignored, maybe another resolver will find the class
+                }
             }
-<span class="fc" id="L290">        }</span>
+<span class="fc" id="L397">        }</span>
 
-<span class="fc" id="L292">        throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+<span class="fc" id="L399">        throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
     }
 
     private void buildResolvers() {
-<span class="fc" id="L296">        resolvers.add(new PrimitiveTypeResolver());</span>
-<span class="fc" id="L297">        resolvers.add(new VoidResolver());</span>
-<span class="fc" id="L298">        resolvers.add(new ExplicitImportResolver(pmdClassLoader, imports));</span>
-<span class="fc" id="L299">        resolvers.add(new CurrentPackageResolver(pmdClassLoader, pkg));</span>
-<span class="fc" id="L300">        resolvers.add(new ImplicitImportResolver(pmdClassLoader));</span>
-<span class="fc" id="L301">        resolvers.add(new ImportOnDemandResolver(pmdClassLoader, imports));</span>
-<span class="fc" id="L302">        resolvers.add(new FullyQualifiedNameResolver(pmdClassLoader));</span>
-<span class="fc" id="L303">    }</span>
+<span class="fc" id="L403">        resolvers.add(new PrimitiveTypeResolver());</span>
+<span class="fc" id="L404">        resolvers.add(new VoidResolver());</span>
+<span class="fc" id="L405">        resolvers.add(new ExplicitImportResolver(pmdClassLoader, imports));</span>
+<span class="fc" id="L406">        resolvers.add(new CurrentPackageResolver(pmdClassLoader, pkg));</span>
+<span class="fc" id="L407">        resolvers.add(new ImplicitImportResolver(pmdClassLoader));</span>
+<span class="fc" id="L408">        resolvers.add(new ImportOnDemandResolver(pmdClassLoader, imports));</span>
+<span class="fc" id="L409">        resolvers.add(new FullyQualifiedNameResolver(pmdClassLoader));</span>
+<span class="fc" id="L410">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
