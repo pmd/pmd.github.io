@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SingularFieldRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">SingularFieldRule.java</span></div><h1>SingularFieldRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTInitializer;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTSynchronizedStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.rule.AbstractLombokAwareRule;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * @author Eric Olander
+ * @author Wouter Zelle
+ * @since Created on April 17, 2005, 9:49 PM
+ */
+public class SingularFieldRule extends AbstractLombokAwareRule {
+
+	/**
+	 * Restore old behavior by setting both properties to true, which will result in many false positives
+	 */
+<span class="fc" id="L36">    private static final BooleanProperty CHECK_INNER_CLASSES = new BooleanProperty(</span>
+			&quot;checkInnerClasses&quot;, &quot;Check inner classes&quot;, false, 1.0f);
+<span class="fc" id="L38">    private static final BooleanProperty DISALLOW_NOT_ASSIGNMENT = new BooleanProperty(</span>
+			&quot;disallowNotAssignment&quot;, &quot;Disallow violations where the first usage is not an assignment&quot;, false, 2.0f);
+
+<span class="fc" id="L41">    public SingularFieldRule() {</span>
+<span class="fc" id="L42">	definePropertyDescriptor(CHECK_INNER_CLASSES);</span>
+<span class="fc" id="L43">	definePropertyDescriptor(DISALLOW_NOT_ASSIGNMENT);</span>
+<span class="fc" id="L44">    }</span>
+
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="fc" id="L49">    	boolean checkInnerClasses = getProperty(CHECK_INNER_CLASSES);</span>
+<span class="fc" id="L50">    	boolean disallowNotAssignment = getProperty(DISALLOW_NOT_ASSIGNMENT);</span>
+
+<span class="fc bfc" id="L52" title="All 8 branches covered.">        if (node.isPrivate() &amp;&amp; !node.isStatic()  &amp;&amp; !hasClassLombokAnnotation() &amp;&amp; !hasLombokAnnotation(node)) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            for (ASTVariableDeclarator declarator: node.findChildrenOfType(ASTVariableDeclarator.class)) {</span>
+<span class="fc" id="L54">        	ASTVariableDeclaratorId declaration = (ASTVariableDeclaratorId) declarator.jjtGetChild(0);</span>
+<span class="fc" id="L55">                List&lt;NameOccurrence&gt; usages = declaration.getUsages();</span>
+<span class="fc" id="L56">                Node decl = null;</span>
+<span class="fc" id="L57">                boolean violation = true;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">                for (int ix = 0; ix &lt; usages.size(); ix++) {</span>
+<span class="fc" id="L59">                    NameOccurrence no = usages.get(ix);</span>
+<span class="fc" id="L60">                    Node location = no.getLocation();</span>
+
+<span class="fc" id="L62">                    ASTPrimaryExpression primaryExpressionParent = location.getFirstParentOfType(ASTPrimaryExpression.class);</span>
+<span class="fc bfc" id="L63" title="All 4 branches covered.">                    if (ix==0 &amp;&amp; !disallowNotAssignment) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                    	if (primaryExpressionParent.getFirstParentOfType(ASTIfStatement.class) != null) {</span>
+                    		//the first usage is in an if, so it may be skipped on
+                    		//later calls to the method. So this might be legit code
+                    		//that simply stores an object for later use.
+<span class="fc" id="L68">                    		violation = false;</span>
+<span class="fc" id="L69">    	                	break;		//Optimization</span>
+                    	}
+
+                    	//Is the first usage in an assignment?
+<span class="fc" id="L73">                    	Node potentialStatement = primaryExpressionParent.jjtGetParent();</span>
+<span class="fc" id="L74">    	                boolean assignmentToField = no.getImage().equals(location.getImage());	//Check the the assignment is not to a field inside the field object</span>
+<span class="fc bfc" id="L75" title="All 4 branches covered.">    					if (!assignmentToField || !isInAssignment(potentialStatement)) {</span>
+<span class="fc" id="L76">    	                	violation = false;</span>
+<span class="fc" id="L77">    	                	break;		//Optimization</span>
+    	                } else {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">    	                	if (usages.size() &gt; ix + 1) {</span>
+<span class="fc" id="L80">    	                	    Node secondUsageLocation = usages.get(ix + 1).getLocation();</span>
+
+<span class="fc" id="L82">    	                		List&lt;ASTStatementExpression&gt; parentStatements = secondUsageLocation.getParentsOfType(ASTStatementExpression.class);</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">    	                		for (ASTStatementExpression statementExpression : parentStatements) {</span>
+<span class="pc bpc" id="L84" title="1 of 4 branches missed.">    	                			if (statementExpression != null &amp;&amp; statementExpression.equals(potentialStatement)) {</span>
+    		                			//The second usage is in the assignment of the first usage, which is allowed
+<span class="fc" id="L86">    		                			violation = false;</span>
+<span class="fc" id="L87">    		    	                	break;		//Optimization</span>
+    		                		}
+<span class="fc" id="L89">    							}</span>
+
+    	                	}
+    	                }
+                    }
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                    if (!checkInnerClasses) {</span>
+    	                //Skip inner classes because the field can be used in the outer class and checking this is too difficult
+<span class="fc" id="L97">    	                ASTClassOrInterfaceDeclaration clazz = location.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">    	                if (clazz!= null &amp;&amp; clazz.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class) != null) {</span>
+<span class="fc" id="L99">    	                	violation = false;</span>
+<span class="fc" id="L100">    	                	break;			//Optimization</span>
+    	                }
+                    }
+
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    if (primaryExpressionParent.jjtGetParent() instanceof ASTSynchronizedStatement) {</span>
+                    	//This usage is directly in an expression of a synchronized block
+<span class="nc" id="L106">                    	violation = false;</span>
+<span class="nc" id="L107">                    	break;			//Optimization</span>
+                    }
+
+<span class="fc" id="L110">                    Node method = location.getFirstParentOfType(ASTMethodDeclaration.class);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                    if (method == null) {</span>
+<span class="fc" id="L112">                        method = location.getFirstParentOfType(ASTConstructorDeclaration.class);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                        if (method == null) {</span>
+<span class="fc" id="L114">                        	method = location.getFirstParentOfType(ASTInitializer.class);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">                        	if (method == null) {</span>
+<span class="nc" id="L116">                        		continue;</span>
+                        	}
+                        }
+                    }
+
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                    if (decl == null) {</span>
+<span class="fc" id="L122">                        decl = method;</span>
+<span class="fc" id="L123">                        continue;</span>
+<span class="fc bfc" id="L124" title="All 4 branches covered.">                    } else if (decl != method</span>
+                            // handle inner classes
+                            &amp;&amp; decl.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class)
+                                == method.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class)) {
+<span class="fc" id="L128">                        violation = false;</span>
+<span class="fc" id="L129">                        break;			//Optimization</span>
+                    }
+
+
+                }
+
+<span class="fc bfc" id="L135" title="All 4 branches covered.">                if (violation &amp;&amp; !usages.isEmpty()) {</span>
+<span class="fc" id="L136">                    addViolation(data, node, new Object[] { declaration.getImage() });</span>
+                }
+<span class="fc" id="L138">            }</span>
+        }
+<span class="fc" id="L140">        return data;</span>
+    }
+
+	private boolean isInAssignment(Node potentialStatement) {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">		if (potentialStatement instanceof ASTStatementExpression) {</span>
+<span class="fc" id="L145">			ASTStatementExpression statement = (ASTStatementExpression)potentialStatement;</span>
+<span class="fc" id="L146">			List&lt;ASTAssignmentOperator&gt; assignments = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L147">			statement.findDescendantsOfType(ASTAssignmentOperator.class, assignments, false);</span>
+<span class="pc bpc" id="L148" title="2 of 4 branches missed.">			return !assignments.isEmpty() &amp;&amp; &quot;=&quot;.equals(assignments.get(0).getImage());</span>
+		} else {
+<span class="fc" id="L150">			return false;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

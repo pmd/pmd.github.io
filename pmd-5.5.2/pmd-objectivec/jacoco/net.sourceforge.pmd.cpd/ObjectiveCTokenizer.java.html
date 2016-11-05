@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ObjectiveCTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Objective-C</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">ObjectiveCTokenizer.java</span></div><h1>ObjectiveCTokenizer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import java.io.Reader;
+import java.io.StringReader;
+
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersionHandler;
+import net.sourceforge.pmd.lang.TokenManager;
+import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.lang.objectivec.ObjectiveCLanguageModule;
+import net.sourceforge.pmd.lang.objectivec.ast.Token;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * The Objective-C Tokenizer
+ */
+<span class="fc" id="L21">public class ObjectiveCTokenizer implements Tokenizer {</span>
+
+    @Override
+    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
+<span class="fc" id="L25">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L26">        Reader reader = null;</span>
+        try {
+<span class="fc" id="L28">            LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(ObjectiveCLanguageModule.NAME)</span>
+                    .getDefaultVersion().getLanguageVersionHandler();
+<span class="fc" id="L30">            reader = new StringReader(buffer.toString());</span>
+<span class="fc" id="L31">            TokenManager tokenManager = languageVersionHandler.getParser(</span>
+                    languageVersionHandler.getDefaultParserOptions()).getTokenManager(sourceCode.getFileName(), reader);
+<span class="fc" id="L33">            Token currentToken = (Token) tokenManager.getNextToken();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            while (currentToken.image.length() &gt; 0) {</span>
+<span class="fc" id="L35">                tokenEntries.add(new TokenEntry(currentToken.image, sourceCode.getFileName(), currentToken.beginLine));</span>
+<span class="fc" id="L36">                currentToken = (Token) tokenManager.getNextToken();</span>
+            }
+<span class="fc" id="L38">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L39">            System.err.println(&quot;Added &quot; + sourceCode.getFileName());</span>
+<span class="nc" id="L40">        } catch (TokenMgrError err) {</span>
+<span class="nc" id="L41">            err.printStackTrace();</span>
+<span class="nc" id="L42">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
+<span class="nc" id="L43">            tokenEntries.add(TokenEntry.getEOF());</span>
+        } finally {
+<span class="pc" id="L45">            IOUtils.closeQuietly(reader);</span>
+<span class="pc" id="L46">        }</span>
+<span class="fc" id="L47">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

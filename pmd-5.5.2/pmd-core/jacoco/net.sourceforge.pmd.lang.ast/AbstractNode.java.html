@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ast</a> &gt; <span class="el_source">AbstractNode.java</span></div><h1>AbstractNode.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ast;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.jaxen.BaseXPath;
+import org.jaxen.JaxenException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import net.sourceforge.pmd.lang.ast.xpath.Attribute;
+import net.sourceforge.pmd.lang.ast.xpath.DocumentNavigator;
+import net.sourceforge.pmd.lang.dfa.DataFlowNode;
+
+public abstract class AbstractNode implements Node {
+
+    protected Node parent;
+    protected Node[] children;
+    protected int childIndex;
+    protected int id;
+
+    private String image;
+<span class="fc" id="L31">    protected int beginLine = -1;</span>
+    protected int endLine;
+<span class="fc" id="L33">    protected int beginColumn = -1;</span>
+    protected int endColumn;
+    private DataFlowNode dataFlowNode;
+    private Object userData;
+    protected GenericToken firstToken;
+    protected GenericToken lastToken;
+
+<span class="fc" id="L40">    public AbstractNode(int id) {</span>
+<span class="fc" id="L41">    	this.id = id;</span>
+<span class="fc" id="L42">    }</span>
+
+    public AbstractNode(int id, int theBeginLine, int theEndLine, int theBeginColumn, int theEndColumn) {
+<span class="nc" id="L45">    	this(id);</span>
+    	
+<span class="nc" id="L47">    	beginLine = theBeginLine;</span>
+<span class="nc" id="L48">    	endLine = theEndLine;</span>
+<span class="nc" id="L49">    	beginColumn = theBeginColumn;</span>
+<span class="nc" id="L50">    	endColumn = theEndColumn;</span>
+<span class="nc" id="L51">    }</span>
+    
+    public boolean isSingleLine() {
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">    	return beginLine == endLine;</span>
+    }
+    
+    @Override
+    public void jjtOpen() {
+	// to be overridden by subclasses
+<span class="nc" id="L60">    }</span>
+
+    @Override
+    public void jjtClose() {
+	// to be overridden by subclasses
+<span class="nc" id="L65">    }</span>
+
+    @Override
+    public void jjtSetParent(Node parent) {
+<span class="fc" id="L69">    	this.parent = parent;</span>
+<span class="fc" id="L70">    }</span>
+
+    @Override
+    public Node jjtGetParent() {
+<span class="fc" id="L74">    	return parent;</span>
+    }
+
+    @Override
+    public void jjtAddChild(Node child, int index) {
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (children == null) {</span>
+<span class="fc" id="L80">		    children = new Node[index + 1];</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		} else if (index &gt;= children.length) {</span>
+<span class="nc" id="L82">		    Node[] newChildren = new Node[index + 1];</span>
+<span class="nc" id="L83">		    System.arraycopy(children, 0, newChildren, 0, children.length);</span>
+<span class="nc" id="L84">		    children = newChildren;</span>
+		}
+<span class="fc" id="L86">		children[index] = child;</span>
+<span class="fc" id="L87">		child.jjtSetChildIndex(index);</span>
+<span class="fc" id="L88">    }</span>
+    @Override
+    public void jjtSetChildIndex(int index) {
+<span class="fc" id="L91">        childIndex = index;</span>
+<span class="fc" id="L92">    }</span>
+    @Override
+    public int jjtGetChildIndex() {
+<span class="nc" id="L95">        return childIndex;</span>
+    }
+
+    @Override
+    public Node jjtGetChild(int index) {
+<span class="nc" id="L100">    	return children[index];</span>
+    }
+
+    @Override
+    public int jjtGetNumChildren() {
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">    	return children == null ? 0 : children.length;</span>
+    }
+
+    @Override
+    public int jjtGetId() {
+<span class="nc" id="L110">    	return id;</span>
+    }
+
+    /**
+     * Subclasses should implement this method to return a name usable with
+     * XPathRule for evaluating Element Names.
+     */
+    @Override
+    public abstract String toString();
+
+    @Override
+    public String getImage() {
+<span class="fc" id="L122">    	return image;</span>
+    }
+
+    @Override
+    public void setImage(String image) {
+<span class="fc" id="L127">	this.image = image;</span>
+<span class="fc" id="L128">    }</span>
+
+    @Override
+    public boolean hasImageEqualTo(String image) {
+<span class="nc bnc" id="L132" title="All 4 branches missed.">	return this.getImage() != null &amp;&amp; this.getImage().equals(image);</span>
+    }
+
+    @Override
+    public int getBeginLine() {
+<span class="fc" id="L137">	return beginLine;</span>
+    }
+
+    public void testingOnly__setBeginLine(int i) {
+<span class="fc" id="L141">	this.beginLine = i;</span>
+<span class="fc" id="L142">    }</span>
+
+    @Override
+    public int getBeginColumn() {
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">	if (beginColumn != -1) {</span>
+<span class="fc" id="L147">	    return beginColumn;</span>
+	} else {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">	    if (children != null &amp;&amp; children.length &gt; 0) {</span>
+<span class="nc" id="L150">		return children[0].getBeginColumn();</span>
+	    } else {
+<span class="nc" id="L152">		throw new RuntimeException(&quot;Unable to determine beginning line of Node.&quot;);</span>
+	    }
+	}
+    }
+
+    public void testingOnly__setBeginColumn(int i) {
+<span class="fc" id="L158">	this.beginColumn = i;</span>
+<span class="fc" id="L159">    }</span>
+
+    @Override
+    public int getEndLine() {
+<span class="fc" id="L163">	return endLine;</span>
+    }
+
+    public void testingOnly__setEndLine(int i) {
+<span class="fc" id="L167">	this.endLine = i;</span>
+<span class="fc" id="L168">    }</span>
+
+    @Override
+    public int getEndColumn() {
+<span class="fc" id="L172">	return endColumn;</span>
+    }
+
+    public void testingOnly__setEndColumn(int i) {
+<span class="fc" id="L176">	this.endColumn = i;</span>
+<span class="fc" id="L177">    }</span>
+
+    @Override
+    public DataFlowNode getDataFlowNode() {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">	if (this.dataFlowNode == null) {</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">	    if (this.parent != null) {</span>
+<span class="nc" id="L183">		return parent.getDataFlowNode();</span>
+	    }
+<span class="nc" id="L185">	    return null; //TODO wise?</span>
+	}
+<span class="nc" id="L187">	return dataFlowNode;</span>
+    }
+
+    @Override
+    public void setDataFlowNode(DataFlowNode dataFlowNode) {
+<span class="nc" id="L192">	this.dataFlowNode = dataFlowNode;</span>
+<span class="nc" id="L193">    }</span>
+
+    /**
+     * Returns the n-th parent or null if there are not &lt;code&gt;n&lt;/code&gt; ancestors
+     *
+     * @param n how many ancestors to iterate over.
+     * @return the n-th parent or null.
+     * @throws IllegalArgumentException if &lt;code&gt;n&lt;/code&gt; is not positive.
+     */
+    @Override
+    public Node getNthParent(int n) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (n &lt;= 0) {</span>
+<span class="nc" id="L205">            throw new IllegalArgumentException();</span>
+        }
+<span class="nc" id="L207">        Node result = this.jjtGetParent();</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        for (int i = 1; i &lt; n; i++) {</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">            if (result == null) {</span>
+<span class="nc" id="L210">                return null;</span>
+            }
+<span class="nc" id="L212">            result = result.jjtGetParent();</span>
+        }
+<span class="nc" id="L214">        return result;</span>
+    }
+
+    /**
+     * Traverses up the tree to find the first parent instance of type parentType
+     *
+     * @param parentType class which you want to find.
+     * @return Node of type parentType.  Returns null if none found.
+     */
+    @Override
+    public &lt;T&gt; T getFirstParentOfType(Class&lt;T&gt; parentType) {
+<span class="nc" id="L225">	Node parentNode = jjtGetParent();</span>
+<span class="nc bnc" id="L226" title="All 4 branches missed.">	while (parentNode != null &amp;&amp; parentNode.getClass() != parentType) {</span>
+<span class="nc" id="L227">	    parentNode = parentNode.jjtGetParent();</span>
+	}
+<span class="nc" id="L229">	return (T) parentNode;</span>
+    }
+
+    /**
+     * Traverses up the tree to find all of the parent instances of type parentType
+     *
+     * @param parentType classes which you want to find.
+     * @return List of parentType instances found.
+     */
+    @Override
+    public &lt;T&gt; List&lt;T&gt; getParentsOfType(Class&lt;T&gt; parentType) {
+<span class="nc" id="L240">	List&lt;T&gt; parents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L241">	Node parentNode = jjtGetParent();</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">	while (parentNode != null) {</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">	    if (parentNode.getClass() == parentType) {</span>
+<span class="nc" id="L244">		parents.add((T) parentNode);</span>
+	    }
+<span class="nc" id="L246">	    parentNode = parentNode.jjtGetParent();</span>
+	}
+<span class="nc" id="L248">	return parents;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; List&lt;T&gt; findDescendantsOfType(Class&lt;T&gt; targetType) {
+<span class="nc" id="L256">	List&lt;T&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L257">	findDescendantsOfType(this, targetType, list, true);</span>
+<span class="nc" id="L258">	return list;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; void findDescendantsOfType(Class&lt;T&gt; targetType, List&lt;T&gt; results, boolean crossBoundaries) {
+<span class="nc" id="L266">	findDescendantsOfType(this, targetType, results, crossBoundaries);</span>
+<span class="nc" id="L267">    }</span>
+
+    private static &lt;T&gt; void findDescendantsOfType(Node node, Class&lt;T&gt; targetType, List&lt;T&gt; results,
+	    boolean crossFindBoundaries) {
+
+<span class="nc bnc" id="L272" title="All 4 branches missed.">	if (!crossFindBoundaries &amp;&amp; node.isFindBoundary()) {</span>
+<span class="nc" id="L273">	    return;</span>
+	}
+
+<span class="nc" id="L276">	int n = node.jjtGetNumChildren();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">	for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L278">	    Node child = node.jjtGetChild(i);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">	    if (child.getClass() == targetType) {</span>
+<span class="nc" id="L280">		results.add((T) child);</span>
+	    }
+
+<span class="nc" id="L283">	    findDescendantsOfType(child, targetType, results, crossFindBoundaries);</span>
+	}
+<span class="nc" id="L285">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; List&lt;T&gt; findChildrenOfType(Class&lt;T&gt; targetType) {
+<span class="nc" id="L292">	List&lt;T&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L293">	int n = jjtGetNumChildren();</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">	for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L295">	    Node child = jjtGetChild(i);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">	    if (child.getClass() == targetType) {</span>
+<span class="nc" id="L297">		list.add((T) child);</span>
+	    }
+	}
+<span class="nc" id="L300">	return list;</span>
+    }
+
+    @Override
+    public boolean isFindBoundary() {
+<span class="fc" id="L305">	return false;</span>
+    }
+
+    @Override
+    public Document getAsDocument() {
+	try {
+<span class="fc" id="L311">	    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L312">	    DocumentBuilder db = dbf.newDocumentBuilder();</span>
+<span class="fc" id="L313">	    Document document = db.newDocument();</span>
+<span class="fc" id="L314">	    appendElement(document);</span>
+<span class="fc" id="L315">	    return document;</span>
+<span class="nc" id="L316">	} catch (ParserConfigurationException pce) {</span>
+<span class="nc" id="L317">	    throw new RuntimeException(pce);</span>
+	}
+    }
+
+    protected void appendElement(org.w3c.dom.Node parentNode) {
+<span class="fc" id="L322">	DocumentNavigator docNav = new DocumentNavigator();</span>
+<span class="fc" id="L323">	Document ownerDocument = parentNode.getOwnerDocument();</span>
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">	if (ownerDocument == null) {</span>
+	    //If the parentNode is a Document itself, it's ownerDocument is null
+<span class="fc" id="L326">	    ownerDocument = (Document) parentNode;</span>
+	}
+<span class="fc" id="L328">	String elementName = docNav.getElementName(this);</span>
+<span class="fc" id="L329">	Element element = ownerDocument.createElement(elementName);</span>
+<span class="fc" id="L330">	parentNode.appendChild(element);</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">	for (Iterator&lt;Attribute&gt; iter = docNav.getAttributeAxisIterator(this); iter.hasNext();) {</span>
+<span class="fc" id="L332">	    Attribute attr = iter.next();</span>
+<span class="fc" id="L333">	    element.setAttribute(attr.getName(), attr.getStringValue());</span>
+<span class="fc" id="L334">	}</span>
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">	for (Iterator&lt;Node&gt; iter = docNav.getChildAxisIterator(this); iter.hasNext();) {</span>
+<span class="nc" id="L336">	    AbstractNode child = (AbstractNode) iter.next();</span>
+<span class="nc" id="L337">	    child.appendElement(element);</span>
+<span class="nc" id="L338">	}</span>
+<span class="fc" id="L339">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; T getFirstDescendantOfType(Class&lt;T&gt; descendantType) {
+<span class="nc" id="L346">	return getFirstDescendantOfType(descendantType, this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; T getFirstChildOfType(Class&lt;T&gt; childType) {
+<span class="nc" id="L354">	int n = jjtGetNumChildren();</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">	for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L356">	    Node child = jjtGetChild(i);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">	    if (child.getClass() == childType) {</span>
+<span class="nc" id="L358">		return (T) child;</span>
+	    }
+	}
+<span class="nc" id="L361">	return null;</span>
+    }
+
+    private static &lt;T&gt; T getFirstDescendantOfType(Class&lt;T&gt; descendantType, Node node) {
+<span class="nc" id="L365">	int n = node.jjtGetNumChildren();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">	for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L367">	    Node n1 = node.jjtGetChild(i);</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">	    if (n1.getClass() == descendantType) {</span>
+<span class="nc" id="L369">		return (T) n1;</span>
+	    }
+<span class="nc" id="L371">	    T n2 = getFirstDescendantOfType(descendantType, n1);</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">	    if (n2 != null) {</span>
+<span class="nc" id="L373">		return n2;</span>
+	    }
+	}
+<span class="nc" id="L376">	return null;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final &lt;T&gt; boolean hasDescendantOfType(Class&lt;T&gt; type) {
+<span class="nc bnc" id="L384" title="All 2 branches missed.">	return getFirstDescendantOfType(type) != null;</span>
+    }
+
+    /**
+     * 
+     * @param types
+     * @return boolean
+     */
+    public final boolean hasDecendantOfAnyType(Class&lt;?&gt;... types) {
+<span class="nc bnc" id="L393" title="All 2 branches missed.">    	for (Class&lt;?&gt; type : types) {</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">    		if (hasDescendantOfType(type)) {</span>
+<span class="nc" id="L395">    		    return true;</span>
+    		}
+    	}
+<span class="nc" id="L398">    	return false;</span>
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public List&lt;Node&gt; findChildNodesWithXPath(String xpathString) throws JaxenException {
+<span class="nc" id="L407">        return new BaseXPath(xpathString, new DocumentNavigator()).selectNodes(this);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDescendantMatchingXPath(String xpathString) {
+        try {
+<span class="nc bnc" id="L416" title="All 2 branches missed.">            return !findChildNodesWithXPath(xpathString).isEmpty();</span>
+<span class="nc" id="L417">        } catch (JaxenException e) {</span>
+<span class="nc" id="L418">            throw new RuntimeException(&quot;XPath expression &quot; + xpathString + &quot; failed: &quot; + e.getLocalizedMessage(), e);</span>
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getUserData() {
+<span class="nc" id="L427">        return userData;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUserData(Object userData) {
+<span class="nc" id="L435">        this.userData = userData;</span>
+<span class="nc" id="L436">    }</span>
+    
+
+	public GenericToken jjtGetFirstToken() {
+<span class="nc" id="L440">		return firstToken;</span>
+	}
+
+	public void jjtSetFirstToken(GenericToken token) {
+<span class="nc" id="L444">		this.firstToken = token;</span>
+<span class="nc" id="L445">	}</span>
+
+	public GenericToken jjtGetLastToken() {
+<span class="nc" id="L448">		return lastToken;</span>
+	}
+
+	public void jjtSetLastToken(GenericToken token) {
+<span class="nc" id="L452">		this.lastToken = token;</span>
+<span class="nc" id="L453">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

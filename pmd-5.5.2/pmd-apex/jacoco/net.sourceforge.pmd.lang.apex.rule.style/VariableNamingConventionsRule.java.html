@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VariableNamingConventionsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.style</a> &gt; <span class="el_source">VariableNamingConventionsRule.java</span></div><h1>VariableNamingConventionsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.style;
+
+import static apex.jorje.semantic.symbol.type.ModifierTypeInfos.FINAL;
+import static apex.jorje.semantic.symbol.type.ModifierTypeInfos.STATIC;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.lang.apex.ast.ASTField;
+import net.sourceforge.pmd.lang.apex.ast.ASTParameter;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserInterface;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.StringMultiProperty;
+import net.sourceforge.pmd.util.CollectionUtil;
+
+public class VariableNamingConventionsRule extends AbstractApexRule {
+
+	private boolean checkMembers;
+	private boolean checkLocals;
+	private boolean checkParameters;
+	private String[] staticPrefixes;
+	private String[] staticSuffixes;
+	private String[] memberPrefixes;
+	private String[] memberSuffixes;
+	private String[] localPrefixes;
+	private String[] localSuffixes;
+	private String[] parameterPrefixes;
+	private String[] parameterSuffixes;
+
+<span class="fc" id="L35">	private static final BooleanProperty CHECK_MEMBERS_DESCRIPTOR = new BooleanProperty(&quot;checkMembers&quot;,</span>
+<span class="fc" id="L36">			&quot;Check member variables&quot;, true, 1.0f);</span>
+
+<span class="fc" id="L38">	private static final BooleanProperty CHECK_LOCALS_DESCRIPTOR = new BooleanProperty(&quot;checkLocals&quot;,</span>
+<span class="fc" id="L39">			&quot;Check local variables&quot;, true, 2.0f);</span>
+
+<span class="fc" id="L41">	private static final BooleanProperty CHECK_PARAMETERS_DESCRIPTOR = new BooleanProperty(&quot;checkParameters&quot;,</span>
+<span class="fc" id="L42">			&quot;Check constructor and method parameter variables&quot;, true, 3.0f);</span>
+
+<span class="fc" id="L44">	private static final StringMultiProperty STATIC_PREFIXES_DESCRIPTOR = new StringMultiProperty(&quot;staticPrefix&quot;,</span>
+			&quot;Static variable prefixes&quot;, new String[] { &quot;&quot; }, 4.0f, ',');
+
+<span class="fc" id="L47">	private static final StringMultiProperty STATIC_SUFFIXES_DESCRIPTOR = new StringMultiProperty(&quot;staticSuffix&quot;,</span>
+			&quot;Static variable suffixes&quot;, new String[] { &quot;&quot; }, 5.0f, ',');
+
+<span class="fc" id="L50">	private static final StringMultiProperty MEMBER_PREFIXES_DESCRIPTOR = new StringMultiProperty(&quot;memberPrefix&quot;,</span>
+			&quot;Member variable prefixes&quot;, new String[] { &quot;&quot; }, 6.0f, ',');
+
+<span class="fc" id="L53">	private static final StringMultiProperty MEMBER_SUFFIXES_DESCRIPTOR = new StringMultiProperty(&quot;memberSuffix&quot;,</span>
+			&quot;Member variable suffixes&quot;, new String[] { &quot;&quot; }, 7.0f, ',');
+
+<span class="fc" id="L56">	private static final StringMultiProperty LOCAL_PREFIXES_DESCRIPTOR = new StringMultiProperty(&quot;localPrefix&quot;,</span>
+			&quot;Local variable prefixes&quot;, new String[] { &quot;&quot; }, 8.0f, ',');
+
+<span class="fc" id="L59">	private static final StringMultiProperty LOCAL_SUFFIXES_DESCRIPTOR = new StringMultiProperty(&quot;localSuffix&quot;,</span>
+			&quot;Local variable suffixes&quot;, new String[] { &quot;&quot; }, 9.0f, ',');
+
+<span class="fc" id="L62">	private static final StringMultiProperty PARAMETER_PREFIXES_DESCRIPTOR = new StringMultiProperty(&quot;parameterPrefix&quot;,</span>
+			&quot;Method parameter variable prefixes&quot;, new String[] { &quot;&quot; }, 10.0f, ',');
+
+<span class="fc" id="L65">	private static final StringMultiProperty PARAMETER_SUFFIXES_DESCRIPTOR = new StringMultiProperty(&quot;parameterSuffix&quot;,</span>
+			&quot;Method parameter variable suffixes&quot;, new String[] { &quot;&quot; }, 11.0f, ',');
+
+<span class="fc" id="L68">	public VariableNamingConventionsRule() {</span>
+<span class="fc" id="L69">		definePropertyDescriptor(CHECK_MEMBERS_DESCRIPTOR);</span>
+<span class="fc" id="L70">		definePropertyDescriptor(CHECK_LOCALS_DESCRIPTOR);</span>
+<span class="fc" id="L71">		definePropertyDescriptor(CHECK_PARAMETERS_DESCRIPTOR);</span>
+<span class="fc" id="L72">		definePropertyDescriptor(STATIC_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L73">		definePropertyDescriptor(STATIC_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L74">		definePropertyDescriptor(MEMBER_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L75">		definePropertyDescriptor(MEMBER_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L76">		definePropertyDescriptor(LOCAL_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L77">		definePropertyDescriptor(LOCAL_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L78">		definePropertyDescriptor(PARAMETER_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L79">		definePropertyDescriptor(PARAMETER_SUFFIXES_DESCRIPTOR);</span>
+
+<span class="fc" id="L81">		setProperty(CODECLIMATE_CATEGORIES, new String[]{ &quot;Style&quot; });</span>
+		// Note: x10 as Apex has not automatic refactoring
+<span class="fc" id="L83">		setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 5);</span>
+<span class="fc" id="L84">		setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L85">	}</span>
+
+	public Object visit(ASTUserClass node, Object data) {
+<span class="fc" id="L88">		init();</span>
+<span class="fc" id="L89">		return super.visit(node, data);</span>
+	}
+
+	public Object visit(ASTUserInterface node, Object data) {
+<span class="fc" id="L93">		init();</span>
+<span class="fc" id="L94">		return super.visit(node, data);</span>
+	}
+
+	protected void init() {
+<span class="fc" id="L98">		checkMembers = getProperty(CHECK_MEMBERS_DESCRIPTOR);</span>
+<span class="fc" id="L99">		checkLocals = getProperty(CHECK_LOCALS_DESCRIPTOR);</span>
+<span class="fc" id="L100">		checkParameters = getProperty(CHECK_PARAMETERS_DESCRIPTOR);</span>
+<span class="fc" id="L101">		staticPrefixes = getProperty(STATIC_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L102">		staticSuffixes = getProperty(STATIC_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L103">		memberPrefixes = getProperty(MEMBER_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L104">		memberSuffixes = getProperty(MEMBER_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L105">		localPrefixes = getProperty(LOCAL_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L106">		localSuffixes = getProperty(LOCAL_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L107">		parameterPrefixes = getProperty(PARAMETER_PREFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L108">		parameterSuffixes = getProperty(PARAMETER_SUFFIXES_DESCRIPTOR);</span>
+<span class="fc" id="L109">	}</span>
+
+	public Object visit(ASTField node, Object data) {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		if (!checkMembers) {</span>
+<span class="fc" id="L113">			return data;</span>
+		}
+<span class="fc" id="L115">		boolean isStatic = node.getNode().getFieldInfo().getModifiers().has(STATIC);</span>
+<span class="fc" id="L116">		boolean isFinal = node.getNode().getFieldInfo().getModifiers().has(FINAL);</span>
+
+<span class="fc bfc" id="L118" title="All 4 branches covered.">		return checkName(isStatic ? staticPrefixes : memberPrefixes, isStatic ? staticSuffixes : memberSuffixes, node,</span>
+				isStatic, isFinal, data);
+	}
+
+	public Object visit(ASTVariableDeclaration node, Object data) {
+
+<span class="fc bfc" id="L124" title="All 2 branches covered.">		if (!checkLocals) {</span>
+<span class="fc" id="L125">			return data;</span>
+		}
+
+<span class="fc" id="L128">		boolean isFinal = node.getNode().getLocalInfo().getModifiers().has(FINAL);</span>
+<span class="fc" id="L129">		return checkName(localPrefixes, localSuffixes, node, false, isFinal, data);</span>
+	}
+
+	public Object visit(ASTParameter node, Object data) {
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		if (!checkParameters) {</span>
+<span class="fc" id="L134">			return data;</span>
+		}
+
+<span class="fc" id="L137">		boolean isFinal = node.getNode().getModifierInfo().has(FINAL);</span>
+<span class="fc" id="L138">		return checkName(parameterPrefixes, parameterSuffixes, node, false, isFinal, data);</span>
+	}
+
+	private Object checkName(String[] prefixes, String[] suffixes, ApexNode&lt;?&gt; node, boolean isStatic, boolean isFinal,
+			Object data) {
+
+<span class="fc" id="L144">		String varName = node.getImage();</span>
+
+		// Skip on null (with exception classes) and serialVersionUID
+<span class="fc bfc" id="L147" title="All 4 branches covered.">		if (varName == null || varName.equals(&quot;serialVersionUID&quot;)) {</span>
+<span class="fc" id="L148">			return data;</span>
+		}
+
+		// Static finals should be uppercase
+<span class="fc bfc" id="L152" title="All 4 branches covered.">		if (isStatic &amp;&amp; isFinal) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">			if (!varName.equals(varName.toUpperCase())) {</span>
+<span class="fc" id="L154">				addViolationWithMessage(data, node,</span>
+						&quot;Variables that are final and static should be all capitals, ''{0}'' is not all capitals.&quot;,
+						new Object[] { varName });
+			}
+<span class="fc" id="L158">			return data;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">		} else if (!isFinal) {</span>
+<span class="fc" id="L160">			String normalizedVarName = normalizeVariableName(varName, prefixes, suffixes);</span>
+
+<span class="fc bfc" id="L162" title="All 2 branches covered.">			if (normalizedVarName.indexOf('_') &gt;= 0) {</span>
+<span class="fc" id="L163">				addViolationWithMessage(data, node,</span>
+						&quot;Only variables that are final should contain underscores (except for underscores in standard prefix/suffix), ''{0}'' is not final.&quot;,
+						new Object[] { varName });
+			}
+<span class="fc bfc" id="L167" title="All 2 branches covered.">			if (Character.isUpperCase(varName.charAt(0))) {</span>
+<span class="fc" id="L168">				addViolationWithMessage(data, node,</span>
+						&quot;Variables should start with a lowercase character, ''{0}'' starts with uppercase character.&quot;,
+						new Object[] { varName });
+			}
+		}
+<span class="fc" id="L173">		return data;</span>
+	}
+
+	private String normalizeVariableName(String varName, String[] prefixes, String[] suffixes) {
+<span class="fc" id="L177">		return stripSuffix(stripPrefix(varName, prefixes), suffixes);</span>
+	}
+
+	private String stripSuffix(String varName, String[] suffixes) {
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">		if (suffixes != null) {</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">			for (int i = 0; i &lt; suffixes.length; i++) {</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">				if (varName.endsWith(suffixes[i])) {</span>
+<span class="fc" id="L184">					varName = varName.substring(0, varName.length() - suffixes[i].length());</span>
+<span class="fc" id="L185">					break;</span>
+				}
+			}
+		}
+<span class="fc" id="L189">		return varName;</span>
+	}
+
+	private String stripPrefix(String varName, String[] prefixes) {
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">		if (prefixes != null) {</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">			for (int i = 0; i &lt; prefixes.length; i++) {</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">				if (varName.startsWith(prefixes[i])) {</span>
+<span class="fc" id="L196">					return varName.substring(prefixes[i].length());</span>
+				}
+			}
+		}
+<span class="nc" id="L200">		return varName;</span>
+	}
+
+	public boolean hasPrefixesOrSuffixes() {
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		for (PropertyDescriptor&lt;?&gt; desc : getPropertyDescriptors()) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (desc instanceof StringMultiProperty) {</span>
+<span class="nc" id="L207">				String[] values = getProperty((StringMultiProperty) desc);</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">				if (CollectionUtil.isNotEmpty(values)) {</span>
+<span class="nc" id="L209">					return true;</span>
+				}
+			}
+<span class="nc" id="L212">		}</span>
+<span class="nc" id="L213">		return false;</span>
+	}
+
+	public String dysfunctionReason() {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		return hasPrefixesOrSuffixes() ? null : &quot;No prefixes or suffixes specified&quot;;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

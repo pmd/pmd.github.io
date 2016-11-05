@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DBType.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.database</a> &gt; <span class="el_source">DBType.java</span></div><h1>DBType.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util.database;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * Encapsulate the settings needed to access database source code.
+ * 
+ * 
+ * @author sturton
+ */
+public class DBType {
+<span class="fc" id="L26">    private static final String CLASS_NAME = DBType.class.getCanonicalName();</span>
+
+<span class="fc" id="L28">    private static final Logger LOGGER = Logger.getLogger(DBType.class.getPackage().getName());</span>
+
+    private static final String INTERNAL_SETTINGS = &quot;[Internal Settings]&quot;;
+
+    /**
+     * The names of the properties
+     */
+<span class="nc" id="L35">    public enum property {</span>
+<span class="nc" id="L36">        USER(&quot;user&quot;, &quot;Name of the connecting database user&quot;), PASSWORD(&quot;password&quot;,</span>
+<span class="nc" id="L37">                &quot;The connecting database user's password&quot;), DRIVER(&quot;driver&quot;, &quot;JDBC driver classname&quot;), CHARACTERSET(</span>
+<span class="nc" id="L38">                &quot;characterset&quot;, &quot;Reader character set&quot;), LANGUAGES(&quot;languages&quot;,</span>
+<span class="nc" id="L39">                &quot;Comma-separated list of PMD-supported languages&quot;), SCHEMAS(&quot;schemas&quot;,</span>
+<span class="nc" id="L40">                &quot;SchemaSpy compatible regular expression for schemas to be processed&quot;), SOURCE_TYPES(&quot;sourcecodetypes&quot;,</span>
+<span class="nc" id="L41">                &quot;Comma-separated list of supported source types&quot;), SOURCE_NAMES(&quot;sourcecodenames&quot;,</span>
+<span class="nc" id="L42">                &quot;Default comma-separated list of source code names to validate&quot;), GET_SOURCE_CODE_STATEMENT(</span>
+                &quot;getSourceCodeStatement&quot;,
+<span class="nc" id="L44">                &quot;SQL92 or Oracle embedded SQL statement to retrieve  code source from the database catalogue&quot;), RETURN_TYPE(</span>
+                &quot;returnType&quot;, &quot;int equivalent of java.sql.Types return type of getSourceCodeStatement&quot;);
+
+        private String name;
+        private String description;
+
+<span class="nc" id="L50">        private property(String name, String description) {</span>
+<span class="nc" id="L51">            this.name = name;</span>
+<span class="nc" id="L52">            this.description = description;</span>
+<span class="nc" id="L53">        }</span>
+
+        public String getPropertyName() {
+<span class="nc" id="L56">            return name;</span>
+        }
+
+        public String getDescription() {
+<span class="nc" id="L60">            return description;</span>
+        }
+    }
+
+    /**
+     * Where the properties were taken from
+     */
+    private String propertiesSource;
+
+    /**
+     * Parameters from Properties
+     */
+    private Properties properties;
+
+    // Driver Class
+    private String driverClass;
+
+    // Database CharacterSet
+    private String characterSet;
+
+    // String to get objects
+    private String sourceCodeTypes;
+
+    // Languages to process
+    private String languages;
+
+    // Return class for source code
+    private int sourceCodeReturnType;
+
+    /**
+     * 
+     * @param dbType
+     */
+<span class="fc" id="L93">    public DBType(String dbType) throws Exception {</span>
+<span class="fc" id="L94">        properties = loadDBProperties(dbType);</span>
+<span class="fc" id="L95">    }</span>
+
+    /**
+     * Load the most specific dbType for the protocol
+     * 
+     * @param subProtocol
+     * @param subnamePrefix
+     * @throws IOException
+     */
+<span class="fc" id="L104">    public DBType(String subProtocol, String subnamePrefix) throws IOException {</span>
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L107">            LOGGER.fine(&quot;subProtocol=&quot; + subProtocol + &quot;, subnamePrefix=&quot; + subnamePrefix);</span>
+        }
+
+<span class="pc bpc" id="L110" title="3 of 4 branches missed.">        if (null == subProtocol &amp;&amp; null == subnamePrefix) {</span>
+<span class="nc" id="L111">            throw new RuntimeException(&quot;subProtocol and subnamePrefix cannot both be null&quot;);</span>
+        } else {
+
+<span class="fc" id="L114">            properties = null;</span>
+
+            // Attempt subnamePrefix before subProtocol
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (subnamePrefix != null) {</span>
+<span class="fc" id="L118">                properties = loadDBProperties(subnamePrefix);</span>
+            }
+<span class="pc bpc" id="L120" title="1 of 4 branches missed.">            if (properties == null &amp;&amp; subProtocol != null) {</span>
+<span class="fc" id="L121">                properties = loadDBProperties(subProtocol);</span>
+            }
+
+<span class="pc bpc" id="L124" title="1 of 4 branches missed.">            if (subnamePrefix != null &amp;&amp; properties != null) {</span>
+<span class="fc" id="L125">                LOGGER.log(Level.FINE, &quot;DBType found using subnamePrefix={0}&quot;, subnamePrefix);</span>
+<span class="pc bpc" id="L126" title="2 of 4 branches missed.">            } else if (subProtocol != null &amp;&amp; properties != null) {</span>
+<span class="fc" id="L127">                LOGGER.log(Level.FINE, &quot;DBType found using subProtocol={0}&quot;, subProtocol);</span>
+            } else {
+<span class="nc" id="L129">                throw new RuntimeException(String.format(</span>
+                        &quot;Could not locate DBType properties using subProtocol=%s and subnamePrefix=%s&quot;, subProtocol,
+                        subnamePrefix));
+            }
+
+        }
+<span class="fc" id="L135">    }</span>
+
+    public Properties getProperties() {
+
+<span class="fc" id="L139">        return properties;</span>
+    }
+
+    /**
+     * Load properties from one or more files or resources.
+     * 
+     * &lt;p&gt;
+     * This method recursively finds property files or JAR resources matching
+     * {@matchstring}.
+     * &lt;/p&gt;
+     * .
+     * &lt;p&gt;
+     * The method is intended to be able to use , so any
+     *
+     * @param matchString
+     * @return &quot;current&quot; set of properties (from one or more resources/property
+     *         files)
+     */
+    private Properties loadDBProperties(String matchString) throws IOException {
+<span class="fc" id="L158">        LOGGER.entering(CLASS_NAME, matchString);</span>
+        // Locale locale = Control.g;
+<span class="fc" id="L160">        ResourceBundle resourceBundle = null;</span>
+<span class="fc" id="L161">        InputStream stream = null;</span>
+
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L164">            LOGGER.finest(&quot;class_path+&quot; + System.getProperty(&quot;java.class.path&quot;));</span>
+        }
+
+        /*
+         * Attempt to match properties files in this order:- File path with
+         * properties suffix File path without properties suffix Resource
+         * without class prefix Resource with class prefix
+         */
+        try {
+<span class="fc" id="L173">            File propertiesFile = new File(matchString);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L175">                LOGGER.finest(&quot;Attempting File no file suffix: &quot; + matchString);</span>
+            }
+<span class="fc" id="L177">            stream = new FileInputStream(propertiesFile);</span>
+<span class="fc" id="L178">            resourceBundle = new PropertyResourceBundle(stream);</span>
+<span class="fc" id="L179">            propertiesSource = propertiesFile.getAbsolutePath();</span>
+<span class="fc" id="L180">            LOGGER.finest(&quot;FileSystemWithoutExtension&quot;);</span>
+<span class="fc" id="L181">        } catch (FileNotFoundException notFoundOnFilesystemWithoutExtension) {</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L183">                LOGGER.finest(&quot;notFoundOnFilesystemWithoutExtension&quot;);</span>
+<span class="nc" id="L184">                LOGGER.finest(&quot;Attempting File with added file suffix: &quot; + matchString + &quot;.properties&quot;);</span>
+            }
+            try {
+<span class="fc" id="L187">                File propertiesFile = new File(matchString + &quot;.properties&quot;);</span>
+<span class="nc" id="L188">                stream = new FileInputStream(propertiesFile);</span>
+<span class="nc" id="L189">                resourceBundle = new PropertyResourceBundle(stream);</span>
+<span class="nc" id="L190">                propertiesSource = propertiesFile.getAbsolutePath();</span>
+<span class="nc" id="L191">                LOGGER.finest(&quot;FileSystemWithExtension&quot;);</span>
+<span class="fc" id="L192">            } catch (FileNotFoundException notFoundOnFilesystemWithExtensionTackedOn) {</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L194">                    LOGGER.finest(&quot;Attempting JARWithoutClassPrefix: &quot; + matchString);</span>
+                }
+                try {
+<span class="nc" id="L197">                    resourceBundle = ResourceBundle.getBundle(matchString);</span>
+<span class="nc" id="L198">                    propertiesSource = &quot;[&quot; + INTERNAL_SETTINGS + &quot;]&quot; + File.separator + matchString + &quot;.properties&quot;;</span>
+<span class="nc" id="L199">                    LOGGER.finest(&quot;InJarWithoutPath&quot;);</span>
+<span class="fc" id="L200">                } catch (Exception notInJarWithoutPath) {</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L202">                        LOGGER.finest(&quot;Attempting JARWithClass prefix: &quot; + DBType.CLASS_NAME + &quot;.&quot; + matchString);</span>
+                    }
+                    try {
+<span class="fc" id="L205">                        resourceBundle = ResourceBundle.getBundle(DBType.CLASS_NAME + &quot;.&quot; + matchString);</span>
+<span class="fc" id="L206">                        propertiesSource = &quot;[&quot; + INTERNAL_SETTINGS + &quot;]&quot; + File.separator + matchString + &quot;.properties&quot;;</span>
+<span class="fc" id="L207">                        LOGGER.finest(&quot;found InJarWithPath&quot;);</span>
+<span class="nc" id="L208">                    } catch (Exception notInJarWithPath) {</span>
+<span class="nc" id="L209">                        notInJarWithPath.printStackTrace();</span>
+<span class="nc" id="L210">                        notFoundOnFilesystemWithExtensionTackedOn.printStackTrace();</span>
+<span class="nc" id="L211">                        throw new RuntimeException(&quot; Could not locate DBTYpe settings : &quot; + matchString,</span>
+                                notInJarWithPath);
+<span class="fc" id="L213">                    }</span>
+<span class="nc" id="L214">                }</span>
+<span class="nc" id="L215">            }</span>
+        } finally {
+<span class="pc" id="L217">            IOUtils.closeQuietly(stream);</span>
+<span class="fc" id="L218">        }</span>
+
+        // Properties in this matched resource
+<span class="fc" id="L221">        Properties matchedProperties = getResourceBundleAsProperties(resourceBundle);</span>
+<span class="fc" id="L222">        resourceBundle = null;</span>
+<span class="fc" id="L223">        String saveLoadedFrom = getPropertiesSource();</span>
+
+        /*
+         * If the matched properties contain the &quot;extends&quot; key, use the value as
+         * a matchstring, to recursively set the properties before overwriting
+         * any previous properties with the matched properties.
+         */
+<span class="fc" id="L230">        String extendedPropertyFile = (String) matchedProperties.remove(&quot;extends&quot;);</span>
+<span class="pc bpc" id="L231" title="1 of 4 branches missed.">        if (null != extendedPropertyFile &amp;&amp; !&quot;&quot;.equals(extendedPropertyFile.trim())) {</span>
+<span class="fc" id="L232">            Properties extendedProperties = loadDBProperties(extendedPropertyFile.trim());</span>
+
+            // Overwrite extended properties with properties in the matched
+            // resource
+<span class="fc" id="L236">            extendedProperties.putAll(matchedProperties);</span>
+<span class="fc" id="L237">            matchedProperties = extendedProperties;</span>
+        }
+
+        /*
+         * Record the location of the original matched resource/property file,
+         * and the current set of properties secured.
+         */
+<span class="fc" id="L244">        propertiesSource = saveLoadedFrom;</span>
+<span class="fc" id="L245">        setProperties(matchedProperties);</span>
+
+<span class="fc" id="L247">        return matchedProperties;</span>
+    }
+
+    /**
+     * Options that are specific to a type of database. E.g. things like
+     * &lt;code&gt;host&lt;/code&gt;, &lt;code&gt;port&lt;/code&gt; or &lt;code&gt;db&lt;/code&gt;, but &lt;b&gt;don't&lt;/b&gt;
+     * have a setter in this class.
+     *
+     * @param dbSpecificOptions
+     */
+
+    /**
+     * Convert &lt;code&gt;resourceBundle&lt;/code&gt; to usable {@Properties}.
+     *
+     * @param resourceBundle ResourceBundle
+     * @return Properties
+     */
+    public static Properties getResourceBundleAsProperties(ResourceBundle resourceBundle) {
+<span class="fc" id="L265">        Properties properties = new Properties();</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">        for (String key : resourceBundle.keySet()) {</span>
+<span class="fc" id="L267">            properties.put(key, resourceBundle.getObject(key));</span>
+<span class="fc" id="L268">        }</span>
+
+<span class="fc" id="L270">        return properties;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L275">        final int prime = 31;</span>
+<span class="nc" id="L276">        int result = 1;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        result = prime * result + ((characterSet == null) ? 0 : characterSet.hashCode());</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        result = prime * result + ((driverClass == null) ? 0 : driverClass.hashCode());</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        result = prime * result + ((languages == null) ? 0 : languages.hashCode());</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        result = prime * result + ((properties == null) ? 0 : properties.hashCode());</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">        result = prime * result + ((propertiesSource == null) ? 0 : propertiesSource.hashCode());</span>
+<span class="nc" id="L282">        result = prime * result + sourceCodeReturnType;</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        result = prime * result + ((sourceCodeTypes == null) ? 0 : sourceCodeTypes.hashCode());</span>
+<span class="nc" id="L284">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">        if (this == obj) {</span>
+<span class="fc" id="L290">            return true;</span>
+        }
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L293">            return false;</span>
+        }
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L296">            return false;</span>
+        }
+<span class="nc" id="L298">        DBType other = (DBType) obj;</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (characterSet == null) {</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">            if (other.characterSet != null) {</span>
+<span class="nc" id="L301">                return false;</span>
+            }
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        } else if (!characterSet.equals(other.characterSet)) {</span>
+<span class="nc" id="L304">            return false;</span>
+        }
+<span class="nc bnc" id="L306" title="All 2 branches missed.">        if (driverClass == null) {</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">            if (other.driverClass != null) {</span>
+<span class="nc" id="L308">                return false;</span>
+            }
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        } else if (!driverClass.equals(other.driverClass)) {</span>
+<span class="nc" id="L311">            return false;</span>
+        }
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (languages == null) {</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">            if (other.languages != null) {</span>
+<span class="nc" id="L315">                return false;</span>
+            }
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        } else if (!languages.equals(other.languages)) {</span>
+<span class="nc" id="L318">            return false;</span>
+        }
+<span class="nc bnc" id="L320" title="All 2 branches missed.">        if (properties == null) {</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">            if (other.properties != null) {</span>
+<span class="nc" id="L322">                return false;</span>
+            }
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        } else if (!properties.equals(other.properties)) {</span>
+<span class="nc" id="L325">            return false;</span>
+        }
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (propertiesSource == null) {</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">            if (other.propertiesSource != null) {</span>
+<span class="nc" id="L329">                return false;</span>
+            }
+<span class="nc bnc" id="L331" title="All 2 branches missed.">        } else if (!propertiesSource.equals(other.propertiesSource)) {</span>
+<span class="nc" id="L332">            return false;</span>
+        }
+<span class="nc bnc" id="L334" title="All 2 branches missed.">        if (sourceCodeReturnType != other.sourceCodeReturnType) {</span>
+<span class="nc" id="L335">            return false;</span>
+        }
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if (sourceCodeTypes == null) {</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">            if (other.sourceCodeTypes != null) {</span>
+<span class="nc" id="L339">                return false;</span>
+            }
+<span class="nc bnc" id="L341" title="All 2 branches missed.">        } else if (!sourceCodeTypes.equals(other.sourceCodeTypes)) {</span>
+<span class="nc" id="L342">            return false;</span>
+        }
+<span class="nc" id="L344">        return true;</span>
+    }
+
+    /**
+     * @return the driverClass
+     */
+    public String getDriverClass() {
+<span class="fc" id="L351">        return driverClass;</span>
+    }
+
+    /**
+     * @return the characterSet
+     */
+    public String getCharacterSet() {
+<span class="fc" id="L358">        return characterSet;</span>
+    }
+
+    /**
+     * @return the sourceCodeTypes
+     */
+    public String getSourceCodeTypes() {
+<span class="fc" id="L365">        return sourceCodeTypes;</span>
+    }
+
+    /**
+     * @return the languages
+     */
+    public String getLanguages() {
+<span class="fc" id="L372">        return languages;</span>
+    }
+
+    /**
+     * @return the sourceCodeReturnType
+     */
+    public int getSourceCodeReturnType() {
+<span class="nc" id="L379">        return sourceCodeReturnType;</span>
+    }
+
+    /**
+     * @return the propertiesSource
+     */
+    public String getPropertiesSource() {
+<span class="fc" id="L386">        return propertiesSource;</span>
+    }
+
+    /**
+     * @param properties the properties to set
+     */
+    public void setProperties(Properties properties) {
+<span class="fc" id="L393">        this.properties = properties;</span>
+
+        // Driver Class
+<span class="fc bfc" id="L396" title="All 2 branches covered.">        if (null != this.properties.getProperty(&quot;driver&quot;)) {</span>
+<span class="fc" id="L397">            this.driverClass = this.properties.getProperty(&quot;driver&quot;);</span>
+        }
+
+        // Database CharacterSet
+<span class="fc bfc" id="L401" title="All 2 branches covered.">        if (null != this.properties.getProperty(&quot;characterset&quot;)) {</span>
+<span class="fc" id="L402">            this.characterSet = this.properties.getProperty(&quot;characterset&quot;);</span>
+        }
+
+        // String to get objects
+<span class="fc bfc" id="L406" title="All 2 branches covered.">        if (null != this.properties.getProperty(&quot;sourcecodetypes&quot;)) {</span>
+<span class="fc" id="L407">            this.sourceCodeTypes = this.properties.getProperty(&quot;sourcecodetypes&quot;);</span>
+        }
+
+        // Languages to process
+<span class="fc bfc" id="L411" title="All 2 branches covered.">        if (null != this.properties.getProperty(&quot;languages&quot;)) {</span>
+<span class="fc" id="L412">            this.languages = this.properties.getProperty(&quot;languages&quot;);</span>
+        }
+
+        // Return class for source code
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        if (null != this.properties.getProperty(&quot;returnType&quot;)) {</span>
+<span class="pc bpc" id="L417" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L418">                LOGGER.finest(&quot;returnType&quot; + this.properties.getProperty(&quot;returnType&quot;));</span>
+            }
+<span class="fc" id="L420">            this.sourceCodeReturnType = Integer.parseInt(this.properties.getProperty(&quot;returnType&quot;));</span>
+        }
+
+<span class="fc" id="L423">    }</span>
+
+    @Override
+    public String toString() {
+<span class="nc" id="L427">        return CLASS_NAME + &quot;@&quot; + propertiesSource;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
