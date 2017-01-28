@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClassLoaderUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd</a> &gt; <span class="el_source">ClassLoaderUtil.java</span></div><h1>ClassLoaderUtil.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.dcd;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+
+/**
+ * ClassLoader utilities.  Useful for extracting additional details from a class
+ * hierarchy beyond the basic standard Java Reflection APIs.
+ */
+<span class="nc" id="L14">public class ClassLoaderUtil {</span>
+
+    public static final String CLINIT = &quot;&lt;clinit&gt;&quot;;
+
+    public static final String INIT = &quot;&lt;init&gt;&quot;;
+
+    public static String fromInternalForm(String internalForm) {
+<span class="nc" id="L21">	return internalForm.replace('/', '.');</span>
+    }
+
+    public static String toInternalForm(String internalForm) {
+<span class="nc" id="L25">	return internalForm.replace('.', '/');</span>
+    }
+
+    public static Class&lt;?&gt; getClass(String name) {
+	try {
+<span class="nc" id="L30">	    return ClassLoaderUtil.class.getClassLoader().loadClass(name);</span>
+<span class="nc" id="L31">	} catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L32">	    throw new RuntimeException(e);</span>
+<span class="nc" id="L33">	} catch (NoClassDefFoundError e) {</span>
+<span class="nc" id="L34">	    throw new RuntimeException(e);</span>
+	}
+    }
+
+    public static Field getField(Class&lt;?&gt; type, String name) {
+	try {
+<span class="nc" id="L40">	    return myGetField(type, name);</span>
+<span class="nc" id="L41">	} catch (NoSuchFieldException e) {</span>
+<span class="nc" id="L42">	    throw new RuntimeException(e);</span>
+	}
+    }
+
+    private static Field myGetField(Class&lt;?&gt; type, String name) throws NoSuchFieldException {
+	// Scan the type hierarchy just like Class.getField(String) using
+	// Class.getDeclaredField(String)
+	try {
+<span class="nc" id="L50">	    return type.getDeclaredField(name);</span>
+<span class="nc" id="L51">	} catch (NoSuchFieldException e) {</span>
+	    // Try the super interfaces
+<span class="nc bnc" id="L53" title="All 2 branches missed.">	    for (Class&lt;?&gt; superInterface : type.getInterfaces()) {</span>
+		try {
+<span class="nc" id="L55">		    return myGetField(superInterface, name);</span>
+<span class="nc" id="L56">		} catch (NoSuchFieldException e2) {</span>
+		    // Okay
+		}
+	    }
+	    // Try the super classes
+<span class="nc bnc" id="L61" title="All 2 branches missed.">	    if (type.getSuperclass() != null) {</span>
+<span class="nc" id="L62">		return myGetField(type.getSuperclass(), name);</span>
+	    } else {
+<span class="nc" id="L64">		throw new NoSuchFieldException(type.getName() + &quot;.&quot; + name);</span>
+	    }
+	}
+    }
+
+    public static Method getMethod(Class&lt;?&gt; type, String name, Class&lt;?&gt;... parameterTypes) {
+	try {
+<span class="nc" id="L71">	    return myGetMethod(type, name, parameterTypes);</span>
+<span class="nc" id="L72">	} catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L73">	    throw new RuntimeException(e);</span>
+	}
+    }
+
+    private static Method myGetMethod(Class&lt;?&gt; type, String name, Class&lt;?&gt;... parameterTypes)
+	    throws NoSuchMethodException {
+	// Scan the type hierarchy just like Class.getMethod(String, Class[])
+	// using Class.getDeclaredMethod(String, Class[])
+	// System.out.println(&quot;type: &quot; + type);
+	// System.out.println(&quot;name: &quot; + name);
+	// System.out
+	// .println(&quot;parameterTypes: &quot; + Arrays.toString(parameterTypes));
+	try {
+	    // System.out.println(&quot;Checking getDeclaredMethod&quot;);
+	    // for (Method m : type.getDeclaredMethods()) {
+	    // System.out.println(&quot;\t&quot; + m);
+	    // }
+<span class="nc" id="L90">	    return type.getDeclaredMethod(name, parameterTypes);</span>
+<span class="nc" id="L91">	} catch (NoSuchMethodException e) {</span>
+	    try {
+		// Try the super classes
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (type.getSuperclass() != null) {</span>
+		    // System.out.println(&quot;Checking super: &quot;
+		    // + type.getSuperclass());
+<span class="nc" id="L97">		    return myGetMethod(type.getSuperclass(), name, parameterTypes);</span>
+		}
+<span class="nc" id="L99">	    } catch (NoSuchMethodException e2) {</span>
+		// Okay
+<span class="nc" id="L101">	    }</span>
+	    // Try the super interfaces
+<span class="nc bnc" id="L103" title="All 2 branches missed.">	    for (Class&lt;?&gt; superInterface : type.getInterfaces()) {</span>
+		try {
+		    // System.out.println(&quot;Checking super interface: &quot;
+		    // + superInterface);
+<span class="nc" id="L107">		    return myGetMethod(superInterface, name, parameterTypes);</span>
+<span class="nc" id="L108">		} catch (NoSuchMethodException e3) {</span>
+		    // Okay
+		}
+	    }
+<span class="nc" id="L112">	    throw new NoSuchMethodException(type.getName() + '.' + getMethodSignature(name, parameterTypes));</span>
+	}
+    }
+
+    public static Constructor&lt;?&gt; getConstructor(Class&lt;?&gt; type, String name, Class&lt;?&gt;... parameterTypes) {
+	try {
+<span class="nc" id="L118">	    return type.getDeclaredConstructor(parameterTypes);</span>
+<span class="nc" id="L119">	} catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L120">	    throw new RuntimeException(e);</span>
+	}
+    }
+
+    public static String getMethodSignature(String name, Class&lt;?&gt;... parameterTypes) {
+<span class="nc" id="L125">	StringBuilder builder = new StringBuilder(name);</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">	if (!(name.equals(CLINIT) || name.equals(INIT))) {</span>
+<span class="nc" id="L127">	    builder.append('(');</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">	    if (parameterTypes != null &amp;&amp; parameterTypes.length &gt; 0) {</span>
+<span class="nc" id="L129">	    	builder.append(parameterTypes[0].getName());</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">	    	for (int i = 1; i &lt; parameterTypes.length; i++) {</span>
+<span class="nc" id="L131">	    		builder.append(&quot;, &quot;).append(parameterTypes[i].getName());</span>
+	    	}
+	    }
+<span class="nc" id="L134">	    builder.append(')');</span>
+	}
+<span class="nc" id="L136">	return builder.toString();</span>
+    }
+
+    public static Class&lt;?&gt;[] getParameterTypes(String... parameterTypeNames) {
+<span class="nc" id="L140">	Class&lt;?&gt;[] parameterTypes = new Class[parameterTypeNames.length];</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">	for (int i = 0; i &lt; parameterTypeNames.length; i++) {</span>
+<span class="nc" id="L142">	    parameterTypes[i] = getClass(parameterTypeNames[i]);</span>
+	}
+<span class="nc" id="L144">	return parameterTypes;</span>
+    }
+
+    public static boolean isOverridenMethod(Class&lt;?&gt; clazz, Method method, boolean checkThisClass) {
+	try {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">	    if (checkThisClass) {</span>
+<span class="nc" id="L150">		clazz.getDeclaredMethod(method.getName(), method.getParameterTypes());</span>
+<span class="nc" id="L151">		return true;</span>
+	    }
+<span class="nc" id="L153">	} catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L154">	}</span>
+	// Check super class
+<span class="nc bnc" id="L156" title="All 2 branches missed.">	if (clazz.getSuperclass() != null) {</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">	    if (isOverridenMethod(clazz.getSuperclass(), method, true)) {</span>
+<span class="nc" id="L158">		return true;</span>
+	    }
+	}
+	// Check interfaces
+<span class="nc bnc" id="L162" title="All 2 branches missed.">	for (Class&lt;?&gt; anInterface : clazz.getInterfaces()) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">	    if (isOverridenMethod(anInterface, method, true)) {</span>
+<span class="nc" id="L164">		return true;</span>
+	    }
+	}
+<span class="nc" id="L167">	return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

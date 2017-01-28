@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Filters.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.filter</a> &gt; <span class="el_source">Filters.java</span></div><h1>Filters.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util.filter;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Utility class for working with Filters.  Contains builder style methods,
+ * apply methods, as well as mechanisms for adapting Filters and FilenameFilters.
+ */
+<span class="nc" id="L16">public class Filters {</span>
+
+	/**
+	 * Filter a given Collection.
+	 * @param &lt;T&gt; Type of the Collection.
+	 * @param filter A Filter upon the Type of objects in the Collection.
+	 * @param collection The Collection to filter.
+	 * @return A List containing only those objects for which the Filter returned &lt;code&gt;true&lt;/code&gt;.
+	 */
+	public static &lt;T&gt; List&lt;T&gt; filter(Filter&lt;T&gt; filter, Collection&lt;T&gt; collection) {
+<span class="nc" id="L26">		List&lt;T&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">		for (T obj : collection) {</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">			if (filter.filter(obj)) {</span>
+<span class="nc" id="L29">				list.add(obj);</span>
+			}
+<span class="nc" id="L31">		}</span>
+<span class="nc" id="L32">		return list;</span>
+	}
+
+	/**
+	 * Get a File Filter for files with the given extensions, ignoring case.
+	 * @param extensions The extensions to filter.
+	 * @return A File Filter.
+	 */
+	public static Filter&lt;File&gt; getFileExtensionFilter(String... extensions) {
+<span class="fc" id="L41">		return new FileExtensionFilter(extensions);</span>
+	}
+
+	/**
+	 * Get a File Filter for directories.
+	 * @return A File Filter.
+	 */
+	public static Filter&lt;File&gt; getDirectoryFilter() {
+<span class="fc" id="L49">		return DirectoryFilter.INSTANCE;</span>
+	}
+
+	/**
+	 * Get a File Filter for directories or for files with the given extensions, ignoring case.
+	 * @param extensions The extensions to filter.
+	 * @return A File Filter.
+	 */
+	public static Filter&lt;File&gt; getFileExtensionOrDirectoryFilter(String... extensions) {
+<span class="fc" id="L58">		return new OrFilter&lt;&gt;(getFileExtensionFilter(extensions), getDirectoryFilter());</span>
+	}
+
+	/**
+	 * Given a String Filter, expose as a File Filter.  The File paths are
+	 * normalized to a standard pattern using &lt;code&gt;/&lt;/code&gt; as a path separator
+	 * which can be used cross platform easily in a regular expression based
+	 * String Filter.
+	 * 
+	 * @param filter A String Filter.
+	 * @return A File Filter.
+	 */
+	public static Filter&lt;File&gt; toNormalizedFileFilter(final Filter&lt;String&gt; filter) {
+<span class="fc" id="L71">		return new Filter&lt;File&gt;() {</span>
+			public boolean filter(File file) {
+<span class="fc" id="L73">				String path = file.getPath();</span>
+<span class="fc" id="L74">				path = path.replace('\\', '/');</span>
+<span class="fc" id="L75">				return filter.filter(path);</span>
+			}
+
+			public String toString() {
+<span class="nc" id="L79">				return filter.toString();</span>
+			}
+		};
+	}
+
+	/**
+	 * Given a String Filter, expose as a Filter on another type.  The
+	 * &lt;code&gt;toString()&lt;/code&gt; method is called on the objects of the other
+	 * type and delegated to the String Filter.
+	 * @param &lt;T&gt; The desired type.
+	 * @param filter The existing String Filter.
+	 * @return A Filter on the desired type.
+	 */
+	public static &lt;T&gt; Filter&lt;T&gt; fromStringFilter(final Filter&lt;String&gt; filter) {
+<span class="nc" id="L93">		return new Filter&lt;T&gt;() {</span>
+			public boolean filter(T obj) {
+<span class="nc" id="L95">				return filter.filter(obj.toString());</span>
+			}
+
+			public String toString() {
+<span class="nc" id="L99">				return filter.toString();</span>
+			}
+		};
+	}
+
+	/**
+	 * Given a File Filter, expose as a FilenameFilter.
+	 * @param filter The File Filter.
+	 * @return A FilenameFilter.
+	 */
+	public static FilenameFilter toFilenameFilter(final Filter&lt;File&gt; filter) {
+<span class="fc" id="L110">		return new FilenameFilter() {</span>
+			public boolean accept(File dir, String name) {
+<span class="fc" id="L112">				return filter.filter(new File(dir, name));</span>
+			}
+
+			public String toString() {
+<span class="nc" id="L116">				return filter.toString();</span>
+			}
+		};
+	}
+
+	/**
+	 * Given a FilenameFilter, expose as a File Filter.
+	 * @param filter The FilenameFilter.
+	 * @return A File Filter.
+	 */
+	public static Filter&lt;File&gt; toFileFilter(final FilenameFilter filter) {
+<span class="nc" id="L127">		return new Filter&lt;File&gt;() {</span>
+			public boolean filter(File file) {
+<span class="nc" id="L129">				return filter.accept(file.getParentFile(), file.getName());</span>
+			}
+
+			public String toString() {
+<span class="nc" id="L133">				return filter.toString();</span>
+			}
+		};
+	}
+
+	/**
+	 * Construct a String Filter using set of include and exclude regular
+	 * expressions.  If there are no include regular expressions provide, then
+	 * a regular expression is added which matches every String by default.
+	 * A String is included as long as it matches an include regular expression
+	 * and does not match an exclude regular expression.
+	 * &lt;p&gt;
+	 * In other words, exclude patterns override include patterns.
+	 * 
+	 * @param includeRegexes The include regular expressions.  May be &lt;code&gt;null&lt;/code&gt;.
+	 * @param excludeRegexes The exclude regular expressions.  May be &lt;code&gt;null&lt;/code&gt;.
+	 * @return A String Filter.
+	 */
+	public static Filter&lt;String&gt; buildRegexFilterExcludeOverInclude(List&lt;String&gt; includeRegexes,
+			List&lt;String&gt; excludeRegexes) {
+<span class="nc" id="L153">		OrFilter&lt;String&gt; includeFilter = new OrFilter&lt;&gt;();</span>
+<span class="nc bnc" id="L154" title="All 4 branches missed.">		if (includeRegexes == null || includeRegexes.isEmpty()) {</span>
+<span class="nc" id="L155">			includeFilter.addFilter(new RegexStringFilter(&quot;.*&quot;));</span>
+		} else {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			for (String includeRegex : includeRegexes) {</span>
+<span class="nc" id="L158">				includeFilter.addFilter(new RegexStringFilter(includeRegex));</span>
+<span class="nc" id="L159">			}</span>
+		}
+
+<span class="nc" id="L162">		OrFilter&lt;String&gt; excludeFilter = new OrFilter&lt;&gt;();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (excludeRegexes != null) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			for (String excludeRegex : excludeRegexes) {</span>
+<span class="nc" id="L165">				excludeFilter.addFilter(new RegexStringFilter(excludeRegex));</span>
+<span class="nc" id="L166">			}</span>
+		}
+
+<span class="nc" id="L169">		return new AndFilter&lt;&gt;(includeFilter, new NotFilter&lt;&gt;(excludeFilter));</span>
+	}
+
+	/**
+	 * Construct a String Filter using set of include and exclude regular
+	 * expressions.  If there are no include regular expressions provide, then
+	 * a regular expression is added which matches every String by default.
+	 * A String is included as long as the case that there is an include which
+	 * matches or there is not an exclude which matches.
+	 * &lt;p&gt;
+	 * In other words, include patterns override exclude patterns.
+	 * 
+	 * @param includeRegexes The include regular expressions.  May be &lt;code&gt;null&lt;/code&gt;.
+	 * @param excludeRegexes The exclude regular expressions.  May be &lt;code&gt;null&lt;/code&gt;.
+	 * @return A String Filter.
+	 */
+	public static Filter&lt;String&gt; buildRegexFilterIncludeOverExclude(List&lt;String&gt; includeRegexes,
+			List&lt;String&gt; excludeRegexes) {
+<span class="fc" id="L187">		OrFilter&lt;String&gt; includeFilter = new OrFilter&lt;&gt;();</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">		if (includeRegexes != null) {</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">			for (String includeRegex : includeRegexes) {</span>
+<span class="fc" id="L190">				includeFilter.addFilter(new RegexStringFilter(includeRegex));</span>
+<span class="fc" id="L191">			}</span>
+		}
+
+<span class="fc" id="L194">		OrFilter&lt;String&gt; excludeFilter = new OrFilter&lt;&gt;();</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">		if (excludeRegexes != null) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">			for (String excludeRegex : excludeRegexes) {</span>
+<span class="fc" id="L197">				excludeFilter.addFilter(new RegexStringFilter(excludeRegex));</span>
+<span class="fc" id="L198">			}</span>
+		}
+
+<span class="fc" id="L201">		return new OrFilter&lt;&gt;(includeFilter, new NotFilter&lt;&gt;(excludeFilter));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

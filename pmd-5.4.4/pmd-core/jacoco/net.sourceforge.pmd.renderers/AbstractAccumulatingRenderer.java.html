@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractAccumulatingRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">AbstractAccumulatingRenderer.java</span></div><h1>AbstractAccumulatingRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.renderers;
+
+import java.io.IOException;
+
+import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.util.datasource.DataSource;
+
+/**
+ * Abstract base class for {@link Renderer} implementations which only produce
+ * output once all source files are processed.  Such {@link Renderer}s use
+ * working memory proportional to the number of violations found, which can
+ * be quite large in some scenarios.  Consider using
+ * {@link AbstractIncrementingRenderer} which can use significantly less memory.
+ * 
+ * Subclasses should implement the {@link #end()} method to output the
+ * {@link #report}.
+ * 
+ * @see AbstractIncrementingRenderer
+ */
+public abstract class AbstractAccumulatingRenderer extends AbstractRenderer {
+
+    /**
+     * The accumulated Report.
+     */
+    protected Report report;
+
+    public AbstractAccumulatingRenderer(String name, String description) {
+<span class="fc" id="L31">	super(name, description);</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void start() throws IOException {
+<span class="fc" id="L38">	report = new Report();</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void startFileAnalysis(DataSource dataSource) {
+<span class="nc" id="L45">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void renderFileReport(Report report) throws IOException {
+<span class="fc" id="L51">	this.report.merge(report);</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Subclasses should output the {@link #report}.
+     * 
+     * {@inheritDoc}
+     */
+    public abstract void end() throws IOException;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

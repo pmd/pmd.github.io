@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>UsageNodeVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd</a> &gt; <span class="el_source">UsageNodeVisitor.java</span></div><h1>UsageNodeVisitor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.dcd;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
+import net.sourceforge.pmd.dcd.graph.ClassNode;
+import net.sourceforge.pmd.dcd.graph.ConstructorNode;
+import net.sourceforge.pmd.dcd.graph.FieldNode;
+import net.sourceforge.pmd.dcd.graph.MemberNode;
+import net.sourceforge.pmd.dcd.graph.MethodNode;
+import net.sourceforge.pmd.dcd.graph.NodeVisitorAdapter;
+import net.sourceforge.pmd.dcd.graph.UsageGraph;
+
+/**
+ * Perform a visitation a UsageGraph, looking for &lt;em&gt;dead code&lt;/em&gt;, which
+ * is essential code which is not used by any other code.  There are various
+ * options for configuration how this determination is made.
+ */
+<span class="nc" id="L22">public class UsageNodeVisitor extends NodeVisitorAdapter {</span>
+
+	/**
+	 * Configuration options for usage analysis.
+	 */
+<span class="nc" id="L27">	public static final class Options {</span>
+<span class="nc" id="L28">		private boolean ignoreClassAnonymous = true;</span>
+
+<span class="nc" id="L30">		private boolean ignoreConstructorStaticInitializer = true;</span>
+
+<span class="nc" id="L32">		private boolean ignoreConstructorSinglePrivateNoArg = true;</span>
+
+<span class="nc" id="L34">		private boolean ignoreConstructorAllPrivate = false;</span>
+
+<span class="nc" id="L36">		private boolean ignoreMethodJavaLangObjectOverride = true;</span>
+
+<span class="nc" id="L38">		private boolean ignoreMethodAllOverride = false;</span>
+
+<span class="nc" id="L40">		private boolean ignoreMethodMain = true;</span>
+
+<span class="nc" id="L42">		private boolean ignoreFieldInlinable = true;</span>
+
+		public boolean isIgnoreClassAnonymous() {
+<span class="nc" id="L45">			return ignoreClassAnonymous;</span>
+		}
+
+		public void setIgnoreClassAnonymous(boolean ignoreClassAnonymous) {
+<span class="nc" id="L49">			this.ignoreClassAnonymous = ignoreClassAnonymous;</span>
+<span class="nc" id="L50">		}</span>
+
+		public boolean isIgnoreConstructorStaticInitializer() {
+<span class="nc" id="L53">			return ignoreConstructorStaticInitializer;</span>
+		}
+
+		public void setIgnoreConstructorStaticInitializer(boolean ignoreConstructorStaticInitializer) {
+<span class="nc" id="L57">			this.ignoreConstructorStaticInitializer = ignoreConstructorStaticInitializer;</span>
+<span class="nc" id="L58">		}</span>
+
+		public boolean isIgnoreConstructorSinglePrivateNoArg() {
+<span class="nc" id="L61">			return ignoreConstructorSinglePrivateNoArg;</span>
+		}
+
+		public void setIgnoreConstructorSinglePrivateNoArg(boolean ignoreConstructorSinglePrivateNoArg) {
+<span class="nc" id="L65">			this.ignoreConstructorSinglePrivateNoArg = ignoreConstructorSinglePrivateNoArg;</span>
+<span class="nc" id="L66">		}</span>
+
+		public boolean isIgnoreConstructorAllPrivate() {
+<span class="nc" id="L69">			return ignoreConstructorAllPrivate;</span>
+		}
+
+		public void setIgnoreConstructorAllPrivate(boolean ignoreConstructorAllPrivate) {
+<span class="nc" id="L73">			this.ignoreConstructorAllPrivate = ignoreConstructorAllPrivate;</span>
+<span class="nc" id="L74">		}</span>
+
+		public boolean isIgnoreMethodJavaLangObjectOverride() {
+<span class="nc" id="L77">			return ignoreMethodJavaLangObjectOverride;</span>
+		}
+
+		public void setIgnoreMethodJavaLangObjectOverride(boolean ignoreMethodJavaLangObjectOverride) {
+<span class="nc" id="L81">			this.ignoreMethodJavaLangObjectOverride = ignoreMethodJavaLangObjectOverride;</span>
+<span class="nc" id="L82">		}</span>
+
+		public boolean isIgnoreMethodAllOverride() {
+<span class="nc" id="L85">			return ignoreMethodAllOverride;</span>
+		}
+
+		public void setIgnoreMethodAllOverride(boolean ignoreMethodAllOverride) {
+<span class="nc" id="L89">			this.ignoreMethodAllOverride = ignoreMethodAllOverride;</span>
+<span class="nc" id="L90">		}</span>
+
+		public boolean isIgnoreMethodMain() {
+<span class="nc" id="L93">			return ignoreMethodMain;</span>
+		}
+
+		public void setIgnoreMethodMain(boolean ignoreMethodMain) {
+<span class="nc" id="L97">			this.ignoreMethodMain = ignoreMethodMain;</span>
+<span class="nc" id="L98">		}</span>
+
+		public boolean isIgnoreFieldInlinable() {
+<span class="nc" id="L101">			return ignoreFieldInlinable;</span>
+		}
+
+		public void setIgnoreFieldInlinable(boolean ignoreFieldInlinable) {
+<span class="nc" id="L105">			this.ignoreFieldInlinable = ignoreFieldInlinable;</span>
+<span class="nc" id="L106">		}</span>
+
+	}
+
+<span class="nc" id="L110">	private final Options options = new Options();</span>
+
+	public Object visit(UsageGraph usageGraph, Object data) {
+<span class="nc" id="L113">		System.out.println(&quot;----------------------------------------&quot;);</span>
+<span class="nc" id="L114">		super.visit(usageGraph, data);</span>
+<span class="nc" id="L115">		System.out.println(&quot;----------------------------------------&quot;);</span>
+<span class="nc" id="L116">		return data;</span>
+	}
+
+	public Object visit(ClassNode classNode, Object data) {
+<span class="nc" id="L120">		boolean log = true;</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">		if (options.isIgnoreClassAnonymous() &amp;&amp; classNode.getType().isAnonymousClass()) {</span>
+<span class="nc" id="L122">			ignore(&quot;class anonymous&quot;, classNode);</span>
+<span class="nc" id="L123">			log = false;</span>
+		}
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (log) {</span>
+<span class="nc" id="L126">			System.out.println(&quot;--- &quot; + classNode.getName() + &quot; ---&quot;);</span>
+<span class="nc" id="L127">			return super.visit(classNode, data);</span>
+		} else {
+<span class="nc" id="L129">			return data;</span>
+		}
+	}
+
+	public Object visit(FieldNode fieldNode, Object data) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (fieldNode.getUsers().isEmpty()) {</span>
+<span class="nc" id="L135">			boolean log = true;</span>
+			// A field is inlinable if:
+			// 1) It is final
+			// 2) It is a primitive, or a java.lang.String
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (options.isIgnoreFieldInlinable()) {</span>
+<span class="nc bnc" id="L140" title="All 6 branches missed.">				if (Modifier.isFinal(fieldNode.getMember().getModifiers())</span>
+						&amp;&amp; fieldNode.getMember().getType().isPrimitive()
+						|| fieldNode.getMember().getType().getName().equals(&quot;java.lang.String&quot;)) {
+<span class="nc" id="L143">					ignore(&quot;field inlinable&quot;, fieldNode);</span>
+<span class="nc" id="L144">					log = false;</span>
+				}
+			}
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (log) {</span>
+<span class="nc" id="L148">				System.out.println(&quot;\t&quot; + fieldNode.toStringLong());</span>
+			}
+		}
+<span class="nc" id="L151">		return super.visit(fieldNode, data);</span>
+	}
+
+	public Object visit(ConstructorNode constructorNode, Object data) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (constructorNode.getUsers().isEmpty()) {</span>
+<span class="nc" id="L156">			boolean log = true;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (constructorNode.isStaticInitializer()) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				if (options.isIgnoreConstructorStaticInitializer()) {</span>
+<span class="nc" id="L159">					ignore(&quot;constructor static initializer&quot;, constructorNode);</span>
+<span class="nc" id="L160">					log = false;</span>
+				}
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			} else if (constructorNode.isInstanceInitializer()) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">				if (Modifier.isPrivate(constructorNode.getMember().getModifiers())) {</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">					if (options.isIgnoreConstructorAllPrivate()) {</span>
+<span class="nc" id="L165">						ignore(&quot;constructor all private&quot;, constructorNode);</span>
+<span class="nc" id="L166">						log = false;</span>
+<span class="nc bnc" id="L167" title="All 6 branches missed.">					} else if (options.isIgnoreConstructorSinglePrivateNoArg()</span>
+							&amp;&amp; constructorNode.getMember().getParameterTypes().length == 0
+							&amp;&amp; constructorNode.getClassNode().getConstructorNodes().size() == 1) {
+<span class="nc" id="L170">						ignore(&quot;constructor single private no-arg&quot;, constructorNode);</span>
+<span class="nc" id="L171">						log = false;</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (log) {</span>
+<span class="nc" id="L176">				System.out.println(&quot;\t&quot; + constructorNode.toStringLong());</span>
+			}
+		}
+<span class="nc" id="L179">		return super.visit(constructorNode, data);</span>
+	}
+
+	private static boolean isMainMethod(MethodNode node) {
+		
+<span class="nc" id="L184">		final Method method = node.getMember();</span>
+		
+<span class="nc bnc" id="L186" title="All 14 branches missed.">		return method.getName().equals(&quot;main&quot;)</span>
+			&amp;&amp; Modifier.isPublic(method.getModifiers())
+			&amp;&amp; Modifier.isStatic(method.getModifiers())
+			&amp;&amp; method.getReturnType() == Void.TYPE
+			&amp;&amp; method.getParameterTypes().length == 1
+			&amp;&amp; method.getParameterTypes()[0].isArray()
+			&amp;&amp; method.getParameterTypes()[0].getComponentType().equals(java.lang.String.class);
+	}
+	
+	
+	public Object visit(MethodNode methodNode, Object data) {
+<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (methodNode.getUsers().isEmpty()) {</span>
+<span class="nc" id="L198">			boolean log = true;</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (options.isIgnoreMethodAllOverride()) {</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">				if (ClassLoaderUtil.isOverridenMethod(methodNode.getClassNode().getClass(), methodNode.getMember(),</span>
+						false)) {
+<span class="nc" id="L202">					ignore(&quot;method all override&quot;, methodNode);</span>
+<span class="nc" id="L203">					log = false;</span>
+				}
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			} else if (options.isIgnoreMethodJavaLangObjectOverride()) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">				if (ClassLoaderUtil.isOverridenMethod(java.lang.Object.class, methodNode.getMember(), true)) {</span>
+<span class="nc" id="L207">					ignore(&quot;method java.lang.Object override&quot;, methodNode);</span>
+<span class="nc" id="L208">					log = false;</span>
+				}
+			}
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (options.isIgnoreMethodMain()) {</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (isMainMethod(methodNode)) {</span>
+<span class="nc" id="L213">					ignore(&quot;method public static void main(String[])&quot;, methodNode);</span>
+<span class="nc" id="L214">					log = false;</span>
+				}
+			}
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (log) {</span>
+<span class="nc" id="L218">				System.out.println(&quot;\t&quot; + methodNode.toStringLong());</span>
+			}
+		}
+<span class="nc" id="L221">		return super.visit(methodNode, data);</span>
+	}
+
+	private void ignore(String description, ClassNode classNode) {
+<span class="nc" id="L225">		System.out.println(&quot;Ignoring &quot; + description + &quot;: &quot; + classNode.getName());</span>
+<span class="nc" id="L226">	}</span>
+
+	private void ignore(String description, MemberNode memberNode) {
+<span class="nc" id="L229">		System.out.println(&quot;Ignoring &quot; + description + &quot;: &quot; + memberNode.toStringLong());</span>
+<span class="nc" id="L230">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

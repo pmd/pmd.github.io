@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>UnusedModifierRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.unusedcode</a> &gt; <span class="el_source">UnusedModifierRule.java</span></div><h1>UnusedModifierRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.unusedcode;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+<span class="fc" id="L13">public class UnusedModifierRule extends AbstractJavaRule {</span>
+
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L16" title="All 2 branches covered.">        if (!node.isNested()) return super.visit(node, data);</span>
+
+<span class="fc" id="L18">        ASTClassOrInterfaceDeclaration parentClassOrInterface = node</span>
+                .getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);
+<span class="fc" id="L20">        ASTEnumDeclaration parentEnum = node.getFirstParentOfType(ASTEnumDeclaration.class);</span>
+
+<span class="fc bfc" id="L22" title="All 4 branches covered.">        if (node.isInterface() &amp;&amp; node.isPublic()) {</span>
+            // a public interface
+<span class="fc bfc" id="L24" title="All 4 branches covered.">            if (parentClassOrInterface != null &amp;&amp; parentClassOrInterface.isInterface()) {</span>
+                // within a interface
+<span class="fc" id="L26">                addViolation(data, node, getMessage());</span>
+            }
+        }
+
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (node.isInterface() &amp;&amp; node.isStatic()) {</span>
+            // a static interface
+<span class="pc bpc" id="L32" title="1 of 4 branches missed.">            if (parentClassOrInterface != null || parentEnum != null) {</span>
+                // within a interface, class or enum
+<span class="fc" id="L34">                addViolation(data, node, getMessage());</span>
+            }
+        }
+
+<span class="fc bfc" id="L38" title="All 6 branches covered.">        if (!node.isInterface() &amp;&amp; (node.isPublic() || node.isStatic())) {</span>
+            // a public and/or static class
+<span class="fc bfc" id="L40" title="All 4 branches covered.">            if (parentClassOrInterface != null &amp;&amp; parentClassOrInterface.isInterface()) {</span>
+                // within a interface
+<span class="fc" id="L42">                addViolation(data, node, getMessage());</span>
+            }
+        }
+
+<span class="fc" id="L46">        return super.visit(node, data);</span>
+    }
+
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc bfc" id="L50" title="All 4 branches covered.">        if (node.isSyntacticallyPublic() || node.isSyntacticallyAbstract()) {</span>
+<span class="fc" id="L51">            check(node, data);</span>
+        }
+<span class="fc" id="L53">        return super.visit(node, data);</span>
+    }
+
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="fc bfc" id="L57" title="All 6 branches covered.">        if (node.isSyntacticallyPublic() || node.isSyntacticallyStatic() || node.isSyntacticallyFinal()) {</span>
+<span class="fc" id="L58">            check(node, data);</span>
+        }
+<span class="fc" id="L60">        return super.visit(node, data);</span>
+    }
+
+    private void check(Node fieldOrMethod, Object data) {
+        // third ancestor could be an AllocationExpression
+        // if this is a method in an anonymous inner class
+<span class="fc" id="L66">        Node parent = fieldOrMethod.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="fc bfc" id="L67" title="All 4 branches covered.">        if (parent instanceof ASTClassOrInterfaceDeclaration &amp;&amp; ((ASTClassOrInterfaceDeclaration) parent).isInterface()) {</span>
+<span class="fc" id="L68">            addViolation(data, fieldOrMethod);</span>
+        }
+<span class="fc" id="L70">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDConfiguration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">PMDConfiguration.java</span></div><h1>PMDConfiguration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.LanguageVersionDiscoverer;
+import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.renderers.RendererFactory;
+import net.sourceforge.pmd.util.ClasspathClassLoader;
+import net.sourceforge.pmd.util.IOUtil;
+
+/**
+ * This class contains the details for the runtime configuration of PMD.
+ * There are several aspects to the configuration of PMD.
+ * &lt;p&gt;
+ * The aspects related to generic PMD behavior:
+ * &lt;ul&gt;
+ * 	&lt;li&gt;Suppress marker is used in source files to suppress a RuleViolation,
+ *	    defaults to {@link PMD#SUPPRESS_MARKER}.
+ *          {@link #getSuppressMarker()}&lt;/li&gt;
+ *  &lt;li&gt;The number of threads to create when invoking on multiple files,
+ *      defaults one thread per available processor.
+ *          {@link #getThreads()}&lt;/li&gt;
+ *  &lt;li&gt;A ClassLoader to use when loading classes during Rule processing
+ *      (e.g. during type resolution), defaults to ClassLoader of the
+ *      Configuration class.
+ *          {@link #getClassLoader()}&lt;/li&gt;
+ *  &lt;li&gt;A means to configure a ClassLoader using a prepended classpath
+ *     String, instead of directly setting it programmatically.
+ *          {@link #prependClasspath(String)}&lt;/li&gt;
+ *  &lt;li&gt;A LanguageVersionDiscoverer instance, which defaults to using the
+ *      default LanguageVersion of each Language.  Means are provided to
+ *      change the LanguageVersion for each Language.
+ *          {@link #getLanguageVersionDiscoverer()}&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * The aspects related to Rules and Source files are:
+ * &lt;ul&gt;
+ *  &lt;li&gt;A comma separated list of RuleSets URIs.
+ *          {@link #getRuleSets()}&lt;/li&gt;
+ *  &lt;li&gt;A minimum priority threshold when loading Rules from RuleSets,
+ *      defaults to {@link RulePriority#LOW}.
+ *          {@link #getMinimumPriority()}&lt;/li&gt;
+ *  &lt;li&gt;The character encoding of source files, defaults to the system default
+ *      as returned by &lt;code&gt;System.getProperty(&quot;file.encoding&quot;)&lt;/code&gt;.
+ *          {@link #getSourceEncoding()}&lt;/li&gt;
+ *  &lt;li&gt;A comma separated list of input paths to process for source files.
+ *      This may include files, directories, archives (e.g. ZIP files), etc.
+ *          {@link #getInputPaths()}&lt;/li&gt;
+ *  &lt;li&gt;A flag which controls, whether {@link RuleSetFactoryCompatibility} filter
+ *      should be used or not: #isRuleSetFactoryCompatibilityEnabled;
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * &lt;ul&gt;
+ *  &lt;li&gt;The renderer format to use for Reports.
+ *          {@link #getReportFormat()}&lt;/li&gt;
+ *  &lt;li&gt;The file to which the Report should render.
+ *          {@link #getReportFile()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether to use File short names in Reports, defaults
+ *      to &lt;code&gt;false&lt;/code&gt;.
+ *          {@link #isReportShortNames()}&lt;/li&gt;
+ *  &lt;li&gt;The initialization properties to use when creating a Renderer instance.
+ *          {@link #getReportProperties()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether to show suppressed Rule violations in Reports.
+ *          {@link #isShowSuppressedViolations()}&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;p&gt;
+ * The aspects related to special PMD behavior are:
+ * &lt;ul&gt;
+ *  &lt;li&gt;An indicator of whether PMD should log debug information.
+ *          {@link #isDebug()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether PMD should perform stress testing behaviors,
+ *          such as randomizing the order of file processing.
+ *          {@link #isStressTest()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether PMD should log benchmarking information.
+ *          {@link #isBenchmark()}&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+<span class="fc" id="L86">public class PMDConfiguration extends AbstractConfiguration {</span>
+
+    // General behavior options
+<span class="fc" id="L89">    private String suppressMarker = PMD.SUPPRESS_MARKER;</span>
+<span class="fc" id="L90">    private int threads = Runtime.getRuntime().availableProcessors();</span>
+<span class="fc" id="L91">    private ClassLoader classLoader = getClass().getClassLoader();</span>
+<span class="fc" id="L92">    private LanguageVersionDiscoverer languageVersionDiscoverer = new LanguageVersionDiscoverer();</span>
+
+    // Rule and source file options
+    private String ruleSets;
+<span class="fc" id="L96">    private RulePriority minimumPriority = RulePriority.LOW;</span>
+    private String inputPaths;
+    private String inputUri;
+<span class="fc" id="L99">    private boolean ruleSetFactoryCompatibilityEnabled = true;</span>
+
+    // Reporting options
+    private String reportFormat;
+    private String reportFile;
+<span class="fc" id="L104">    private boolean reportShortNames = false;</span>
+<span class="fc" id="L105">    private Properties reportProperties = new Properties();</span>
+<span class="fc" id="L106">    private boolean showSuppressedViolations = false;</span>
+<span class="fc" id="L107">    private boolean failOnViolation = true;</span>
+
+    private boolean stressTest;
+    private boolean benchmark;
+
+    /**
+     * Get the suppress marker. This is the source level marker used to indicate a
+     * RuleViolation should be suppressed.
+     * 
+     * @return The suppress marker.
+     */
+    public String getSuppressMarker() {
+<span class="fc" id="L119">        return suppressMarker;</span>
+    }
+
+    /**
+     * Set the suppress marker.
+     * 
+     * @param suppressMarker
+     *            The suppress marker to use.
+     */
+    public void setSuppressMarker(String suppressMarker) {
+<span class="fc" id="L129">        this.suppressMarker = suppressMarker;</span>
+<span class="fc" id="L130">    }</span>
+
+    /**
+     * Get the number of threads to use when processing Rules.
+     * 
+     * @return The number of threads.
+     */
+    public int getThreads() {
+<span class="fc" id="L138">        return threads;</span>
+    }
+
+    /**
+     * Set the number of threads to use when processing Rules.
+     * 
+     * @param threads
+     *            The number of threads.
+     */
+    public void setThreads(int threads) {
+<span class="fc" id="L148">        this.threads = threads;</span>
+<span class="fc" id="L149">    }</span>
+
+    /**
+     * Get the ClassLoader being used by PMD when processing Rules.
+     * 
+     * @return The ClassLoader being used
+     */
+    public ClassLoader getClassLoader() {
+<span class="fc" id="L157">        return classLoader;</span>
+    }
+
+    /**
+     * Set the ClassLoader being used by PMD when processing Rules. Setting a
+     * value of &lt;code&gt;null&lt;/code&gt; will cause the default ClassLoader to be used.
+     * 
+     * @param classLoader
+     *            The ClassLoader to use
+     */
+    public void setClassLoader(ClassLoader classLoader) {
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (classLoader == null) {</span>
+<span class="fc" id="L169">            this.classLoader = getClass().getClassLoader();</span>
+        } else {
+<span class="fc" id="L171">            this.classLoader = classLoader;</span>
+        }
+<span class="fc" id="L173">    }</span>
+
+    /**
+     * Prepend the specified classpath like string to the current ClassLoader of
+     * the configuration. If no ClassLoader is currently configured, the
+     * ClassLoader used to load the {@link PMDConfiguration} class will be used
+     * as the parent ClassLoader of the created ClassLoader.
+     * &lt;p&gt;
+     * If the classpath String looks like a URL to a file (i.e. starts with
+     * &lt;code&gt;file://&lt;/code&gt;) the file will be read with each line representing
+     * an entry on the classpath.
+     * 
+     * @param classpath The prepended classpath.
+     * @throws IOException if the given classpath is invalid (e.g. does not exist)
+     * @see PMDConfiguration#setClassLoader(ClassLoader)
+     * @see ClasspathClassLoader
+     */
+    public void prependClasspath(String classpath) throws IOException {
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (classLoader == null) {</span>
+<span class="nc" id="L192">            classLoader = PMDConfiguration.class.getClassLoader();</span>
+        }
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (classpath != null) {</span>
+<span class="fc" id="L195">            classLoader = new ClasspathClassLoader(classpath, classLoader);</span>
+        }
+<span class="fc" id="L197">    }</span>
+
+    /**
+     * Get the LanguageVersionDiscoverer, used to determine the LanguageVersion
+     * of a source file.
+     * 
+     * @return The LanguageVersionDiscoverer.
+     */
+    public LanguageVersionDiscoverer getLanguageVersionDiscoverer() {
+<span class="nc" id="L206">        return languageVersionDiscoverer;</span>
+    }
+
+    /**
+     * Set the given LanguageVersion as the current default for it's Language.
+     * 
+     * @param languageVersion
+     *            the LanguageVersion
+     */
+    public void setDefaultLanguageVersion(LanguageVersion languageVersion) {
+<span class="nc" id="L216">        setDefaultLanguageVersions(Arrays.asList(languageVersion));</span>
+<span class="nc" id="L217">    }</span>
+
+    /**
+     * Set the given LanguageVersions as the current default for their
+     * Languages.
+     * 
+     * @param languageVersions
+     *            The LanguageVersions.
+     */
+    public void setDefaultLanguageVersions(List&lt;LanguageVersion&gt; languageVersions) {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        for (LanguageVersion languageVersion : languageVersions) {</span>
+<span class="nc" id="L228">            languageVersionDiscoverer.setDefaultLanguageVersion(languageVersion);</span>
+<span class="nc" id="L229">        }</span>
+<span class="nc" id="L230">    }</span>
+
+    /**
+     * Get the LanguageVersion of the source file with given name. This depends
+     * on the fileName extension, and the java version.
+     * &lt;p/&gt;
+     * For compatibility with older code that does not always pass in a correct
+     * filename, unrecognized files are assumed to be java files.
+     * 
+     * @param fileName
+     *            Name of the file, can be absolute, or simple.
+     * @return the LanguageVersion
+     */
+    // FUTURE Delete this? I can't think of a good reason to keep it around.
+    // Failure to determine the LanguageVersion for a file should be a hard
+    // error, or simply cause the file to be skipped?
+    public LanguageVersion getLanguageVersionOfFile(String fileName) {
+<span class="fc" id="L247">        LanguageVersion languageVersion = languageVersionDiscoverer.getDefaultLanguageVersionForFile(fileName);</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (languageVersion == null) {</span>
+            // For compatibility with older code that does not always pass in
+            // a correct filename.
+<span class="nc" id="L251">            languageVersion = languageVersionDiscoverer.getDefaultLanguageVersion(LanguageRegistry.getLanguage(&quot;Java&quot;));</span>
+        }
+<span class="fc" id="L253">        return languageVersion;</span>
+    }
+
+    /**
+     * Get the comma separated list of RuleSet URIs.
+     * 
+     * @return The RuleSet URIs.
+     */
+    public String getRuleSets() {
+<span class="fc" id="L262">        return ruleSets;</span>
+    }
+
+    /**
+     * Set the comma separated list of RuleSet URIs.
+     * 
+     * @param ruleSets the rulesets to set
+     */
+    public void setRuleSets(String ruleSets) {
+<span class="fc" id="L271">        this.ruleSets = ruleSets;</span>
+<span class="fc" id="L272">    }</span>
+
+    /**
+     * Get the minimum priority threshold when loading Rules from RuleSets.
+     * 
+     * @return The minimum priority threshold.
+     */
+    public RulePriority getMinimumPriority() {
+<span class="fc" id="L280">        return minimumPriority;</span>
+    }
+
+    /**
+     * Set the minimum priority threshold when loading Rules from RuleSets.
+     * 
+     * @param minimumPriority
+     *            The minimum priority.
+     */
+    public void setMinimumPriority(RulePriority minimumPriority) {
+<span class="fc" id="L290">        this.minimumPriority = minimumPriority;</span>
+<span class="fc" id="L291">    }</span>
+
+    /**
+     * Get the comma separated list of input paths to process for source files.
+     * 
+     * @return A comma separated list.
+     */
+    public String getInputPaths() {
+<span class="fc" id="L299">        return inputPaths;</span>
+    }
+
+    /**
+     * Set the comma separated list of input paths to process for source files.
+     * 
+     * @param inputPaths
+     *            The comma separated list.
+     */
+    public void setInputPaths(String inputPaths) {
+<span class="fc" id="L309">        this.inputPaths = inputPaths;</span>
+<span class="fc" id="L310">    }</span>
+
+    /**
+     * Get the input URI to process for source code objects.
+     * 
+     * @return URI
+     */
+    public String getInputUri() {
+<span class="nc" id="L318">        return inputUri;</span>
+    }
+
+    /**
+     * Set the input URI to process for source code objects.
+     * 
+     * @param inputUri
+     *            a single URI
+     */
+    public void setInputUri(String inputUri) {
+<span class="nc" id="L328">        this.inputUri = inputUri;</span>
+<span class="nc" id="L329">    }</span>
+
+    /**
+     * Get whether to use File short names in Reports.
+     * 
+     * @return &lt;code&gt;true&lt;/code&gt; when using short names in reports.
+     */
+    public boolean isReportShortNames() {
+<span class="fc" id="L337">        return reportShortNames;</span>
+    }
+
+    /**
+     * Set whether to use File short names in Reports.
+     * 
+     * @param reportShortNames
+     *            &lt;code&gt;true&lt;/code&gt; when using short names in reports.
+     */
+    public void setReportShortNames(boolean reportShortNames) {
+<span class="fc" id="L347">        this.reportShortNames = reportShortNames;</span>
+<span class="fc" id="L348">    }</span>
+
+    /**
+     * Create a Renderer instance based upon the configured reporting options.
+     * No writer is created.
+     * 
+     * @return renderer
+     */
+    public Renderer createRenderer() {
+<span class="fc" id="L357">        return createRenderer(false);</span>
+    }
+
+    /**
+     * Create a Renderer instance based upon the configured reporting options.
+     * If withReportWriter then we'll configure it with a writer for the
+     * reportFile specified.
+     * 
+     * @param withReportWriter whether to configure a writer or not
+     * @return A Renderer instance.
+     */
+    public Renderer createRenderer(boolean withReportWriter) {
+<span class="fc" id="L369">        Renderer renderer = RendererFactory.createRenderer(reportFormat, reportProperties);</span>
+<span class="fc" id="L370">        renderer.setShowSuppressedViolations(showSuppressedViolations);</span>
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">        if (withReportWriter) {</span>
+<span class="nc" id="L372">            renderer.setWriter(IOUtil.createWriter(reportFile));</span>
+        }
+<span class="fc" id="L374">        return renderer;</span>
+    }
+
+    /**
+     * Get the report format.
+     * 
+     * @return The report format.
+     */
+    public String getReportFormat() {
+<span class="fc" id="L383">        return reportFormat;</span>
+    }
+
+    /**
+     * Set the report format. This should be a name of a Renderer.
+     * 
+     * @param reportFormat
+     *            The report format.
+     * 
+     * @see Renderer
+     */
+    public void setReportFormat(String reportFormat) {
+<span class="fc" id="L395">        this.reportFormat = reportFormat;</span>
+<span class="fc" id="L396">    }</span>
+
+    /**
+     * Get the file to which the report should render.
+     * 
+     * @return The file to which to render.
+     */
+    public String getReportFile() {
+<span class="fc" id="L404">        return reportFile;</span>
+    }
+
+    /**
+     * Set the file to which the report should render.
+     * 
+     * @param reportFile the file to set
+     */
+    public void setReportFile(String reportFile) {
+<span class="fc" id="L413">        this.reportFile = reportFile;</span>
+<span class="fc" id="L414">    }</span>
+
+    /**
+     * Get whether the report should show suppressed violations.
+     * 
+     * @return &lt;code&gt;true&lt;/code&gt; if showing suppressed violations,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean isShowSuppressedViolations() {
+<span class="fc" id="L423">        return showSuppressedViolations;</span>
+    }
+
+    /**
+     * Set whether the report should show suppressed violations.
+     * 
+     * @param showSuppressedViolations
+     *            &lt;code&gt;true&lt;/code&gt; if showing suppressed violations,
+     *            &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public void setShowSuppressedViolations(boolean showSuppressedViolations) {
+<span class="fc" id="L434">        this.showSuppressedViolations = showSuppressedViolations;</span>
+<span class="fc" id="L435">    }</span>
+
+    /**
+     * Get the Report properties. These are used to create the Renderer.
+     * 
+     * @return The report properties.
+     */
+    public Properties getReportProperties() {
+<span class="fc" id="L443">        return reportProperties;</span>
+    }
+
+    /**
+     * Set the Report properties. These are used to create the Renderer.
+     * 
+     * @param reportProperties
+     *            The Report properties to set.
+     */
+    public void setReportProperties(Properties reportProperties) {
+<span class="fc" id="L453">        this.reportProperties = reportProperties;</span>
+<span class="fc" id="L454">    }</span>
+
+    /**
+     * Return the stress test indicator. If this value is &lt;code&gt;true&lt;/code&gt; then
+     * PMD will randomize the order of file processing to attempt to shake out
+     * bugs.
+     * 
+     * @return &lt;code&gt;true&lt;/code&gt; if stress test is enbaled, &lt;code&gt;false&lt;/code&gt;
+     *         otherwise.
+     */
+    public boolean isStressTest() {
+<span class="fc" id="L465">        return stressTest;</span>
+    }
+
+    /**
+     * Set the stress test indicator.
+     * 
+     * @param stressTest
+     *            The stree test indicator to set.
+     * @see #isStressTest()
+     */
+    public void setStressTest(boolean stressTest) {
+<span class="fc" id="L476">        this.stressTest = stressTest;</span>
+<span class="fc" id="L477">    }</span>
+
+    /**
+     * Return the benchmark indicator. If this value is &lt;code&gt;true&lt;/code&gt; then
+     * PMD will log benchmark information.
+     * 
+     * @return &lt;code&gt;true&lt;/code&gt; if benchmark logging is enbaled,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean isBenchmark() {
+<span class="fc" id="L487">        return benchmark;</span>
+    }
+
+    /**
+     * Set the benchmark indicator.
+     * 
+     * @param benchmark
+     *            The benchmark indicator to set.
+     * @see #isBenchmark()
+     */
+    public void setBenchmark(boolean benchmark) {
+<span class="fc" id="L498">        this.benchmark = benchmark;</span>
+<span class="fc" id="L499">    }</span>
+
+    /**
+     * Whether PMD should exit with status 4 (the default behavior, true) if violations
+     * are found or just with 0 (to not break the build, e.g.).
+     * @return failOnViolation
+     */
+    public boolean isFailOnViolation() {
+<span class="nc" id="L507">        return failOnViolation;</span>
+    }
+
+    /**
+     * Sets whether PMD should exit with status 4 (the default behavior, true) if violations
+     * are found or just with 0 (to not break the build, e.g.).
+     * @param failOnViolation failOnViolation
+     */
+    public void setFailOnViolation(boolean failOnViolation) {
+<span class="nc" id="L516">        this.failOnViolation = failOnViolation;</span>
+<span class="nc" id="L517">    }</span>
+
+    /**
+     * Checks if the rule set factory compatibility feature is enabled.
+     *
+     * @return true, if the rule set factory compatibility feature is enabled
+     *
+     * @see RuleSetFactoryCompatibility
+     */
+    public boolean isRuleSetFactoryCompatibilityEnabled() {
+<span class="fc" id="L527">        return ruleSetFactoryCompatibilityEnabled;</span>
+    }
+
+    /**
+     * Sets the rule set factory compatibility feature enabled/disabled.
+     *
+     * @param ruleSetFactoryCompatibilityEnabled &lt;code&gt;true&lt;/code&gt; if the feature should be enabled
+     *
+     * @see RuleSetFactoryCompatibility
+     */
+    public void setRuleSetFactoryCompatibilityEnabled(boolean ruleSetFactoryCompatibilityEnabled) {
+<span class="fc" id="L538">        this.ruleSetFactoryCompatibilityEnabled = ruleSetFactoryCompatibilityEnabled;</span>
+<span class="fc" id="L539">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

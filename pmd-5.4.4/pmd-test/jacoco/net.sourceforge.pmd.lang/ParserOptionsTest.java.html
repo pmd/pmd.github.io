@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ParserOptionsTest.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang</a> &gt; <span class="el_source">ParserOptionsTest.java</span></div><h1>ParserOptionsTest.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+/**
+ * Unit tests for {@link ParserOptions}.
+ */
+<span class="nc" id="L12">public class ParserOptionsTest {</span>
+
+    /**
+     * SuppressMarker should be initially null and changeable.
+     */
+    @Test
+    public void testSuppressMarker() {
+<span class="nc" id="L19">        ParserOptions parserOptions = new ParserOptions();</span>
+<span class="nc" id="L20">        Assert.assertNull(parserOptions.getSuppressMarker());</span>
+<span class="nc" id="L21">        parserOptions.setSuppressMarker(&quot;foo&quot;);</span>
+<span class="nc" id="L22">        Assert.assertEquals(&quot;foo&quot;, parserOptions.getSuppressMarker());</span>
+<span class="nc" id="L23">    }</span>
+
+    /**
+     * Verify that the equals and hashCode methods work as expected.
+     */
+    @Test
+    public void testEqualsHashcode() {
+<span class="nc" id="L30">        ParserOptions options1 = new ParserOptions();</span>
+<span class="nc" id="L31">        options1.setSuppressMarker(&quot;foo&quot;);</span>
+<span class="nc" id="L32">        ParserOptions options2 = new ParserOptions();</span>
+<span class="nc" id="L33">        options2.setSuppressMarker(&quot;bar&quot;);</span>
+<span class="nc" id="L34">        ParserOptions options3 = new ParserOptions();</span>
+<span class="nc" id="L35">        options3.setSuppressMarker(&quot;foo&quot;);</span>
+<span class="nc" id="L36">        ParserOptions options4 = new ParserOptions();</span>
+<span class="nc" id="L37">        options4.setSuppressMarker(&quot;bar&quot;);</span>
+<span class="nc" id="L38">        verifyOptionsEqualsHashcode(options1, options2, options3, options4);</span>
+<span class="nc" id="L39">    }</span>
+
+    /**
+     * Verify equals and hashCode for 4 {@link ParserOptions} instances.
+     * The given options should be as follows: 1 and 3 are equals, as are 2 and 4.
+     * 
+     * @param options1 first option instance - equals third
+     * @param options2 second option instance - equals fourth
+     * @param options3 third option instance - equals first
+     * @param options4 fourth option instance - equals second
+     */
+    public static void verifyOptionsEqualsHashcode(ParserOptions options1, ParserOptions options2,
+            ParserOptions options3, ParserOptions options4) {
+        // Objects should be different
+<span class="nc" id="L53">        Assert.assertNotSame(options1, options2);</span>
+<span class="nc" id="L54">        Assert.assertNotSame(options1, options2);</span>
+<span class="nc" id="L55">        Assert.assertNotSame(options1, options3);</span>
+<span class="nc" id="L56">        Assert.assertNotSame(options2, options3);</span>
+<span class="nc" id="L57">        Assert.assertNotSame(options2, options4);</span>
+<span class="nc" id="L58">        Assert.assertNotSame(options3, options4);</span>
+
+        // Check all 16 equality combinations
+<span class="nc" id="L61">        Assert.assertEquals(options1, options1);</span>
+<span class="nc" id="L62">        Assert.assertFalse(options1.equals(options2));</span>
+<span class="nc" id="L63">        Assert.assertEquals(options1, options3);</span>
+<span class="nc" id="L64">        Assert.assertFalse(options1.equals(options4));</span>
+
+<span class="nc" id="L66">        Assert.assertFalse(options2.equals(options1));</span>
+<span class="nc" id="L67">        Assert.assertEquals(options2, options2);</span>
+<span class="nc" id="L68">        Assert.assertFalse(options2.equals(options3));</span>
+<span class="nc" id="L69">        Assert.assertEquals(options2, options4);</span>
+
+<span class="nc" id="L71">        Assert.assertEquals(options3, options1);</span>
+<span class="nc" id="L72">        Assert.assertFalse(options3.equals(options2));</span>
+<span class="nc" id="L73">        Assert.assertEquals(options3, options3);</span>
+<span class="nc" id="L74">        Assert.assertFalse(options3.equals(options4));</span>
+
+<span class="nc" id="L76">        Assert.assertFalse(options4.equals(options1));</span>
+<span class="nc" id="L77">        Assert.assertEquals(options4, options2);</span>
+<span class="nc" id="L78">        Assert.assertFalse(options4.equals(options3));</span>
+<span class="nc" id="L79">        Assert.assertEquals(options4, options4);</span>
+
+        // Hashcodes should match up
+<span class="nc" id="L82">        Assert.assertNotEquals(options1.hashCode(), options2.hashCode());</span>
+<span class="nc" id="L83">        Assert.assertEquals(options1.hashCode(), options3.hashCode());</span>
+<span class="nc" id="L84">        Assert.assertNotEquals(options1.hashCode(), options4.hashCode());</span>
+<span class="nc" id="L85">        Assert.assertNotEquals(options2.hashCode(), options3.hashCode());</span>
+<span class="nc" id="L86">        Assert.assertEquals(options2.hashCode(), options4.hashCode());</span>
+<span class="nc" id="L87">        Assert.assertNotEquals(options3.hashCode(), options4.hashCode());</span>
+<span class="nc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
