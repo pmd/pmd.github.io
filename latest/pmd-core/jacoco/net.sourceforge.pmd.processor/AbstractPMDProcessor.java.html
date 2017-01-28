@@ -8,9 +8,11 @@ import java.util.List;
 
 import net.sourceforge.pmd.PMDConfiguration;
 import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleSetFactory;
 import net.sourceforge.pmd.RuleSets;
 import net.sourceforge.pmd.RulesetsFactoryUtils;
+import net.sourceforge.pmd.SourceCodeProcessor;
 import net.sourceforge.pmd.benchmark.Benchmark;
 import net.sourceforge.pmd.benchmark.Benchmarker;
 import net.sourceforge.pmd.renderers.Renderer;
@@ -22,29 +24,28 @@ import net.sourceforge.pmd.util.datasource.DataSource;
  */
 public abstract class AbstractPMDProcessor {
 
-	protected final PMDConfiguration configuration;
+    protected final PMDConfiguration configuration;
 
-<span class="fc" id="L27">	public AbstractPMDProcessor(PMDConfiguration configuration) {</span>
-<span class="fc" id="L28">		this.configuration = configuration;</span>
-<span class="fc" id="L29">	}</span>
+<span class="fc" id="L29">    public AbstractPMDProcessor(PMDConfiguration configuration) {</span>
+<span class="fc" id="L30">        this.configuration = configuration;</span>
+<span class="fc" id="L31">    }</span>
 
-	public void renderReports(final List&lt;Renderer&gt; renderers, final Report report) {
-		
-<span class="fc" id="L33">		long start = System.nanoTime();</span>
+    public void renderReports(final List&lt;Renderer&gt; renderers, final Report report) {
+<span class="fc" id="L34">        long start = System.nanoTime();</span>
 
 		try {	
-<span class="pc bpc" id="L36" title="1 of 2 branches missed.">			for (Renderer r : renderers) {</span>
-<span class="nc" id="L37">				r.renderFileReport(report);</span>
-<span class="nc" id="L38">			}</span>
-<span class="fc" id="L39">			long end = System.nanoTime();</span>
-<span class="fc" id="L40">			Benchmarker.mark(Benchmark.Reporting, end - start, 1);</span>
-<span class="nc" id="L41">		} catch (IOException ioe) {</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">			for (Renderer r : renderers) {</span>
+<span class="nc" id="L38">				r.renderFileReport(report);</span>
+<span class="nc" id="L39">			}</span>
+<span class="fc" id="L40">			long end = System.nanoTime();</span>
+<span class="fc" id="L41">			Benchmarker.mark(Benchmark.Reporting, end - start, 1);</span>
+<span class="nc" id="L42">		} catch (IOException ioe) {</span>
 
-<span class="fc" id="L43">		}</span>
-<span class="fc" id="L44">	}</span>
+<span class="fc" id="L44">		}</span>
+<span class="fc" id="L45">	}</span>
 
 	protected String filenameFrom(DataSource dataSource) {
-<span class="fc" id="L47">		return dataSource.getNiceFileName(</span>
+<span class="fc" id="L48">		return dataSource.getNiceFileName(</span>
 			 configuration.isReportShortNames(), 
 			 configuration.getInputPaths()
 			 );
@@ -60,8 +61,25 @@ public abstract class AbstractPMDProcessor {
 	 * @return the rules within a rulesets
 	 */
 	protected RuleSets createRuleSets(RuleSetFactory factory) {
-<span class="fc" id="L63">		return RulesetsFactoryUtils.getRuleSets(configuration.getRuleSets(), factory);</span>
+<span class="nc" id="L64">		return RulesetsFactoryUtils.getRuleSets(configuration.getRuleSets(), factory);</span>
 	}
-	
+
+    public void processFiles(RuleSetFactory ruleSetFactory, List&lt;DataSource&gt; files, RuleContext ctx,
+            List&lt;Renderer&gt; renderers) {
+<span class="fc" id="L69">        SourceCodeProcessor processor = new SourceCodeProcessor(configuration);</span>
+
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (DataSource dataSource : files) {</span>
+<span class="fc" id="L72">            String niceFileName = filenameFrom(dataSource);</span>
+
+<span class="fc" id="L74">            runAnalysis(new PmdRunnable(configuration, dataSource, niceFileName, renderers,</span>
+                    ctx, ruleSetFactory, processor));
+<span class="fc" id="L76">        }</span>
+
+<span class="fc" id="L78">        collectReports(renderers);</span>
+<span class="fc" id="L79">    }</span>
+
+    protected abstract void runAnalysis(PmdRunnable runnable);
+
+    protected abstract void collectReports(List&lt;Renderer&gt; renderers);
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

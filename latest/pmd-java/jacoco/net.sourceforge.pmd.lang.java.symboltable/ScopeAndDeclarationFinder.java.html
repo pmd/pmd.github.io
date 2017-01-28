@@ -139,78 +139,79 @@ public class ScopeAndDeclarationFinder extends JavaParserVisitorAdapter {
         SourceFileScope scope;
 <span class="fc" id="L140">        ASTPackageDeclaration n = node.getPackageDeclaration();</span>
 <span class="fc bfc" id="L141" title="All 2 branches covered.">        if (n != null) {</span>
-<span class="fc" id="L142">            scope = new SourceFileScope(n.jjtGetChild(0).getImage());</span>
+<span class="fc" id="L142">            scope = new SourceFileScope(classLoader, n.jjtGetChild(0).getImage());</span>
         } else {
-<span class="fc" id="L144">            scope = new SourceFileScope();</span>
+<span class="fc" id="L144">            scope = new SourceFileScope(classLoader);</span>
         }
-<span class="fc" id="L146">        scope.configureImports(classLoader, node.findChildrenOfType(ASTImportDeclaration.class));</span>
-<span class="fc" id="L147">        scopes.push(scope);</span>
-<span class="fc" id="L148">        node.setScope(scope);</span>
-<span class="fc" id="L149">    }</span>
+<span class="fc" id="L146">        scope.configureImports(node.findChildrenOfType(ASTImportDeclaration.class));</span>
+
+<span class="fc" id="L148">        scopes.push(scope);</span>
+<span class="fc" id="L149">        node.setScope(scope);</span>
+<span class="fc" id="L150">    }</span>
 
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
-<span class="fc" id="L153">	createSourceFileScope(node);</span>
-<span class="fc" id="L154">	cont(node);</span>
-<span class="fc" id="L155">	return data;</span>
+<span class="fc" id="L154">	createSourceFileScope(node);</span>
+<span class="fc" id="L155">	cont(node);</span>
+<span class="fc" id="L156">	return data;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc" id="L160">	createClassScope(node);</span>
-<span class="fc" id="L161">	Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
-<span class="fc" id="L162">	s.addDeclaration(new ClassNameDeclaration(node));</span>
-<span class="fc" id="L163">	cont(node);</span>
-<span class="fc" id="L164">	return data;</span>
+<span class="fc" id="L161">	createClassScope(node);</span>
+<span class="fc" id="L162">	Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
+<span class="fc" id="L163">	s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="fc" id="L164">	cont(node);</span>
+<span class="fc" id="L165">	return data;</span>
     }
 
     @Override
     public Object visit(ASTEnumDeclaration node, Object data) {
-<span class="fc" id="L169">	createClassScope(node);</span>
-<span class="fc" id="L170">	((ClassScope)node.getScope()).setIsEnum(true);</span>
-<span class="fc" id="L171">    Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
-<span class="fc" id="L172">    s.addDeclaration(new ClassNameDeclaration(node));</span>
-<span class="fc" id="L173">	cont(node);</span>
-<span class="fc" id="L174">	return data;</span>
+<span class="fc" id="L170">	createClassScope(node);</span>
+<span class="fc" id="L171">	((ClassScope)node.getScope()).setIsEnum(true);</span>
+<span class="fc" id="L172">    Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
+<span class="fc" id="L173">    s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="fc" id="L174">	cont(node);</span>
+<span class="fc" id="L175">	return data;</span>
     }
 
     @Override
     public Object visit(ASTAnnotationTypeDeclaration node, Object data) {
-<span class="fc" id="L179">	createClassScope(node);</span>
-<span class="fc" id="L180">	cont(node);</span>
-<span class="fc" id="L181">	return data;</span>
+<span class="fc" id="L180">	createClassScope(node);</span>
+<span class="fc" id="L181">	cont(node);</span>
+<span class="fc" id="L182">	return data;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceBodyDeclaration node, Object data) {
-<span class="fc bfc" id="L186" title="All 4 branches covered.">	if (node.isAnonymousInnerClass() || node.isEnumChild()) {</span>
-<span class="fc" id="L187">	    createClassScope(node);</span>
-<span class="fc" id="L188">	    cont(node);</span>
+<span class="fc bfc" id="L187" title="All 4 branches covered.">	if (node.isAnonymousInnerClass() || node.isEnumChild()) {</span>
+<span class="fc" id="L188">	    createClassScope(node);</span>
+<span class="fc" id="L189">	    cont(node);</span>
 	} else {
-<span class="fc" id="L190">	    super.visit(node, data);</span>
+<span class="fc" id="L191">	    super.visit(node, data);</span>
 	}
-<span class="fc" id="L192">	return data;</span>
+<span class="fc" id="L193">	return data;</span>
     }
 
     @Override
     public Object visit(ASTBlock node, Object data) {
-<span class="fc" id="L197">	createLocalScope(node);</span>
-<span class="fc" id="L198">	cont(node);</span>
-<span class="fc" id="L199">	return data;</span>
+<span class="fc" id="L198">	createLocalScope(node);</span>
+<span class="fc" id="L199">	cont(node);</span>
+<span class="fc" id="L200">	return data;</span>
     }
 
     @Override
     public Object visit(ASTCatchStatement node, Object data) {
-<span class="fc" id="L204">	createLocalScope(node);</span>
-<span class="fc" id="L205">	cont(node);</span>
-<span class="fc" id="L206">	return data;</span>
+<span class="fc" id="L205">	createLocalScope(node);</span>
+<span class="fc" id="L206">	cont(node);</span>
+<span class="fc" id="L207">	return data;</span>
     }
 
     @Override
     public Object visit(ASTFinallyStatement node, Object data) {
-<span class="fc" id="L211">	createLocalScope(node);</span>
-<span class="fc" id="L212">	cont(node);</span>
-<span class="fc" id="L213">	return data;</span>
+<span class="fc" id="L212">	createLocalScope(node);</span>
+<span class="fc" id="L213">	cont(node);</span>
+<span class="fc" id="L214">	return data;</span>
     }
 
     @Override
@@ -219,103 +220,103 @@ public class ScopeAndDeclarationFinder extends JavaParserVisitorAdapter {
 	 * Local variables declared inside the constructor need to
 	 * be in a different scope so special handling is needed
 	 */
-<span class="fc" id="L222">	createMethodScope(node);</span>
+<span class="fc" id="L223">	createMethodScope(node);</span>
 
-<span class="fc" id="L224">	Scope methodScope = node.getScope();</span>
+<span class="fc" id="L225">	Scope methodScope = node.getScope();</span>
 
-<span class="fc" id="L226">	Node formalParameters = node.jjtGetChild(0);</span>
-<span class="fc" id="L227">	int i = 1;</span>
-<span class="fc" id="L228">	int n = node.jjtGetNumChildren();</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">	if (!(formalParameters instanceof ASTFormalParameters)) {</span>
-<span class="fc" id="L230">	    visit((ASTTypeParameters) formalParameters, data);</span>
-<span class="fc" id="L231">	    formalParameters = node.jjtGetChild(1);</span>
-<span class="fc" id="L232">	    i++;</span>
+<span class="fc" id="L227">	Node formalParameters = node.jjtGetChild(0);</span>
+<span class="fc" id="L228">	int i = 1;</span>
+<span class="fc" id="L229">	int n = node.jjtGetNumChildren();</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">	if (!(formalParameters instanceof ASTFormalParameters)) {</span>
+<span class="fc" id="L231">	    visit((ASTTypeParameters) formalParameters, data);</span>
+<span class="fc" id="L232">	    formalParameters = node.jjtGetChild(1);</span>
+<span class="fc" id="L233">	    i++;</span>
 	}
-<span class="fc" id="L234">	visit((ASTFormalParameters) formalParameters, data);</span>
+<span class="fc" id="L235">	visit((ASTFormalParameters) formalParameters, data);</span>
 
-<span class="fc" id="L236">	Scope localScope = null;</span>
-<span class="fc bfc" id="L237" title="All 2 branches covered.">	for (; i &lt; n; i++) {</span>
-<span class="fc" id="L238">	    JavaNode b = (JavaNode) node.jjtGetChild(i);</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">	    if (b instanceof ASTBlockStatement) {</span>
-<span class="fc bfc" id="L240" title="All 2 branches covered.">		if (localScope == null) {</span>
-<span class="fc" id="L241">		    createLocalScope(node);</span>
-<span class="fc" id="L242">		    localScope = node.getScope();</span>
+<span class="fc" id="L237">	Scope localScope = null;</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">	for (; i &lt; n; i++) {</span>
+<span class="fc" id="L239">	    JavaNode b = (JavaNode) node.jjtGetChild(i);</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">	    if (b instanceof ASTBlockStatement) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">		if (localScope == null) {</span>
+<span class="fc" id="L242">		    createLocalScope(node);</span>
+<span class="fc" id="L243">		    localScope = node.getScope();</span>
 		}
-<span class="fc" id="L244">		b.setScope(localScope);</span>
-<span class="fc" id="L245">		visit(b, data);</span>
+<span class="fc" id="L245">		b.setScope(localScope);</span>
+<span class="fc" id="L246">		visit(b, data);</span>
 	    } else {
-<span class="fc" id="L247">		visit(b, data);</span>
+<span class="fc" id="L248">		visit(b, data);</span>
 	    }
 	}
-<span class="fc bfc" id="L250" title="All 2 branches covered.">	if (localScope != null) {</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">	if (localScope != null) {</span>
 	    // pop the local scope
-<span class="fc" id="L252">	    scopes.pop();</span>
+<span class="fc" id="L253">	    scopes.pop();</span>
 
 	    // reset the correct scope for the constructor
-<span class="fc" id="L255">	    node.setScope(methodScope);</span>
+<span class="fc" id="L256">	    node.setScope(methodScope);</span>
 	}
 	// pop the method scope
-<span class="fc" id="L258">	scopes.pop();</span>
+<span class="fc" id="L259">	scopes.pop();</span>
 
-<span class="fc" id="L260">	return data;</span>
+<span class="fc" id="L261">	return data;</span>
     }
 
     @Override
     public Object visit(ASTMethodDeclaration node, Object data) {
-<span class="fc" id="L265">	createMethodScope(node);</span>
-<span class="fc" id="L266">	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);</span>
-<span class="fc" id="L267">	node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(md));</span>
-<span class="fc" id="L268">	cont(node);</span>
-<span class="fc" id="L269">	return data;</span>
+<span class="fc" id="L266">	createMethodScope(node);</span>
+<span class="fc" id="L267">	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);</span>
+<span class="fc" id="L268">	node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(md));</span>
+<span class="fc" id="L269">	cont(node);</span>
+<span class="fc" id="L270">	return data;</span>
     }
 
     @Override
     public Object visit(ASTLambdaExpression node, Object data) {
-<span class="fc" id="L274">        createLocalScope(node);</span>
-<span class="fc" id="L275">        cont(node);</span>
-<span class="fc" id="L276">        return data;</span>
+<span class="fc" id="L275">        createLocalScope(node);</span>
+<span class="fc" id="L276">        cont(node);</span>
+<span class="fc" id="L277">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTryStatement node, Object data) {
-<span class="fc" id="L281">	createLocalScope(node);</span>
-<span class="fc" id="L282">	cont(node);</span>
-<span class="fc" id="L283">	return data;</span>
+<span class="fc" id="L282">	createLocalScope(node);</span>
+<span class="fc" id="L283">	cont(node);</span>
+<span class="fc" id="L284">	return data;</span>
     }
 
     // TODO - what about while loops and do loops?
     @Override
     public Object visit(ASTForStatement node, Object data) {
-<span class="fc" id="L289">	createLocalScope(node);</span>
-<span class="fc" id="L290">	cont(node);</span>
-<span class="fc" id="L291">	return data;</span>
+<span class="fc" id="L290">	createLocalScope(node);</span>
+<span class="fc" id="L291">	cont(node);</span>
+<span class="fc" id="L292">	return data;</span>
     }
 
     @Override
     public Object visit(ASTIfStatement node, Object data) {
-<span class="fc" id="L296">	createLocalScope(node);</span>
-<span class="fc" id="L297">	cont(node);</span>
-<span class="fc" id="L298">	return data;</span>
+<span class="fc" id="L297">	createLocalScope(node);</span>
+<span class="fc" id="L298">	cont(node);</span>
+<span class="fc" id="L299">	return data;</span>
     }
 
     @Override
     public Object visit(ASTVariableDeclaratorId node, Object data) {
-<span class="fc" id="L303">	VariableNameDeclaration decl = new VariableNameDeclaration(node);</span>
-<span class="fc" id="L304">	node.getScope().addDeclaration(decl);</span>
-<span class="fc" id="L305">	node.setNameDeclaration(decl);</span>
-<span class="fc" id="L306">	return super.visit(node, data);</span>
+<span class="fc" id="L304">	VariableNameDeclaration decl = new VariableNameDeclaration(node);</span>
+<span class="fc" id="L305">	node.getScope().addDeclaration(decl);</span>
+<span class="fc" id="L306">	node.setNameDeclaration(decl);</span>
+<span class="fc" id="L307">	return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTSwitchStatement node, Object data) {
-<span class="fc" id="L311">	createLocalScope(node);</span>
-<span class="fc" id="L312">	cont(node);</span>
-<span class="fc" id="L313">	return data;</span>
+<span class="fc" id="L312">	createLocalScope(node);</span>
+<span class="fc" id="L313">	cont(node);</span>
+<span class="fc" id="L314">	return data;</span>
     }
 
     private void cont(AbstractJavaNode node) {
-<span class="fc" id="L317">	super.visit(node, null);</span>
-<span class="fc" id="L318">	scopes.pop();</span>
-<span class="fc" id="L319">    }</span>
+<span class="fc" id="L318">	super.visit(node, null);</span>
+<span class="fc" id="L319">	scopes.pop();</span>
+<span class="fc" id="L320">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

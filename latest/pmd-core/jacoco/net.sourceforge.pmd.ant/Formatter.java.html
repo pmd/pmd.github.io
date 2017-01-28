@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Formatter.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.ant</a> &gt; <span class="el_source">Formatter.java</span></div><h1>Formatter.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.ant;
 
 import java.io.BufferedWriter;
+import java.io.Console;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Parameter;
 
@@ -21,121 +30,209 @@ import net.sourceforge.pmd.renderers.Renderer;
 import net.sourceforge.pmd.renderers.RendererFactory;
 import net.sourceforge.pmd.util.StringUtil;
 
-<span class="fc" id="L24">public class Formatter {</span>
+<span class="fc" id="L33">public class Formatter {</span>
 
     private File toFile;
     private String type;
     private boolean toConsole;
     private boolean showSuppressed;
-<span class="fc" id="L30">    private final List&lt;Parameter&gt; parameters = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L39">    private final List&lt;Parameter&gt; parameters = new ArrayList&lt;&gt;();</span>
     private Writer writer;
     private Renderer renderer;
 
     public void setShowSuppressed(boolean value) {
-<span class="nc" id="L35">        this.showSuppressed = value;</span>
-<span class="nc" id="L36">    }</span>
+<span class="nc" id="L44">        this.showSuppressed = value;</span>
+<span class="nc" id="L45">    }</span>
 
     public void setType(String type) {
-<span class="fc" id="L39">        this.type = type;</span>
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L48">        this.type = type;</span>
+<span class="fc" id="L49">    }</span>
 
     public void setToFile(File toFile) {
-<span class="fc" id="L43">        this.toFile = toFile;</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L52">        this.toFile = toFile;</span>
+<span class="fc" id="L53">    }</span>
 
     public void setToConsole(boolean toConsole) {
-<span class="fc" id="L47">        this.toConsole = toConsole;</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L56">        this.toConsole = toConsole;</span>
+<span class="fc" id="L57">    }</span>
 
     public void addConfiguredParam(Parameter parameter) {
-<span class="nc" id="L51">	this.parameters.add(parameter);</span>
-<span class="nc" id="L52">    }</span>
+<span class="nc" id="L60">	this.parameters.add(parameter);</span>
+<span class="nc" id="L61">    }</span>
 
     public Renderer getRenderer() {
-<span class="nc" id="L55">        return renderer;</span>
+<span class="nc" id="L64">        return renderer;</span>
     }
 
     public void start(String baseDir) {
+
+<span class="fc" id="L69">        Properties properties = createProperties();</span>
+
+        Charset charset;
+        {
+<span class="fc" id="L73">            String s = (String) properties.get(&quot;encoding&quot;);</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (null == s) {</span>
+
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                if (toConsole) {</span>
+<span class="fc" id="L77">                    s = getConsoleEncoding();</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                    if (null == s) {</span>
+<span class="fc" id="L79">                        s = System.getProperty(&quot;file.encoding&quot;);</span>
+                    }
+                }
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                if (null == s) {</span>
+<span class="nc" id="L84">                    charset = StandardCharsets.UTF_8;</span>
+                } else {
+<span class="fc" id="L86">                    charset = Charset.forName(s);</span>
+                }
+
+                // Configures the encoding for the renderer.
+<span class="fc" id="L90">                final Parameter parameter = new Parameter();</span>
+<span class="fc" id="L91">                parameter.setName(&quot;encoding&quot;);</span>
+<span class="fc" id="L92">                parameter.setValue(charset.name());</span>
+<span class="fc" id="L93">                parameters.add(parameter);</span>
+<span class="fc" id="L94">            } else {</span>
+<span class="nc" id="L95">                charset = Charset.forName(s);</span>
+            }
+        }
+
         try {
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            if (toConsole) {</span>
-<span class="fc" id="L61">                writer = new BufferedWriter(new OutputStreamWriter(System.out));</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            if (toConsole) {</span>
+<span class="fc" id="L101">                writer = new BufferedWriter(new OutputStreamWriter(System.out, charset));</span>
             }
-<span class="pc bpc" id="L63" title="1 of 2 branches missed.">            if (toFile != null) {</span>
-<span class="nc" id="L64">                writer = getToFileWriter(baseDir);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            if (toFile != null) {</span>
+<span class="nc" id="L104">                writer = getToFileWriter(baseDir, toFile, charset);</span>
             }
-<span class="fc" id="L66">            renderer = createRenderer();</span>
-<span class="fc" id="L67">            renderer.setWriter(writer);</span>
-<span class="fc" id="L68">            renderer.start();</span>
-<span class="nc" id="L69">        } catch (IOException ioe) {</span>
-<span class="nc" id="L70">            throw new BuildException(ioe.getMessage(), ioe);</span>
-<span class="fc" id="L71">        }</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L106">            renderer = createRenderer();</span>
+<span class="fc" id="L107">            renderer.setWriter(writer);</span>
+<span class="fc" id="L108">            renderer.start();</span>
+<span class="nc" id="L109">        } catch (IOException ioe) {</span>
+<span class="nc" id="L110">            throw new BuildException(ioe.getMessage(), ioe);</span>
+<span class="fc" id="L111">        }</span>
+<span class="fc" id="L112">    }</span>
 
     public void end(Report errorReport) {
         try {
-<span class="fc" id="L76">            renderer.renderFileReport(errorReport);</span>
-<span class="fc" id="L77">            renderer.end();</span>
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            if (toConsole) {</span>
-<span class="fc" id="L79">                writer.flush();</span>
+<span class="fc" id="L116">            renderer.renderFileReport(errorReport);</span>
+<span class="fc" id="L117">            renderer.end();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (toConsole) {</span>
+<span class="fc" id="L119">                writer.flush();</span>
             } else {
-<span class="nc" id="L81">                writer.close();</span>
+<span class="nc" id="L121">                writer.close();</span>
             }
-<span class="nc" id="L83">        } catch (IOException ioe) {</span>
-<span class="nc" id="L84">            throw new BuildException(ioe.getMessage(), ioe);</span>
-<span class="fc" id="L85">        }</span>
-<span class="fc" id="L86">    }</span>
+<span class="nc" id="L123">        } catch (IOException ioe) {</span>
+<span class="nc" id="L124">            throw new BuildException(ioe.getMessage(), ioe);</span>
+<span class="fc" id="L125">        }</span>
+<span class="fc" id="L126">    }</span>
 
     public boolean isNoOutputSupplied() {
-<span class="pc bpc" id="L89" title="1 of 4 branches missed.">        return toFile == null &amp;&amp; !toConsole;</span>
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">        return toFile == null &amp;&amp; !toConsole;</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L94">        return &quot;file = &quot; + toFile + &quot;; renderer = &quot; + type;</span>
+<span class="fc" id="L134">        return &quot;file = &quot; + toFile + &quot;; renderer = &quot; + type;</span>
     }
 
     private static String[] validRendererCodes() {
-<span class="nc" id="L98">        return RendererFactory.REPORT_FORMAT_TO_RENDERER.keySet().toArray(new String[RendererFactory.REPORT_FORMAT_TO_RENDERER.size()]);</span>
+<span class="nc" id="L138">        return RendererFactory.REPORT_FORMAT_TO_RENDERER.keySet().toArray(new String[RendererFactory.REPORT_FORMAT_TO_RENDERER.size()]);</span>
     }
 
     private static String unknownRendererMessage(String userSpecifiedType) {
-<span class="nc" id="L102">        String[] typeCodes = validRendererCodes();</span>
-<span class="nc" id="L103">    	StringBuilder sb = new StringBuilder(100);</span>
-<span class="nc" id="L104">        sb.append(&quot;Formatter type must be one of: '&quot;)</span>
+<span class="nc" id="L142">        String[] typeCodes = validRendererCodes();</span>
+<span class="nc" id="L143">    	StringBuilder sb = new StringBuilder(100);</span>
+<span class="nc" id="L144">        sb.append(&quot;Formatter type must be one of: '&quot;)</span>
           .append(typeCodes[0]);
-<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (int i = 1; i &lt; typeCodes.length; i++) {</span>
-<span class="nc" id="L107">            sb.append(&quot;', '&quot;).append(typeCodes[i]);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (int i = 1; i &lt; typeCodes.length; i++) {</span>
+<span class="nc" id="L147">            sb.append(&quot;', '&quot;).append(typeCodes[i]);</span>
         }
-<span class="nc" id="L109">        sb.append(&quot;', or a class name; you specified: &quot;)</span>
+<span class="nc" id="L149">        sb.append(&quot;', or a class name; you specified: &quot;)</span>
           .append(userSpecifiedType);
-<span class="nc" id="L111">        return sb.toString();</span>
+<span class="nc" id="L151">        return sb.toString();</span>
     }
 
     // FIXME - hm, what about this consoleRenderer thing... need a test for this
     Renderer createRenderer() {
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(type)) {</span>
-<span class="nc" id="L117">            throw new BuildException(unknownRendererMessage(&quot;&lt;unspecified&gt;&quot;));</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(type)) {</span>
+<span class="nc" id="L157">            throw new BuildException(unknownRendererMessage(&quot;&lt;unspecified&gt;&quot;));</span>
         }
 
-<span class="fc" id="L120">        Properties properties = createProperties();</span>
-<span class="fc" id="L121">        Renderer renderer = RendererFactory.createRenderer(type, properties);</span>
-<span class="fc" id="L122">        renderer.setShowSuppressedViolations(showSuppressed);</span>
-<span class="fc" id="L123">        return renderer;</span>
+<span class="fc" id="L160">        Properties properties = createProperties();</span>
+<span class="fc" id="L161">        Renderer renderer = RendererFactory.createRenderer(type, properties);</span>
+<span class="fc" id="L162">        renderer.setShowSuppressedViolations(showSuppressed);</span>
+<span class="fc" id="L163">        return renderer;</span>
     }
 
     private Properties createProperties() {
-<span class="fc" id="L127">	Properties properties = new Properties();</span>
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">	for (Parameter parameter : parameters) {</span>
-<span class="nc" id="L129">	    properties.put(parameter.getName(), parameter.getValue());</span>
-<span class="nc" id="L130">	}</span>
-<span class="fc" id="L131">	return properties;</span>
+<span class="fc" id="L167">	Properties properties = new Properties();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">	for (Parameter parameter : parameters) {</span>
+<span class="fc" id="L169">	    properties.put(parameter.getName(), parameter.getValue());</span>
+<span class="fc" id="L170">	}</span>
+<span class="fc" id="L171">	return properties;</span>
     }
 
-    private Writer getToFileWriter(String baseDir) throws IOException {
-<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (!toFile.isAbsolute()) {</span>
-<span class="nc" id="L136">            return new BufferedWriter(new FileWriter(new File(baseDir + System.getProperty(&quot;file.separator&quot;) + toFile.getPath())));</span>
+    private static Writer getToFileWriter(String baseDir, File toFile, Charset charset) throws IOException {
+        final File file;
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (toFile.isAbsolute()) {</span>
+<span class="nc" id="L177">            file = toFile;</span>
+        } else {
+<span class="nc" id="L179">            file = new File(baseDir + System.getProperty(&quot;file.separator&quot;) + toFile.getPath());</span>
         }
-<span class="nc" id="L138">        return new BufferedWriter(new FileWriter(toFile));</span>
+
+<span class="nc" id="L182">        OutputStream output = null;</span>
+<span class="nc" id="L183">        Writer writer = null;</span>
+<span class="nc" id="L184">        boolean isOnError = true;</span>
+        try {
+<span class="nc" id="L186">            output = new FileOutputStream(file);</span>
+<span class="nc" id="L187">            writer = new OutputStreamWriter(output, charset);</span>
+<span class="nc" id="L188">            writer = new BufferedWriter(writer);</span>
+<span class="nc" id="L189">            isOnError = false;</span>
+        } finally {
+<span class="nc bnc" id="L191" title="All 4 branches missed.">            if (isOnError) {</span>
+<span class="nc" id="L192">                IOUtils.closeQuietly(output);</span>
+<span class="nc" id="L193">                IOUtils.closeQuietly(writer);</span>
+            }
+        }
+<span class="nc" id="L196">        return writer;</span>
+    }
+
+    private static String getConsoleEncoding() {
+<span class="fc" id="L200">        Console console = System.console();</span>
+        // in case of pipe or redirect, no interactive console.
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (console != null) {</span>
+            try {
+<span class="nc" id="L204">                Field f = Console.class.getDeclaredField(&quot;cs&quot;);</span>
+<span class="nc" id="L205">                f.setAccessible(true);</span>
+<span class="nc" id="L206">                Object res = f.get(console);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                if (res instanceof Charset) {</span>
+<span class="nc" id="L208">                    return ((Charset) res).name();</span>
+                }
+<span class="nc" id="L210">            } catch (NoSuchFieldException e) {</span>
+                // fall-through
+<span class="nc" id="L212">            } catch (IllegalAccessException e) {</span>
+                // fall-through
+<span class="nc" id="L214">            }</span>
+<span class="nc" id="L215">            return getNativeConsoleEncoding();</span>
+        }
+<span class="fc" id="L217">        return null;</span>
+    }
+
+    private static String getNativeConsoleEncoding() {
+        try {
+<span class="nc" id="L222">            Method m = Console.class.getDeclaredMethod(&quot;encoding&quot;);</span>
+<span class="nc" id="L223">            m.setAccessible(true);</span>
+<span class="nc" id="L224">            Object res = m.invoke(null);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (res instanceof String) {</span>
+<span class="nc" id="L226">                return (String) res;</span>
+            }
+<span class="nc" id="L228">        } catch (NoSuchMethodException e) {</span>
+            // fall-through
+<span class="nc" id="L230">        } catch (InvocationTargetException e) {</span>
+            // fall-through
+<span class="nc" id="L232">        } catch (IllegalAccessException e) {</span>
+            // fall-through
+<span class="nc" id="L234">        }</span>
+<span class="nc" id="L235">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

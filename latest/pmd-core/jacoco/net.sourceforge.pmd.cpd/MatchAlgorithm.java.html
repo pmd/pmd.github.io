@@ -63,67 +63,66 @@ public class MatchAlgorithm {
 <span class="fc bfc" id="L63" title="All 2 branches covered.">        for (Iterator&lt;Object&gt; i = markGroups.values().iterator(); i.hasNext();) {</span>
 <span class="fc" id="L64">            Object o = i.next();</span>
 <span class="fc bfc" id="L65" title="All 2 branches covered.">            if (o instanceof List) {</span>
-<span class="fc" id="L66">                List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
-<span class="fc" id="L67">                Collections.reverse(l);</span>
-<span class="fc" id="L68">                matchCollector.collect(l);</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L67">                List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
+<span class="fc" id="L68">                Collections.reverse(l);</span>
+<span class="fc" id="L69">                matchCollector.collect(l);</span>
             }
-<span class="fc" id="L70">            i.remove();</span>
-<span class="fc" id="L71">        }</span>
-<span class="fc" id="L72">        cpdListener.phaseUpdate(CPDListener.GROUPING);</span>
-<span class="fc" id="L73">        matches = matchCollector.getMatches();</span>
+<span class="fc" id="L71">            i.remove();</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">        cpdListener.phaseUpdate(CPDListener.GROUPING);</span>
+<span class="fc" id="L74">        matches = matchCollector.getMatches();</span>
 
-<span class="fc bfc" id="L75" title="All 2 branches covered.">        for (Match match : matches) {</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        	for (Iterator&lt;Mark&gt; occurrences = match.iterator(); occurrences.hasNext();) {</span>
-<span class="fc" id="L77">                Mark mark = occurrences.next();</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for (Match match : matches) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            for (Mark mark : match) {</span>
 <span class="fc" id="L78">                TokenEntry token = mark.getToken();</span>
 <span class="fc" id="L79">                int lineCount = tokens.getLineCount(token, match);</span>
 
 <span class="fc" id="L81">                mark.setLineCount(lineCount);</span>
 <span class="fc" id="L82">                SourceCode sourceCode = source.get(token.getTokenSrcID());</span>
-<span class="fc" id="L83">                String code = sourceCode.getSlice(mark.getBeginLine(), mark.getEndLine());</span>
-
-<span class="fc" id="L85">                mark.setSoureCodeSlice(code);</span>
-<span class="fc" id="L86">            }</span>
-<span class="fc" id="L87">        }</span>
-<span class="fc" id="L88">        cpdListener.phaseUpdate(CPDListener.DONE);</span>
-<span class="fc" id="L89">    }</span>
+<span class="fc" id="L83">                mark.setSourceCode(sourceCode);</span>
+<span class="fc" id="L84">            }</span>
+<span class="fc" id="L85">        }</span>
+<span class="fc" id="L86">        cpdListener.phaseUpdate(CPDListener.DONE);</span>
+<span class="fc" id="L87">    }</span>
 
     @SuppressWarnings(&quot;PMD.JumbledIncrementer&quot;)
     private Map&lt;TokenEntry, Object&gt; hash() {
-<span class="fc" id="L93">        Map&lt;TokenEntry, Object&gt; markGroups = new HashMap&lt;&gt;(tokens.size());</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        for (int i = code.size() - 1; i &gt;= 0; i--) {</span>
-<span class="fc" id="L95">            TokenEntry token = code.get(i);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (token != TokenEntry.EOF) {</span>
-<span class="fc" id="L97">                int last = tokenAt(min, token).getIdentifier();</span>
-<span class="fc" id="L98">                lastHash = MOD * lastHash + token.getIdentifier() - lastMod * last;</span>
-<span class="fc" id="L99">                token.setHashCode(lastHash);</span>
-<span class="fc" id="L100">                Object o = markGroups.get(token);</span>
+<span class="fc" id="L91">        Map&lt;TokenEntry, Object&gt; markGroups = new HashMap&lt;&gt;(tokens.size());</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (int i = code.size() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L93">            TokenEntry token = code.get(i);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (token != TokenEntry.EOF) {</span>
+<span class="fc" id="L95">                int last = tokenAt(min, token).getIdentifier();</span>
+<span class="fc" id="L96">                lastHash = MOD * lastHash + token.getIdentifier() - lastMod * last;</span>
+<span class="fc" id="L97">                token.setHashCode(lastHash);</span>
+<span class="fc" id="L98">                Object o = markGroups.get(token);</span>
 
                 // Note that this insertion method is worthwhile since the vast majority
                 // markGroup keys will have only one value.
-<span class="fc bfc" id="L104" title="All 2 branches covered.">                if (o == null) {</span>
-<span class="fc" id="L105">                    markGroups.put(token, token);</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">                } else if (o instanceof TokenEntry) {</span>
-<span class="fc" id="L107">                    List&lt;TokenEntry&gt; l = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L108">                    l.add((TokenEntry) o);</span>
-<span class="fc" id="L109">                    l.add(token);</span>
-<span class="fc" id="L110">                    markGroups.put(token, l);</span>
-<span class="fc" id="L111">                } else {</span>
-<span class="fc" id="L112">                    List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
-<span class="fc" id="L113">                    l.add(token);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                if (o == null) {</span>
+<span class="fc" id="L103">                    markGroups.put(token, token);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                } else if (o instanceof TokenEntry) {</span>
+<span class="fc" id="L105">                    List&lt;TokenEntry&gt; l = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L106">                    l.add((TokenEntry) o);</span>
+<span class="fc" id="L107">                    l.add(token);</span>
+<span class="fc" id="L108">                    markGroups.put(token, l);</span>
+<span class="fc" id="L109">                } else {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L111">                    List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
+<span class="fc" id="L112">                    l.add(token);</span>
                 }
-<span class="fc" id="L115">            } else {</span>
-<span class="fc" id="L116">                lastHash = 0;</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">                for (int end = Math.max(0, i - min + 1); i &gt; end; i--) {</span>
-<span class="fc" id="L118">                    token = code.get(i - 1);</span>
-<span class="fc" id="L119">                    lastHash = MOD * lastHash + token.getIdentifier();</span>
-<span class="fc bfc" id="L120" title="All 2 branches covered.">                    if (token == TokenEntry.EOF) {</span>
-<span class="fc" id="L121">                        break;</span>
+<span class="fc" id="L114">            } else {</span>
+<span class="fc" id="L115">                lastHash = 0;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                for (int end = Math.max(0, i - min + 1); i &gt; end; i--) {</span>
+<span class="fc" id="L117">                    token = code.get(i - 1);</span>
+<span class="fc" id="L118">                    lastHash = MOD * lastHash + token.getIdentifier();</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                    if (token == TokenEntry.EOF) {</span>
+<span class="fc" id="L120">                        break;</span>
                     }
                 }
             }
         }
-<span class="fc" id="L126">        return markGroups;</span>
+<span class="fc" id="L125">        return markGroups;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

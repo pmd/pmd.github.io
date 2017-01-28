@@ -87,116 +87,125 @@ import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 <span class="fc" id="L87">        params.remove(0);</span>
 <span class="fc" id="L88">        final int expectedArguments = expectedArguments(messageParam);</span>
 
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (expectedArguments == 0) {</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (expectedArguments == 0) {</span>
             // ignore if we are not expecting arguments to format the message
-<span class="nc" id="L92">            return super.visit(node, data);</span>
+            // or if we couldn't analyze the message parameter
+<span class="fc" id="L93">            return super.visit(node, data);</span>
         }
 
         // Remove throwable param, since it is shown separately.
-<span class="fc" id="L96">        removeThrowableParam(params);</span>
-
-<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (params.size() &lt; expectedArguments) {</span>
-<span class="fc" id="L99">            addViolationWithMessage(data, node, &quot;Missing arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        } else if (params.size() &gt; expectedArguments) {</span>
-<span class="fc" id="L101">            addViolationWithMessage(data, node, &quot;Too many arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
+        // But only, if it is not used as a placeholder argument
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (params.size() &gt; expectedArguments) {</span>
+<span class="fc" id="L99">            removeThrowableParam(params);</span>
         }
 
-<span class="fc" id="L104">        return super.visit(node, data);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (params.size() &lt; expectedArguments) {</span>
+<span class="fc" id="L103">            addViolationWithMessage(data, node, &quot;Missing arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        } else if (params.size() &gt; expectedArguments) {</span>
+<span class="fc" id="L105">            addViolationWithMessage(data, node, &quot;Too many arguments,&quot; + getExpectedMessage(params, expectedArguments));</span>
+        }
+
+<span class="fc" id="L108">        return super.visit(node, data);</span>
     }
 
     private boolean isNewThrowable(ASTPrimaryExpression last) {
         // in case a new exception is created or the exception class is mentioned.
-<span class="fc" id="L109">        ASTClassOrInterfaceType classOrInterface = last.getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
-<span class="pc bpc" id="L110" title="2 of 6 branches missed.">        if (classOrInterface != null &amp;&amp; classOrInterface.getType() != null</span>
+<span class="fc" id="L113">        ASTClassOrInterfaceType classOrInterface = last.getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L114" title="2 of 6 branches missed.">        if (classOrInterface != null &amp;&amp; classOrInterface.getType() != null</span>
                 &amp;&amp; Throwable.class.isAssignableFrom(classOrInterface.getType())) {
-<span class="fc" id="L112">            return true;</span>
+<span class="fc" id="L116">            return true;</span>
         }
-<span class="fc" id="L114">        return false;</span>
+<span class="fc" id="L118">        return false;</span>
     }
 
     private boolean hasTypeThrowable(ASTPrimaryExpression last) {
         // if the type could be determined already
-<span class="pc bpc" id="L119" title="1 of 4 branches missed.">        if (last.getType() != null &amp;&amp; Throwable.class.isAssignableFrom(last.getType())) {</span>
-<span class="nc" id="L120">            return true;</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">        if (last.getType() != null &amp;&amp; Throwable.class.isAssignableFrom(last.getType())) {</span>
+<span class="nc" id="L124">            return true;</span>
         }
-<span class="fc" id="L122">        return false;</span>
+<span class="fc" id="L126">        return false;</span>
     }
 
     private boolean isReferencingThrowable(ASTPrimaryExpression last) {
         // check the variable type, if there is a reference by name
-<span class="fc" id="L127">        ASTName variable = last.getFirstDescendantOfType(ASTName.class);</span>
-<span class="pc bpc" id="L128" title="1 of 6 branches missed.">        if (variable != null &amp;&amp; variable.getNameDeclaration() != null</span>
+<span class="fc" id="L131">        ASTName variable = last.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L132" title="2 of 6 branches missed.">        if (variable != null &amp;&amp; variable.getNameDeclaration() != null</span>
                 &amp;&amp; variable.getNameDeclaration() instanceof VariableNameDeclaration) {
-<span class="fc" id="L130">            VariableNameDeclaration declaration = (VariableNameDeclaration) variable.getNameDeclaration();</span>
-<span class="pc bpc" id="L131" title="1 of 4 branches missed.">            if (declaration.getType() != null &amp;&amp; Throwable.class.isAssignableFrom(declaration.getType())) {</span>
-<span class="nc" id="L132">                return true;</span>
+<span class="fc" id="L134">            VariableNameDeclaration declaration = (VariableNameDeclaration) variable.getNameDeclaration();</span>
+<span class="pc bpc" id="L135" title="3 of 4 branches missed.">            if (declaration.getType() != null &amp;&amp; Throwable.class.isAssignableFrom(declaration.getType())) {</span>
+<span class="nc" id="L136">                return true;</span>
             }
             // convention: Exception type names should end with Exception
-<span class="pc bpc" id="L135" title="1 of 4 branches missed.">            if (declaration.getTypeImage() != null &amp;&amp; declaration.getTypeImage().endsWith(&quot;Exception&quot;)) {</span>
-<span class="fc" id="L136">                return true;</span>
+<span class="pc bpc" id="L139" title="2 of 4 branches missed.">            if (declaration.getTypeImage() != null &amp;&amp; declaration.getTypeImage().endsWith(&quot;Exception&quot;)) {</span>
+<span class="fc" id="L140">                return true;</span>
             }
         }
-<span class="fc" id="L139">        return false;</span>
+<span class="fc" id="L143">        return false;</span>
     }
 
     private void removeThrowableParam(final List&lt;ASTPrimaryExpression&gt; params) {
         // Throwable parameters are the last one in the list, if any.
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (params.isEmpty()) {</span>
-<span class="nc" id="L145">            return;</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if (params.isEmpty()) {</span>
+<span class="nc" id="L149">            return;</span>
         }
-<span class="fc" id="L147">        int lastIndex = params.size() - 1;</span>
-<span class="fc" id="L148">        ASTPrimaryExpression last = params.get(lastIndex);</span>
+<span class="fc" id="L151">        int lastIndex = params.size() - 1;</span>
+<span class="fc" id="L152">        ASTPrimaryExpression last = params.get(lastIndex);</span>
 
-<span class="pc bpc" id="L150" title="1 of 6 branches missed.">        if (isNewThrowable(last) || hasTypeThrowable(last) || isReferencingThrowable(last)) {</span>
-<span class="fc" id="L151">            params.remove(lastIndex);</span>
-<span class="fc" id="L152">            return;</span>
+<span class="pc bpc" id="L154" title="1 of 6 branches missed.">        if (isNewThrowable(last) || hasTypeThrowable(last) || isReferencingThrowable(last)) {</span>
+<span class="fc" id="L155">            params.remove(lastIndex);</span>
+<span class="fc" id="L156">            return;</span>
         }
-<span class="fc" id="L154">    }</span>
+<span class="fc" id="L158">    }</span>
 
     private String getExpectedMessage(final List&lt;ASTPrimaryExpression&gt; params, final int expectedArguments) {
-<span class="fc bfc" id="L157" title="All 2 branches covered.">        return &quot; expected &quot; + expectedArguments + (expectedArguments &gt; 1 ? &quot; arguments &quot; : &quot; argument &quot;) + &quot;but have &quot;</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        return &quot; expected &quot; + expectedArguments + (expectedArguments &gt; 1 ? &quot; arguments &quot; : &quot; argument &quot;) + &quot;but have &quot;</span>
                 + params.size();
     }
 
     private int expectedArguments(final ASTPrimaryExpression node) {
-<span class="fc" id="L162">        int count = 0;</span>
+<span class="fc" id="L166">        int count = 0;</span>
         // look if the logger have a literal message
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (node.getFirstDescendantOfType(ASTLiteral.class) != null) {</span>
-<span class="fc" id="L165">            count = countPlaceholders(node);</span>
-<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        } else if (node.getFirstDescendantOfType(ASTName.class) != null) {</span>
-<span class="fc" id="L167">            final String variableName = node.getFirstDescendantOfType(ASTName.class).getImage();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (node.getFirstDescendantOfType(ASTLiteral.class) != null) {</span>
+<span class="fc" id="L169">            count = countPlaceholders(node);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        } else if (node.getFirstDescendantOfType(ASTName.class) != null) {</span>
+<span class="fc" id="L171">            final String variableName = node.getFirstDescendantOfType(ASTName.class).getImage();</span>
             // look if the message is defined locally
-<span class="fc" id="L169">            final List&lt;ASTVariableDeclarator&gt; localValiables = node.getFirstParentOfType(ASTMethodDeclaration.class)</span>
+<span class="fc" id="L173">            final List&lt;ASTVariableDeclarator&gt; localValiables = node.getFirstParentOfType(ASTMethodDeclaration.class)</span>
                     .findDescendantsOfType(ASTVariableDeclarator.class);
-<span class="fc" id="L171">            count = getAmountOfExpectedArguments(variableName, localValiables);</span>
+<span class="fc" id="L175">            count = getAmountOfExpectedArguments(variableName, localValiables);</span>
 
-<span class="fc bfc" id="L173" title="All 2 branches covered.">            if (count == 0) {</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">            if (count == 0) {</span>
                 // look if the message is defined in a field
-<span class="fc" id="L175">                final List&lt;ASTFieldDeclaration&gt; fieldlist = node.getFirstParentOfType(ASTClassOrInterfaceBody.class)</span>
+<span class="fc" id="L179">                final List&lt;ASTFieldDeclaration&gt; fieldlist = node.getFirstParentOfType(ASTClassOrInterfaceBody.class)</span>
                         .findDescendantsOfType(ASTFieldDeclaration.class);
                 // only look for ASTVariableDeclarator that are Fields
-<span class="fc" id="L178">                final List&lt;ASTVariableDeclarator&gt; fields = new ArrayList&lt;ASTVariableDeclarator&gt;(fieldlist.size());</span>
-<span class="fc bfc" id="L179" title="All 2 branches covered.">                for (final ASTFieldDeclaration astFieldDeclaration : fieldlist) {</span>
-<span class="fc" id="L180">                    fields.add(astFieldDeclaration.getFirstChildOfType(ASTVariableDeclarator.class));</span>
-<span class="fc" id="L181">                }</span>
-<span class="fc" id="L182">                count = getAmountOfExpectedArguments(variableName, fields);</span>
+<span class="fc" id="L182">                final List&lt;ASTVariableDeclarator&gt; fields = new ArrayList&lt;ASTVariableDeclarator&gt;(fieldlist.size());</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">                for (final ASTFieldDeclaration astFieldDeclaration : fieldlist) {</span>
+<span class="fc" id="L184">                    fields.add(astFieldDeclaration.getFirstChildOfType(ASTVariableDeclarator.class));</span>
+<span class="fc" id="L185">                }</span>
+<span class="fc" id="L186">                count = getAmountOfExpectedArguments(variableName, fields);</span>
             }
         }
-<span class="fc" id="L185">        return count;</span>
+<span class="fc" id="L189">        return count;</span>
     }
 
     private int getAmountOfExpectedArguments(final String variableName, final List&lt;ASTVariableDeclarator&gt; variables) {
-<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (final ASTVariableDeclarator astVariableDeclarator : variables) {</span>
-<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (astVariableDeclarator.getFirstChildOfType(ASTVariableDeclaratorId.class).getImage()</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        for (final ASTVariableDeclarator astVariableDeclarator : variables) {</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            if (astVariableDeclarator.getFirstChildOfType(ASTVariableDeclaratorId.class).getImage()</span>
                     .equals(variableName)) {
-<span class="fc" id="L192">                return countPlaceholders(astVariableDeclarator);</span>
+<span class="fc" id="L196">                return countPlaceholders(astVariableDeclarator);</span>
             }
-<span class="fc" id="L194">        }</span>
-<span class="fc" id="L195">        return 0;</span>
+<span class="fc" id="L198">        }</span>
+<span class="fc" id="L199">        return 0;</span>
     }
 
     private int countPlaceholders(final AbstractJavaTypeNode node) {
-<span class="fc" id="L199">        return StringUtils.countMatches(node.getFirstDescendantOfType(ASTLiteral.class).getImage(), &quot;{}&quot;);</span>
+<span class="fc" id="L203">        int result = 0; // zero means, no placeholders, or we could not analyze the message parameter</span>
+<span class="fc" id="L204">        ASTLiteral stringLiteral = node.getFirstDescendantOfType(ASTLiteral.class);</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (stringLiteral != null) {</span>
+<span class="fc" id="L206">            result = StringUtils.countMatches(stringLiteral.getImage(), &quot;{}&quot;);</span>
+        }
+<span class="fc" id="L208">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

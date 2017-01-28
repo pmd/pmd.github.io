@@ -6,6 +6,9 @@ package net.sourceforge.pmd.lang.java.rule.design;
 import java.util.List;
 import java.util.Map;
 
+import net.sourceforge.pmd.lang.java.ast.ASTAssertStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTBlock;
+import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTName;
@@ -16,48 +19,54 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
-<span class="fc" id="L19">public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {</span>
+<span class="fc" id="L22">public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {</span>
 
     @Override
     public Object visit(ASTMethodDeclaration meth, Object data) {
         // skip void/abstract/native method
-<span class="fc bfc" id="L24" title="All 6 branches covered.">        if (meth.isVoid() || meth.isAbstract() || meth.isNative()) {</span>
-<span class="fc" id="L25">            return data;</span>
+<span class="fc bfc" id="L27" title="All 6 branches covered.">        if (meth.isVoid() || meth.isAbstract() || meth.isNative()) {</span>
+<span class="fc" id="L28">            return data;</span>
         }
-<span class="fc" id="L27">        return super.visit(meth, data);</span>
+<span class="fc" id="L30">        return super.visit(meth, data);</span>
     }
 
     @Override
     public Object visit(ASTReturnStatement rtn, Object data) {
         // skip returns of literals
-<span class="fc" id="L33">        ASTName name = rtn.getFirstDescendantOfType(ASTName.class);</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (name == null) {</span>
-<span class="fc" id="L35">            return data;</span>
+<span class="fc" id="L36">        ASTName name = rtn.getFirstDescendantOfType(ASTName.class);</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (name == null) {</span>
+<span class="fc" id="L38">            return data;</span>
         }
 
         // skip 'complicated' expressions
-<span class="fc bfc" id="L39" title="All 6 branches covered.">        if (rtn.findDescendantsOfType(ASTExpression.class).size() &gt; 1 || rtn.findDescendantsOfType(ASTPrimaryExpression.class).size() &gt; 1 || isMethodCall(rtn)) {</span>
-<span class="fc" id="L40">            return data;</span>
+<span class="fc bfc" id="L42" title="All 6 branches covered.">        if (rtn.findDescendantsOfType(ASTExpression.class).size() &gt; 1 || rtn.findDescendantsOfType(ASTPrimaryExpression.class).size() &gt; 1 || isMethodCall(rtn)) {</span>
+<span class="fc" id="L43">            return data;</span>
         }
 
-<span class="fc" id="L43">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = name.getScope().getDeclarations(VariableNameDeclaration.class);</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry: vars.entrySet()) {</span>
-<span class="fc" id="L45">            VariableNameDeclaration key = entry.getKey();</span>
-<span class="fc" id="L46">            List&lt;NameOccurrence&gt; usages = entry.getValue();</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">            for (NameOccurrence occ: usages) {</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">                if (occ.getLocation().equals(name)) {</span>
+<span class="fc" id="L46">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = name.getScope().getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry: vars.entrySet()) {</span>
+<span class="fc" id="L48">            VariableNameDeclaration key = entry.getKey();</span>
+<span class="fc" id="L49">            List&lt;NameOccurrence&gt; usages = entry.getValue();</span>
+
+            // skip, if there is an assert between declaration and return
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            if (hasAssertStatement(key, rtn)) {</span>
+<span class="fc" id="L53">                continue;</span>
+            }
+
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            for (NameOccurrence occ: usages) {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                if (occ.getLocation().equals(name)) {</span>
                     // only check declarations that occur one line earlier
-<span class="fc bfc" id="L50" title="All 2 branches covered.">                    if (key.getNode().getBeginLine() == name.getBeginLine() - 1) {</span>
-<span class="fc" id="L51">                        String var = name.getImage();</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">                        if (var.indexOf('.') != -1) {</span>
-<span class="nc" id="L53">                            var = var.substring(0, var.indexOf('.'));</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                    if (key.getNode().getBeginLine() == name.getBeginLine() - 1) {</span>
+<span class="fc" id="L60">                        String var = name.getImage();</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">                        if (var.indexOf('.') != -1) {</span>
+<span class="nc" id="L62">                            var = var.substring(0, var.indexOf('.'));</span>
                         }
-<span class="fc" id="L55">                        addViolation(data, rtn, var);</span>
+<span class="fc" id="L64">                        addViolation(data, rtn, var);</span>
                     }
                 }
-<span class="fc" id="L58">            }</span>
-<span class="fc" id="L59">        }</span>
-<span class="fc" id="L60">        return data;</span>
+<span class="fc" id="L67">            }</span>
+<span class="fc" id="L68">        }</span>
+<span class="fc" id="L69">        return data;</span>
     }
 
     /**
@@ -68,13 +77,40 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      * @return true if any method calls are made within the given return
      */
     private boolean isMethodCall(ASTReturnStatement rtn) {
-<span class="fc" id="L71">     List&lt;ASTPrimarySuffix&gt; suffix = rtn.findDescendantsOfType( ASTPrimarySuffix.class );</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">     for ( ASTPrimarySuffix element: suffix ) {</span>
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if ( element.isArguments() ) {</span>
-<span class="fc" id="L74">          return true;</span>
+<span class="fc" id="L80">     List&lt;ASTPrimarySuffix&gt; suffix = rtn.findDescendantsOfType( ASTPrimarySuffix.class );</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">     for ( ASTPrimarySuffix element: suffix ) {</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if ( element.isArguments() ) {</span>
+<span class="fc" id="L83">          return true;</span>
         }
-<span class="nc" id="L76">      }</span>
-<span class="fc" id="L77">      return false;</span>
+<span class="nc" id="L85">      }</span>
+<span class="fc" id="L86">      return false;</span>
+    }
+
+    /**
+     * Checks whether there is an assert statement between the variable declaration
+     * and the return statement, that uses the variable.
+     * @param variableDeclaration
+     * @param rtn
+     * @return
+     */
+    private boolean hasAssertStatement(VariableNameDeclaration variableDeclaration, ASTReturnStatement rtn) {
+<span class="fc" id="L97">        boolean hasAssert = false;</span>
+<span class="fc" id="L98">        ASTBlockStatement blockStatement = variableDeclaration.getAccessNodeParent().getFirstParentOfType(ASTBlockStatement.class);</span>
+<span class="fc" id="L99">        int startIndex = blockStatement.jjtGetChildIndex() + 1;</span>
+<span class="fc" id="L100">        int endIndex = rtn.getFirstParentOfType(ASTBlockStatement.class).jjtGetChildIndex();</span>
+<span class="fc" id="L101">        ASTBlock block = (ASTBlock)blockStatement.jjtGetParent();</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (int i = startIndex; i &lt; endIndex; i++) {</span>
+<span class="fc" id="L103">            List&lt;ASTAssertStatement&gt; asserts = block.jjtGetChild(i).findDescendantsOfType(ASTAssertStatement.class);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (ASTAssertStatement assertStatement : asserts) {</span>
+<span class="fc" id="L105">                List&lt;ASTName&gt; names = assertStatement.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                for (ASTName n : names) {</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                    if (n.hasImageEqualTo(variableDeclaration.getName())) {</span>
+<span class="fc" id="L108">                        hasAssert = true;</span>
+                    }
+<span class="fc" id="L110">                }</span>
+<span class="fc" id="L111">            }</span>
+        }
+<span class="fc" id="L113">        return hasAssert;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

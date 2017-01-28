@@ -68,43 +68,44 @@ public class SourceCodeProcessor {
      *                      not be parsed, or other error is encountered.
      */
     public void processSourceCode(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) throws PMDException {
-<span class="fc" id="L71">    	determineLanguage(ctx);</span>
+<span class="fc" id="L71">        determineLanguage(ctx);</span>
 
-		// make sure custom XPath functions are initialized
-<span class="fc" id="L74">		Initializer.initialize();</span>
+        // make sure custom XPath functions are initialized
+<span class="fc" id="L74">        Initializer.initialize();</span>
 
-	    // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
-<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		 if (ruleSets.applies(ctx.getSourceCodeFile())) {</span>
+        // Coarse check to see if any RuleSet applies to file, will need to do a finer RuleSet specific check later
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (ruleSets.applies(ctx.getSourceCodeFile())) {</span>
 
-		try {
-<span class="fc" id="L80">			processSource(sourceCode, ruleSets,ctx);</span>
-
-<span class="nc" id="L82">		} catch (ParseException pe) {</span>
-<span class="nc" id="L83">		    throw new PMDException(&quot;Error while parsing &quot; + ctx.getSourceCodeFilename(), pe);</span>
-<span class="nc" id="L84">		} catch (Exception e) {</span>
-<span class="nc" id="L85">		    throw new PMDException(&quot;Error while processing &quot; + ctx.getSourceCodeFilename(), e);</span>
-		} finally {
-<span class="pc" id="L87">		    IOUtils.closeQuietly(sourceCode);</span>
-<span class="fc" id="L88">		}</span>
-		}
-<span class="fc" id="L90">    }</span>
+            try {
+<span class="fc" id="L80">                ruleSets.start(ctx);</span>
+<span class="fc" id="L81">                processSource(sourceCode, ruleSets, ctx);</span>
+<span class="nc" id="L82">            } catch (ParseException pe) {</span>
+<span class="nc" id="L83">                throw new PMDException(&quot;Error while parsing &quot; + ctx.getSourceCodeFilename(), pe);</span>
+<span class="nc" id="L84">            } catch (Exception e) {</span>
+<span class="nc" id="L85">                throw new PMDException(&quot;Error while processing &quot; + ctx.getSourceCodeFilename(), e);</span>
+            } finally {
+<span class="pc" id="L87">                IOUtils.closeQuietly(sourceCode);</span>
+<span class="pc" id="L88">                ruleSets.end(ctx);</span>
+<span class="fc" id="L89">            }</span>
+        }
+<span class="fc" id="L91">    }</span>
 
     
     private Node parse(RuleContext ctx, Reader sourceCode, Parser parser) {
-<span class="fc" id="L94">		long start = System.nanoTime();</span>
-<span class="fc" id="L95">		Node rootNode = parser.parse(ctx.getSourceCodeFilename(), sourceCode);</span>
-<span class="fc" id="L96">		ctx.getReport().suppress(parser.getSuppressMap());</span>
-<span class="fc" id="L97">		long end = System.nanoTime();    	</span>
-<span class="fc" id="L98">		Benchmarker.mark(Benchmark.Parser, end - start, 0);</span>
-<span class="fc" id="L99">		return rootNode;</span>
+<span class="fc" id="L95">		long start = System.nanoTime();</span>
+<span class="fc" id="L96">		Node rootNode = parser.parse(ctx.getSourceCodeFilename(), sourceCode);</span>
+<span class="fc" id="L97">		ctx.getReport().suppress(parser.getSuppressMap());</span>
+<span class="fc" id="L98">		long end = System.nanoTime();    	</span>
+<span class="fc" id="L99">		Benchmarker.mark(Benchmark.Parser, end - start, 0);</span>
+<span class="fc" id="L100">		return rootNode;</span>
     }
 
     private void symbolFacade(Node rootNode, LanguageVersionHandler languageVersionHandler) {
-<span class="fc" id="L103">    	long start = System.nanoTime();</span>
-<span class="fc" id="L104">		languageVersionHandler.getSymbolFacade(configuration.getClassLoader()).start(rootNode);</span>
-<span class="fc" id="L105">		long end = System.nanoTime();</span>
-<span class="fc" id="L106">		Benchmarker.mark(Benchmark.SymbolTable, end - start, 0);</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L104">    	long start = System.nanoTime();</span>
+<span class="fc" id="L105">		languageVersionHandler.getSymbolFacade(configuration.getClassLoader()).start(rootNode);</span>
+<span class="fc" id="L106">		long end = System.nanoTime();</span>
+<span class="fc" id="L107">		Benchmarker.mark(Benchmark.SymbolTable, end - start, 0);</span>
+<span class="fc" id="L108">    }</span>
     
 //    private ParserOptions getParserOptions(final LanguageVersionHandler languageVersionHandler) {
 //		// TODO Handle Rules having different parser options.
@@ -115,46 +116,46 @@ public class SourceCodeProcessor {
 
     private void usesDFA(LanguageVersion languageVersion, Node rootNode, RuleSets ruleSets, Language language ) {
 
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">		if (ruleSets.usesDFA(language)) {</span>
-<span class="nc" id="L119">		    long start = System.nanoTime();</span>
-<span class="nc" id="L120">		    VisitorStarter dataFlowFacade = languageVersion.getLanguageVersionHandler().getDataFlowFacade();</span>
-<span class="nc" id="L121">		    dataFlowFacade.start(rootNode);</span>
-<span class="nc" id="L122">		    long end = System.nanoTime();</span>
-<span class="nc" id="L123">		    Benchmarker.mark(Benchmark.DFA, end - start, 0);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		if (ruleSets.usesDFA(language)) {</span>
+<span class="nc" id="L120">		    long start = System.nanoTime();</span>
+<span class="nc" id="L121">		    VisitorStarter dataFlowFacade = languageVersion.getLanguageVersionHandler().getDataFlowFacade();</span>
+<span class="nc" id="L122">		    dataFlowFacade.start(rootNode);</span>
+<span class="nc" id="L123">		    long end = System.nanoTime();</span>
+<span class="nc" id="L124">		    Benchmarker.mark(Benchmark.DFA, end - start, 0);</span>
 		}
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L126">    }</span>
 
     private void usesTypeResolution(LanguageVersion languageVersion, Node rootNode, RuleSets ruleSets, Language language) {
 	
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (ruleSets.usesTypeResolution(language)) {</span>
-<span class="nc" id="L130">		    long start = System.nanoTime();</span>
-<span class="nc" id="L131">		    languageVersion.getLanguageVersionHandler().getTypeResolutionFacade(configuration.getClassLoader()).start(rootNode);</span>
-<span class="nc" id="L132">		    long end = System.nanoTime();</span>
-<span class="nc" id="L133">		    Benchmarker.mark(Benchmark.TypeResolution, end - start, 0);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (ruleSets.usesTypeResolution(language)) {</span>
+<span class="nc" id="L131">		    long start = System.nanoTime();</span>
+<span class="nc" id="L132">		    languageVersion.getLanguageVersionHandler().getTypeResolutionFacade(configuration.getClassLoader()).start(rootNode);</span>
+<span class="nc" id="L133">		    long end = System.nanoTime();</span>
+<span class="nc" id="L134">		    Benchmarker.mark(Benchmark.TypeResolution, end - start, 0);</span>
 		}
-<span class="fc" id="L135">    }</span>
+<span class="fc" id="L136">    }</span>
     
     private void processSource(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) {
-<span class="fc" id="L138">		LanguageVersion languageVersion = ctx.getLanguageVersion();</span>
-<span class="fc" id="L139">		LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
-<span class="fc" id="L140">		Parser parser = PMD.parserFor(languageVersion, configuration);</span>
+<span class="fc" id="L139">		LanguageVersion languageVersion = ctx.getLanguageVersion();</span>
+<span class="fc" id="L140">		LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="fc" id="L141">		Parser parser = PMD.parserFor(languageVersion, configuration);</span>
 		
-<span class="fc" id="L142">		Node rootNode = parse(ctx, sourceCode, parser);</span>
-<span class="fc" id="L143">		symbolFacade(rootNode, languageVersionHandler);</span>
-<span class="fc" id="L144">		Language language = languageVersion.getLanguage();</span>
-<span class="fc" id="L145">		usesDFA(languageVersion, rootNode, ruleSets, language);</span>
-<span class="fc" id="L146">		usesTypeResolution(languageVersion, rootNode, ruleSets,language);</span>
+<span class="fc" id="L143">		Node rootNode = parse(ctx, sourceCode, parser);</span>
+<span class="fc" id="L144">		symbolFacade(rootNode, languageVersionHandler);</span>
+<span class="fc" id="L145">		Language language = languageVersion.getLanguage();</span>
+<span class="fc" id="L146">		usesDFA(languageVersion, rootNode, ruleSets, language);</span>
+<span class="fc" id="L147">		usesTypeResolution(languageVersion, rootNode, ruleSets,language);</span>
 		
-<span class="fc" id="L148">		List&lt;Node&gt; acus = Collections.singletonList(rootNode);</span>
-<span class="fc" id="L149">		ruleSets.apply(acus, ctx, language);</span>
-<span class="fc" id="L150">	}</span>
+<span class="fc" id="L149">		List&lt;Node&gt; acus = Collections.singletonList(rootNode);</span>
+<span class="fc" id="L150">		ruleSets.apply(acus, ctx, language);</span>
+<span class="fc" id="L151">	}</span>
 
 	private void determineLanguage(RuleContext ctx) {
 		// If LanguageVersion of the source file is not known, make a determination
-<span class="pc bpc" id="L154" title="1 of 2 branches missed.">		if (ctx.getLanguageVersion() == null) {</span>
-<span class="fc" id="L155">		    LanguageVersion languageVersion = configuration.getLanguageVersionOfFile(ctx.getSourceCodeFilename());</span>
-<span class="fc" id="L156">		    ctx.setLanguageVersion(languageVersion);</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">		if (ctx.getLanguageVersion() == null) {</span>
+<span class="fc" id="L156">		    LanguageVersion languageVersion = configuration.getLanguageVersionOfFile(ctx.getSourceCodeFilename());</span>
+<span class="fc" id="L157">		    ctx.setLanguageVersion(languageVersion);</span>
 		}
-<span class="fc" id="L158">    }</span>
+<span class="fc" id="L159">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

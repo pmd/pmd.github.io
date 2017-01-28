@@ -193,19 +193,19 @@ import net.sourceforge.pmd.lang.java.ast.Token;
      * It can detect, whether the current token belongs to a constructor method identifier
      * and if so, is able to restore it when using ignoreIdentifiers.
      */
-<span class="fc" id="L196">    private static class ConstructorDetector {</span>
+    private static class ConstructorDetector {
         private boolean ignoreIdentifiers;
         
-        private Deque&lt;Integer&gt; classMembersIndentations;
+        private Deque&lt;TypeDeclaration&gt; classMembersIndentations;
         private int currentNestingLevel;
-        private boolean constructorCandidate;
+        private boolean storeNextIdentifier;
         private String prevIdentifier;
         
 <span class="fc" id="L204">        public ConstructorDetector(boolean ignoreIdentifiers) {</span>
 <span class="fc" id="L205">            this.ignoreIdentifiers = ignoreIdentifiers;</span>
             
 <span class="fc" id="L207">            currentNestingLevel = 0;</span>
-<span class="fc" id="L208">            classMembersIndentations = new LinkedList&lt;Integer&gt;();</span>
+<span class="fc" id="L208">            classMembersIndentations = new LinkedList&lt;TypeDeclaration&gt;();</span>
 <span class="fc" id="L209">        }</span>
         
         public void processToken(Token currentToken) {
@@ -215,55 +215,81 @@ import net.sourceforge.pmd.lang.java.ast.Token;
             
 <span class="fc bfc" id="L216" title="All 5 branches covered.">            switch (currentToken.kind) {</span>
             case JavaParserConstants.IDENTIFIER:
-                // Could this be a constructor?
-<span class="pc bpc" id="L219" title="1 of 6 branches missed.">                if (constructorCandidate &amp;&amp; (!classMembersIndentations.isEmpty() &amp;&amp; classMembersIndentations.peek().intValue() == currentNestingLevel)) {</span>
-<span class="fc" id="L220">                    prevIdentifier = currentToken.image;</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                if (&quot;enum&quot;.equals(currentToken.image)) {</span>
+                    // If declaring an enum, add a new block nesting level at which constructors may exist
+<span class="fc" id="L220">                    pushTypeDeclaration();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">                } else if (storeNextIdentifier) {</span>
+<span class="fc" id="L222">                    classMembersIndentations.peek().name = currentToken.image;</span>
+<span class="fc" id="L223">                    storeNextIdentifier = false;</span>
                 }
-                break;
+                
+                // Store this token
+<span class="fc" id="L227">                prevIdentifier = currentToken.image;</span>
+<span class="fc" id="L228">                break;</span>
                 
             case JavaParserConstants.CLASS:
                 // If declaring a class, add a new block nesting level at which constructors may exist
-<span class="fc" id="L226">                classMembersIndentations.push(currentNestingLevel + 1);</span>
-<span class="fc" id="L227">                break;</span>
+<span class="fc" id="L232">                pushTypeDeclaration();</span>
+<span class="fc" id="L233">                break;</span>
                 
             case JavaParserConstants.LBRACE:
-<span class="fc" id="L230">                currentNestingLevel++;</span>
-<span class="fc" id="L231">                break;</span>
+<span class="fc" id="L236">                currentNestingLevel++;</span>
+<span class="fc" id="L237">                break;</span>
                 
             case JavaParserConstants.RBRACE:
                 // Discard completed blocks
-<span class="fc bfc" id="L235" title="All 2 branches covered.">                if (classMembersIndentations.peek() == currentNestingLevel) {</span>
-<span class="fc" id="L236">                    classMembersIndentations.pop();</span>
+<span class="pc bpc" id="L241" title="1 of 4 branches missed.">                if (!classMembersIndentations.isEmpty() &amp;&amp;</span>
+                        classMembersIndentations.peek().indentationLevel == currentNestingLevel) {
+<span class="fc" id="L243">                    classMembersIndentations.pop();</span>
                 }
-<span class="fc" id="L238">                currentNestingLevel--;</span>
+<span class="fc" id="L245">                currentNestingLevel--;</span>
+<span class="fc" id="L246">                break;</span>
+
+            default:
+                /*
+                 * Did we find a &quot;class&quot; token not followed by an identifier? i.e:
+                 * expectThrows(IllegalStateException.class, () -&gt; {
+                 *  newSearcher(r).search(parentQuery.build(), c);
+                 * });
+                 */
+<span class="fc bfc" id="L255" title="All 2 branches covered.">                if (storeNextIdentifier) {</span>
+<span class="fc" id="L256">                    classMembersIndentations.pop();</span>
+<span class="fc" id="L257">                    storeNextIdentifier = false;</span>
+                }
                 break;
             }
-            
-            // Can the next token be a constructor identifier?
-<span class="pc bpc" id="L243" title="1 of 10 branches missed.">            constructorCandidate = currentToken.kind == JavaParserConstants.PRIVATE</span>
-                    || currentToken.kind == JavaParserConstants.PROTECTED
-                    || currentToken.kind == JavaParserConstants.PUBLIC
-                    || currentToken.kind == JavaParserConstants.LBRACE
-                    || currentToken.kind == JavaParserConstants.RBRACE;
-<span class="fc" id="L248">        }</span>
+<span class="fc" id="L261">        }</span>
         
+        private void pushTypeDeclaration() {
+<span class="fc" id="L264">            TypeDeclaration cd = new TypeDeclaration(currentNestingLevel + 1);</span>
+<span class="fc" id="L265">            classMembersIndentations.push(cd);</span>
+<span class="fc" id="L266">            storeNextIdentifier = true;</span>
+<span class="fc" id="L267">        }</span>
+
         public void restoreConstructorToken(Tokens tokenEntries, Token currentToken) {
-<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (!ignoreIdentifiers) {</span>
-<span class="fc" id="L252">                return;</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">            if (!ignoreIdentifiers) {</span>
+<span class="fc" id="L271">                return;</span>
             }
             
-<span class="fc bfc" id="L255" title="All 2 branches covered.">            if (prevIdentifier != null) {</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.LPAREN) {</span>
                 // was the previous token a constructor? If so, restore the identifier
-<span class="fc bfc" id="L257" title="All 2 branches covered.">                if (currentToken.kind == JavaParserConstants.LPAREN) {</span>
-<span class="fc" id="L258">                    int lastTokenIndex = tokenEntries.size() - 1;</span>
-<span class="fc" id="L259">                    TokenEntry lastToken = tokenEntries.getTokens().get(lastTokenIndex);</span>
-<span class="fc" id="L260">                    tokenEntries.getTokens().set(lastTokenIndex,</span>
-                        new TokenEntry(prevIdentifier, lastToken.getTokenSrcID(), lastToken.getBeginLine()));
+<span class="pc bpc" id="L276" title="1 of 4 branches missed.">                if (!classMembersIndentations.isEmpty()</span>
+                        &amp;&amp; classMembersIndentations.peek().name.equals(prevIdentifier)) {
+<span class="fc" id="L278">                    int lastTokenIndex = tokenEntries.size() - 1;</span>
+<span class="fc" id="L279">                    TokenEntry lastToken = tokenEntries.getTokens().get(lastTokenIndex);</span>
+<span class="fc" id="L280">                    lastToken.setImage(prevIdentifier);</span>
                 }
-                
-<span class="fc" id="L264">                prevIdentifier = null;</span>
             }
-<span class="fc" id="L266">        }</span>
+<span class="fc" id="L283">        }</span>
+    }
+    
+<span class="fc" id="L286">    private static class TypeDeclaration {</span>
+        int indentationLevel;
+        String name;
+        
+<span class="fc" id="L290">        public TypeDeclaration(int indentationLevel) {</span>
+<span class="fc" id="L291">            this.indentationLevel = indentationLevel;</span>
+<span class="fc" id="L292">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

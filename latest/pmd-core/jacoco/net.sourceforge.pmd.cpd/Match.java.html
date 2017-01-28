@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class Match implements Comparable&lt;Match&gt; {
+public class Match implements Comparable&lt;Match&gt;, Iterable&lt;Mark&gt; {
 
     private int tokenCount;
 <span class="fc" id="L16">    private Set&lt;Mark&gt; markSet = new TreeSet&lt;&gt;();</span>
@@ -72,62 +72,63 @@ public class Match implements Comparable&lt;Match&gt; {
 <span class="fc" id="L72">        return this.getMark(0).getSourceCodeSlice();</span>
     }
 
+    @Override
     public Iterator&lt;Mark&gt; iterator() {
-<span class="fc" id="L76">        return markSet.iterator();</span>
+<span class="fc" id="L77">        return markSet.iterator();</span>
     }
 
     public int compareTo(Match other) {
-<span class="fc" id="L80">        int diff = other.getTokenCount() - getTokenCount();</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (diff != 0) {</span>
-<span class="fc" id="L82">            return diff;</span>
+<span class="fc" id="L81">        int diff = other.getTokenCount() - getTokenCount();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (diff != 0) {</span>
+<span class="fc" id="L83">            return diff;</span>
         }
-<span class="fc" id="L84">        return getFirstMark().compareTo(other.getFirstMark());</span>
+<span class="fc" id="L85">        return getFirstMark().compareTo(other.getFirstMark());</span>
     }
 
     public Mark getFirstMark() {
-<span class="fc" id="L88">        return getMark(0);</span>
+<span class="fc" id="L89">        return getMark(0);</span>
     }
 
     public Mark getSecondMark() {
-<span class="nc" id="L92">        return getMark(1);</span>
+<span class="nc" id="L93">        return getMark(1);</span>
     }
 
     public String toString() {
-<span class="nc" id="L96">        return &quot;Match: &quot; + PMD.EOL + &quot;tokenCount = &quot; + tokenCount + PMD.EOL + &quot;marks = &quot; + markSet.size();</span>
+<span class="nc" id="L97">        return &quot;Match: &quot; + PMD.EOL + &quot;tokenCount = &quot; + tokenCount + PMD.EOL + &quot;marks = &quot; + markSet.size();</span>
     }
 
     public Set&lt;Mark&gt; getMarkSet() {
-<span class="nc" id="L100">        return markSet;</span>
+<span class="nc" id="L101">        return markSet;</span>
     }
 
     public int getEndIndex() {
-<span class="nc" id="L104">        return getMark(0).getToken().getIndex() + getTokenCount() - 1;</span>
+<span class="nc" id="L105">        return getMark(0).getToken().getIndex() + getTokenCount() - 1;</span>
     }
 
     public void setMarkSet(Set&lt;Mark&gt; markSet) {
-<span class="nc" id="L108">        this.markSet = markSet;</span>
-<span class="nc" id="L109">    }</span>
+<span class="nc" id="L109">        this.markSet = markSet;</span>
+<span class="nc" id="L110">    }</span>
 
     public void setLabel(String aLabel) {
-<span class="nc" id="L112">    	label = aLabel;</span>
-<span class="nc" id="L113">    }</span>
+<span class="nc" id="L113">    	label = aLabel;</span>
+<span class="nc" id="L114">    }</span>
     
     public String getLabel() {
-<span class="nc" id="L116">    	return label;</span>
+<span class="nc" id="L117">    	return label;</span>
     }
     
     public void addTokenEntry(TokenEntry entry){
-<span class="fc" id="L120">        markSet.add(new Mark(entry));                </span>
-<span class="fc" id="L121">    }</span>
+<span class="fc" id="L121">        markSet.add(new Mark(entry));                </span>
+<span class="fc" id="L122">    }</span>
     
     private Mark getMark(int index) {
-<span class="fc" id="L124">        Mark result = null;</span>
-<span class="fc" id="L125">        int i = 0;</span>
-<span class="pc bpc" id="L126" title="1 of 4 branches missed.">        for (Iterator&lt;Mark&gt; it = markSet.iterator(); it.hasNext() &amp;&amp; i &lt; index + 1; ){            </span>
-<span class="fc" id="L127">            result = it.next();</span>
-<span class="fc" id="L128">            i++;</span>
+<span class="fc" id="L125">        Mark result = null;</span>
+<span class="fc" id="L126">        int i = 0;</span>
+<span class="pc bpc" id="L127" title="1 of 4 branches missed.">        for (Iterator&lt;Mark&gt; it = markSet.iterator(); it.hasNext() &amp;&amp; i &lt; index + 1; ){            </span>
+<span class="fc" id="L128">            result = it.next();</span>
+<span class="fc" id="L129">            i++;</span>
         }
-<span class="fc" id="L130">        return result;</span>
+<span class="fc" id="L131">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -3,10 +3,10 @@
  */
 package net.sourceforge.pmd.cpd;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.ref.SoftReference;
@@ -14,26 +14,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.ByteOrderMark;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
 
 import net.sourceforge.pmd.PMD;
 
 public class SourceCode {
 
-<span class="fc" id="L24">    public abstract static class CodeLoader {</span>
+<span class="fc" id="L23">    public abstract static class CodeLoader {</span>
         private SoftReference&lt;List&lt;String&gt;&gt; code;
 
         public List&lt;String&gt; getCode() {
-<span class="fc" id="L28">            List&lt;String&gt; c = null;</span>
-<span class="fc bfc" id="L29" title="All 2 branches covered.">            if (code != null) {</span>
-<span class="fc" id="L30">                c = code.get();</span>
+<span class="fc" id="L27">            List&lt;String&gt; c = null;</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">            if (code != null) {</span>
+<span class="nc" id="L29">                c = code.get();</span>
             }
-<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (c != null) {</span>
-<span class="fc" id="L33">                return c;</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">            if (c != null) {</span>
+<span class="nc" id="L32">                return c;</span>
             }
-<span class="fc" id="L35">            this.code = new SoftReference&lt;&gt;(load());</span>
-<span class="fc" id="L36">            return code.get();</span>
+<span class="fc" id="L34">            this.code = new SoftReference&lt;&gt;(load());</span>
+<span class="fc" id="L35">            return code.get();</span>
+        }
+
+        public List&lt;String&gt; getCodeSlice(int startLine, int endLine) {
+<span class="fc" id="L39">            List&lt;String&gt; c = null;</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (code != null) {</span>
+<span class="fc" id="L41">                c = code.get();</span>
+            }
+<span class="fc bfc" id="L43" title="All 2 branches covered.">            if (c != null) {</span>
+<span class="fc" id="L44">                return c.subList(startLine, endLine);</span>
+            }
+<span class="fc" id="L46">            return load(startLine, endLine);</span>
         }
 
         public abstract String getFileName();
@@ -41,20 +51,41 @@ public class SourceCode {
         protected abstract Reader getReader() throws Exception;
 
         protected List&lt;String&gt; load() {
-<span class="fc" id="L44">            LineNumberReader lnr = null;</span>
-            try {
-<span class="fc" id="L46">                lnr = new LineNumberReader(getReader());</span>
-<span class="fc" id="L47">                List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
+<span class="pc" id="L54">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
+<span class="fc" id="L55">                List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
                 String currentLine;
-<span class="fc bfc" id="L49" title="All 2 branches covered.">                while ((currentLine = lnr.readLine()) != null) {</span>
-<span class="fc" id="L50">                    lines.add(currentLine);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
+<span class="fc" id="L58">                    lines.add(currentLine);</span>
                 }
-<span class="fc" id="L52">                return lines;</span>
-<span class="nc" id="L53">            } catch (Exception e) {</span>
-<span class="nc" id="L54">                e.printStackTrace();</span>
-<span class="nc" id="L55">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
-            } finally {
-<span class="pc" id="L57">                IOUtils.closeQuietly(lnr);</span>
+<span class="fc" id="L60">                return lines;</span>
+<span class="pc bpc" id="L61" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
+<span class="nc" id="L62">                e.printStackTrace();</span>
+<span class="nc" id="L63">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
+            }
+        }
+
+        protected List&lt;String&gt; load(int startLine, int endLine) {
+<span class="pc" id="L68">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
+<span class="fc" id="L69">                int linesToRead = endLine - startLine;</span>
+<span class="fc" id="L70">                List&lt;String&gt; lines = new ArrayList&lt;&gt;(linesToRead);</span>
+
+                // Skip lines until we reach the start point
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                for (int i = 0; i &lt; startLine; i++) {</span>
+<span class="fc" id="L74">                    reader.readLine();</span>
+                }
+
+                String currentLine;
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
+<span class="fc" id="L79">                    lines.add(currentLine);</span>
+
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                    if (lines.size() == linesToRead) {</span>
+<span class="nc" id="L82">                        break;</span>
+                    }
+                }
+<span class="fc" id="L85">                return lines;</span>
+<span class="pc bpc" id="L86" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
+<span class="nc" id="L87">                e.printStackTrace();</span>
+<span class="nc" id="L88">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
             }
         }
     }
@@ -63,30 +94,30 @@ public class SourceCode {
         private File file;
         private String encoding;
 
-<span class="fc" id="L66">        public FileCodeLoader(File file, String encoding) {</span>
-<span class="fc" id="L67">            this.file = file;</span>
-<span class="fc" id="L68">            this.encoding = encoding;</span>
-<span class="fc" id="L69">        }</span>
+<span class="fc" id="L97">        public FileCodeLoader(File file, String encoding) {</span>
+<span class="fc" id="L98">            this.file = file;</span>
+<span class="fc" id="L99">            this.encoding = encoding;</span>
+<span class="fc" id="L100">        }</span>
 
         @Override
         public Reader getReader() throws Exception {
-<span class="fc" id="L73">            BOMInputStream inputStream = </span>
+<span class="fc" id="L104">            BOMInputStream inputStream = </span>
                 new BOMInputStream(new FileInputStream(file),
                         ByteOrderMark.UTF_8, ByteOrderMark.UTF_16BE, ByteOrderMark.UTF_16LE);
 
-<span class="fc bfc" id="L77" title="All 2 branches covered.">            if (inputStream.hasBOM()) {</span>
-<span class="fc" id="L78">               encoding = inputStream.getBOMCharsetName();</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (inputStream.hasBOM()) {</span>
+<span class="fc" id="L109">               encoding = inputStream.getBOMCharsetName();</span>
             }
-<span class="fc" id="L80">            return new InputStreamReader(inputStream, encoding);</span>
+<span class="fc" id="L111">            return new InputStreamReader(inputStream, encoding);</span>
         }
 
         public String getEncoding() {
-<span class="fc" id="L84">            return encoding;</span>
+<span class="fc" id="L115">            return encoding;</span>
         }
 
         @Override
         public String getFileName() {
-<span class="fc" id="L89">            return file.getAbsolutePath();</span>
+<span class="fc" id="L120">            return file.getAbsolutePath();</span>
         }
     }
 
@@ -98,22 +129,22 @@ public class SourceCode {
         private String name;
 
         public StringCodeLoader(String code) {
-<span class="fc" id="L101">            this(code, DEFAULT_NAME);</span>
-<span class="fc" id="L102">        }</span>
+<span class="fc" id="L132">            this(code, DEFAULT_NAME);</span>
+<span class="fc" id="L133">        }</span>
 
-<span class="fc" id="L104">        public StringCodeLoader(String code, String name) {</span>
-<span class="fc" id="L105">            this.code = code;</span>
-<span class="fc" id="L106">            this.name = name;</span>
-<span class="fc" id="L107">        }</span>
+<span class="fc" id="L135">        public StringCodeLoader(String code, String name) {</span>
+<span class="fc" id="L136">            this.code = code;</span>
+<span class="fc" id="L137">            this.name = name;</span>
+<span class="fc" id="L138">        }</span>
 
         @Override
         public Reader getReader() {
-<span class="fc" id="L111">            return new StringReader(code);</span>
+<span class="fc" id="L142">            return new StringReader(code);</span>
         }
 
         @Override
         public String getFileName() {
-<span class="fc" id="L116">            return name;</span>
+<span class="fc" id="L147">            return name;</span>
         }
     }
 
@@ -125,58 +156,59 @@ public class SourceCode {
         private String name;
 
         public ReaderCodeLoader(Reader code) {
-<span class="nc" id="L128">            this(code, DEFAULT_NAME);</span>
-<span class="nc" id="L129">        }</span>
+<span class="nc" id="L159">            this(code, DEFAULT_NAME);</span>
+<span class="nc" id="L160">        }</span>
 
-<span class="nc" id="L131">        public ReaderCodeLoader(Reader code, String name) {</span>
-<span class="nc" id="L132">            this.code = code;</span>
-<span class="nc" id="L133">            this.name = name;</span>
-<span class="nc" id="L134">        }</span>
+<span class="nc" id="L162">        public ReaderCodeLoader(Reader code, String name) {</span>
+<span class="nc" id="L163">            this.code = code;</span>
+<span class="nc" id="L164">            this.name = name;</span>
+<span class="nc" id="L165">        }</span>
 
         @Override
         public Reader getReader() {
-<span class="nc" id="L138">            return code;</span>
+<span class="nc" id="L169">            return code;</span>
         }
 
         @Override
         public String getFileName() {
-<span class="nc" id="L143">            return name;</span>
+<span class="nc" id="L174">            return name;</span>
         }
     }
 
     private CodeLoader cl;
 
-<span class="fc" id="L149">    public SourceCode(CodeLoader cl) {</span>
-<span class="fc" id="L150">        this.cl = cl;</span>
-<span class="fc" id="L151">    }</span>
+<span class="fc" id="L180">    public SourceCode(CodeLoader cl) {</span>
+<span class="fc" id="L181">        this.cl = cl;</span>
+<span class="fc" id="L182">    }</span>
 
     public List&lt;String&gt; getCode() {
-<span class="fc" id="L154">        return cl.getCode();</span>
+<span class="fc" id="L185">        return cl.getCode();</span>
     }
 
     public StringBuilder getCodeBuffer() {
-<span class="fc" id="L158">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc" id="L159">        List&lt;String&gt; lines = cl.getCode();</span>
-<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (String line : lines) {</span>
-<span class="fc" id="L161">            sb.append(line).append(PMD.EOL);</span>
-<span class="fc" id="L162">        }</span>
-<span class="fc" id="L163">        return sb;</span>
+<span class="fc" id="L189">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L190">        List&lt;String&gt; lines = cl.getCode();</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc" id="L192">            sb.append(line).append(PMD.EOL);</span>
+<span class="fc" id="L193">        }</span>
+<span class="fc" id="L194">        return sb;</span>
     }
 
     public String getSlice(int startLine, int endLine) {
-<span class="fc" id="L167">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc" id="L168">        List&lt;String&gt; lines = cl.getCode();</span>
-<span class="pc bpc" id="L169" title="2 of 6 branches missed.">        for (int i = startLine == 0 ? startLine : startLine - 1; i &lt; endLine &amp;&amp; i &lt; lines.size(); i++) {</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            if (sb.length() != 0) {</span>
-<span class="fc" id="L171">                sb.append(PMD.EOL);</span>
+<span class="fc" id="L198">        List&lt;String&gt; lines = cl.getCodeSlice(startLine - 1, endLine);</span>
+
+<span class="fc" id="L200">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if (sb.length() != 0) {</span>
+<span class="fc" id="L203">                sb.append(PMD.EOL);</span>
             }
-<span class="fc" id="L173">            sb.append(lines.get(i));</span>
-        }
-<span class="fc" id="L175">        return sb.toString();</span>
+<span class="fc" id="L205">            sb.append(line);</span>
+<span class="fc" id="L206">        }</span>
+<span class="fc" id="L207">        return sb.toString();</span>
     }
 
     public String getFileName() {
-<span class="fc" id="L179">        return cl.getFileName();</span>
+<span class="fc" id="L211">        return cl.getFileName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

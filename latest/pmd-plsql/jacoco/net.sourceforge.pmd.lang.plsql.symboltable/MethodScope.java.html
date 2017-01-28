@@ -12,6 +12,8 @@ import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.plsql.ast.ASTName;
 import net.sourceforge.pmd.lang.plsql.ast.AbstractPLSQLNode;
 import net.sourceforge.pmd.lang.symboltable.AbstractScope;
+import net.sourceforge.pmd.lang.symboltable.Applier;
+import net.sourceforge.pmd.lang.symboltable.ImageFinderFunction;
 import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
@@ -19,61 +21,61 @@ public class MethodScope extends AbstractScope {
 
     private Node node;
 
-<span class="fc" id="L22">    public MethodScope(Node node) {</span>
-<span class="fc" id="L23">        this.node = node;</span>
-<span class="fc" id="L24">    }</span>
+<span class="fc" id="L24">    public MethodScope(Node node) {</span>
+<span class="fc" id="L25">        this.node = node;</span>
+<span class="fc" id="L26">    }</span>
 
     public MethodScope getEnclosingMethodScope() {
-<span class="nc" id="L27">        return this;</span>
+<span class="nc" id="L29">        return this;</span>
     }
 
     public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
-<span class="nc" id="L31">        return getDeclarations(VariableNameDeclaration.class);</span>
+<span class="nc" id="L33">        return getDeclarations(VariableNameDeclaration.class);</span>
     }
 
     @Override
     public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occ) {
-<span class="nc" id="L36">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence)occ;</span>
-<span class="nc" id="L37">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(occurrence);</span>
-<span class="nc bnc" id="L38" title="All 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; !occurrence.isThisOrSuper()) {</span>
-<span class="nc bnc" id="L39" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
-<span class="nc" id="L40">                getVariableDeclarations().get(decl).add(occurrence);</span>
-<span class="nc" id="L41">                Node n = occurrence.getLocation();</span>
-<span class="nc bnc" id="L42" title="All 2 branches missed.">                if (n instanceof ASTName) {</span>
-<span class="nc" id="L43">                    ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="nc" id="L38">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence)occ;</span>
+<span class="nc" id="L39">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(occurrence);</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; !occurrence.isThisOrSuper()) {</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L42">                getVariableDeclarations().get(decl).add(occurrence);</span>
+<span class="nc" id="L43">                Node n = occurrence.getLocation();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (n instanceof ASTName) {</span>
+<span class="nc" id="L45">                    ((ASTName) n).setNameDeclaration(decl);</span>
                 } // TODO what to do with PrimarySuffix case?
-<span class="nc" id="L45">            }</span>
+<span class="nc" id="L47">            }</span>
         }
-<span class="nc" id="L47">        return declarations;</span>
+<span class="nc" id="L49">        return declarations;</span>
     }
 
     @Override
     public void addDeclaration(NameDeclaration declaration) {
-<span class="pc bpc" id="L52" title="2 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
-<span class="nc" id="L53">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
+<span class="pc bpc" id="L54" title="2 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
+<span class="nc" id="L55">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
         }
-<span class="fc" id="L55">        super.addDeclaration(declaration);</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L57">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L58">    }</span>
 
     public Set&lt;NameDeclaration&gt; findVariableHere(PLSQLNameOccurrence occurrence) {
-<span class="nc" id="L59">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
-<span class="nc bnc" id="L60" title="All 4 branches missed.">        if (occurrence.isThisOrSuper() || occurrence.isMethodOrConstructorInvocation()) {</span>
-<span class="nc" id="L61">            return result;</span>
+<span class="nc" id="L61">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">        if (occurrence.isThisOrSuper() || occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="nc" id="L63">            return result;</span>
         }
-<span class="nc" id="L63">        ImageFinderFunction finder = new ImageFinderFunction(occurrence.getImage());</span>
-<span class="nc" id="L64">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (finder.getDecl() != null) {</span>
-<span class="nc" id="L66">            result.add(finder.getDecl());</span>
+<span class="nc" id="L65">        ImageFinderFunction finder = new ImageFinderFunction(occurrence.getImage());</span>
+<span class="nc" id="L66">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (finder.getDecl() != null) {</span>
+<span class="nc" id="L68">            result.add(finder.getDecl());</span>
         }
-<span class="nc" id="L68">        return result;</span>
+<span class="nc" id="L70">        return result;</span>
     }
 
     public String getName() {
-<span class="nc" id="L72">        return ( (AbstractPLSQLNode) node.jjtGetChild(1) ) .getCanonicalImage();</span>
+<span class="nc" id="L74">        return ( (AbstractPLSQLNode) node.jjtGetChild(1) ) .getCanonicalImage();</span>
     }
 
     public String toString() {
-<span class="nc" id="L76">        return &quot;MethodScope:&quot; + getVariableDeclarations().keySet();</span>
+<span class="nc" id="L78">        return &quot;MethodScope:&quot; + getVariableDeclarations().keySet();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
