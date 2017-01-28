@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TypeMultiProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">TypeMultiProperty.java</span></div><h1>TypeMultiProperty.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.rule.properties;
+
+import java.util.Map;
+
+import net.sourceforge.pmd.PropertyDescriptorFactory;
+import net.sourceforge.pmd.lang.rule.properties.factories.BasicPropertyDescriptorFactory;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * Defines a property that supports multiple class types, even for primitive
+ * values!
+ * 
+ * TODO - untested for array types
+ *
+ * @author Brian Remedios
+ */
+public class TypeMultiProperty extends AbstractMultiPackagedProperty&lt;Class[]&gt; {
+
+<span class="fc" id="L22">    public static final PropertyDescriptorFactory FACTORY = new BasicPropertyDescriptorFactory&lt;TypeMultiProperty&gt;(</span>
+<span class="fc" id="L23">            Class[].class, PACKAGED_FIELD_TYPES_BY_KEY) {</span>
+
+        public TypeMultiProperty createWith(Map&lt;String, String&gt; valuesById) {
+<span class="fc" id="L26">            char delimiter = delimiterIn(valuesById);</span>
+<span class="fc" id="L27">            return new TypeMultiProperty(nameIn(valuesById), descriptionIn(valuesById), defaultValueIn(valuesById),</span>
+                    legalPackageNamesIn(valuesById, delimiter), 0f);
+        }
+    };
+
+    /**
+     * Constructor for TypeProperty.
+     * 
+     * @param theName String
+     * @param theDescription String
+     * @param theDefaults Class[]
+     * @param legalPackageNames String[]
+     * @param theUIOrder float
+     * @throws IllegalArgumentException
+     */
+    public TypeMultiProperty(String theName, String theDescription, Class&lt;?&gt;[] theDefaults, String[] legalPackageNames,
+            float theUIOrder) {
+<span class="fc" id="L44">        super(theName, theDescription, theDefaults, legalPackageNames, theUIOrder);</span>
+
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Constructor for TypeProperty.
+     * 
+     * @param theName String
+     * @param theDescription String
+     * @param theTypeDefaults String
+     * @param legalPackageNames String[]
+     * @param theUIOrder float
+     * @throws IllegalArgumentException
+     */
+    public TypeMultiProperty(String theName, String theDescription, String theTypeDefaults, String[] legalPackageNames,
+            float theUIOrder) {
+<span class="fc" id="L60">        this(theName, theDescription, typesFrom(theTypeDefaults), legalPackageNames, theUIOrder);</span>
+
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Constructor for TypeProperty.
+     * 
+     * @param theName String
+     * @param theDescription String
+     * @param theTypeDefaults String
+     * @param otherParams Map&lt;String, String&gt;
+     * @param theUIOrder float
+     * @throws IllegalArgumentException
+     */
+    public TypeMultiProperty(String theName, String theDescription, String theTypeDefaults,
+            Map&lt;String, String&gt; otherParams, float theUIOrder) {
+<span class="nc" id="L76">        this(theName, theDescription, typesFrom(theTypeDefaults), packageNamesIn(otherParams), theUIOrder);</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * @param classesStr String
+     * @return Class[]
+     */
+    public static Class&lt;?&gt;[] typesFrom(String classesStr) {
+<span class="fc" id="L84">        String[] values = StringUtil.substringsOf(classesStr, DELIMITER);</span>
+
+<span class="fc" id="L86">        Class&lt;?&gt;[] classes = new Class&lt;?&gt;[values.length];</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="fc" id="L88">            classes[i] = TypeProperty.classFrom(values[i]);</span>
+        }
+<span class="fc" id="L90">        return classes;</span>
+    }
+
+    /**
+     * @param item Object
+     * @return String
+     */
+    @Override
+    protected String packageNameOf(Object item) {
+<span class="fc" id="L99">        return ((Class&lt;?&gt;) item).getName();</span>
+    }
+
+    /**
+     * @return Class
+     * @see net.sourceforge.pmd.PropertyDescriptor#type()
+     */
+    public Class&lt;Class[]&gt; type() {
+<span class="fc" id="L107">        return Class[].class;</span>
+    }
+
+    /**
+     * @return String
+     */
+    @Override
+    protected String itemTypeName() {
+<span class="fc" id="L115">        return &quot;type&quot;;</span>
+    }
+
+    /**
+     * @param value Object
+     * @return String
+     */
+    @Override
+    protected String asString(Object value) {
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        return value == null ? &quot;&quot; : ((Class&lt;?&gt;) value).getName();</span>
+    }
+
+    /**
+     * @param valueString String
+     * @return Object
+     * @see net.sourceforge.pmd.PropertyDescriptor#valueFrom(String)
+     */
+    public Class&lt;?&gt;[] valueFrom(String valueString) {
+<span class="fc" id="L133">        return typesFrom(valueString);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

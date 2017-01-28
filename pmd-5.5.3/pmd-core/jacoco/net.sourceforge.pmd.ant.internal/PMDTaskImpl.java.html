@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDTaskImpl.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.ant.internal</a> &gt; <span class="el_source">PMDTaskImpl.java</span></div><h1>PMDTaskImpl.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.ant.internal;
+
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.tools.ant.AntClassLoader;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Path;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.PMDConfiguration;
+import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.RuleSet;
+import net.sourceforge.pmd.RuleSetFactory;
+import net.sourceforge.pmd.RuleSetNotFoundException;
+import net.sourceforge.pmd.RuleSets;
+import net.sourceforge.pmd.ant.Formatter;
+import net.sourceforge.pmd.ant.PMDTask;
+import net.sourceforge.pmd.ant.SourceLanguage;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.renderers.AbstractRenderer;
+import net.sourceforge.pmd.renderers.Renderer;
+import net.sourceforge.pmd.util.IOUtil;
+import net.sourceforge.pmd.util.StringUtil;
+import net.sourceforge.pmd.util.datasource.DataSource;
+import net.sourceforge.pmd.util.datasource.FileDataSource;
+import net.sourceforge.pmd.util.log.AntLogHandler;
+import net.sourceforge.pmd.util.log.ScopedLogHandlersManager;
+
+public class PMDTaskImpl {
+
+    private Path classpath;
+    private Path auxClasspath;
+<span class="fc" id="L54">    private final List&lt;Formatter&gt; formatters = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L55">    private final List&lt;FileSet&gt; filesets = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L56">    private final PMDConfiguration configuration = new PMDConfiguration();</span>
+    private boolean failOnError;
+    private boolean failOnRuleViolation;
+<span class="fc" id="L59">    private int maxRuleViolations = 0;</span>
+    private String failuresPropertyName;
+    private Project project;
+
+<span class="fc" id="L63">    public PMDTaskImpl(PMDTask task) {</span>
+<span class="fc" id="L64">        configuration.setReportShortNames(task.isShortFilenames());</span>
+<span class="fc" id="L65">        configuration.setSuppressMarker(task.getSuppressMarker());</span>
+<span class="fc" id="L66">        this.failOnError = task.isFailOnError();</span>
+<span class="fc" id="L67">        this.failOnRuleViolation = task.isFailOnRuleViolation();</span>
+<span class="fc" id="L68">        this.maxRuleViolations = task.getMaxRuleViolations();</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (this.maxRuleViolations &gt; 0) {</span>
+<span class="nc" id="L70">            this.failOnRuleViolation = true;</span>
+        }
+<span class="fc" id="L72">        configuration.setRuleSets(task.getRulesetFiles());</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        configuration.setRuleSetFactoryCompatibilityEnabled(!task.isNoRuleSetCompatibility());</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (task.getEncoding() != null) {</span>
+<span class="nc" id="L75">            configuration.setSourceEncoding(task.getEncoding());</span>
+        }
+<span class="fc" id="L77">        configuration.setThreads(task.getThreads());</span>
+<span class="fc" id="L78">        this.failuresPropertyName = task.getFailuresPropertyName();</span>
+<span class="fc" id="L79">        configuration.setMinimumPriority(RulePriority.valueOf(task.getMinimumPriority()));</span>
+
+<span class="fc" id="L81">        SourceLanguage version = task.getSourceLanguage();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (version != null) {</span>
+<span class="fc" id="L83">            LanguageVersion languageVersion = LanguageRegistry.findLanguageVersionByTerseName(version.getName() + &quot; &quot;</span>
+                    + version.getVersion());
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if (languageVersion == null) {</span>
+<span class="fc" id="L86">                throw new BuildException(&quot;The following language is not supported:&quot; + version + &quot;.&quot;);</span>
+            }
+<span class="nc" id="L88">            configuration.setDefaultLanguageVersion(languageVersion);</span>
+        }
+
+<span class="fc" id="L91">        classpath = task.getClasspath();</span>
+<span class="fc" id="L92">        auxClasspath = task.getAuxClasspath();</span>
+
+<span class="fc" id="L94">        filesets.addAll(task.getFilesets());</span>
+<span class="fc" id="L95">        formatters.addAll(task.getFormatters());</span>
+
+<span class="fc" id="L97">        project = task.getProject();</span>
+<span class="fc" id="L98">    }</span>
+
+    private void doTask() {
+<span class="fc" id="L101">        setupClassLoader();</span>
+
+        // Setup RuleSetFactory and validate RuleSets
+<span class="fc" id="L104">        RuleSetFactory ruleSetFactory = new RuleSetFactory();</span>
+<span class="fc" id="L105">        ruleSetFactory.setClassLoader(configuration.getClassLoader());</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!configuration.isRuleSetFactoryCompatibilityEnabled()) {</span>
+<span class="nc" id="L107">            ruleSetFactory.disableCompatibilityFilter();</span>
+        }
+        try {
+            // This is just used to validate and display rules. Each thread will
+            // create its own ruleset
+<span class="fc" id="L112">            ruleSetFactory.setMinimumPriority(configuration.getMinimumPriority());</span>
+<span class="fc" id="L113">            ruleSetFactory.setWarnDeprecated(true);</span>
+<span class="fc" id="L114">            String ruleSets = configuration.getRuleSets();</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">            if (StringUtil.isNotEmpty(ruleSets)) {</span>
+                // Substitute env variables/properties
+<span class="fc" id="L117">                configuration.setRuleSets(project.replaceProperties(ruleSets));</span>
+            }
+<span class="fc" id="L119">            RuleSets rules = ruleSetFactory.createRuleSets(configuration.getRuleSets());</span>
+<span class="fc" id="L120">            ruleSetFactory.setWarnDeprecated(false);</span>
+<span class="fc" id="L121">            logRulesUsed(rules);</span>
+<span class="nc" id="L122">        } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L123">            throw new BuildException(e.getMessage(), e);</span>
+<span class="fc" id="L124">        }</span>
+
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if (configuration.getSuppressMarker() != null) {</span>
+<span class="nc" id="L127">            project.log(&quot;Setting suppress marker to be &quot; + configuration.getSuppressMarker(), Project.MSG_VERBOSE);</span>
+        }
+
+        // Start the Formatters
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        for (Formatter formatter : formatters) {</span>
+<span class="fc" id="L132">            project.log(&quot;Sending a report to &quot; + formatter, Project.MSG_VERBOSE);</span>
+<span class="fc" id="L133">            formatter.start(project.getBaseDir().toString());</span>
+<span class="fc" id="L134">        }</span>
+
+        // log(&quot;Setting Language Version &quot; + languageVersion.getShortName(),
+        // Project.MSG_VERBOSE);
+
+        // TODO Do we really need all this in a loop over each FileSet? Seems
+        // like a lot of redundancy
+<span class="fc" id="L141">        RuleContext ctx = new RuleContext();</span>
+<span class="fc" id="L142">        Report errorReport = new Report();</span>
+<span class="fc" id="L143">        final AtomicInteger reportSize = new AtomicInteger();</span>
+<span class="fc" id="L144">        final String separator = System.getProperty(&quot;file.separator&quot;);</span>
+
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        for (FileSet fs : filesets) {</span>
+<span class="nc" id="L147">            List&lt;DataSource&gt; files = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L148">            DirectoryScanner ds = fs.getDirectoryScanner(project);</span>
+<span class="nc" id="L149">            String[] srcFiles = ds.getIncludedFiles();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            for (String srcFile : srcFiles) {</span>
+<span class="nc" id="L151">                File file = new File(ds.getBasedir() + separator + srcFile);</span>
+<span class="nc" id="L152">                files.add(new FileDataSource(file));</span>
+            }
+
+<span class="nc" id="L155">            final String inputPaths = ds.getBasedir().getPath();</span>
+<span class="nc" id="L156">            configuration.setInputPaths(inputPaths);</span>
+
+<span class="nc" id="L158">            Renderer logRenderer = new AbstractRenderer(&quot;log&quot;, &quot;Logging renderer&quot;) {</span>
+                public void start() {
+                    // Nothing to do
+<span class="nc" id="L161">                }</span>
+
+                public void startFileAnalysis(DataSource dataSource) {
+<span class="nc" id="L164">                    project.log(&quot;Processing file &quot; + dataSource.getNiceFileName(false, inputPaths), Project.MSG_VERBOSE);</span>
+<span class="nc" id="L165">                }</span>
+
+                public void renderFileReport(Report r) {
+<span class="nc" id="L168">                    int size = r.size();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                    if (size &gt; 0) {</span>
+<span class="nc" id="L170">                        reportSize.addAndGet(size);</span>
+                    }
+<span class="nc" id="L172">                }</span>
+
+                public void end() {
+                    // Nothing to do
+<span class="nc" id="L176">                }</span>
+
+                public String defaultFileExtension() {
+<span class="nc" id="L179">                    return null;</span>
+                } // not relevant
+            };
+<span class="nc" id="L182">            List&lt;Renderer&gt; renderers = new ArrayList&lt;&gt;(formatters.size() + 1);</span>
+<span class="nc" id="L183">            renderers.add(logRenderer);</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            for (Formatter formatter : formatters) {</span>
+<span class="nc" id="L185">                renderers.add(formatter.getRenderer());</span>
+<span class="nc" id="L186">            }</span>
+            try {
+<span class="nc" id="L188">                PMD.processFiles(configuration, ruleSetFactory, files, ctx, renderers);</span>
+<span class="nc" id="L189">            } catch (RuntimeException pmde) {</span>
+<span class="nc" id="L190">                handleError(ctx, errorReport, pmde);</span>
+<span class="nc" id="L191">            }</span>
+<span class="nc" id="L192">        }</span>
+
+<span class="fc" id="L194">        int problemCount = reportSize.get();</span>
+<span class="fc" id="L195">        project.log(problemCount + &quot; problems found&quot;, Project.MSG_VERBOSE);</span>
+
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        for (Formatter formatter : formatters) {</span>
+<span class="fc" id="L198">            formatter.end(errorReport);</span>
+<span class="fc" id="L199">        }</span>
+
+<span class="pc bpc" id="L201" title="3 of 4 branches missed.">        if (failuresPropertyName != null &amp;&amp; problemCount &gt; 0) {</span>
+<span class="nc" id="L202">            project.setProperty(failuresPropertyName, String.valueOf(problemCount));</span>
+<span class="nc" id="L203">            project.log(&quot;Setting property &quot; + failuresPropertyName + &quot; to &quot; + problemCount, Project.MSG_VERBOSE);</span>
+        }
+
+<span class="pc bpc" id="L206" title="3 of 4 branches missed.">        if (failOnRuleViolation &amp;&amp; problemCount &gt; maxRuleViolations) {</span>
+<span class="nc" id="L207">            throw new BuildException(&quot;Stopping build since PMD found &quot; + problemCount + &quot; rule violations in the code&quot;);</span>
+        }
+<span class="fc" id="L209">    }</span>
+
+    private void handleError(RuleContext ctx, Report errorReport, RuntimeException pmde) {
+
+<span class="nc" id="L213">        pmde.printStackTrace();</span>
+<span class="nc" id="L214">        project.log(pmde.toString(), Project.MSG_VERBOSE);</span>
+
+<span class="nc" id="L216">        Throwable cause = pmde.getCause();</span>
+
+<span class="nc bnc" id="L218" title="All 2 branches missed.">        if (cause != null) {</span>
+<span class="nc" id="L219">            StringWriter strWriter = new StringWriter();</span>
+<span class="nc" id="L220">            PrintWriter printWriter = new PrintWriter(strWriter);</span>
+<span class="nc" id="L221">            cause.printStackTrace(printWriter);</span>
+<span class="nc" id="L222">            project.log(strWriter.toString(), Project.MSG_VERBOSE);</span>
+<span class="nc" id="L223">            IOUtils.closeQuietly(printWriter);</span>
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (StringUtil.isNotEmpty(cause.getMessage())) {</span>
+<span class="nc" id="L226">                project.log(cause.getMessage(), Project.MSG_VERBOSE);</span>
+            }
+        }
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (failOnError) {</span>
+<span class="nc" id="L231">            throw new BuildException(pmde);</span>
+        }
+<span class="nc" id="L233">        errorReport.addError(new Report.ProcessingError(pmde.getMessage(), ctx.getSourceCodeFilename()));</span>
+<span class="nc" id="L234">    }</span>
+
+    private void setupClassLoader() {
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (classpath == null) {</span>
+<span class="fc" id="L238">            classpath = new Path(project);</span>
+        }
+        /*
+         * 'basedir' is added to the path to make sure that relative paths
+         * such as &quot;&lt;ruleset&gt;resources/custom_ruleset.xml&lt;/ruleset&gt;&quot; still
+         * work when ant is invoked from a different directory using &quot;-f&quot;
+         */
+<span class="fc" id="L245">        classpath.add(new Path(null, project.getBaseDir().toString()));</span>
+
+<span class="fc" id="L247">        project.log(&quot;Using the AntClassLoader: &quot; + classpath, Project.MSG_VERBOSE);</span>
+        // must be true, otherwise you'll get ClassCastExceptions as classes
+        // are loaded twice
+        // and exist in multiple class loaders
+<span class="fc" id="L251">        boolean parentFirst = true;</span>
+<span class="fc" id="L252">        configuration.setClassLoader(new AntClassLoader(Thread.currentThread().getContextClassLoader(), project,</span>
+                classpath, parentFirst));
+
+        try {
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            if (auxClasspath != null) {</span>
+<span class="nc" id="L257">                project.log(&quot;Using auxclasspath: &quot; + auxClasspath, Project.MSG_VERBOSE);</span>
+<span class="nc" id="L258">                configuration.prependClasspath(auxClasspath.toString());</span>
+            }
+<span class="nc" id="L260">        } catch (IOException ioe) {</span>
+<span class="nc" id="L261">            throw new BuildException(ioe.getMessage(), ioe);</span>
+<span class="fc" id="L262">        }</span>
+<span class="fc" id="L263">    }</span>
+
+    public void execute() throws BuildException {
+<span class="fc" id="L266">        final Handler antLogHandler = new AntLogHandler(project);</span>
+<span class="fc" id="L267">        final ScopedLogHandlersManager logManager = new ScopedLogHandlersManager(Level.FINEST, antLogHandler);</span>
+        try {
+<span class="fc" id="L269">            doTask();</span>
+        } finally {
+<span class="pc" id="L271">            tryClose(configuration.getClassLoader());</span>
+<span class="pc" id="L272">            logManager.close();</span>
+<span class="pc" id="L273">            IOUtil.tryCloseClassLoader(configuration.getClassLoader());</span>
+<span class="fc" id="L274">        }</span>
+<span class="fc" id="L275">    }</span>
+
+    private static void tryClose(ClassLoader classLoader) {
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        if (classLoader instanceof Closeable) {</span>
+            try {
+<span class="nc" id="L280">                ((Closeable) classLoader).close();</span>
+<span class="nc" id="L281">            } catch (IOException ignore) {</span>
+                // do nothing.
+<span class="nc" id="L283">            }</span>
+        }
+<span class="fc" id="L285">    }</span>
+
+    private void logRulesUsed(RuleSets rules) {
+<span class="fc" id="L288">        project.log(&quot;Using these rulesets: &quot; + configuration.getRuleSets(), Project.MSG_VERBOSE);</span>
+
+<span class="fc" id="L290">        RuleSet[] ruleSets = rules.getAllRuleSets();</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        for (RuleSet ruleSet : ruleSets) {</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">            for (Rule rule : ruleSet.getRules()) {</span>
+<span class="fc" id="L293">                project.log(&quot;Using rule &quot; + rule.getName(), Project.MSG_VERBOSE);</span>
+<span class="fc" id="L294">            }</span>
+        }
+<span class="fc" id="L296">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
