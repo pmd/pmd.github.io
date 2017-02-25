@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScopeAndDeclarationFinder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">ScopeAndDeclarationFinder.java</span></div><h1>ScopeAndDeclarationFinder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotationTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTBlock;
+import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTCatchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFinallyStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameters;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTLambdaExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTPackageDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTTryStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTTypeParameters;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.AbstractJavaNode;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.ast.JavaParserVisitorAdapter;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+
+
+/**
+ * Visitor for scope creation.
+ * Visits all nodes of an AST and creates scope objects for nodes representing
+ * syntactic entities which may contain declarations. For example, a block
+ * may contain variable definitions (which are declarations) and
+ * therefore needs a scope object where these declarations can be associated,
+ * whereas an expression can't contain declarations and therefore doesn't need
+ * a scope object.
+ * With the exception of global scopes, each scope object is linked to its
+ * parent scope, which is the scope object of the next embedding syntactic
+ * entity that has a scope.
+ */
+public class ScopeAndDeclarationFinder extends JavaParserVisitorAdapter {
+
+    private ClassLoader classLoader;
+
+    /**
+     * A stack of scopes reflecting the scope hierarchy when a node is visited.
+     * This is used to set the parents of the created scopes correctly.
+     */
+<span class="fc" id="L58">    private Deque&lt;Scope&gt; scopes = new ArrayDeque&lt;&gt;();</span>
+
+    /**
+     * Creates a new {@link ScopeAndDeclarationFinder} using the current class loader.
+     */
+    public ScopeAndDeclarationFinder() {
+<span class="fc" id="L64">        this(ScopeAndDeclarationFinder.class.getClassLoader());</span>
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Creates a new {@link ScopeAndDeclarationFinder}.
+     * @param classLoader the class loader to use to resolve types, see {@link SourceFileScope} and {@link TypeSet}
+     */
+<span class="fc" id="L71">    public ScopeAndDeclarationFinder(ClassLoader classLoader) {</span>
+<span class="fc" id="L72">        this.classLoader = classLoader;</span>
+<span class="fc" id="L73">    }</span>
+
+    /**
+     * Sets the scope of a node and adjusts the scope stack accordingly.
+     * The scope on top of the stack is set as the parent of the given scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param newScope the scope for the node.
+     * @param node     the AST node for which the scope is to be set.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void addScope(Scope newScope, JavaNode node) {
+<span class="fc" id="L85">	newScope.setParent(scopes.peek());</span>
+<span class="fc" id="L86">	scopes.push(newScope);</span>
+<span class="fc" id="L87">	node.setScope(newScope);</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * Creates a new local scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createLocalScope(JavaNode node) {
+<span class="fc" id="L99">	addScope(new LocalScope(), node);</span>
+<span class="fc" id="L100">    }</span>
+
+    /**
+     * Creates a new method scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createMethodScope(JavaNode node) {
+<span class="fc" id="L111">	addScope(new MethodScope(node), node);</span>
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * Creates a new class scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createClassScope(JavaNode node) {
+<span class="fc" id="L123">        Scope s = ((JavaNode) node.jjtGetParent()).getScope();</span>
+<span class="fc" id="L124">        ClassNameDeclaration classNameDeclaration = new ClassNameDeclaration(node);</span>
+<span class="fc" id="L125">        s.addDeclaration(classNameDeclaration);</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (node instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
+<span class="fc" id="L128">            addScope(new ClassScope(classNameDeclaration), node);</span>
+        } else {
+<span class="fc" id="L130">            addScope(new ClassScope(node.getImage(), classNameDeclaration), node);</span>
+        }
+<span class="fc" id="L132">    }</span>
+
+    /**
+     * Creates a new global scope for an AST node.
+     * The new scope is stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     */
+    private void createSourceFileScope(ASTCompilationUnit node) {
+        // When we do full symbol resolution, we'll need to add a truly
+        // top-level GlobalScope.
+        SourceFileScope scope;
+<span class="fc" id="L144">        ASTPackageDeclaration n = node.getPackageDeclaration();</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (n != null) {</span>
+<span class="fc" id="L146">            scope = new SourceFileScope(classLoader, n.jjtGetChild(0).getImage());</span>
+        } else {
+<span class="fc" id="L148">            scope = new SourceFileScope(classLoader);</span>
+        }
+<span class="fc" id="L150">        scope.configureImports(node.findChildrenOfType(ASTImportDeclaration.class));</span>
+
+<span class="fc" id="L152">        scopes.push(scope);</span>
+<span class="fc" id="L153">        node.setScope(scope);</span>
+<span class="fc" id="L154">    }</span>
+
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L158">	createSourceFileScope(node);</span>
+<span class="fc" id="L159">	cont(node);</span>
+<span class="fc" id="L160">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc" id="L165">        createClassScope(node);</span>
+<span class="fc" id="L166">        cont(node);</span>
+<span class="fc" id="L167">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTEnumDeclaration node, Object data) {
+<span class="fc" id="L172">        createClassScope(node);</span>
+<span class="fc" id="L173">        ((ClassScope) node.getScope()).setIsEnum(true);</span>
+<span class="fc" id="L174">        cont(node);</span>
+<span class="fc" id="L175">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTAnnotationTypeDeclaration node, Object data) {
+<span class="fc" id="L180">	createClassScope(node);</span>
+<span class="fc" id="L181">	cont(node);</span>
+<span class="fc" id="L182">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTClassOrInterfaceBodyDeclaration node, Object data) {
+<span class="fc bfc" id="L187" title="All 4 branches covered.">	if (node.isAnonymousInnerClass() || node.isEnumChild()) {</span>
+<span class="fc" id="L188">	    createClassScope(node);</span>
+<span class="fc" id="L189">	    cont(node);</span>
+	} else {
+<span class="fc" id="L191">	    super.visit(node, data);</span>
+	}
+<span class="fc" id="L193">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTBlock node, Object data) {
+<span class="fc" id="L198">	createLocalScope(node);</span>
+<span class="fc" id="L199">	cont(node);</span>
+<span class="fc" id="L200">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTCatchStatement node, Object data) {
+<span class="fc" id="L205">	createLocalScope(node);</span>
+<span class="fc" id="L206">	cont(node);</span>
+<span class="fc" id="L207">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTFinallyStatement node, Object data) {
+<span class="fc" id="L212">	createLocalScope(node);</span>
+<span class="fc" id="L213">	cont(node);</span>
+<span class="fc" id="L214">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTConstructorDeclaration node, Object data) {
+	/*
+	 * Local variables declared inside the constructor need to
+	 * be in a different scope so special handling is needed
+	 */
+<span class="fc" id="L223">	createMethodScope(node);</span>
+
+<span class="fc" id="L225">	Scope methodScope = node.getScope();</span>
+
+<span class="fc" id="L227">	Node formalParameters = node.jjtGetChild(0);</span>
+<span class="fc" id="L228">	int i = 1;</span>
+<span class="fc" id="L229">	int n = node.jjtGetNumChildren();</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">	if (!(formalParameters instanceof ASTFormalParameters)) {</span>
+<span class="fc" id="L231">	    visit((ASTTypeParameters) formalParameters, data);</span>
+<span class="fc" id="L232">	    formalParameters = node.jjtGetChild(1);</span>
+<span class="fc" id="L233">	    i++;</span>
+	}
+<span class="fc" id="L235">	visit((ASTFormalParameters) formalParameters, data);</span>
+
+<span class="fc" id="L237">	Scope localScope = null;</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">	for (; i &lt; n; i++) {</span>
+<span class="fc" id="L239">	    JavaNode b = (JavaNode) node.jjtGetChild(i);</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">	    if (b instanceof ASTBlockStatement) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">		if (localScope == null) {</span>
+<span class="fc" id="L242">		    createLocalScope(node);</span>
+<span class="fc" id="L243">		    localScope = node.getScope();</span>
+		}
+<span class="fc" id="L245">		b.setScope(localScope);</span>
+<span class="fc" id="L246">		visit(b, data);</span>
+	    } else {
+<span class="fc" id="L248">		visit(b, data);</span>
+	    }
+	}
+<span class="fc bfc" id="L251" title="All 2 branches covered.">	if (localScope != null) {</span>
+	    // pop the local scope
+<span class="fc" id="L253">	    scopes.pop();</span>
+
+	    // reset the correct scope for the constructor
+<span class="fc" id="L256">	    node.setScope(methodScope);</span>
+	}
+	// pop the method scope
+<span class="fc" id="L259">	scopes.pop();</span>
+
+<span class="fc" id="L261">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L266">	createMethodScope(node);</span>
+<span class="fc" id="L267">	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);</span>
+<span class="fc" id="L268">	node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(md));</span>
+<span class="fc" id="L269">	cont(node);</span>
+<span class="fc" id="L270">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTLambdaExpression node, Object data) {
+<span class="fc" id="L275">        createLocalScope(node);</span>
+<span class="fc" id="L276">        cont(node);</span>
+<span class="fc" id="L277">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTTryStatement node, Object data) {
+<span class="fc" id="L282">	createLocalScope(node);</span>
+<span class="fc" id="L283">	cont(node);</span>
+<span class="fc" id="L284">	return data;</span>
+    }
+
+    // TODO - what about while loops and do loops?
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L290">	createLocalScope(node);</span>
+<span class="fc" id="L291">	cont(node);</span>
+<span class="fc" id="L292">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L297">	createLocalScope(node);</span>
+<span class="fc" id="L298">	cont(node);</span>
+<span class="fc" id="L299">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTVariableDeclaratorId node, Object data) {
+<span class="fc" id="L304">	VariableNameDeclaration decl = new VariableNameDeclaration(node);</span>
+<span class="fc" id="L305">	node.getScope().addDeclaration(decl);</span>
+<span class="fc" id="L306">	node.setNameDeclaration(decl);</span>
+<span class="fc" id="L307">	return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTSwitchStatement node, Object data) {
+<span class="fc" id="L312">	createLocalScope(node);</span>
+<span class="fc" id="L313">	cont(node);</span>
+<span class="fc" id="L314">	return data;</span>
+    }
+
+    private void cont(AbstractJavaNode node) {
+<span class="fc" id="L318">	super.visit(node, null);</span>
+<span class="fc" id="L319">	scopes.pop();</span>
+<span class="fc" id="L320">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

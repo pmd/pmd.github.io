@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractEcmascriptRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JavaScript</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ecmascript.rule</a> &gt; <span class="el_source">AbstractEcmascriptRule.java</span></div><h1>AbstractEcmascriptRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ecmascript.rule;
+
+import java.util.List;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.ParserOptions;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ecmascript.EcmascriptLanguageModule;
+import net.sourceforge.pmd.lang.ecmascript.EcmascriptParserOptions;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTArrayComprehension;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTArrayComprehensionLoop;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTArrayLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTAssignment;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTAstRoot;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTBlock;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTBreakStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTCatchClause;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTComment;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTConditionalExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTContinueStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTDoLoop;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTElementGet;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTEmptyExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTExpressionStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTForInLoop;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTForLoop;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTFunctionCall;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTFunctionNode;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTInfixExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTKeywordLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTLabel;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTLabeledStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTLetNode;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTName;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTNewExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTNumberLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTObjectLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTObjectProperty;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTParenthesizedExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTPropertyGet;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTRegExpLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTReturnStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTScope;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTStringLiteral;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTSwitchCase;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTSwitchStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTThrowStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTTryStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTUnaryExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTVariableInitializer;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTWhileLoop;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTWithStatement;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTXmlDotQuery;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTXmlExpression;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTXmlMemberGet;
+import net.sourceforge.pmd.lang.ecmascript.ast.ASTXmlString;
+import net.sourceforge.pmd.lang.ecmascript.ast.EcmascriptNode;
+import net.sourceforge.pmd.lang.ecmascript.ast.EcmascriptParserVisitor;
+import net.sourceforge.pmd.lang.rule.AbstractRule;
+import net.sourceforge.pmd.lang.rule.ImmutableLanguage;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.EnumeratedProperty;
+
+public abstract class AbstractEcmascriptRule extends AbstractRule implements EcmascriptParserVisitor, ImmutableLanguage {
+
+<span class="fc" id="L72">    private static final BooleanProperty RECORDING_COMMENTS_DESCRIPTOR = EcmascriptParserOptions.RECORDING_COMMENTS_DESCRIPTOR;</span>
+<span class="fc" id="L73">    private static final BooleanProperty RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR = EcmascriptParserOptions.RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR;</span>
+<span class="fc" id="L74">    private static final EnumeratedProperty&lt;EcmascriptParserOptions.Version&gt; RHINO_LANGUAGE_VERSION = EcmascriptParserOptions.RHINO_LANGUAGE_VERSION;</span>
+
+<span class="fc" id="L76">    public AbstractEcmascriptRule() {</span>
+<span class="fc" id="L77">	super.setLanguage(LanguageRegistry.getLanguage(EcmascriptLanguageModule.NAME));</span>
+<span class="fc" id="L78">	definePropertyDescriptor(RECORDING_COMMENTS_DESCRIPTOR);</span>
+<span class="fc" id="L79">	definePropertyDescriptor(RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR);</span>
+<span class="fc" id="L80">	definePropertyDescriptor(RHINO_LANGUAGE_VERSION);</span>
+<span class="fc" id="L81">    }</span>
+
+    @Override
+    public ParserOptions getParserOptions() {
+<span class="fc" id="L85">	return new EcmascriptParserOptions(this);</span>
+    }
+
+    public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="fc" id="L89">	visitAll(nodes, ctx);</span>
+<span class="fc" id="L90">    }</span>
+
+    protected void visitAll(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="fc bfc" id="L93" title="All 2 branches covered.">	for (Object element : nodes) {</span>
+<span class="fc" id="L94">	    ASTAstRoot node = (ASTAstRoot) element;</span>
+<span class="fc" id="L95">	    visit(node, ctx);</span>
+<span class="fc" id="L96">	}</span>
+<span class="fc" id="L97">    }</span>
+
+    //
+    // The following APIs are identical to those in EcmascriptParserVisitorAdapter.
+    // Due to Java single inheritance, it preferred to extend from the more
+    // complex Rule base class instead of from relatively simple Visitor.
+    //
+
+    public Object visit(EcmascriptNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L106">	node.childrenAccept(this, data);</span>
+<span class="fc" id="L107">	return null;</span>
+    }
+
+    public Object visit(ASTArrayComprehension node, Object data) {
+<span class="nc" id="L111">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTArrayComprehensionLoop node, Object data) {
+<span class="nc" id="L115">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTArrayLiteral node, Object data) {
+<span class="nc" id="L119">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTAssignment node, Object data) {
+<span class="fc" id="L123">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTAstRoot node, Object data) {
+<span class="fc" id="L127">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTBlock node, Object data) {
+<span class="fc" id="L131">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTBreakStatement node, Object data) {
+<span class="nc" id="L135">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTCatchClause node, Object data) {
+<span class="nc" id="L139">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTComment node, Object data) {
+<span class="nc" id="L143">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTConditionalExpression node, Object data) {
+<span class="nc" id="L147">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTContinueStatement node, Object data) {
+<span class="nc" id="L151">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTDoLoop node, Object data) {
+<span class="nc" id="L155">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTElementGet node, Object data) {
+<span class="nc" id="L159">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTEmptyExpression node, Object data) {
+<span class="nc" id="L163">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTExpressionStatement node, Object data) {
+<span class="fc" id="L167">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTForInLoop node, Object data) {
+<span class="nc" id="L171">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTForLoop node, Object data) {
+<span class="nc" id="L175">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTFunctionCall node, Object data) {
+<span class="nc" id="L179">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTFunctionNode node, Object data) {
+<span class="fc" id="L183">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L187">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTInfixExpression node, Object data) {
+<span class="nc" id="L191">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTKeywordLiteral node, Object data) {
+<span class="nc" id="L195">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTLabel node, Object data) {
+<span class="nc" id="L199">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTLabeledStatement node, Object data) {
+<span class="nc" id="L203">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTLetNode node, Object data) {
+<span class="nc" id="L207">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTName node, Object data) {
+<span class="fc" id="L211">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTNewExpression node, Object data) {
+<span class="nc" id="L215">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTNumberLiteral node, Object data) {
+<span class="fc" id="L219">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTObjectLiteral node, Object data) {
+<span class="nc" id="L223">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTObjectProperty node, Object data) {
+<span class="nc" id="L227">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTParenthesizedExpression node, Object data) {
+<span class="nc" id="L231">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTPropertyGet node, Object data) {
+<span class="nc" id="L235">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTRegExpLiteral node, Object data) {
+<span class="nc" id="L239">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTReturnStatement node, Object data) {
+<span class="fc" id="L243">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTScope node, Object data) {
+<span class="fc" id="L247">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTStringLiteral node, Object data) {
+<span class="nc" id="L251">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTSwitchCase node, Object data) {
+<span class="nc" id="L255">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTSwitchStatement node, Object data) {
+<span class="nc" id="L259">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTThrowStatement node, Object data) {
+<span class="nc" id="L263">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTTryStatement node, Object data) {
+<span class="nc" id="L267">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTUnaryExpression node, Object data) {
+<span class="nc" id="L271">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTVariableDeclaration node, Object data) {
+<span class="nc" id="L275">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTVariableInitializer node, Object data) {
+<span class="nc" id="L279">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTWhileLoop node, Object data) {
+<span class="nc" id="L283">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTWithStatement node, Object data) {
+<span class="nc" id="L287">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTXmlDotQuery node, Object data) {
+<span class="nc" id="L291">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTXmlExpression node, Object data) {
+<span class="nc" id="L295">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTXmlMemberGet node, Object data) {
+<span class="nc" id="L299">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+
+    public Object visit(ASTXmlString node, Object data) {
+<span class="nc" id="L303">	return visit((EcmascriptNode&lt;?&gt;) node, data);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

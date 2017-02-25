@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractNcssCountRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.rule.codesize</a> &gt; <span class="el_source">AbstractNcssCountRule.java</span></div><h1>AbstractNcssCountRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.rule.codesize;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.plsql.ast.ASTCaseStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTCaseWhenClause;
+import net.sourceforge.pmd.lang.plsql.ast.ASTContinueStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTElseClause;
+import net.sourceforge.pmd.lang.plsql.ast.ASTElsifClause;
+import net.sourceforge.pmd.lang.plsql.ast.ASTExceptionHandler;
+import net.sourceforge.pmd.lang.plsql.ast.ASTExitStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTExpression;
+import net.sourceforge.pmd.lang.plsql.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTGotoStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTLabelledStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTLoopStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTRaiseStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTReturnStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTWhileStatement;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
+import net.sourceforge.pmd.lang.plsql.rule.AbstractStatisticalPLSQLRule;
+import net.sourceforge.pmd.stat.DataPoint;
+import net.sourceforge.pmd.util.NumericConstants;
+
+/**
+ * Abstract superclass for NCSS counting methods. Analogous to and cribbed from {@link net.sourceforge.pmd.lang.java.rule.codesize.AbstractNcssCountRule}.
+ */
+public abstract class AbstractNcssCountRule extends AbstractStatisticalPLSQLRule {
+<span class="fc" id="L36">    private static final Logger LOGGER = Logger.getLogger(AbstractNcssCountRule.class.getName());</span>
+
+    private Class&lt;?&gt; nodeClass;
+
+    /**
+     * Count the nodes of the given type using NCSS rules.
+     * 
+     * @param nodeClass
+     *          class of node to count
+     */
+<span class="fc" id="L46">    protected AbstractNcssCountRule(Class&lt;?&gt; nodeClass) {</span>
+<span class="fc" id="L47">	this.nodeClass = nodeClass;</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">	if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L49">        LOGGER.fine(&quot;Counting for &quot; + nodeClass.getCanonicalName());</span>
+	}
+<span class="fc" id="L51">    }</span>
+
+    @Override
+    public Object visit(PLSQLNode node, Object data) {
+<span class="fc" id="L55">	int numNodes = 0;</span>
+
+<span class="fc bfc" id="L57" title="All 2 branches covered.">	for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L58">		PLSQLNode n = (PLSQLNode) node.jjtGetChild(i);</span>
+<span class="fc" id="L59">	    Integer treeSize = (Integer) n.jjtAccept(this, data);</span>
+<span class="fc" id="L60">	    numNodes += treeSize.intValue();</span>
+	}
+
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">	if (LOGGER.isLoggable(Level.FINER)) {</span>
+<span class="nc" id="L64">        LOGGER.finer(&quot;Checking candidate &quot; + node.getClass().getCanonicalName() </span>
+                    + &quot; against target class &quot; + nodeClass.getCanonicalName() 
+                    + &quot; with &quot; + numNodes + &quot; nodes&quot;
+                   );
+	}
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">	if (this.nodeClass.isInstance(node)) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L72">          LOGGER.fine(&quot;Matched candidate &quot; + node.getClass().getCanonicalName() </span>
+                        + &quot; against target class &quot; + nodeClass.getCanonicalName() 
+                       );
+	    }
+	    // Add 1 to account for base node
+<span class="fc" id="L77">	    numNodes++;</span>
+<span class="fc" id="L78">	    DataPoint point = new DataPoint();</span>
+<span class="fc" id="L79">	    point.setNode(node);</span>
+<span class="fc" id="L80">	    point.setScore(1.0 * numNodes);</span>
+<span class="fc" id="L81">	    point.setMessage(getMessage());</span>
+<span class="fc" id="L82">	    addDataPoint(point);</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L84">            LOGGER.fine(&quot;Running score is &quot; +  point.getScore());</span>
+	    }
+	}
+
+<span class="fc" id="L88">	return Integer.valueOf(numNodes);</span>
+    }
+
+    /**
+     * Count the number of children of the given PLSQL node. Adds one to count the
+     * node itself.
+     * 
+     * @param node
+     *          PLSQL node having children counted
+     * @param data
+     *          node data
+     * @return count of the number of children of the node, plus one
+     */
+    protected Integer countNodeChildren(Node node, Object data) {
+<span class="nc" id="L102">	Integer nodeCount = null;</span>
+<span class="nc" id="L103">	int lineCount = 0;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">	for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
+<span class="nc" id="L105">	    nodeCount = (Integer) ((PLSQLNode) node.jjtGetChild(i)).jjtAccept(this, data);</span>
+<span class="nc" id="L106">	    lineCount += nodeCount.intValue();</span>
+	}
+<span class="nc" id="L108">	return ++lineCount;</span>
+    }
+
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="nc" id="L113">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTLoopStatement node, Object data) {
+<span class="nc" id="L118">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTIfStatement node, Object data) {
+
+<span class="nc" id="L124">	Integer lineCount = countNodeChildren(node, data);</span>
+
+<span class="nc" id="L126">	return lineCount;</span>
+    }
+
+    @Override
+    public Object visit(ASTElsifClause node, Object data) {
+
+<span class="nc" id="L132">	Integer lineCount = countNodeChildren(node, data);</span>
+
+<span class="nc" id="L134">	return lineCount;</span>
+    }
+
+    @Override
+    public Object visit(ASTElseClause node, Object data) {
+
+<span class="nc" id="L140">	Integer lineCount = countNodeChildren(node, data);</span>
+
+<span class="nc" id="L142">	return lineCount;</span>
+    }
+
+    @Override
+    public Object visit(ASTWhileStatement node, Object data) {
+<span class="nc" id="L147">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTExitStatement node, Object data) {
+<span class="nc" id="L152">	return NumericConstants.ONE;</span>
+    }
+
+    @Override
+    public Object visit(ASTExceptionHandler node, Object data) {
+<span class="nc" id="L157">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTContinueStatement node, Object data) {
+<span class="nc" id="L162">	return NumericConstants.ONE;</span>
+    }
+
+    @Override
+    public Object visit(ASTGotoStatement node, Object data) {
+<span class="nc" id="L167">	return NumericConstants.ONE;</span>
+    }
+
+    @Override
+    public Object visit(ASTReturnStatement node, Object data) {
+<span class="nc" id="L172">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTCaseStatement node, Object data) {
+<span class="nc" id="L177">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTRaiseStatement node, Object data) {
+<span class="nc" id="L182">	return NumericConstants.ONE;</span>
+    }
+
+    @Override
+    public Object visit(ASTExpression node, Object data) {
+
+	// &quot;For&quot; update expressions do not count as separate lines of code
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">	if (node.jjtGetParent() instanceof ASTStatement) {</span>
+<span class="nc" id="L190">	    return NumericConstants.ZERO;</span>
+	}
+
+<span class="fc" id="L193">	return NumericConstants.ONE;</span>
+    }
+
+    @Override
+    public Object visit(ASTLabelledStatement node, Object data) {
+<span class="nc" id="L198">	return countNodeChildren(node, data);</span>
+    }
+
+
+
+    @Override
+    public Object visit(ASTCaseWhenClause node, Object data) {
+<span class="nc" id="L205">	return countNodeChildren(node, data);</span>
+    }
+
+    @Override
+    public Object[] getViolationParameters(DataPoint point) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L211">        LOGGER.fine(&quot;Point score is &quot; + point.getScore());</span>
+        }
+<span class="nc" id="L213">	return new String[] { String.valueOf((int) point.getScore()) };</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

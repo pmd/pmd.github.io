@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceCodePositioner.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ast</a> &gt; <span class="el_source">SourceCodePositioner.java</span></div><h1>SourceCodePositioner.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.ast;
+
+import java.util.Arrays;
+
+/**
+ * Calculates from an absolute offset in the source file the line/column coordinate.
+ * This is needed as Rhino only offers absolute positions for each node.
+ * Some other languages like XML and Apex use this, too.
+ * 
+ * Idea from: http://code.google.com/p/closure-compiler/source/browse/trunk/src/com/google/javascript/jscomp/SourceFile.java
+ */
+public class SourceCodePositioner {
+
+    private int[] lineOffsets;
+    private int sourceCodeLength;
+    
+<span class="fc" id="L20">    public SourceCodePositioner(String sourceCode) {</span>
+<span class="fc" id="L21">	analyzeLineOffsets(sourceCode);</span>
+<span class="fc" id="L22">    }</span>
+
+    private void analyzeLineOffsets(String sourceCode) {
+<span class="fc" id="L25">	String[] lines = sourceCode.split(&quot;\n&quot;);</span>
+<span class="fc" id="L26">	sourceCodeLength = sourceCode.length();</span>
+	
+<span class="fc" id="L28">	int startOffset = 0;</span>
+<span class="fc" id="L29">	int lineNumber = 0;</span>
+	
+<span class="fc" id="L31">	lineOffsets = new int[lines.length];</span>
+	
+<span class="fc bfc" id="L33" title="All 2 branches covered.">	for (String line : lines) {</span>
+<span class="fc" id="L34">	    lineOffsets[lineNumber] = startOffset;</span>
+<span class="fc" id="L35">	    lineNumber++;</span>
+<span class="fc" id="L36">	    startOffset += line.length() + 1; // +1 for the &quot;\n&quot; character</span>
+	}
+<span class="fc" id="L38">    }</span>
+
+    public int lineNumberFromOffset(int offset) {
+<span class="fc" id="L41">	int search = Arrays.binarySearch(lineOffsets, offset);</span>
+	int lineNumber;
+<span class="fc bfc" id="L43" title="All 2 branches covered.">	if (search &gt;= 0) {</span>
+<span class="fc" id="L44">	    lineNumber = search;</span>
+	} else {
+<span class="fc" id="L46">	    int insertionPoint = search;</span>
+<span class="fc" id="L47">	    insertionPoint += 1;</span>
+<span class="fc" id="L48">	    insertionPoint *= -1;</span>
+<span class="fc" id="L49">	    lineNumber = insertionPoint - 1; // take the insertion point one before</span>
+	}
+<span class="fc" id="L51">	return lineNumber + 1; // 1-based line numbers</span>
+    }
+
+    public int columnFromOffset(int lineNumber, int offset) {
+<span class="fc" id="L55">        int lineIndex = lineNumber - 1;</span>
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">        if (lineIndex &lt; 0 || lineIndex &gt;= lineOffsets.length) {</span>
+            // no line number found...
+<span class="nc" id="L58">            return 0;</span>
+        }
+<span class="fc" id="L60">        int columnOffset = offset - lineOffsets[lineNumber - 1];</span>
+<span class="fc" id="L61">        return columnOffset + 1; // 1-based column offsets</span>
+    }
+
+    public int getLastLine() {
+<span class="nc" id="L65">        return lineOffsets.length;</span>
+    }
+
+    public int getLastLineColumn() {
+<span class="nc" id="L69">        return columnFromOffset(getLastLine(), sourceCodeLength - 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

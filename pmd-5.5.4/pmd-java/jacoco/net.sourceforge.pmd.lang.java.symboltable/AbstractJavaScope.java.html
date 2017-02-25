@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractJavaScope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">AbstractJavaScope.java</span></div><h1>AbstractJavaScope.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.symboltable.AbstractScope;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * Provides the basic java scope implementation
+ * &lt;p/&gt;
+ * @see &lt;a href=&quot;http://docs.oracle.com/javase/specs/jls/se7/html/jls-6.html#jls-6.3&quot;&gt;JLS 6.3&lt;/a&gt;
+ */
+<span class="fc" id="L17">public abstract class AbstractJavaScope extends AbstractScope {</span>
+
+    @Override
+    public void addDeclaration(NameDeclaration declaration) {
+<span class="fc" id="L21">        checkForDuplicatedNameDeclaration(declaration);</span>
+<span class="fc" id="L22">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L23">    }</span>
+
+    protected void checkForDuplicatedNameDeclaration(NameDeclaration declaration) {
+<span class="pc bpc" id="L26" title="1 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
+<span class="nc" id="L27">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
+        }
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public boolean contains(NameOccurrence occurrence) {
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        return !findVariableHere((JavaNameOccurrence)occurrence).isEmpty();</span>
+    }
+
+    protected abstract Set&lt;NameDeclaration&gt; findVariableHere(JavaNameOccurrence occurrence);
+
+    protected &lt;T&gt; String glomNames(Set&lt;T&gt; s) {
+<span class="nc" id="L39">    	StringBuilder result = new StringBuilder();</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        for (T t: s) {</span>
+<span class="nc" id="L41">            result.append(t.toString());</span>
+<span class="nc" id="L42">            result.append(',');</span>
+<span class="nc" id="L43">        }</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        return result.length() == 0 ? &quot;&quot; : result.toString().substring(0, result.length() - 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
