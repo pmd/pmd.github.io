@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MatchAlgorithm.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">MatchAlgorithm.java</span></div><h1>MatchAlgorithm.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.cpd;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+public class MatchAlgorithm {
+
+    private final static int MOD = 37;
+    private int lastHash;
+<span class="fc" id="L17">    private int lastMod = 1;</span>
+
+    private List&lt;Match&gt; matches;
+    private Map&lt;String, SourceCode&gt; source;
+    private Tokens tokens;
+    private List&lt;TokenEntry&gt; code;
+    private CPDListener cpdListener;
+    private int min;
+
+    public MatchAlgorithm(Map&lt;String, SourceCode&gt; sourceCode, Tokens tokens, int min) {
+<span class="nc" id="L27">        this(sourceCode, tokens, min, new CPDNullListener());</span>
+<span class="nc" id="L28">    }</span>
+
+<span class="fc" id="L30">    public MatchAlgorithm(Map&lt;String, SourceCode&gt; sourceCode, Tokens tokens, int min, CPDListener listener) {</span>
+<span class="fc" id="L31">        this.source = sourceCode;</span>
+<span class="fc" id="L32">        this.tokens = tokens;</span>
+<span class="fc" id="L33">        this.code = tokens.getTokens();</span>
+<span class="fc" id="L34">        this.min = min;</span>
+<span class="fc" id="L35">        this.cpdListener = listener;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (int i = 0; i &lt; min; i++) {</span>
+<span class="fc" id="L37">            lastMod *= MOD;</span>
+        }
+<span class="fc" id="L39">    }</span>
+
+    public void setListener(CPDListener listener) {
+<span class="nc" id="L42">        this.cpdListener = listener;</span>
+<span class="nc" id="L43">    }</span>
+
+    public Iterator&lt;Match&gt; matches() {
+<span class="fc" id="L46">        return matches.iterator();</span>
+    }
+
+    public TokenEntry tokenAt(int offset, TokenEntry m) {
+<span class="fc" id="L50">        return code.get(offset + m.getIndex());</span>
+    }
+
+    public int getMinimumTileSize() {
+<span class="fc" id="L54">        return this.min;</span>
+    }
+
+    public void findMatches() {
+<span class="fc" id="L58">        cpdListener.phaseUpdate(CPDListener.HASH);</span>
+<span class="fc" id="L59">        Map&lt;TokenEntry, Object&gt; markGroups = hash();</span>
+
+<span class="fc" id="L61">        cpdListener.phaseUpdate(CPDListener.MATCH);</span>
+<span class="fc" id="L62">        MatchCollector matchCollector = new MatchCollector(this);</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (Iterator&lt;Object&gt; i = markGroups.values().iterator(); i.hasNext();) {</span>
+<span class="fc" id="L64">            Object o = i.next();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (o instanceof List) {</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L67">                List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
+<span class="fc" id="L68">                Collections.reverse(l);</span>
+<span class="fc" id="L69">                matchCollector.collect(l);</span>
+            }
+<span class="fc" id="L71">            i.remove();</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">        cpdListener.phaseUpdate(CPDListener.GROUPING);</span>
+<span class="fc" id="L74">        matches = matchCollector.getMatches();</span>
+<span class="fc" id="L75">        matchCollector = null;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for (Match match : matches) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            for (Mark mark : match) {</span>
+<span class="fc" id="L78">                TokenEntry token = mark.getToken();</span>
+<span class="fc" id="L79">                int lineCount = tokens.getLineCount(token, match);</span>
+
+<span class="fc" id="L81">                mark.setLineCount(lineCount);</span>
+<span class="fc" id="L82">                SourceCode sourceCode = source.get(token.getTokenSrcID());</span>
+<span class="fc" id="L83">                mark.setSourceCode(sourceCode);</span>
+<span class="fc" id="L84">            }</span>
+<span class="fc" id="L85">        }</span>
+<span class="fc" id="L86">        cpdListener.phaseUpdate(CPDListener.DONE);</span>
+<span class="fc" id="L87">    }</span>
+
+    @SuppressWarnings(&quot;PMD.JumbledIncrementer&quot;)
+    private Map&lt;TokenEntry, Object&gt; hash() {
+<span class="fc" id="L91">        Map&lt;TokenEntry, Object&gt; markGroups = new HashMap&lt;&gt;(tokens.size());</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (int i = code.size() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L93">            TokenEntry token = code.get(i);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (token != TokenEntry.EOF) {</span>
+<span class="fc" id="L95">                int last = tokenAt(min, token).getIdentifier();</span>
+<span class="fc" id="L96">                lastHash = MOD * lastHash + token.getIdentifier() - lastMod * last;</span>
+<span class="fc" id="L97">                token.setHashCode(lastHash);</span>
+<span class="fc" id="L98">                Object o = markGroups.get(token);</span>
+
+                // Note that this insertion method is worthwhile since the vast majority
+                // markGroup keys will have only one value.
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                if (o == null) {</span>
+<span class="fc" id="L103">                    markGroups.put(token, token);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                } else if (o instanceof TokenEntry) {</span>
+<span class="fc" id="L105">                    List&lt;TokenEntry&gt; l = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L106">                    l.add((TokenEntry) o);</span>
+<span class="fc" id="L107">                    l.add(token);</span>
+<span class="fc" id="L108">                    markGroups.put(token, l);</span>
+<span class="fc" id="L109">                } else {</span>
+                    @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L111">                    List&lt;TokenEntry&gt; l = (List&lt;TokenEntry&gt;) o;</span>
+<span class="fc" id="L112">                    l.add(token);</span>
+                }
+<span class="fc" id="L114">            } else {</span>
+<span class="fc" id="L115">                lastHash = 0;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                for (int end = Math.max(0, i - min + 1); i &gt; end; i--) {</span>
+<span class="fc" id="L117">                    token = code.get(i - 1);</span>
+<span class="fc" id="L118">                    lastHash = MOD * lastHash + token.getIdentifier();</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                    if (token == TokenEntry.EOF) {</span>
+<span class="fc" id="L120">                        break;</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L125">        return markGroups;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

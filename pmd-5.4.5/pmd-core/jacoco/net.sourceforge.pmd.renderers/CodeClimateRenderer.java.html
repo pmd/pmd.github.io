@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CodeClimateRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">CodeClimateRenderer.java</span></div><h1>CodeClimateRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.renderers;
+
+import com.google.gson.Gson;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleViolation;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Iterator;
+
+/**
+ * Renderer for Code Climate JSON format
+ */
+public class CodeClimateRenderer extends AbstractIncrementingRenderer {
+    public static final String NAME = &quot;codeclimate&quot;;
+
+<span class="fc" id="L21">    protected static final String EOL = System.getProperty(&quot;line.separator&quot;, &quot;\n&quot;);</span>
+
+    public CodeClimateRenderer() {
+<span class="fc" id="L24">        super(NAME, &quot;Code Climate integration.&quot;);</span>
+<span class="fc" id="L25">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void renderFileViolations(Iterator&lt;RuleViolation&gt; violations) throws IOException {
+<span class="fc" id="L32">        Writer writer = getWriter();</span>
+<span class="fc" id="L33">        Gson gson = new Gson();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        while (violations.hasNext()) {</span>
+<span class="fc" id="L35">            RuleViolation rv = violations.next();</span>
+<span class="fc" id="L36">            writer.write(gson.toJson(makeIssue(rv)) + EOL);</span>
+<span class="fc" id="L37">        }</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * Generate a CodeClimateIssue suitable for processing into JSON from the given RuleViolation.
+     * @param rv RuleViolation to convert.
+     * @return The generated issue.
+     */
+    private CodeClimateIssue makeIssue(RuleViolation rv) {
+<span class="fc" id="L46">        CodeClimateIssue issue = new CodeClimateIssue();</span>
+<span class="fc" id="L47">        Rule rule = rv.getRule();</span>
+<span class="fc" id="L48">        issue.check_name = rule.getName();</span>
+<span class="fc" id="L49">        issue.description = rv.getDescription();</span>
+<span class="fc" id="L50">        issue.content = new CodeClimateIssue.Content(rule.getDescription());</span>
+<span class="fc" id="L51">        issue.location = new CodeClimateIssue.Location(rv.getFilename(), rv.getBeginLine(), rv.getEndLine());</span>
+<span class="pc bpc" id="L52" title="3 of 4 branches missed.">        switch(rule.getPriority()) {</span>
+            case HIGH:
+<span class="nc" id="L54">                issue.severity = &quot;critical&quot;;</span>
+<span class="nc" id="L55">                break;</span>
+            case MEDIUM_HIGH:
+            case MEDIUM:
+            case MEDIUM_LOW:
+<span class="nc" id="L59">                issue.severity = &quot;normal&quot;;</span>
+<span class="nc" id="L60">                break;</span>
+            case LOW:
+<span class="fc" id="L62">                issue.severity = &quot;info&quot;;</span>
+                break;
+        }
+<span class="fc" id="L65">        return issue;</span>
+    }
+
+    @Override
+    public String defaultFileExtension() {
+<span class="nc" id="L70">        return &quot;json&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StringUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util</a> &gt; <span class="el_source">StringUtil.java</span></div><h1>StringUtil.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+/**
+ * A number of String-specific utility methods for use by PMD or its IDE
+ * plugins.
+ *
+ * @author BrianRemedios
+ */
+public final class StringUtil {
+
+<span class="fc" id="L18">    public static final String[] EMPTY_STRINGS = new String[0];</span>
+<span class="fc" id="L19">    private static final boolean SUPPORTS_UTF8 = System.getProperty(&quot;net.sourceforge.pmd.supportUTF8&quot;, &quot;no&quot;).equals(</span>
+            &quot;yes&quot;);
+
+<span class="nc" id="L22">    private StringUtil() {</span>
+<span class="nc" id="L23">    }</span>
+
+    /**
+     * Return whether the non-null text arg starts with any of the prefix
+     * values.
+     *
+     * @param text
+     * @param prefixes
+     * @return boolean
+     */
+    public static boolean startsWithAny(String text, String... prefixes) {
+
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        for (String prefix : prefixes) {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            if (text.startsWith(prefix)) {</span>
+<span class="nc" id="L37">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L41">        return false;</span>
+    }
+
+    /**
+     * Returns whether the non-null text arg matches any of the test values.
+     *
+     * @param text
+     * @param tests
+     * @return boolean
+     */
+    public static boolean isAnyOf(String text, String... tests) {
+
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (String test : tests) {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (text.equals(test)) {</span>
+<span class="fc" id="L55">                return true;</span>
+            }
+        }
+
+<span class="fc" id="L59">        return false;</span>
+    }
+
+    /**
+     * Checks for the existence of any of the listed prefixes on the non-null
+     * text and removes them.
+     *
+     * @param text
+     * @param prefixes
+     * @return String
+     */
+    public static String withoutPrefixes(String text, String... prefixes) {
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        for (String prefix : prefixes) {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (text.startsWith(prefix)) {</span>
+<span class="nc" id="L74">                return text.substring(prefix.length());</span>
+            }
+        }
+
+<span class="nc" id="L78">        return text;</span>
+    }
+
+    /**
+     * Returns true if the value arg is either null, empty, or full of
+     * whitespace characters. More efficient that calling
+     * (string).trim().length() == 0
+     *
+     * @param value
+     * @return &lt;code&gt;true&lt;/code&gt; if the value is empty, &lt;code&gt;false&lt;/code&gt;
+     *         otherwise.
+     */
+    public static boolean isEmpty(String value) {
+
+<span class="fc bfc" id="L92" title="All 4 branches covered.">        if (value == null || &quot;&quot;.equals(value)) {</span>
+<span class="fc" id="L93">            return true;</span>
+        }
+
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">        for (int i = 0; i &lt; value.length(); i++) {</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (!Character.isWhitespace(value.charAt(i))) {</span>
+<span class="fc" id="L98">                return false;</span>
+            }
+        }
+
+<span class="nc" id="L102">        return true;</span>
+    }
+
+    /**
+     *
+     * @param value String
+     * @return boolean
+     */
+    public static boolean isNotEmpty(String value) {
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        return !isEmpty(value);</span>
+    }
+
+    /**
+     * Returns true if both strings are effectively null or whitespace, returns
+     * false otherwise if they have actual text that differs.
+     *
+     * @param a
+     * @param b
+     * @return boolean
+     */
+    public static boolean areSemanticEquals(String a, String b) {
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        if (a == null) {</span>
+<span class="nc" id="L125">            return isEmpty(b);</span>
+        }
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (b == null) {</span>
+<span class="nc" id="L128">            return isEmpty(a);</span>
+        }
+
+<span class="nc" id="L131">        return a.equals(b);</span>
+    }
+
+    /**
+     *
+     * @param original String
+     * @param oldChar char
+     * @param newString String
+     * @return String
+     */
+    public static String replaceString(final String original, char oldChar, final String newString) {
+<span class="fc" id="L142">        int index = original.indexOf(oldChar);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (index &lt; 0) {</span>
+<span class="fc" id="L144">            return original;</span>
+        } else {
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            final String replace = newString == null ? &quot;&quot; : newString;</span>
+<span class="fc" id="L147">            final StringBuilder buf = new StringBuilder(Math.max(16, original.length() + replace.length()));</span>
+<span class="fc" id="L148">            int last = 0;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            while (index != -1) {</span>
+<span class="fc" id="L150">                buf.append(original.substring(last, index));</span>
+<span class="fc" id="L151">                buf.append(replace);</span>
+<span class="fc" id="L152">                last = index + 1;</span>
+<span class="fc" id="L153">                index = original.indexOf(oldChar, last);</span>
+            }
+<span class="fc" id="L155">            buf.append(original.substring(last));</span>
+<span class="fc" id="L156">            return buf.toString();</span>
+        }
+    }
+
+    /**
+     *
+     * @param original String
+     * @param oldString String
+     * @param newString String
+     * @return String
+     */
+    public static String replaceString(final String original, final String oldString, final String newString) {
+<span class="fc" id="L168">        int index = original.indexOf(oldString);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (index &lt; 0) {</span>
+<span class="fc" id="L170">            return original;</span>
+        } else {
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            final String replace = newString == null ? &quot;&quot; : newString;</span>
+<span class="fc" id="L173">            final StringBuilder buf = new StringBuilder(Math.max(16, original.length() + replace.length()));</span>
+<span class="fc" id="L174">            int last = 0;</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            while (index != -1) {</span>
+<span class="fc" id="L176">                buf.append(original.substring(last, index));</span>
+<span class="fc" id="L177">                buf.append(replace);</span>
+<span class="fc" id="L178">                last = index + oldString.length();</span>
+<span class="fc" id="L179">                index = original.indexOf(oldString, last);</span>
+            }
+<span class="fc" id="L181">            buf.append(original.substring(last));</span>
+<span class="fc" id="L182">            return buf.toString();</span>
+        }
+    }
+
+    /**
+     * Appends to a StringBuilder the String src where non-ASCII and XML special
+     * chars are escaped.
+     *
+     * @param buf The destination XML stream
+     * @param src The String to append to the stream
+     *
+     * @deprecated use {@link #appendXmlEscaped(StringBuilder, String, boolean)} instead
+     */
+    @Deprecated
+    public static void appendXmlEscaped(StringBuilder buf, String src) {
+<span class="nc" id="L197">        appendXmlEscaped(buf, src, SUPPORTS_UTF8);</span>
+<span class="nc" id="L198">    }</span>
+
+    /**
+     * Replace some whitespace characters so they are visually apparent.
+     * 
+     * @param o
+     * @return String
+     */
+    public static String escapeWhitespace(Object o) {
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (o == null) {</span>
+<span class="nc" id="L209">            return null;</span>
+        }
+<span class="nc" id="L211">        String s = String.valueOf(o);</span>
+<span class="nc" id="L212">        s = s.replace(&quot;\n&quot;, &quot;\\n&quot;);</span>
+<span class="nc" id="L213">        s = s.replace(&quot;\r&quot;, &quot;\\r&quot;);</span>
+<span class="nc" id="L214">        s = s.replace(&quot;\t&quot;, &quot;\\t&quot;);</span>
+<span class="nc" id="L215">        return s;</span>
+    }
+
+    /**
+     *
+     * @param string String
+     * @return String
+     */
+    public static String htmlEncode(String string) {
+<span class="fc" id="L224">        String encoded = replaceString(string, '&amp;', &quot;&amp;amp;&quot;);</span>
+<span class="fc" id="L225">        encoded = replaceString(encoded, '&lt;', &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L226">        return replaceString(encoded, '&gt;', &quot;&amp;gt;&quot;);</span>
+    }
+
+    /**
+     *
+     * @param buf
+     * @param src
+     * @param supportUTF8 override the default setting, whether special
+     *            characters should be replaced with entities (
+     *            &lt;code&gt;false&lt;/code&gt;) or should be included as is (
+     *            &lt;code&gt;true&lt;/code&gt;).
+     * @see #appendXmlEscaped(StringBuilder, String)
+     *
+     *      TODO - unify the method above with the one below
+     *
+     *      public to support unit testing - make this package private, once the
+     *      unit test classes are in the same package.
+     */
+    public static void appendXmlEscaped(StringBuilder buf, String src, boolean supportUTF8) {
+        char c;
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        for (int i = 0; i &lt; src.length(); i++) {</span>
+<span class="fc" id="L247">            c = src.charAt(i);</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">            if (c &gt; '~') {// 126</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">                if (!supportUTF8) {</span>
+<span class="fc" id="L250">                    int codepoint = c;</span>
+                    // surrogate characters are not allowed in XML
+<span class="fc bfc" id="L252" title="All 2 branches covered.">                    if (Character.isHighSurrogate(c)) {</span>
+<span class="fc" id="L253">                        char low = src.charAt(i + 1);</span>
+<span class="fc" id="L254">                        codepoint = Character.toCodePoint(c, low);</span>
+<span class="fc" id="L255">                        i += 1;</span>
+                    }
+<span class="fc" id="L257">                    buf.append(&quot;&amp;#x&quot;).append(Integer.toHexString(codepoint)).append(';');</span>
+<span class="fc" id="L258">                } else {</span>
+<span class="fc" id="L259">                    buf.append(c);</span>
+                }
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">            } else if (c == '&amp;') {</span>
+<span class="nc" id="L262">                buf.append(&quot;&amp;amp;&quot;);</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">            } else if (c == '&quot;') {</span>
+<span class="fc" id="L264">                buf.append(&quot;&amp;quot;&quot;);</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">            } else if (c == '&lt;') {</span>
+<span class="nc" id="L266">                buf.append(&quot;&amp;lt;&quot;);</span>
+<span class="pc bpc" id="L267" title="1 of 2 branches missed.">            } else if (c == '&gt;') {</span>
+<span class="nc" id="L268">                buf.append(&quot;&amp;gt;&quot;);</span>
+            } else {
+<span class="fc" id="L270">                buf.append(c);</span>
+            }
+        }
+<span class="fc" id="L273">    }</span>
+
+    /**
+     * Parses the input source using the delimiter specified. This method is
+     * much faster than using the StringTokenizer or String.split(char) approach
+     * and serves as a replacement for String.split() for JDK1.3 that doesn't
+     * have it.
+     *
+     * FIXME - we're on JDK 1.4 now, can we replace this with String.split?
+     *
+     * @param source String
+     * @param delimiter char
+     * @return String[]
+     */
+    public static String[] substringsOf(String source, char delimiter) {
+
+<span class="pc bpc" id="L289" title="1 of 4 branches missed.">        if (source == null || source.length() == 0) {</span>
+<span class="fc" id="L290">            return EMPTY_STRINGS;</span>
+        }
+
+<span class="fc" id="L293">        int delimiterCount = 0;</span>
+<span class="fc" id="L294">        int length = source.length();</span>
+<span class="fc" id="L295">        char[] chars = source.toCharArray();</span>
+
+<span class="fc bfc" id="L297" title="All 2 branches covered.">        for (int i = 0; i &lt; length; i++) {</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">            if (chars[i] == delimiter) {</span>
+<span class="fc" id="L299">                delimiterCount++;</span>
+            }
+        }
+
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        if (delimiterCount == 0) {</span>
+<span class="fc" id="L304">            return new String[] { source };</span>
+        }
+
+<span class="fc" id="L307">        String[] results = new String[delimiterCount + 1];</span>
+
+<span class="fc" id="L309">        int i = 0;</span>
+<span class="fc" id="L310">        int offset = 0;</span>
+
+<span class="fc bfc" id="L312" title="All 2 branches covered.">        while (offset &lt;= length) {</span>
+<span class="fc" id="L313">            int pos = source.indexOf(delimiter, offset);</span>
+<span class="fc bfc" id="L314" title="All 2 branches covered.">            if (pos &lt; 0) {</span>
+<span class="fc" id="L315">                pos = length;</span>
+            }
+<span class="pc bpc" id="L317" title="1 of 2 branches missed.">            results[i++] = pos == offset ? &quot;&quot; : source.substring(offset, pos);</span>
+<span class="fc" id="L318">            offset = pos + 1;</span>
+<span class="fc" id="L319">        }</span>
+
+<span class="fc" id="L321">        return results;</span>
+    }
+
+    /**
+     * Much more efficient than StringTokenizer.
+     *
+     * @param str String
+     * @param separator char
+     * @return String[]
+     */
+    public static String[] substringsOf(String str, String separator) {
+
+<span class="nc bnc" id="L333" title="All 4 branches missed.">        if (str == null || str.length() == 0) {</span>
+<span class="nc" id="L334">            return EMPTY_STRINGS;</span>
+        }
+
+<span class="nc" id="L337">        int index = str.indexOf(separator);</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">        if (index == -1) {</span>
+<span class="nc" id="L339">            return new String[] { str };</span>
+        }
+
+<span class="nc" id="L342">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L343">        int currPos = 0;</span>
+<span class="nc" id="L344">        int len = separator.length();</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">        while (index != -1) {</span>
+<span class="nc" id="L346">            list.add(str.substring(currPos, index));</span>
+<span class="nc" id="L347">            currPos = index + len;</span>
+<span class="nc" id="L348">            index = str.indexOf(separator, currPos);</span>
+        }
+<span class="nc" id="L350">        list.add(str.substring(currPos));</span>
+<span class="nc" id="L351">        return list.toArray(new String[list.size()]);</span>
+    }
+
+    /**
+     * Copies the elements returned by the iterator onto the string buffer each
+     * delimited by the separator.
+     *
+     * @param sb StringBuffer
+     * @param iter Iterator
+     * @param separator String
+     */
+    public static void asStringOn(StringBuffer sb, Iterator&lt;?&gt; iter, String separator) {
+
+<span class="nc bnc" id="L364" title="All 2 branches missed.">        if (!iter.hasNext()) {</span>
+<span class="nc" id="L365">            return;</span>
+        }
+
+<span class="nc" id="L368">        sb.append(iter.next());</span>
+
+<span class="nc bnc" id="L370" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
+<span class="nc" id="L371">            sb.append(separator);</span>
+<span class="nc" id="L372">            sb.append(iter.next());</span>
+        }
+<span class="nc" id="L374">    }</span>
+
+    /**
+     * Copies the array items onto the string builder each delimited by the
+     * separator. Does nothing if the array is null or empty.
+     *
+     * @param sb StringBuilder
+     * @param items Object[]
+     * @param separator String
+     */
+    public static void asStringOn(StringBuilder sb, Object[] items, String separator) {
+
+<span class="nc bnc" id="L386" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
+<span class="nc" id="L387">            return;</span>
+        }
+
+<span class="nc" id="L390">        sb.append(items[0]);</span>
+
+<span class="nc bnc" id="L392" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
+<span class="nc" id="L393">            sb.append(separator);</span>
+<span class="nc" id="L394">            sb.append(items[i]);</span>
+        }
+<span class="nc" id="L396">    }</span>
+
+    /**
+     * Return the length of the shortest string in the array. If the collection
+     * is empty or any one of them is null then it returns 0.
+     *
+     * @param strings String[]
+     * @return int
+     */
+    public static int lengthOfShortestIn(String[] strings) {
+
+<span class="nc bnc" id="L407" title="All 2 branches missed.">        if (CollectionUtil.isEmpty(strings)) {</span>
+<span class="nc" id="L408">            return 0;</span>
+        }
+
+<span class="nc" id="L411">        int minLength = Integer.MAX_VALUE;</span>
+
+<span class="nc bnc" id="L413" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">            if (strings[i] == null) {</span>
+<span class="nc" id="L415">                return 0;</span>
+            }
+<span class="nc" id="L417">            minLength = Math.min(minLength, strings[i].length());</span>
+        }
+
+<span class="nc" id="L420">        return minLength;</span>
+    }
+
+    /**
+     * Determine the maximum number of common leading whitespace characters the
+     * strings share in the same sequence. Useful for determining how many
+     * leading characters can be removed to shift all the text in the strings to
+     * the left without misaligning them.
+     *
+     * @param strings String[]
+     * @return int
+     */
+    public static int maxCommonLeadingWhitespaceForAll(String[] strings) {
+
+<span class="nc" id="L434">        int shortest = lengthOfShortestIn(strings);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">        if (shortest == 0) {</span>
+<span class="nc" id="L436">            return 0;</span>
+        }
+
+<span class="nc" id="L439">        char[] matches = new char[shortest];</span>
+
+        String str;
+<span class="nc bnc" id="L442" title="All 2 branches missed.">        for (int m = 0; m &lt; matches.length; m++) {</span>
+<span class="nc" id="L443">            matches[m] = strings[0].charAt(m);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">            if (!Character.isWhitespace(matches[m])) {</span>
+<span class="nc" id="L445">                return m;</span>
+            }
+<span class="nc bnc" id="L447" title="All 2 branches missed.">            for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L448">                str = strings[i];</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">                if (str.charAt(m) != matches[m]) {</span>
+<span class="nc" id="L450">                    return m;</span>
+                }
+            }
+        }
+
+<span class="nc" id="L455">        return shortest;</span>
+    }
+
+    /**
+     * Trims off the leading characters off the strings up to the trimDepth
+     * specified. Returns the same strings if trimDepth = 0
+     *
+     * @param strings
+     * @param trimDepth
+     * @return String[]
+     */
+    public static String[] trimStartOn(String[] strings, int trimDepth) {
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">        if (trimDepth == 0) {</span>
+<span class="nc" id="L469">            return strings;</span>
+        }
+
+<span class="nc" id="L472">        String[] results = new String[strings.length];</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L474">            results[i] = strings[i].substring(trimDepth);</span>
+        }
+<span class="nc" id="L476">        return results;</span>
+    }
+
+    /**
+     * Left pads a string.
+     * 
+     * @param s The String to pad
+     * @param length The desired minimum length of the resulting padded String
+     * @return The resulting left padded String
+     */
+    public static String lpad(String s, int length) {
+<span class="nc" id="L487">        String res = s;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">        if (length - s.length() &gt; 0) {</span>
+<span class="nc" id="L489">            char[] arr = new char[length - s.length()];</span>
+<span class="nc" id="L490">            java.util.Arrays.fill(arr, ' ');</span>
+<span class="nc" id="L491">            res = new StringBuilder(length).append(arr).append(s).toString();</span>
+        }
+<span class="nc" id="L493">        return res;</span>
+    }
+
+    /**
+     * Are the two String values the same. The Strings can be optionally trimmed
+     * before checking. The Strings can be optionally compared ignoring case.
+     * The Strings can be have embedded whitespace standardized before
+     * comparing. Two null values are treated as equal.
+     *
+     * @param s1 The first String.
+     * @param s2 The second String.
+     * @param trim Indicates if the Strings should be trimmed before comparison.
+     * @param ignoreCase Indicates if the case of the Strings should ignored
+     *            during comparison.
+     * @param standardizeWhitespace Indicates if the embedded whitespace should
+     *            be standardized before comparison.
+     * @return &lt;code&gt;true&lt;/code&gt; if the Strings are the same, &lt;code&gt;false&lt;/code&gt;
+     *         otherwise.
+     */
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    public static boolean isSame(String s1, String s2, boolean trim, boolean ignoreCase, boolean standardizeWhitespace) {
+<span class="fc bfc" id="L514" title="All 2 branches covered.">        if (s1 == s2) {</span>
+<span class="fc" id="L515">            return true;</span>
+<span class="pc bpc" id="L516" title="2 of 4 branches missed.">        } else if (s1 == null || s2 == null) {</span>
+<span class="nc" id="L517">            return false;</span>
+        } else {
+<span class="pc bpc" id="L519" title="1 of 2 branches missed.">            if (trim) {</span>
+<span class="fc" id="L520">                s1 = s1.trim();</span>
+<span class="fc" id="L521">                s2 = s2.trim();</span>
+            }
+<span class="pc bpc" id="L523" title="1 of 2 branches missed.">            if (standardizeWhitespace) {</span>
+                // Replace all whitespace with a standard single space
+                // character.
+<span class="fc" id="L526">                s1 = s1.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="fc" id="L527">                s2 = s2.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+            }
+<span class="pc bpc" id="L529" title="1 of 2 branches missed.">            return ignoreCase ? s1.equalsIgnoreCase(s2) : s1.equals(s2);</span>
+        }
+    }
+
+    /**
+     * Formats all items onto a string with separators if more than one exists,
+     * return an empty string if the items are null or empty.
+     *
+     * @param items Object[]
+     * @param separator String
+     * @return String
+     */
+    public static String asString(Object[] items, String separator) {
+
+<span class="nc bnc" id="L543" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
+<span class="nc" id="L544">            return &quot;&quot;;</span>
+        }
+<span class="nc bnc" id="L546" title="All 2 branches missed.">        if (items.length == 1) {</span>
+<span class="nc" id="L547">            return items[0].toString();</span>
+        }
+
+<span class="nc" id="L550">        StringBuilder sb = new StringBuilder(items[0].toString());</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
+<span class="nc" id="L552">            sb.append(separator).append(items[i]);</span>
+        }
+
+<span class="nc" id="L555">        return sb.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

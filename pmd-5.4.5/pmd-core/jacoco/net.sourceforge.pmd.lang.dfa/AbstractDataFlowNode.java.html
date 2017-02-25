@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractDataFlowNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa</a> &gt; <span class="el_source">AbstractDataFlowNode.java</span></div><h1>AbstractDataFlowNode.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.dfa;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * @author raik
+ *         &lt;p/&gt;
+ *         Each data flow contains a set of DataFlowNodes.
+ */
+public abstract class AbstractDataFlowNode implements DataFlowNode {
+
+    protected Node node;
+
+<span class="nc" id="L22">    protected List&lt;DataFlowNode&gt; parents = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L23">    protected List&lt;DataFlowNode&gt; children = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L24">    protected BitSet type = new BitSet();</span>
+<span class="nc" id="L25">    protected List&lt;VariableAccess&gt; variableAccess = new ArrayList&lt;&gt;();</span>
+    protected List&lt;DataFlowNode&gt; dataFlow;
+    protected int line;
+
+<span class="nc" id="L29">    public AbstractDataFlowNode(List&lt;DataFlowNode&gt; dataFlow) {</span>
+<span class="nc" id="L30">	this.dataFlow = dataFlow;</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">	if (!this.dataFlow.isEmpty()) {</span>
+<span class="nc" id="L32">	    DataFlowNode parent = this.dataFlow.get(this.dataFlow.size() - 1);</span>
+<span class="nc" id="L33">	    parent.addPathToChild(this);</span>
+	}
+<span class="nc" id="L35">	this.dataFlow.add(this);</span>
+<span class="nc" id="L36">    }</span>
+
+    public AbstractDataFlowNode(List&lt;DataFlowNode&gt; dataFlow, Node node) {
+<span class="nc" id="L39">	this(dataFlow);</span>
+
+<span class="nc" id="L41">	this.node = node;</span>
+<span class="nc" id="L42">	node.setDataFlowNode(this);</span>
+<span class="nc" id="L43">	this.line = node.getBeginLine();</span>
+<span class="nc" id="L44">    }</span>
+
+    public void addPathToChild(DataFlowNode child) {
+<span class="nc" id="L47">	DataFlowNode thisChild = child;</span>
+	// TODO - throw an exception if already contained in children list?
+<span class="nc bnc" id="L49" title="All 4 branches missed.">	if (!this.children.contains(thisChild) || this.equals(thisChild)) {</span>
+<span class="nc" id="L50">	    this.children.add(thisChild);</span>
+<span class="nc" id="L51">	    thisChild.getParents().add(this);</span>
+	}
+<span class="nc" id="L53">    }</span>
+
+    public boolean removePathToChild(DataFlowNode child) {
+<span class="nc" id="L56">	DataFlowNode thisChild = child;</span>
+<span class="nc" id="L57">	thisChild.getParents().remove(this);</span>
+<span class="nc" id="L58">	return this.children.remove(thisChild);</span>
+    }
+
+    public void reverseParentPathsTo(DataFlowNode destination) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">	while (!parents.isEmpty()) {</span>
+<span class="nc" id="L63">	    DataFlowNode parent = parents.get(0);</span>
+<span class="nc" id="L64">	    parent.removePathToChild(this);</span>
+<span class="nc" id="L65">	    parent.addPathToChild(destination);</span>
+<span class="nc" id="L66">	}</span>
+<span class="nc" id="L67">    }</span>
+
+    public int getLine() {
+<span class="nc" id="L70">	return this.line;</span>
+    }
+
+    public void setType(int type) {
+<span class="nc" id="L74">	this.type.set(type);</span>
+<span class="nc" id="L75">    }</span>
+
+    public boolean isType(int intype) {
+	try {
+<span class="nc" id="L79">	    return type.get(intype);</span>
+<span class="nc" id="L80">	} catch (IndexOutOfBoundsException e) {</span>
+<span class="nc" id="L81">	    e.printStackTrace();</span>
+	}
+<span class="nc" id="L83">	return false;</span>
+    }
+
+    public Node getNode() {
+<span class="nc" id="L87">	return this.node;</span>
+    }
+
+    public List&lt;DataFlowNode&gt; getChildren() {
+<span class="nc" id="L91">	return this.children;</span>
+    }
+
+    public List&lt;DataFlowNode&gt; getParents() {
+<span class="nc" id="L95">	return this.parents;</span>
+    }
+
+    public List&lt;DataFlowNode&gt; getFlow() {
+<span class="nc" id="L99">	return this.dataFlow;</span>
+    }
+
+    public int getIndex() {
+<span class="nc" id="L103">	return this.dataFlow.indexOf(this);</span>
+    }
+
+    public void setVariableAccess(List&lt;VariableAccess&gt; variableAccess) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">	if (this.variableAccess.isEmpty()) {</span>
+<span class="nc" id="L108">	    this.variableAccess = variableAccess;</span>
+	} else {
+<span class="nc" id="L110">	    this.variableAccess.addAll(variableAccess);</span>
+	}
+<span class="nc" id="L112">    }</span>
+
+    public List&lt;VariableAccess&gt; getVariableAccess() {
+<span class="nc" id="L115">	return this.variableAccess;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L120">	String res = &quot;DataFlowNode: line &quot; + this.getLine() + &quot;, &quot;;</span>
+<span class="nc" id="L121">	String tmp = type.toString();</span>
+<span class="nc" id="L122">	String newTmp = &quot;&quot;;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">	for (char c : tmp.toCharArray()) {</span>
+<span class="nc bnc" id="L124" title="All 6 branches missed.">	    if (c != '{' &amp;&amp; c != '}' &amp;&amp; c != ' ') {</span>
+<span class="nc" id="L125">		newTmp += c;</span>
+	    }
+	}
+<span class="nc bnc" id="L128" title="All 2 branches missed.">	for (StringTokenizer st = new StringTokenizer(newTmp, &quot;,&quot;); st.hasMoreTokens();) {</span>
+<span class="nc" id="L129">	    int newTmpInt = Integer.parseInt(st.nextToken());</span>
+<span class="nc" id="L130">	    res += &quot;(&quot; + stringFromType(newTmpInt) + &quot;)&quot;;</span>
+<span class="nc" id="L131">	}</span>
+<span class="nc" id="L132">	res += &quot;, &quot; + this.node.getClass().getName().substring(node.getClass().getName().lastIndexOf('.') + 1);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">	res += node.getImage() == null ? &quot;&quot; : &quot;(&quot; + this.node.getImage() + &quot;)&quot;;</span>
+<span class="nc" id="L134">	return res;</span>
+    }
+
+    private String stringFromType(int intype) {
+<span class="nc" id="L138">	return NodeType.stringFromType(intype) ;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
