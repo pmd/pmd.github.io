@@ -96,109 +96,113 @@ public class ApexSOQLInjectionRule extends AbstractApexRule {
 <span class="fc bfc" id="L96" title="All 2 branches covered.">        if (literal != null) {</span>
 <span class="pc bpc" id="L97" title="1 of 2 branches missed.">            if (left != null) {</span>
 <span class="fc" id="L98">                Object o = literal.getNode().getLiteral();</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                if (o instanceof String) {</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">                    if (SELECT_PATTERN.matcher((String) o).matches()) {</span>
-<span class="fc" id="L101">                        selectContainingVariables.put(Helper.getFQVariableName(left), Boolean.TRUE);</span>
+<span class="pc bpc" id="L99" title="2 of 6 branches missed.">                if (o instanceof Integer || o instanceof Boolean || o instanceof Double) {</span>
+<span class="fc" id="L100">                    safeVariables.add(Helper.getFQVariableName(left));</span>
+                }
+
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (o instanceof String) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                    if (SELECT_PATTERN.matcher((String) o).matches()) {</span>
+<span class="fc" id="L105">                        selectContainingVariables.put(Helper.getFQVariableName(left), Boolean.TRUE);</span>
                     } else {
-<span class="fc" id="L103">                        safeVariables.add(Helper.getFQVariableName(left));</span>
+<span class="fc" id="L107">                        safeVariables.add(Helper.getFQVariableName(left));</span>
                     }
                 }
             }
         }
 
         // look for String a = String.escapeSingleQuotes(foo);
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (right != null) {</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (Helper.isMethodName(right, STRING, ESCAPE_SINGLE_QUOTES)) {</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                if (left != null) {</span>
-<span class="fc" id="L113">                    safeVariables.add(Helper.getFQVariableName(left));</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (right != null) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (Helper.isMethodName(right, STRING, ESCAPE_SINGLE_QUOTES)) {</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                if (left != null) {</span>
+<span class="fc" id="L117">                    safeVariables.add(Helper.getFQVariableName(left));</span>
                 }
             }
         }
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L121">    }</span>
 
     private void findSelectContainingVariables(AbstractApexNode&lt;?&gt; node) {
-<span class="fc" id="L120">        final ASTVariableExpression left = node.getFirstChildOfType(ASTVariableExpression.class);</span>
-<span class="fc" id="L121">        final ASTBinaryExpression right = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
-<span class="pc bpc" id="L122" title="1 of 4 branches missed.">        if (left != null &amp;&amp; right != null) {</span>
-<span class="fc" id="L123">            recursivelyCheckForSelect(left, right);</span>
+<span class="fc" id="L124">        final ASTVariableExpression left = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc" id="L125">        final ASTBinaryExpression right = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">        if (left != null &amp;&amp; right != null) {</span>
+<span class="fc" id="L127">            recursivelyCheckForSelect(left, right);</span>
         }
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L129">    }</span>
 
     private void recursivelyCheckForSelect(final ASTVariableExpression var, final ASTBinaryExpression node) {
-<span class="fc" id="L128">        final ASTBinaryExpression right = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (right != null) {</span>
-<span class="fc" id="L130">            recursivelyCheckForSelect(var, right);</span>
+<span class="fc" id="L132">        final ASTBinaryExpression right = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (right != null) {</span>
+<span class="fc" id="L134">            recursivelyCheckForSelect(var, right);</span>
         }
 
-<span class="fc" id="L133">        final ASTVariableExpression concatenatedVar = node.getFirstChildOfType(ASTVariableExpression.class);</span>
-<span class="fc" id="L134">        boolean isSafeVariable = false;</span>
+<span class="fc" id="L137">        final ASTVariableExpression concatenatedVar = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc" id="L138">        boolean isSafeVariable = false;</span>
 
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (concatenatedVar != null) {</span>
-<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (safeVariables.contains(Helper.getFQVariableName(concatenatedVar))) {</span>
-<span class="fc" id="L138">                isSafeVariable = true;</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (concatenatedVar != null) {</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (safeVariables.contains(Helper.getFQVariableName(concatenatedVar))) {</span>
+<span class="fc" id="L142">                isSafeVariable = true;</span>
             }
         }
 
-<span class="fc" id="L142">        final ASTLiteralExpression literal = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (literal != null) {</span>
+<span class="fc" id="L146">        final ASTLiteralExpression literal = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (literal != null) {</span>
 
-<span class="fc" id="L145">            Object o = literal.getNode().getLiteral();</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (o instanceof String) {</span>
-<span class="fc bfc" id="L147" title="All 2 branches covered.">                if (SELECT_PATTERN.matcher((String) o).matches()) {</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">                    if (!isSafeVariable) {</span>
+<span class="fc" id="L149">            Object o = literal.getNode().getLiteral();</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">            if (o instanceof String) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                if (SELECT_PATTERN.matcher((String) o).matches()) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                    if (!isSafeVariable) {</span>
                         // select literal + other unsafe vars
-<span class="fc" id="L150">                        selectContainingVariables.put(Helper.getFQVariableName(var), Boolean.FALSE);</span>
+<span class="fc" id="L154">                        selectContainingVariables.put(Helper.getFQVariableName(var), Boolean.FALSE);</span>
                     }
                 }
             }
-<span class="fc" id="L154">        } else {</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">            if (!isSafeVariable) {</span>
-<span class="fc" id="L156">                selectContainingVariables.put(Helper.getFQVariableName(var), Boolean.FALSE);</span>
+<span class="fc" id="L158">        } else {</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">            if (!isSafeVariable) {</span>
+<span class="fc" id="L160">                selectContainingVariables.put(Helper.getFQVariableName(var), Boolean.FALSE);</span>
             }
         }
 
-<span class="fc" id="L160">    }</span>
+<span class="fc" id="L164">    }</span>
 
     private void reportStrings(ASTMethodCallExpression m, Object data) {
-<span class="fc" id="L163">        final List&lt;ASTBinaryExpression&gt; binaryExpr = m.findChildrenOfType(ASTBinaryExpression.class);</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (ASTBinaryExpression b : binaryExpr) {</span>
-<span class="fc" id="L165">            List&lt;ASTVariableExpression&gt; vars = b.findDescendantsOfType(ASTVariableExpression.class);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">            for (ASTVariableExpression v : vars) {</span>
-<span class="fc" id="L167">                String fqName = Helper.getFQVariableName(v);</span>
+<span class="fc" id="L167">        final List&lt;ASTBinaryExpression&gt; binaryExpr = m.findChildrenOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        for (ASTBinaryExpression b : binaryExpr) {</span>
+<span class="fc" id="L169">            List&lt;ASTVariableExpression&gt; vars = b.findDescendantsOfType(ASTVariableExpression.class);</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            for (ASTVariableExpression v : vars) {</span>
+<span class="fc" id="L171">                String fqName = Helper.getFQVariableName(v);</span>
 
-<span class="fc bfc" id="L169" title="All 2 branches covered.">                if (selectContainingVariables.containsKey(fqName)) {</span>
-<span class="fc" id="L170">                    boolean isLiteral = selectContainingVariables.get(fqName);</span>
-<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                    if (isLiteral) {</span>
-<span class="fc" id="L172">                        continue;</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">                if (selectContainingVariables.containsKey(fqName)) {</span>
+<span class="fc" id="L174">                    boolean isLiteral = selectContainingVariables.get(fqName);</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                    if (isLiteral) {</span>
+<span class="fc" id="L176">                        continue;</span>
                     }
                 }
 
-<span class="fc bfc" id="L176" title="All 2 branches covered.">                if (safeVariables.contains(fqName)) {</span>
-<span class="fc" id="L177">                    continue;</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">                if (safeVariables.contains(fqName)) {</span>
+<span class="fc" id="L181">                    continue;</span>
                 }
 
-<span class="fc" id="L180">                final ASTMethodCallExpression parentCall = v.getFirstParentOfType(ASTMethodCallExpression.class);</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">                boolean isSafeMethod = Helper.isMethodName(parentCall, STRING, ESCAPE_SINGLE_QUOTES)</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">                        || Helper.isMethodName(parentCall, STRING, JOIN);</span>
+<span class="fc" id="L184">                final ASTMethodCallExpression parentCall = v.getFirstParentOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">                boolean isSafeMethod = Helper.isMethodName(parentCall, STRING, ESCAPE_SINGLE_QUOTES)</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">                        || Helper.isMethodName(parentCall, STRING, JOIN);</span>
 
-<span class="fc bfc" id="L184" title="All 2 branches covered.">                if (!isSafeMethod) {</span>
-<span class="fc" id="L185">                    addViolation(data, v);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">                if (!isSafeMethod) {</span>
+<span class="fc" id="L189">                    addViolation(data, v);</span>
                 }
-<span class="fc" id="L187">            }</span>
-<span class="fc" id="L188">        }</span>
-<span class="fc" id="L189">    }</span>
+<span class="fc" id="L191">            }</span>
+<span class="fc" id="L192">        }</span>
+<span class="fc" id="L193">    }</span>
 
     private void reportVariables(final ASTMethodCallExpression m, Object data) {
-<span class="fc" id="L192">        final ASTVariableExpression var = m.getFirstChildOfType(ASTVariableExpression.class);</span>
-<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (var != null) {</span>
-<span class="fc" id="L194">            String nameFQ = Helper.getFQVariableName(var);</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">            if (selectContainingVariables.containsKey(nameFQ)) {</span>
-<span class="fc" id="L196">                boolean isLiteral = selectContainingVariables.get(nameFQ);</span>
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                if (!isLiteral) {</span>
-<span class="fc" id="L198">                    addViolation(data, var);</span>
+<span class="fc" id="L196">        final ASTVariableExpression var = m.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (var != null) {</span>
+<span class="fc" id="L198">            String nameFQ = Helper.getFQVariableName(var);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (selectContainingVariables.containsKey(nameFQ)) {</span>
+<span class="fc" id="L200">                boolean isLiteral = selectContainingVariables.get(nameFQ);</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                if (!isLiteral) {</span>
+<span class="fc" id="L202">                    addViolation(data, var);</span>
                 }
             }
         }
-<span class="fc" id="L202">    }</span>
+<span class="fc" id="L206">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

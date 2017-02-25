@@ -279,6 +279,15 @@ public class PMD {
 <span class="nc" id="L279">            return 0;</span>
         } finally {
 <span class="nc" id="L281">            Benchmarker.mark(Benchmark.Reporting, System.nanoTime() - reportStart, 0);</span>
+
+            /*
+             * Make sure it's our own classloader before attempting to close it....
+             * Maven + Jacoco provide us with a cloaseable classloader that if closed
+             * will throw a ClassNotFoundException.
+            */
+<span class="nc bnc" id="L288" title="All 6 branches missed.">            if (configuration.getClassLoader() instanceof ClasspathClassLoader) {</span>
+<span class="nc" id="L289">                IOUtil.tryCloseClassLoader(configuration.getClassLoader());</span>
+            }
         }
     }
 
@@ -291,11 +300,11 @@ public class PMD {
      */
     public static RuleContext newRuleContext(String sourceCodeFilename, File sourceCodeFile) {
 
-<span class="nc" id="L294">        RuleContext context = new RuleContext();</span>
-<span class="nc" id="L295">        context.setSourceCodeFile(sourceCodeFile);</span>
-<span class="nc" id="L296">        context.setSourceCodeFilename(sourceCodeFilename);</span>
-<span class="nc" id="L297">        context.setReport(new Report());</span>
-<span class="nc" id="L298">        return context;</span>
+<span class="nc" id="L303">        RuleContext context = new RuleContext();</span>
+<span class="nc" id="L304">        context.setSourceCodeFile(sourceCodeFile);</span>
+<span class="nc" id="L305">        context.setSourceCodeFilename(sourceCodeFilename);</span>
+<span class="nc" id="L306">        context.setReport(new Report());</span>
+<span class="nc" id="L307">        return context;</span>
     }
 
     /**
@@ -334,7 +343,7 @@ public class PMD {
         // TODO
         // call the main processFiles with just the new monitor and a single
         // logRenderer
-<span class="nc" id="L337">    }</span>
+<span class="nc" id="L346">    }</span>
 
     /**
      * Run PMD on a list of files using multiple threads - if more than one is
@@ -354,41 +363,37 @@ public class PMD {
     public static void processFiles(final PMDConfiguration configuration, final RuleSetFactory ruleSetFactory,
             final List&lt;DataSource&gt; files, final RuleContext ctx, final List&lt;Renderer&gt; renderers) {
 
-<span class="nc" id="L357">        sortFiles(configuration, files);</span>
+<span class="nc" id="L366">        sortFiles(configuration, files);</span>
 
         /*
          * Check if multithreaded support is available. ExecutorService can also
          * be disabled if threadCount is not positive, e.g. using the
          * &quot;-threads 0&quot; command line option.
          */
-<span class="nc bnc" id="L364" title="All 2 branches missed.">        if (configuration.getThreads() &gt; 0) {</span>
-<span class="nc" id="L365">            new MultiThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        if (configuration.getThreads() &gt; 0) {</span>
+<span class="nc" id="L374">            new MultiThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
         } else {
-<span class="nc" id="L367">            new MonoThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
+<span class="nc" id="L376">            new MonoThreadProcessor(configuration).processFiles(ruleSetFactory, files, ctx, renderers);</span>
         }
-
-<span class="nc bnc" id="L370" title="All 2 branches missed.">        if (configuration.getClassLoader() instanceof ClasspathClassLoader) {</span>
-<span class="nc" id="L371">            IOUtil.tryCloseClassLoader(configuration.getClassLoader());</span>
-        }
-<span class="nc" id="L373">    }</span>
+<span class="nc" id="L378">    }</span>
 
     private static void sortFiles(final PMDConfiguration configuration, final List&lt;DataSource&gt; files) {
-<span class="nc bnc" id="L376" title="All 2 branches missed.">        if (configuration.isStressTest()) {</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">        if (configuration.isStressTest()) {</span>
             // randomize processing order
-<span class="nc" id="L378">            Collections.shuffle(files);</span>
+<span class="nc" id="L383">            Collections.shuffle(files);</span>
         } else {
-<span class="nc" id="L380">            final boolean useShortNames = configuration.isReportShortNames();</span>
-<span class="nc" id="L381">            final String inputPaths = configuration.getInputPaths();</span>
-<span class="nc" id="L382">            Collections.sort(files, new Comparator&lt;DataSource&gt;() {</span>
+<span class="nc" id="L385">            final boolean useShortNames = configuration.isReportShortNames();</span>
+<span class="nc" id="L386">            final String inputPaths = configuration.getInputPaths();</span>
+<span class="nc" id="L387">            Collections.sort(files, new Comparator&lt;DataSource&gt;() {</span>
                 @Override
                 public int compare(DataSource left, DataSource right) {
-<span class="nc" id="L385">                    String leftString = left.getNiceFileName(useShortNames, inputPaths);</span>
-<span class="nc" id="L386">                    String rightString = right.getNiceFileName(useShortNames, inputPaths);</span>
-<span class="nc" id="L387">                    return leftString.compareTo(rightString);</span>
+<span class="nc" id="L390">                    String leftString = left.getNiceFileName(useShortNames, inputPaths);</span>
+<span class="nc" id="L391">                    String rightString = right.getNiceFileName(useShortNames, inputPaths);</span>
+<span class="nc" id="L392">                    return leftString.compareTo(rightString);</span>
                 }
             });
         }
-<span class="nc" id="L391">    }</span>
+<span class="nc" id="L396">    }</span>
 
     /**
      * Determines all the files, that should be analyzed by PMD.
@@ -397,75 +402,75 @@ public class PMD {
      * @return List&lt;DataSource&gt; of files
      */
     public static List&lt;DataSource&gt; getApplicableFiles(PMDConfiguration configuration, Set&lt;Language&gt; languages) {
-<span class="fc" id="L400">        long startFiles = System.nanoTime();</span>
-<span class="fc" id="L401">        List&lt;DataSource&gt; files = internalGetApplicableFiles(configuration, languages);</span>
-<span class="fc" id="L402">        long endFiles = System.nanoTime();</span>
-<span class="fc" id="L403">        Benchmarker.mark(Benchmark.CollectFiles, endFiles - startFiles, 0);</span>
-<span class="fc" id="L404">        return files;</span>
+<span class="fc" id="L405">        long startFiles = System.nanoTime();</span>
+<span class="fc" id="L406">        List&lt;DataSource&gt; files = internalGetApplicableFiles(configuration, languages);</span>
+<span class="fc" id="L407">        long endFiles = System.nanoTime();</span>
+<span class="fc" id="L408">        Benchmarker.mark(Benchmark.CollectFiles, endFiles - startFiles, 0);</span>
+<span class="fc" id="L409">        return files;</span>
     }
 
     private static List&lt;DataSource&gt; internalGetApplicableFiles(PMDConfiguration configuration, Set&lt;Language&gt; languages) {
-<span class="fc" id="L408">        LanguageFilenameFilter fileSelector = new LanguageFilenameFilter(languages);</span>
-<span class="fc" id="L409">        List&lt;DataSource&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L413">        LanguageFilenameFilter fileSelector = new LanguageFilenameFilter(languages);</span>
+<span class="fc" id="L414">        List&lt;DataSource&gt; files = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L411" title="1 of 2 branches missed.">        if (null != configuration.getInputPaths()) {</span>
-<span class="nc" id="L412">            files.addAll(FileUtil.collectFiles(configuration.getInputPaths(), fileSelector));</span>
+<span class="pc bpc" id="L416" title="1 of 2 branches missed.">        if (null != configuration.getInputPaths()) {</span>
+<span class="nc" id="L417">            files.addAll(FileUtil.collectFiles(configuration.getInputPaths(), fileSelector));</span>
         }
 
-<span class="pc bpc" id="L415" title="1 of 2 branches missed.">        if (null != configuration.getInputUri()) {</span>
-<span class="nc" id="L416">            String uriString = configuration.getInputUri();</span>
+<span class="pc bpc" id="L420" title="1 of 2 branches missed.">        if (null != configuration.getInputUri()) {</span>
+<span class="nc" id="L421">            String uriString = configuration.getInputUri();</span>
             try {
-<span class="nc" id="L418">                List&lt;DataSource&gt; dataSources = getURIDataSources(uriString);</span>
+<span class="nc" id="L423">                List&lt;DataSource&gt; dataSources = getURIDataSources(uriString);</span>
 
-<span class="nc" id="L420">                files.addAll(dataSources);</span>
-<span class="nc" id="L421">            } catch (PMDException ex) {</span>
-<span class="nc" id="L422">                LOG.log(Level.SEVERE, &quot;Problem with Input URI&quot;, ex);</span>
-<span class="nc" id="L423">                throw new RuntimeException(&quot;Problem with DBURI: &quot; + uriString, ex);</span>
-<span class="nc" id="L424">            }</span>
+<span class="nc" id="L425">                files.addAll(dataSources);</span>
+<span class="nc" id="L426">            } catch (PMDException ex) {</span>
+<span class="nc" id="L427">                LOG.log(Level.SEVERE, &quot;Problem with Input URI&quot;, ex);</span>
+<span class="nc" id="L428">                throw new RuntimeException(&quot;Problem with DBURI: &quot; + uriString, ex);</span>
+<span class="nc" id="L429">            }</span>
         }
 
-<span class="pc bpc" id="L427" title="1 of 2 branches missed.">        if (null != configuration.getInputFilePath()) {</span>
-<span class="fc" id="L428">            String inputFilePath = configuration.getInputFilePath();</span>
-<span class="fc" id="L429">            File file = new File(inputFilePath);</span>
+<span class="pc bpc" id="L432" title="1 of 2 branches missed.">        if (null != configuration.getInputFilePath()) {</span>
+<span class="fc" id="L433">            String inputFilePath = configuration.getInputFilePath();</span>
+<span class="fc" id="L434">            File file = new File(inputFilePath);</span>
             try {
-<span class="pc bpc" id="L431" title="1 of 2 branches missed.">              if (!file.exists()) {</span>
-<span class="nc" id="L432">                LOG.log(Level.SEVERE, &quot;Problem with Input File Path&quot;, inputFilePath);</span>
-<span class="nc" id="L433">                throw new RuntimeException(&quot;Problem with Input File Path: &quot; + inputFilePath);</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">              if (!file.exists()) {</span>
+<span class="nc" id="L437">                LOG.log(Level.SEVERE, &quot;Problem with Input File Path&quot;, inputFilePath);</span>
+<span class="nc" id="L438">                throw new RuntimeException(&quot;Problem with Input File Path: &quot; + inputFilePath);</span>
               } else {
-<span class="fc" id="L435">                String filePaths = FileUtils.readFileToString(new File(inputFilePath));</span>
-<span class="fc" id="L436">                filePaths = StringUtils.trimToEmpty(filePaths);</span>
-<span class="fc" id="L437">                filePaths = filePaths.replaceAll(&quot;\\r?\\n&quot;, &quot;,&quot;);</span>
-<span class="fc" id="L438">                filePaths = filePaths.replaceAll(&quot;,+&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L440">                String filePaths = FileUtils.readFileToString(new File(inputFilePath));</span>
+<span class="fc" id="L441">                filePaths = StringUtils.trimToEmpty(filePaths);</span>
+<span class="fc" id="L442">                filePaths = filePaths.replaceAll(&quot;\\r?\\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L443">                filePaths = filePaths.replaceAll(&quot;,+&quot;, &quot;,&quot;);</span>
 
-<span class="fc" id="L440">                files.addAll(FileUtil.collectFiles(filePaths, fileSelector));</span>
+<span class="fc" id="L445">                files.addAll(FileUtil.collectFiles(filePaths, fileSelector));</span>
               }
-<span class="nc" id="L442">            } catch (IOException ex) {</span>
-<span class="nc" id="L443">              LOG.log(Level.SEVERE, &quot;Problem with Input File&quot;, ex);</span>
-<span class="nc" id="L444">              throw new RuntimeException(&quot;Problem with Input File Path: &quot; + inputFilePath, ex);</span>
-<span class="fc" id="L445">            }</span>
+<span class="nc" id="L447">            } catch (IOException ex) {</span>
+<span class="nc" id="L448">              LOG.log(Level.SEVERE, &quot;Problem with Input File&quot;, ex);</span>
+<span class="nc" id="L449">              throw new RuntimeException(&quot;Problem with Input File Path: &quot; + inputFilePath, ex);</span>
+<span class="fc" id="L450">            }</span>
 
         }
-<span class="fc" id="L448">        return files;</span>
+<span class="fc" id="L453">        return files;</span>
     }
 
     private static Set&lt;Language&gt; getApplicableLanguages(PMDConfiguration configuration, RuleSets ruleSets) {
-<span class="nc" id="L452">        Set&lt;Language&gt; languages = new HashSet&lt;&gt;();</span>
-<span class="nc" id="L453">        LanguageVersionDiscoverer discoverer = configuration.getLanguageVersionDiscoverer();</span>
+<span class="nc" id="L457">        Set&lt;Language&gt; languages = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L458">        LanguageVersionDiscoverer discoverer = configuration.getLanguageVersionDiscoverer();</span>
 
-<span class="nc bnc" id="L455" title="All 2 branches missed.">        for (Rule rule : ruleSets.getAllRules()) {</span>
-<span class="nc" id="L456">            Language language = rule.getLanguage();</span>
-<span class="nc bnc" id="L457" title="All 2 branches missed.">            if (languages.contains(language)) {</span>
-<span class="nc" id="L458">                continue;</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">        for (Rule rule : ruleSets.getAllRules()) {</span>
+<span class="nc" id="L461">            Language language = rule.getLanguage();</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">            if (languages.contains(language)) {</span>
+<span class="nc" id="L463">                continue;</span>
             }
-<span class="nc" id="L460">            LanguageVersion version = discoverer.getDefaultLanguageVersion(language);</span>
-<span class="nc bnc" id="L461" title="All 2 branches missed.">            if (RuleSet.applies(rule, version)) {</span>
-<span class="nc" id="L462">                languages.add(language);</span>
-<span class="nc bnc" id="L463" title="All 2 branches missed.">                if (LOG.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L464">                    LOG.fine(&quot;Using &quot; + language.getShortName() + &quot; version: &quot; + version.getShortName());</span>
+<span class="nc" id="L465">            LanguageVersion version = discoverer.getDefaultLanguageVersion(language);</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">            if (RuleSet.applies(rule, version)) {</span>
+<span class="nc" id="L467">                languages.add(language);</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">                if (LOG.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L469">                    LOG.fine(&quot;Using &quot; + language.getShortName() + &quot; version: &quot; + version.getShortName());</span>
                 }
             }
-<span class="nc" id="L467">        }</span>
-<span class="nc" id="L468">        return languages;</span>
+<span class="nc" id="L472">        }</span>
+<span class="nc" id="L473">        return languages;</span>
     }
 
     /**
@@ -474,8 +479,8 @@ public class PMD {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-<span class="nc" id="L477">        PMDCommandLineInterface.run(args);</span>
-<span class="nc" id="L478">    }</span>
+<span class="nc" id="L482">        PMDCommandLineInterface.run(args);</span>
+<span class="nc" id="L483">    }</span>
 
     /**
      * Parses the command line arguments and executes PMD.
@@ -484,66 +489,66 @@ public class PMD {
      * &lt;code&gt;4&lt;/code&gt; means there have been violations found.
      */
     public static int run(String[] args) {
-<span class="nc" id="L487">        int status = 0;</span>
-<span class="nc" id="L488">        long start = System.nanoTime();</span>
-<span class="nc" id="L489">        final PMDParameters params = PMDCommandLineInterface.extractParameters(new PMDParameters(), args, &quot;pmd&quot;);</span>
-<span class="nc" id="L490">        final PMDConfiguration configuration = PMDParameters.transformParametersIntoConfiguration(params);</span>
+<span class="nc" id="L492">        int status = 0;</span>
+<span class="nc" id="L493">        long start = System.nanoTime();</span>
+<span class="nc" id="L494">        final PMDParameters params = PMDCommandLineInterface.extractParameters(new PMDParameters(), args, &quot;pmd&quot;);</span>
+<span class="nc" id="L495">        final PMDConfiguration configuration = PMDParameters.transformParametersIntoConfiguration(params);</span>
 
-<span class="nc bnc" id="L492" title="All 2 branches missed.">        final Level logLevel = params.isDebug() ? Level.FINER : Level.INFO;</span>
-<span class="nc" id="L493">        final Handler logHandler = new ConsoleLogHandler();</span>
-<span class="nc" id="L494">        final ScopedLogHandlersManager logHandlerManager = new ScopedLogHandlersManager(logLevel, logHandler);</span>
-<span class="nc" id="L495">        final Level oldLogLevel = LOG.getLevel();</span>
-<span class="nc" id="L496">        LOG.setLevel(logLevel); // Need to do this, since the static logger has</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">        final Level logLevel = params.isDebug() ? Level.FINER : Level.INFO;</span>
+<span class="nc" id="L498">        final Handler logHandler = new ConsoleLogHandler();</span>
+<span class="nc" id="L499">        final ScopedLogHandlersManager logHandlerManager = new ScopedLogHandlersManager(logLevel, logHandler);</span>
+<span class="nc" id="L500">        final Level oldLogLevel = LOG.getLevel();</span>
+<span class="nc" id="L501">        LOG.setLevel(logLevel); // Need to do this, since the static logger has</span>
                                 // already been initialized at this point
         try {
-<span class="nc" id="L499">            int violations = PMD.doPMD(configuration);</span>
-<span class="nc bnc" id="L500" title="All 4 branches missed.">            if (violations &gt; 0 &amp;&amp; configuration.isFailOnViolation()) {</span>
-<span class="nc" id="L501">                status = PMDCommandLineInterface.VIOLATIONS_FOUND;</span>
+<span class="nc" id="L504">            int violations = PMD.doPMD(configuration);</span>
+<span class="nc bnc" id="L505" title="All 4 branches missed.">            if (violations &gt; 0 &amp;&amp; configuration.isFailOnViolation()) {</span>
+<span class="nc" id="L506">                status = PMDCommandLineInterface.VIOLATIONS_FOUND;</span>
             } else {
-<span class="nc" id="L503">                status = 0;</span>
+<span class="nc" id="L508">                status = 0;</span>
             }
-<span class="nc" id="L505">        } catch (Exception e) {</span>
-<span class="nc" id="L506">            System.out.println(PMDCommandLineInterface.buildUsageText());</span>
-<span class="nc" id="L507">            System.out.println();</span>
-<span class="nc" id="L508">            System.err.println(e.getMessage());</span>
-<span class="nc" id="L509">            status = PMDCommandLineInterface.ERROR_STATUS;</span>
+<span class="nc" id="L510">        } catch (Exception e) {</span>
+<span class="nc" id="L511">            System.out.println(PMDCommandLineInterface.buildUsageText());</span>
+<span class="nc" id="L512">            System.out.println();</span>
+<span class="nc" id="L513">            System.err.println(e.getMessage());</span>
+<span class="nc" id="L514">            status = PMDCommandLineInterface.ERROR_STATUS;</span>
         } finally {
-<span class="nc" id="L511">            logHandlerManager.close();</span>
-<span class="nc" id="L512">            LOG.setLevel(oldLogLevel);</span>
-<span class="nc bnc" id="L513" title="All 6 branches missed.">            if (params.isBenchmark()) {</span>
-<span class="nc" id="L514">                long end = System.nanoTime();</span>
-<span class="nc" id="L515">                Benchmarker.mark(Benchmark.TotalPMD, end - start, 0);</span>
+<span class="nc" id="L516">            logHandlerManager.close();</span>
+<span class="nc" id="L517">            LOG.setLevel(oldLogLevel);</span>
+<span class="nc bnc" id="L518" title="All 6 branches missed.">            if (params.isBenchmark()) {</span>
+<span class="nc" id="L519">                long end = System.nanoTime();</span>
+<span class="nc" id="L520">                Benchmarker.mark(Benchmark.TotalPMD, end - start, 0);</span>
 
-<span class="nc" id="L517">                TextReport report = new TextReport(); // TODO get specified</span>
+<span class="nc" id="L522">                TextReport report = new TextReport(); // TODO get specified</span>
                                                       // report format from
                                                       // config
-<span class="nc" id="L520">                report.generate(Benchmarker.values(), System.err);</span>
-<span class="nc" id="L521">            }</span>
+<span class="nc" id="L525">                report.generate(Benchmarker.values(), System.err);</span>
+<span class="nc" id="L526">            }</span>
         }
-<span class="nc" id="L523">        return status;</span>
+<span class="nc" id="L528">        return status;</span>
     }
 
     /**
      * Determines the version from maven's generated pom.properties file.
      */
     static {
-<span class="fc" id="L530">        String pmdVersion = null;</span>
-<span class="fc" id="L531">        InputStream stream = PMD.class.getResourceAsStream(&quot;/META-INF/maven/net.sourceforge.pmd/pmd-core/pom.properties&quot;);</span>
-<span class="pc bpc" id="L532" title="1 of 2 branches missed.">        if (stream != null) {</span>
+<span class="fc" id="L535">        String pmdVersion = null;</span>
+<span class="fc" id="L536">        InputStream stream = PMD.class.getResourceAsStream(&quot;/META-INF/maven/net.sourceforge.pmd/pmd-core/pom.properties&quot;);</span>
+<span class="pc bpc" id="L537" title="1 of 2 branches missed.">        if (stream != null) {</span>
             try {
-<span class="nc" id="L534">                Properties properties = new Properties();</span>
-<span class="nc" id="L535">                properties.load(stream);</span>
-<span class="nc" id="L536">                pmdVersion = properties.getProperty(&quot;version&quot;);</span>
-<span class="nc" id="L537">            } catch (IOException e) {</span>
-<span class="nc" id="L538">                LOG.log(Level.FINE, &quot;Couldn't determine version of PMD&quot;, e);</span>
+<span class="nc" id="L539">                Properties properties = new Properties();</span>
+<span class="nc" id="L540">                properties.load(stream);</span>
+<span class="nc" id="L541">                pmdVersion = properties.getProperty(&quot;version&quot;);</span>
+<span class="nc" id="L542">            } catch (IOException e) {</span>
+<span class="nc" id="L543">                LOG.log(Level.FINE, &quot;Couldn't determine version of PMD&quot;, e);</span>
             } finally {
-<span class="nc" id="L540">                IOUtils.closeQuietly(stream);</span>
-<span class="nc" id="L541">            }</span>
+<span class="nc" id="L545">                IOUtils.closeQuietly(stream);</span>
+<span class="nc" id="L546">            }</span>
         }
-<span class="pc bpc" id="L543" title="1 of 2 branches missed.">        if (pmdVersion == null) {</span>
-<span class="fc" id="L544">            pmdVersion = &quot;unknown&quot;;</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">        if (pmdVersion == null) {</span>
+<span class="fc" id="L549">            pmdVersion = &quot;unknown&quot;;</span>
         }
-<span class="fc" id="L546">        VERSION = pmdVersion;</span>
-<span class="fc" id="L547">    }</span>
+<span class="fc" id="L551">        VERSION = pmdVersion;</span>
+<span class="fc" id="L552">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

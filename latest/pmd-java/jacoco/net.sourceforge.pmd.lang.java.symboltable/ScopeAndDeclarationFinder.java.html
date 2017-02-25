@@ -120,12 +120,16 @@ public class ScopeAndDeclarationFinder extends JavaParserVisitorAdapter {
      * @throws java.util.EmptyStackException if the scope stack is empty.
      */
     private void createClassScope(JavaNode node) {
-<span class="fc bfc" id="L123" title="All 2 branches covered.">	if (node instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
-<span class="fc" id="L124">	    addScope(new ClassScope(), node);</span>
-	} else {
-<span class="fc" id="L126">	    addScope(new ClassScope(node.getImage()), node);</span>
-	}
-<span class="fc" id="L128">    }</span>
+<span class="fc" id="L123">        Scope s = ((JavaNode) node.jjtGetParent()).getScope();</span>
+<span class="fc" id="L124">        ClassNameDeclaration classNameDeclaration = new ClassNameDeclaration(node);</span>
+<span class="fc" id="L125">        s.addDeclaration(classNameDeclaration);</span>
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (node instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
+<span class="fc" id="L128">            addScope(new ClassScope(classNameDeclaration), node);</span>
+        } else {
+<span class="fc" id="L130">            addScope(new ClassScope(node.getImage(), classNameDeclaration), node);</span>
+        }
+<span class="fc" id="L132">    }</span>
 
     /**
      * Creates a new global scope for an AST node.
@@ -137,42 +141,38 @@ public class ScopeAndDeclarationFinder extends JavaParserVisitorAdapter {
         // When we do full symbol resolution, we'll need to add a truly
         // top-level GlobalScope.
         SourceFileScope scope;
-<span class="fc" id="L140">        ASTPackageDeclaration n = node.getPackageDeclaration();</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (n != null) {</span>
-<span class="fc" id="L142">            scope = new SourceFileScope(classLoader, n.jjtGetChild(0).getImage());</span>
+<span class="fc" id="L144">        ASTPackageDeclaration n = node.getPackageDeclaration();</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (n != null) {</span>
+<span class="fc" id="L146">            scope = new SourceFileScope(classLoader, n.jjtGetChild(0).getImage());</span>
         } else {
-<span class="fc" id="L144">            scope = new SourceFileScope(classLoader);</span>
+<span class="fc" id="L148">            scope = new SourceFileScope(classLoader);</span>
         }
-<span class="fc" id="L146">        scope.configureImports(node.findChildrenOfType(ASTImportDeclaration.class));</span>
+<span class="fc" id="L150">        scope.configureImports(node.findChildrenOfType(ASTImportDeclaration.class));</span>
 
-<span class="fc" id="L148">        scopes.push(scope);</span>
-<span class="fc" id="L149">        node.setScope(scope);</span>
-<span class="fc" id="L150">    }</span>
+<span class="fc" id="L152">        scopes.push(scope);</span>
+<span class="fc" id="L153">        node.setScope(scope);</span>
+<span class="fc" id="L154">    }</span>
 
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
-<span class="fc" id="L154">	createSourceFileScope(node);</span>
-<span class="fc" id="L155">	cont(node);</span>
-<span class="fc" id="L156">	return data;</span>
+<span class="fc" id="L158">	createSourceFileScope(node);</span>
+<span class="fc" id="L159">	cont(node);</span>
+<span class="fc" id="L160">	return data;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc" id="L161">	createClassScope(node);</span>
-<span class="fc" id="L162">	Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
-<span class="fc" id="L163">	s.addDeclaration(new ClassNameDeclaration(node));</span>
-<span class="fc" id="L164">	cont(node);</span>
-<span class="fc" id="L165">	return data;</span>
+<span class="fc" id="L165">        createClassScope(node);</span>
+<span class="fc" id="L166">        cont(node);</span>
+<span class="fc" id="L167">        return data;</span>
     }
 
     @Override
     public Object visit(ASTEnumDeclaration node, Object data) {
-<span class="fc" id="L170">	createClassScope(node);</span>
-<span class="fc" id="L171">	((ClassScope)node.getScope()).setIsEnum(true);</span>
-<span class="fc" id="L172">    Scope s = ((JavaNode)node.jjtGetParent()).getScope();</span>
-<span class="fc" id="L173">    s.addDeclaration(new ClassNameDeclaration(node));</span>
-<span class="fc" id="L174">	cont(node);</span>
-<span class="fc" id="L175">	return data;</span>
+<span class="fc" id="L172">        createClassScope(node);</span>
+<span class="fc" id="L173">        ((ClassScope) node.getScope()).setIsEnum(true);</span>
+<span class="fc" id="L174">        cont(node);</span>
+<span class="fc" id="L175">        return data;</span>
     }
 
     @Override

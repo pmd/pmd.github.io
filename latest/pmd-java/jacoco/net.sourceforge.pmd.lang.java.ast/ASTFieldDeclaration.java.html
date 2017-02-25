@@ -53,7 +53,7 @@ public class ASTFieldDeclaration extends AbstractJavaAccessTypeNode implements D
 
     @Override
     public boolean isFinal() {
-<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="fc bfc" id="L56" title="All 4 branches covered.">        if (isAnnotationMember() || isInterfaceMember()) {</span>
 <span class="fc" id="L57">            return true;</span>
         }
 <span class="fc" id="L59">        return super.isFinal();</span>
@@ -61,7 +61,7 @@ public class ASTFieldDeclaration extends AbstractJavaAccessTypeNode implements D
 
     @Override
     public boolean isPrivate() {
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="pc bpc" id="L64" title="1 of 4 branches missed.">        if (isAnnotationMember() || isInterfaceMember()) {</span>
 <span class="fc" id="L65">            return false;</span>
         }
 <span class="fc" id="L67">        return super.isPrivate();</span>
@@ -69,7 +69,7 @@ public class ASTFieldDeclaration extends AbstractJavaAccessTypeNode implements D
 
     @Override
     public boolean isPackagePrivate() {
-<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="pc bpc" id="L72" title="1 of 4 branches missed.">        if (isAnnotationMember() || isInterfaceMember()) {</span>
 <span class="fc" id="L73">            return false;</span>
         }
 <span class="fc" id="L75">        return super.isPackagePrivate();</span>
@@ -77,43 +77,50 @@ public class ASTFieldDeclaration extends AbstractJavaAccessTypeNode implements D
 
     @Override
     public boolean isProtected() {
-<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="pc bpc" id="L80" title="1 of 4 branches missed.">        if (isAnnotationMember() || isInterfaceMember()) {</span>
 <span class="fc" id="L81">            return false;</span>
         }
 <span class="fc" id="L83">        return super.isProtected();</span>
     }
 
-    public boolean isInterfaceMember() {
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (jjtGetParent().jjtGetParent() instanceof ASTEnumBody) {</span>
-<span class="fc" id="L88">            return false;</span>
+    public boolean isAnnotationMember() {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (jjtGetParent().jjtGetParent() instanceof ASTAnnotationTypeBody) {</span>
+<span class="fc" id="L88">            return true;</span>
         }
-<span class="fc" id="L90">        ASTClassOrInterfaceDeclaration n = getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L91" title="All 4 branches covered.">        return n != null &amp;&amp; n.isInterface();</span>
+<span class="fc" id="L90">        return false;</span>
+    }
+
+    public boolean isInterfaceMember() {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (jjtGetParent().jjtGetParent() instanceof ASTEnumBody) {</span>
+<span class="fc" id="L95">            return false;</span>
+        }
+<span class="fc" id="L97">        ASTClassOrInterfaceDeclaration n = getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">        return n != null &amp;&amp; n.isInterface();</span>
     }
 
     public boolean isArray() {
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        return checkType() + checkDecl() &gt; 0;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        return checkType() + checkDecl() &gt; 0;</span>
     }
 
     public int getArrayDepth() {
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (!isArray()) {</span>
-<span class="nc" id="L100">            return 0;</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!isArray()) {</span>
+<span class="nc" id="L107">            return 0;</span>
         }
-<span class="fc" id="L102">        return checkType() + checkDecl();</span>
+<span class="fc" id="L109">        return checkType() + checkDecl();</span>
     }
 
     private int checkType() {
-<span class="pc bpc" id="L106" title="2 of 4 branches missed.">        if (jjtGetNumChildren() == 0 || !(jjtGetChild(0) instanceof ASTType)) {</span>
-<span class="nc" id="L107">            return 0;</span>
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">        if (jjtGetNumChildren() == 0 || !(jjtGetChild(0) instanceof ASTType)) {</span>
+<span class="nc" id="L114">            return 0;</span>
         }
-<span class="fc" id="L109">        return ((ASTType) jjtGetChild(0)).getArrayDepth();</span>
+<span class="fc" id="L116">        return ((ASTType) jjtGetChild(0)).getArrayDepth();</span>
     }
 
     private int checkDecl() {
-<span class="pc bpc" id="L113" title="2 of 4 branches missed.">        if (jjtGetNumChildren() &lt; 2 || !(jjtGetChild(1) instanceof ASTVariableDeclarator)) {</span>
-<span class="nc" id="L114">            return 0;</span>
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">        if (jjtGetNumChildren() &lt; 2 || !(jjtGetChild(1) instanceof ASTVariableDeclarator)) {</span>
+<span class="nc" id="L121">            return 0;</span>
         }
-<span class="fc" id="L116">        return ((ASTVariableDeclaratorId) jjtGetChild(1).jjtGetChild(0)).getArrayDepth();</span>
+<span class="fc" id="L123">        return ((ASTVariableDeclaratorId) jjtGetChild(1).jjtGetChild(0)).getArrayDepth();</span>
     }
 
     /**
@@ -123,11 +130,11 @@ public class ASTFieldDeclaration extends AbstractJavaAccessTypeNode implements D
      * @return a String representing the name of the variable
      */
     public String getVariableName() {
-<span class="fc" id="L126">        ASTVariableDeclaratorId decl = getFirstDescendantOfType(ASTVariableDeclaratorId.class);</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (decl != null) {</span>
-<span class="fc" id="L128">            return decl.getImage();</span>
+<span class="fc" id="L133">        ASTVariableDeclaratorId decl = getFirstDescendantOfType(ASTVariableDeclaratorId.class);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (decl != null) {</span>
+<span class="fc" id="L135">            return decl.getImage();</span>
         }
-<span class="nc" id="L130">        return null;</span>
+<span class="nc" id="L137">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
