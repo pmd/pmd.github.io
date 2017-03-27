@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ExcessivePublicCountRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.complexity</a> &gt; <span class="el_source">ExcessivePublicCountRule.java</span></div><h1>ExcessivePublicCountRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.complexity;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+
+import static apex.jorje.semantic.symbol.type.ModifierTypeInfos.PUBLIC;
+import static apex.jorje.semantic.symbol.type.ModifierTypeInfos.STATIC;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTFieldDeclarationStatements;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
+import net.sourceforge.pmd.util.NumericConstants;
+
+/**
+ * @author ported from Java original of aglover
+ * &lt;p&gt;
+ * Class Name: ExcessivePublicCount
+ * &lt;/p&gt;
+ *
+ * &lt;p&gt;
+ * Rule attempts to count all public methods and public attributes
+ * defined in a class.
+ * &lt;/p&gt;
+ *
+ * &lt;p&gt;
+ * If a class has a high number of public operations, it might be wise
+ * to consider whether it would be appropriate to divide it into
+ * subclasses.
+ * &lt;/p&gt;
+ *
+ * &lt;p&gt;
+ * A large proportion of public members and operations means the class
+ * has high potential to be affected by external classes. Futhermore,
+ * increased effort will be required to thoroughly test the class.
+ * &lt;/p&gt;
+ */
+public class ExcessivePublicCountRule extends ExcessiveNodeCountRule {
+
+	public ExcessivePublicCountRule() {
+<span class="fc" id="L41">		super(ASTUserClass.class);</span>
+<span class="fc" id="L42">		setProperty(MINIMUM_DESCRIPTOR, 20d);</span>
+<span class="fc" id="L43">		setProperty(CODECLIMATE_CATEGORIES, new String[]{ &quot;Complexity&quot; });</span>
+<span class="fc" id="L44">		setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 150);</span>
+<span class="fc" id="L45">		setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L46">	}</span>
+
+	public Object visit(ASTMethod node, Object data) {
+<span class="fc bfc" id="L49" title="All 4 branches covered.">		if (node.getNode().getModifiers().has(PUBLIC) &amp;&amp; !node.getImage().matches(&quot;&lt;clinit&gt;|&lt;init&gt;|clone&quot;)) {</span>
+<span class="fc" id="L50">			return NumericConstants.ONE;</span>
+		}
+<span class="fc" id="L52">		return NumericConstants.ZERO;</span>
+	}
+
+	public Object visit(ASTFieldDeclarationStatements node, Object data) {
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">		if (node.getNode().getModifiers().has(PUBLIC) &amp;&amp; !node.getNode().getModifiers().has(STATIC)) {</span>
+<span class="fc" id="L57">			return NumericConstants.ONE;</span>
+		}
+<span class="nc" id="L59">		return NumericConstants.ZERO;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

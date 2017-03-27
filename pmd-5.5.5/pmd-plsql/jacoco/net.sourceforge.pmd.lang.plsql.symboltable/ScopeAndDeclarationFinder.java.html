@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ScopeAndDeclarationFinder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">ScopeAndDeclarationFinder.java</span></div><h1>ScopeAndDeclarationFinder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.plsql.ast.ASTBlock;
+import net.sourceforge.pmd.lang.plsql.ast.ASTDeclarativeUnit;
+import net.sourceforge.pmd.lang.plsql.ast.ASTForAllStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.plsql.ast.ASTID;
+import net.sourceforge.pmd.lang.plsql.ast.ASTInput;
+import net.sourceforge.pmd.lang.plsql.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.plsql.ast.ASTObjectDeclaration;
+import net.sourceforge.pmd.lang.plsql.ast.ASTObjectNameDeclaration;
+import net.sourceforge.pmd.lang.plsql.ast.ASTPackageBody;
+import net.sourceforge.pmd.lang.plsql.ast.ASTPackageSpecification;
+import net.sourceforge.pmd.lang.plsql.ast.ASTProgramUnit;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTriggerTimingPointSection;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTriggerUnit;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTypeMethod;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTypeSpecification;
+import net.sourceforge.pmd.lang.plsql.ast.ASTVariableOrConstantDeclaratorId;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+
+/**
+ * Visitor for scope creation.
+ * Visits all nodes of an AST and creates scope objects for nodes representing
+ * syntactic entities which may contain declarations. For example, a block
+ * may contain variable definitions (which are declarations) and
+ * therefore needs a scope object where these declarations can be associated,
+ * whereas an expression can't contain declarations and therefore doesn't need
+ * a scope object.
+ * With the exception of global scopes, each scope object is linked to its
+ * parent scope, which is the scope object of the next embedding syntactic
+ * entity that has a scope.
+ */
+<span class="fc" id="L43">public class ScopeAndDeclarationFinder extends PLSQLParserVisitorAdapter {</span>
+<span class="fc" id="L44">    private static final Logger LOGGER = Logger.getLogger(ScopeAndDeclarationFinder.class.getName());</span>
+
+    /**
+     * A stack of scopes reflecting the scope hierarchy when a node is visited.
+     * This is used to set the parents of the created scopes correctly.
+     */
+<span class="fc" id="L50">    private Stack&lt;Scope&gt; scopes = new Stack&lt;&gt;();</span>
+
+    /**
+     * Sets the scope of a node and adjusts the scope stack accordingly.
+     * The scope on top of the stack is set as the parent of the given scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param newScope the scope for the node.
+     * @param node     the AST node for which the scope is to be set.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void addScope(Scope newScope, PLSQLNode node) {
+<span class="fc" id="L62">	newScope.setParent(scopes.peek());</span>
+<span class="fc" id="L63">	scopes.push(newScope);</span>
+<span class="fc" id="L64">	node.setScope(newScope);</span>
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Creates a new local scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createLocalScope(PLSQLNode node) {
+<span class="fc" id="L76">	addScope(new LocalScope(), node);</span>
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * Creates a new method scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createMethodScope(PLSQLNode node) {
+<span class="fc" id="L88">	addScope(new MethodScope(node), node);</span>
+<span class="fc" id="L89">    }</span>
+
+    /**
+     * Creates a new class scope for an AST node.
+     * The scope on top of the stack is set as the parent of the new scope,
+     * which is then also stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     * @throws java.util.EmptyStackException if the scope stack is empty.
+     */
+    private void createClassScope(PLSQLNode node) {
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">	if (node instanceof ASTDeclarativeUnit) {</span>
+<span class="nc" id="L101">	    addScope(new ClassScope(), node);</span>
+	} else {
+<span class="fc" id="L103">	    addScope(new ClassScope(node.getImage()), node);</span>
+	}
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * Creates a new global scope for an AST node.
+     * The new scope is stored on the scope stack.
+     *
+     * @param node the AST node for which the scope has to be created.
+     */
+    private void createSourceFileScope(ASTInput node) {
+	// When we do full symbol resolution, we'll need to add a truly top-level GlobalScope.
+	Scope scope;
+	//%TODO generate a SchemaScope, based on inferred or explcitly specified SchemaName 
+<span class="fc" id="L117">	ASTObjectDeclaration n = null; // node.getPackageDeclaration();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">	if (n != null) {</span>
+<span class="nc" id="L119">	    scope = new SourceFileScope(n.jjtGetChild(0).getImage());</span>
+	} else {
+<span class="fc" id="L121">	    scope = new SourceFileScope();</span>
+	}
+<span class="fc" id="L123">	scopes.push(scope);</span>
+<span class="fc" id="L124">	node.setScope(scope);</span>
+<span class="fc" id="L125">    }</span>
+
+    @Override
+    public Object visit(ASTInput node, Object data) {
+<span class="fc" id="L129">	createSourceFileScope(node);</span>
+<span class="fc" id="L130">	cont(node);</span>
+<span class="fc" id="L131">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTPackageSpecification node, Object data) {
+<span class="nc" id="L136">	createClassScope(node);</span>
+<span class="nc" id="L137">	Scope s = ((PLSQLNode)node.jjtGetParent()).getScope();</span>
+<span class="nc" id="L138">	s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="nc" id="L139">	cont(node);</span>
+<span class="nc" id="L140">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTPackageBody node, Object data) {
+<span class="fc" id="L145">	createClassScope(node);</span>
+<span class="fc" id="L146">	Scope s = ((PLSQLNode)node.jjtGetParent()).getScope();</span>
+<span class="fc" id="L147">	s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="fc" id="L148">	cont(node);</span>
+<span class="fc" id="L149">	return data;</span>
+    }
+
+
+    @Override
+    public Object visit(ASTTypeSpecification node, Object data) {
+<span class="nc" id="L155">	createClassScope(node);</span>
+<span class="nc" id="L156">	Scope s = ((PLSQLNode)node.jjtGetParent()).getScope();</span>
+<span class="nc" id="L157">	s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="nc" id="L158">	cont(node);</span>
+<span class="nc" id="L159">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTTriggerUnit node, Object data) {
+<span class="nc" id="L164">	createClassScope(node);</span>
+<span class="nc" id="L165">	Scope s = ((PLSQLNode)node.jjtGetParent()).getScope();</span>
+<span class="nc" id="L166">	s.addDeclaration(new ClassNameDeclaration(node));</span>
+<span class="nc" id="L167">	cont(node);</span>
+<span class="nc" id="L168">	return data;</span>
+    }
+
+    /*
+    @Override
+    public Object visit(ASTCompoundTriggerBlock node, Object data) {
+	createMethodScope(node);
+	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);
+	node.getScope().getEnclosingClassScope().addDeclaration(new MethodNameDeclaration(md));
+	cont(node);
+	return data;
+    }
+    */
+
+    @Override
+    public Object visit(ASTTriggerTimingPointSection node, Object data) {
+<span class="nc" id="L184">	createMethodScope(node);</span>
+	//Treat a Timing Point Section like a packaged FUNCTION or PROCEDURE
+<span class="nc" id="L186">	node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(node));</span>
+<span class="nc" id="L187">	cont(node);</span>
+<span class="nc" id="L188">	return data;</span>
+    }
+
+    //@Override
+    //public Object visit(ASTEnumDeclaration node, Object data) {
+	//createClassScope(node);
+	//cont(node);
+	//return data;
+    //}
+
+    //@Override
+    //public Object visit(ASTAnnotationTypeDeclaration node, Object data) {
+	//createClassScope(node);
+	//cont(node);
+	//return data;
+    //}
+
+    @Override
+    public Object visit(ASTObjectDeclaration node, Object data) {
+<span class="nc" id="L207">        super.visit(node, data);</span>
+<span class="nc" id="L208">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTBlock node, Object data) {
+<span class="nc" id="L213">	createLocalScope(node);</span>
+<span class="nc" id="L214">	cont(node);</span>
+<span class="nc" id="L215">	return data;</span>
+    }
+
+
+
+    /*
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+	createMethodScope(node);
+	//
+	 // A method declaration my be-
+	 //   ASTProgramUnit - a standalone or packaged FUNCTION or PROCEDURE 
+	 //   ASTTypeMethod - an OBJECT TYPE method  
+	 //  
+	 //  The Method declarator is below the  ASTProgramUnit / ASTTypeMethod 
+	 ///
+	List&lt;ASTMethodDeclarator&gt; methodDeclarators = node.findDescendantsOfType(ASTMethodDeclarator.class);
+	if (!methodDeclarators.isEmpty() )
+	{
+	  //Use first Declarator in the list 
+	  ASTMethodDeclarator md = methodDeclarators.get(0);
+            LOGGER.finest(&quot;ClassScope skipped for Schema-level method: methodName=&quot; 
+		               + node.getMethodName()
+		               + &quot;; Image=&quot; + node.getImage()
+		              );
+	   
+	}
+	//ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);
+	// A PLSQL Method (FUNCTION|PROCEDURE) may be schema-level 
+	try
+	{
+	  node.getScope().getEnclosingClassScope().addDeclaration(new MethodNameDeclaration(md));
+	}
+	catch (Exception e)
+	{
+	  //@TODO possibly add to a pseudo-ClassScope equivalent to the Schema name 
+	  LOGGER.finest(&quot;ProgramUnit getEnclosingClassScope Exception string=\&quot;&quot;+e.getMessage()+&quot;\&quot;&quot;);
+	  if(&quot;getEnclosingClassScope() called on SourceFileScope&quot;.equals(e.getMessage()))
+	  {
+            LOGGER.finest(&quot;ClassScope skipped for Schema-level method: methodName=&quot; 
+		               + node.getMethodName()
+		               + &quot;; Image=&quot; + node.getImage()
+		              );
+	   
+	    //A File-level/Schema-level object may have a Schema-name explicitly specified in the declaration 
+	    ASTObjectNameDeclaration on = md.getFirstChildOfType(ASTObjectNameDeclaration.class);
+	    if( 1 &lt; on.jjtGetNumChildren())
+	    {
+              ASTID schemaName = on.getFirstChildOfType(ASTID.class);
+	      LOGGER.finest(&quot;SchemaName for Schema-level method: methodName=&quot; 
+				 + node.getMethodName()
+				 + &quot;; Image=&quot; + node.getImage()
+				 + &quot;is &quot; + schemaName.getImage()
+				);
+	     
+	    }
+	  }
+	}
+	cont(node);
+	return data;
+    }
+    */
+
+@Override
+public Object visit(ASTTypeMethod node, Object data) {
+<span class="nc" id="L280">	createMethodScope(node);</span>
+<span class="nc" id="L281">	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);</span>
+	// A PLSQL Method (FUNCTION|PROCEDURE) may be schema-level 
+	try
+	{
+<span class="nc" id="L285">	  node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(md));</span>
+	}
+<span class="nc" id="L287">	catch (Exception e)</span>
+	{
+	  //@TODO possibly add to a pseudo-ClassScope equivalent to the Schema name
+<span class="nc bnc" id="L290" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L291">	  LOGGER.finest(&quot;ProgramUnit getEnclosingClassScope Exception string=\&quot;&quot;+e.getMessage()+&quot;\&quot;&quot;);</span>
+	    }
+<span class="nc bnc" id="L293" title="All 2 branches missed.">	  if(&quot;getEnclosingClassScope() called on SourceFileScope&quot;.equals(e.getMessage()))</span>
+	  {
+<span class="nc bnc" id="L295" title="All 2 branches missed.">	      if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L296">            LOGGER.finest(&quot;ClassScope skipped for Schema-level method: methodName=&quot; </span>
+		               + node.getMethodName()
+		               + &quot;; Image=&quot; + node.getImage()
+		              );
+	      }
+	   
+	    //A File-level/Schema-level object may have a Schema-name explicitly specified in the declaration 
+<span class="nc" id="L303">	    ASTObjectNameDeclaration on = md.getFirstChildOfType(ASTObjectNameDeclaration.class);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">	    if( 1 &lt; on.jjtGetNumChildren())</span>
+	    {
+<span class="nc" id="L306">              ASTID schemaName = on.getFirstChildOfType(ASTID.class);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">              if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L308">	      LOGGER.finest(&quot;SchemaName for Schema-level method: methodName=&quot; </span>
+				 + node.getMethodName()
+				 + &quot;; Image=&quot; + node.getImage()
+				 + &quot;is &quot; + schemaName.getImage()
+				);
+              }
+	     
+	    }
+	  }
+<span class="nc" id="L317">	}</span>
+<span class="nc" id="L318">	cont(node);</span>
+<span class="nc" id="L319">	return data;</span>
+  }
+
+    @Override
+    public Object visit(ASTProgramUnit node, Object data) {
+<span class="fc" id="L324">	createMethodScope(node);</span>
+<span class="fc" id="L325">	ASTMethodDeclarator md = node.getFirstChildOfType(ASTMethodDeclarator.class);</span>
+	// A PLSQL Method (FUNCTION|PROCEDURE) may be schema-level 
+	try
+	{
+<span class="fc" id="L329">	  node.getScope().getEnclosingScope(ClassScope.class).addDeclaration(new MethodNameDeclaration(md));</span>
+	}
+<span class="nc" id="L331">	catch (Exception e)</span>
+	{
+	  //@TODO possibly add to a pseudo-ClassScope equivalent to the Schema name 
+<span class="nc bnc" id="L334" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L335">	  LOGGER.finest(&quot;ProgramUnit getEnclosingClassScope Exception string=\&quot;&quot;+e.getMessage()+&quot;\&quot;&quot;);</span>
+	    }
+<span class="nc bnc" id="L337" title="All 2 branches missed.">	  if(&quot;getEnclosingClassScope() called on SourceFileScope&quot;.equals(e.getMessage()))</span>
+	  {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">	      if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L340">            LOGGER.finest(&quot;ClassScope skipped for Schema-level method: methodName=&quot; </span>
+		               + node.getMethodName()
+		               + &quot;; Image=&quot; + node.getImage()
+		              );
+	      }
+	   
+	    //A File-level/Schema-level object may have a Schema-name explicitly specified in the declaration 
+<span class="nc" id="L347">	    ASTObjectNameDeclaration on = md.getFirstChildOfType(ASTObjectNameDeclaration.class);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">	    if( 1 &lt; on.jjtGetNumChildren())</span>
+	    {
+<span class="nc" id="L350">              ASTID schemaName = on.getFirstChildOfType(ASTID.class);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">              if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L352">	      LOGGER.finest(&quot;SchemaName for Schema-level method: methodName=&quot; </span>
+				 + node.getMethodName()
+				 + &quot;; Image=&quot; + node.getImage()
+				 + &quot;is &quot; + schemaName.getImage()
+				);
+              }
+	     
+	    }
+	  }
+<span class="fc" id="L361">	}</span>
+<span class="fc" id="L362">	cont(node);</span>
+<span class="fc" id="L363">	return data;</span>
+    }
+
+    // TODO - what about while loops and do loops?
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L369">	createLocalScope(node);</span>
+<span class="fc" id="L370">	cont(node);</span>
+<span class="fc" id="L371">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTForAllStatement node, Object data) {
+<span class="nc" id="L376">	createLocalScope(node);</span>
+<span class="nc" id="L377">	cont(node);</span>
+<span class="nc" id="L378">	return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTVariableOrConstantDeclaratorId node, Object data) {
+<span class="fc" id="L383">	VariableNameDeclaration decl = new VariableNameDeclaration(node);</span>
+<span class="fc" id="L384">	node.getScope().addDeclaration(decl);</span>
+<span class="fc" id="L385">	node.setNameDeclaration(decl);</span>
+<span class="fc" id="L386">	return super.visit(node, data);</span>
+    }
+
+    //@Override
+    //public Object visit(ASTSwitchStatement node, Object data) {
+	//createLocalScope(node);
+	//cont(node);
+	//return data;
+    //}
+
+    private void cont(PLSQLNode node) {
+<span class="fc" id="L397">	super.visit(node, null);</span>
+<span class="fc" id="L398">	scopes.pop();</span>
+<span class="fc" id="L399">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

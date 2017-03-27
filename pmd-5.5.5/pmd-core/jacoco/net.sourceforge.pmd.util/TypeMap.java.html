@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TypeMap.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util</a> &gt; <span class="el_source">TypeMap.java</span></div><h1>TypeMap.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+/**
+ * A specialized map that stores types by both their full and short (without package prefixes) names.
+ * If an incoming type shares the same name (but different package/prefix) with a type already in the
+ * map then an IllegalArgumentException will be thrown since any subsequent retrievals by said short
+ * name could be in error.
+ *
+ * @author Brian Remedios
+ */
+public class TypeMap {
+
+    private Map&lt;String, Class&lt;?&gt;&gt; typesByName;
+
+    /**
+     * Constructor for TypeMap.
+     *
+     * @param initialSize int
+     */
+<span class="fc" id="L27">    public TypeMap(int initialSize) {</span>
+<span class="fc" id="L28">        typesByName = new HashMap&lt;&gt;(initialSize);</span>
+<span class="fc" id="L29">    }</span>
+
+    /**
+     * Constructor for TypeMap that takes in an initial set of types.
+     *
+     * @param types Class[]
+     */
+    public TypeMap(Class&lt;?&gt;... types) {
+<span class="fc" id="L37">        this(types.length);</span>
+<span class="fc" id="L38">        add(types);</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Adds a type to the receiver and stores it keyed by both its full and
+     * short names. Throws an exception if the short name of the argument
+     * matches an existing one already in the map for a different class.
+     *
+     * @param type Class
+     * @throws IllegalArgumentException
+     */
+    @SuppressWarnings(&quot;PMD.CompareObjectsWithEquals&quot;)
+    public void add(Class&lt;?&gt; type) {
+<span class="fc" id="L51">        final String shortName = ClassUtil.withoutPackageName(type.getName());</span>
+<span class="fc" id="L52">        Class&lt;?&gt; existingType = typesByName.get(shortName);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (existingType == null) {</span>
+<span class="fc" id="L54">            typesByName.put(type.getName(), type);</span>
+<span class="fc" id="L55">            typesByName.put(shortName, type);</span>
+<span class="fc" id="L56">            return;</span>
+        }
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (existingType != type) {</span>
+<span class="fc" id="L60">            throw new IllegalArgumentException(&quot;Short name collision between existing &quot; + existingType + &quot; and new &quot;</span>
+                    + type);
+        }
+<span class="nc" id="L63">    }</span>
+
+    /**
+     * Returns whether the type is known to the receiver.
+     *
+     * @param type Class
+     * @return boolean
+     */
+    public boolean contains(Class&lt;?&gt; type) {
+<span class="fc" id="L72">        return typesByName.containsValue(type);</span>
+    }
+
+    /**
+     * Returns whether the typeName is known to the receiver.
+     *
+     * @param typeName String
+     * @return boolean
+     */
+    public boolean contains(String typeName) {
+<span class="fc" id="L82">        return typesByName.containsKey(typeName);</span>
+    }
+
+    /**
+     * Returns the type for the typeName specified.
+     *
+     * @param typeName String
+     * @return Class
+     */
+    public Class&lt;?&gt; typeFor(String typeName) {
+<span class="fc" id="L92">        return typesByName.get(typeName);</span>
+    }
+
+    /**
+     * Adds an array of types to the receiver at once.
+     *
+     * @param types Class[]
+     */
+    public void add(Class&lt;?&gt;... types) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for (Class&lt;?&gt; element : types) {</span>
+<span class="fc" id="L102">            add(element);</span>
+        }
+<span class="fc" id="L104">    }</span>
+
+    /**
+     * Creates and returns a map of short type names (without the package
+     * prefixes) keyed by the classes themselves.
+     *
+     * @return Map
+     */
+    public Map&lt;Class&lt;?&gt;, String&gt; asInverseWithShortName() {
+<span class="fc" id="L113">        Map&lt;Class&lt;?&gt;, String&gt; inverseMap = new HashMap&lt;&gt;(typesByName.size() / 2);</span>
+
+<span class="fc" id="L115">        Iterator&lt;Map.Entry&lt;String,Class&lt;?&gt;&gt;&gt; iter = typesByName.entrySet().iterator();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        while (iter.hasNext()) {</span>
+<span class="fc" id="L117">            Map.Entry&lt;String,Class&lt;?&gt;&gt; entry = iter.next();</span>
+<span class="fc" id="L118">            storeShortest(inverseMap, entry.getValue(), entry.getKey());</span>
+<span class="fc" id="L119">        }</span>
+
+<span class="fc" id="L121">        return inverseMap;</span>
+    }
+
+    /**
+     * Returns the total number of entries in the receiver. This will be exactly
+     * twice the number of types added.
+     *
+     * @return the total number of entries in the receiver
+     */
+    public int size() {
+<span class="fc" id="L131">        return typesByName.size();</span>
+    }
+
+    /**
+     * Store the shorter of the incoming value or the existing value in the map
+     * at the key specified.
+     *
+     * @param map
+     * @param key
+     * @param value
+     */
+    private void storeShortest(Map&lt;Class&lt;?&gt;, String&gt; map, Class&lt;?&gt; key, String value) {
+<span class="fc" id="L143">        String existingValue = map.get(key);</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (existingValue == null) {</span>
+<span class="fc" id="L146">            map.put(key, value);</span>
+<span class="fc" id="L147">            return;</span>
+        }
+
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (existingValue.length() &lt; value.length()) {</span>
+<span class="fc" id="L151">            return;</span>
+        }
+
+<span class="fc" id="L154">        map.put(key, value);</span>
+<span class="fc" id="L155">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

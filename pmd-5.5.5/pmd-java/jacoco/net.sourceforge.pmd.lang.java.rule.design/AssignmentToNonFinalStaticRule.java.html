@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AssignmentToNonFinalStaticRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">AssignmentToNonFinalStaticRule.java</span></div><h1>AssignmentToNonFinalStaticRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.List;
+import java.util.Map;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.AccessNode;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+
+/**
+ * @author Eric Olander
+ * @since Created on October 24, 2004, 8:56 AM
+ */
+<span class="fc" id="L23">public class AssignmentToNonFinalStaticRule extends AbstractJavaRule {</span>
+
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc" id="L26">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = node.getScope().getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry: vars.entrySet()) {</span>
+<span class="fc" id="L28">            VariableNameDeclaration decl = entry.getKey();</span>
+<span class="fc" id="L29">            AccessNode accessNodeParent = (AccessNode)decl.getAccessNodeParent();</span>
+<span class="fc bfc" id="L30" title="All 4 branches covered.">            if (!accessNodeParent.isStatic() || accessNodeParent.isFinal()) {</span>
+<span class="fc" id="L31">                continue;</span>
+            }
+
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (initializedInConstructor(entry.getValue())) {</span>
+<span class="fc" id="L35">                addViolation(data, decl.getNode(), decl.getImage());</span>
+            }
+<span class="fc" id="L37">        }</span>
+<span class="fc" id="L38">        return super.visit(node, data);</span>
+    }
+
+    private boolean initializedInConstructor(List&lt;NameOccurrence&gt; usages) {
+<span class="fc" id="L42">        boolean initInConstructor = false;</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (NameOccurrence occ: usages) {</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            if (((JavaNameOccurrence)occ).isOnLeftHandSide()) { // specifically omitting prefix and postfix operators as there are legitimate usages of these with static fields, e.g. typesafe enum pattern.</span>
+<span class="fc" id="L46">        	Node node = occ.getLocation();</span>
+<span class="fc" id="L47">        	Node constructor = node.getFirstParentOfType(ASTConstructorDeclaration.class);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">                if (constructor != null) {</span>
+<span class="fc" id="L49">                    initInConstructor = true;</span>
+                }
+            }
+<span class="fc" id="L52">        }</span>
+
+<span class="fc" id="L54">        return initInConstructor;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
