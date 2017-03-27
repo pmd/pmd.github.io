@@ -18,7 +18,7 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
 
 <span class="fc" id="L20">public class UseStringBufferForStringAppendsRule extends AbstractJavaRule {</span>
-
+    
     @Override
     public Object visit(ASTVariableDeclaratorId node, Object data) {
 <span class="fc bfc" id="L24" title="All 4 branches covered.">        if (!TypeHelper.isA(node, String.class) || node.isArray()) {</span>
@@ -45,28 +45,34 @@ import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
 <span class="fc" id="L45">                continue;</span>
             }
 <span class="fc" id="L47">            ASTConditionalExpression conditional = name.getFirstParentOfType(ASTConditionalExpression.class);</span>
-<span class="pc bpc" id="L48" title="1 of 6 branches missed.">            if (conditional != null &amp;&amp; name.jjtGetParent().jjtGetParent().jjtGetParent() == conditional &amp;&amp; conditional.getFirstParentOfType(ASTStatementExpression.class) == statement) {</span>
-                // is used in ternary as only option (not appendend to other string)
-<span class="fc" id="L50">                continue;</span>
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (conditional != null) {</span>
+<span class="fc" id="L50">                Node thirdParent = name.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L51" title="1 of 6 branches missed.">                if ((thirdParent == conditional || thirdParent.jjtGetParent() == conditional)</span>
+                        &amp;&amp; conditional.getFirstParentOfType(ASTStatementExpression.class) == statement) {
+                    // is used in ternary as only option (not appended to other
+                    // string)
+<span class="fc" id="L55">                    continue;</span>
+                }
             }
-<span class="pc bpc" id="L52" title="2 of 4 branches missed.">            if (statement.jjtGetNumChildren() &gt; 0 &amp;&amp; statement.jjtGetChild(0) instanceof ASTPrimaryExpression) {</span>
-<span class="fc" id="L53">                ASTName astName = statement.jjtGetChild(0).getFirstDescendantOfType(ASTName.class);</span>
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">                if(astName != null){</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">                    if (astName.equals(name)) {</span>
-<span class="fc" id="L56">                        ASTAssignmentOperator assignmentOperator = statement.getFirstDescendantOfType(ASTAssignmentOperator.class);</span>
-<span class="pc bpc" id="L57" title="1 of 4 branches missed.">                        if (assignmentOperator != null &amp;&amp; assignmentOperator.isCompound()) {</span>
-<span class="fc" id="L58">                            addViolation(data, assignmentOperator);</span>
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">            if (statement.jjtGetNumChildren() &gt; 0 &amp;&amp; statement.jjtGetChild(0) instanceof ASTPrimaryExpression) {</span>
+<span class="fc" id="L59">                ASTName astName = statement.jjtGetChild(0).getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">                if(astName != null){</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">                    if (astName.equals(name)) {</span>
+<span class="fc" id="L62">                        ASTAssignmentOperator assignmentOperator = statement.getFirstDescendantOfType(ASTAssignmentOperator.class);</span>
+<span class="pc bpc" id="L63" title="1 of 4 branches missed.">                        if (assignmentOperator != null &amp;&amp; assignmentOperator.isCompound()) {</span>
+<span class="fc" id="L64">                            addViolation(data, assignmentOperator);</span>
                         }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">                    } else if(astName.getImage().equals(name.getImage())){</span>
-<span class="fc" id="L61">                        ASTAssignmentOperator assignmentOperator = statement.getFirstDescendantOfType(ASTAssignmentOperator.class);</span>
-<span class="pc bpc" id="L62" title="1 of 4 branches missed.">                        if (assignmentOperator != null &amp;&amp; !assignmentOperator.isCompound()) {</span>
-<span class="fc" id="L63">                            addViolation(data, astName);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                    } else if(astName.getImage().equals(name.getImage())){</span>
+<span class="fc" id="L67">                        ASTAssignmentOperator assignmentOperator = statement.getFirstDescendantOfType(ASTAssignmentOperator.class);</span>
+<span class="pc bpc" id="L68" title="1 of 4 branches missed.">                        if (assignmentOperator != null &amp;&amp; !assignmentOperator.isCompound()) {</span>
+<span class="fc" id="L69">                            addViolation(data, astName);</span>
                         }
                     }
                 }
             }
-<span class="fc" id="L68">        }</span>
-<span class="fc" id="L69">        return data;</span>
+<span class="fc" id="L74">        }</span>
+<span class="fc" id="L75">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -532,7 +532,7 @@
 <a class="jxr_linenumber" name="L524" href="#L524">524</a> <em class="jxr_javadoccomment">     * Rule reference can't be resolved - ref is used instead of class and the class is old (pmd 4.3 and not pmd 5).</em>
 <a class="jxr_linenumber" name="L525" href="#L525">525</a> <em class="jxr_javadoccomment">     * @throws Exception any error</em>
 <a class="jxr_linenumber" name="L526" href="#L526">526</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L527" href="#L527">527</a>     @Test(expected = RuleSetNotFoundException.<strong class="jxr_keyword">class</strong>)
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>     @Test(expected = RuntimeException.<strong class="jxr_keyword">class</strong>)
 <a class="jxr_linenumber" name="L528" href="#L528">528</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testBug1202() <strong class="jxr_keyword">throws</strong> Exception {
 <a class="jxr_linenumber" name="L529" href="#L529">529</a>         RuleSetReferenceId ref = createRuleSetReferenceId(<span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n"</span> + 
 <a class="jxr_linenumber" name="L530" href="#L530">530</a>                 <span class="jxr_string">"&lt;ruleset&gt;\n"</span> +
@@ -635,498 +635,441 @@
 <a class="jxr_linenumber" name="L627" href="#L627">627</a>         ruleSetFactory.createRuleSet(ref);
 <a class="jxr_linenumber" name="L628" href="#L628">628</a>     }
 <a class="jxr_linenumber" name="L629" href="#L629">629</a> 
-<a class="jxr_linenumber" name="L630" href="#L630">630</a>     <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L631" href="#L631">631</a> <em class="jxr_javadoccomment">     * This unit test manifests the current behavior - which might change in the future. See #1537.</em>
-<a class="jxr_linenumber" name="L632" href="#L632">632</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L633" href="#L633">633</a> <em class="jxr_javadoccomment">     * Currently, if a ruleset is imported twice, the excludes of the first import are ignored.</em>
-<a class="jxr_linenumber" name="L634" href="#L634">634</a> <em class="jxr_javadoccomment">     * Duplicated rules are silently ignored.</em>
-<a class="jxr_linenumber" name="L635" href="#L635">635</a> <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L636" href="#L636">636</a> <em class="jxr_javadoccomment">     * @throws Exception any error</em>
-<a class="jxr_linenumber" name="L637" href="#L637">637</a> <em class="jxr_javadoccomment">     * @see &lt;a href="https://sourceforge.net/p/pmd/bugs/1537/"&gt;#1537 Implement strict ruleset parsing&lt;/a&gt;</em>
-<a class="jxr_linenumber" name="L638" href="#L638">638</a> <em class="jxr_javadoccomment">     * @see &lt;a href="<a href="http://stackoverflow.com/questions/40299075/custom-pmd-ruleset-not-working" target="alexandria_uri">http://stackoverflow.com/questions/40299075/custom-pmd-ruleset-not-working</a>"&gt;stackoverflow - custom ruleset not working&lt;/a&gt;</em>
-<a class="jxr_linenumber" name="L639" href="#L639">639</a> <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L640" href="#L640">640</a>     @Test
-<a class="jxr_linenumber" name="L641" href="#L641">641</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testExcludeAndImportTwice() <strong class="jxr_keyword">throws</strong> Exception {
-<a class="jxr_linenumber" name="L642" href="#L642">642</a>         RuleSetReferenceId ref1 = createRuleSetReferenceId(<span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;\n"</span> +
-<a class="jxr_linenumber" name="L643" href="#L643">643</a>                 <span class="jxr_string">"&lt;ruleset name=\&quot;Custom ruleset for tests\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L644" href="#L644">644</a>                 <span class="jxr_string">"    xmlns=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L645" href="#L645">645</a>                 <span class="jxr_string">"    xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L646" href="#L646">646</a>                 <span class="jxr_string">"    xsi:schemaLocation=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L647" href="#L647">647</a>                 <span class="jxr_string">"  &lt;description&gt;Custom ruleset for tests&lt;/description&gt;\n"</span> +
-<a class="jxr_linenumber" name="L648" href="#L648">648</a>                 <span class="jxr_string">"  &lt;rule ref=\&quot;rulesets/dummy/basic.xml\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L649" href="#L649">649</a>                 <span class="jxr_string">"    &lt;exclude name=\&quot;DummyBasicMockRule\&quot;/&gt;\n"</span> +
-<a class="jxr_linenumber" name="L650" href="#L650">650</a>                 <span class="jxr_string">"  &lt;/rule&gt;\n"</span> +
-<a class="jxr_linenumber" name="L651" href="#L651">651</a>                 <span class="jxr_string">"&lt;/ruleset&gt;\n"</span>);
-<a class="jxr_linenumber" name="L652" href="#L652">652</a>         RuleSetFactory ruleSetFactory = <strong class="jxr_keyword">new</strong> RuleSetFactory();
-<a class="jxr_linenumber" name="L653" href="#L653">653</a>         RuleSet ruleset = ruleSetFactory.createRuleSet(ref1);
-<a class="jxr_linenumber" name="L654" href="#L654">654</a>         Assert.assertNull(ruleset.getRuleByName(<span class="jxr_string">"DummyBasicMockRule"</span>));
-<a class="jxr_linenumber" name="L655" href="#L655">655</a> 
-<a class="jxr_linenumber" name="L656" href="#L656">656</a>         RuleSetReferenceId ref2 = createRuleSetReferenceId(<span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;\n"</span> +
-<a class="jxr_linenumber" name="L657" href="#L657">657</a>                 <span class="jxr_string">"&lt;ruleset name=\&quot;Custom ruleset for tests\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L658" href="#L658">658</a>                 <span class="jxr_string">"    xmlns=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L659" href="#L659">659</a>                 <span class="jxr_string">"    xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L660" href="#L660">660</a>                 <span class="jxr_string">"    xsi:schemaLocation=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L661" href="#L661">661</a>                 <span class="jxr_string">"  &lt;description&gt;Custom ruleset for tests&lt;/description&gt;\n"</span> +
-<a class="jxr_linenumber" name="L662" href="#L662">662</a>                 <span class="jxr_string">"  &lt;rule ref=\&quot;rulesets/dummy/basic.xml\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L663" href="#L663">663</a>                 <span class="jxr_string">"    &lt;exclude name=\&quot;DummyBasicMockRule\&quot;/&gt;\n"</span> +
-<a class="jxr_linenumber" name="L664" href="#L664">664</a>                 <span class="jxr_string">"  &lt;/rule&gt;\n"</span> +
-<a class="jxr_linenumber" name="L665" href="#L665">665</a>                 <span class="jxr_string">"  &lt;rule ref=\&quot;rulesets/dummy/basic.xml\&quot;/&gt;\n"</span> +
-<a class="jxr_linenumber" name="L666" href="#L666">666</a>                 <span class="jxr_string">"&lt;/ruleset&gt;\n"</span>);
-<a class="jxr_linenumber" name="L667" href="#L667">667</a>         RuleSetFactory ruleSetFactory2 = <strong class="jxr_keyword">new</strong> RuleSetFactory();
-<a class="jxr_linenumber" name="L668" href="#L668">668</a>         RuleSet ruleset2 = ruleSetFactory2.createRuleSet(ref2);
-<a class="jxr_linenumber" name="L669" href="#L669">669</a>         Assert.assertNotNull(ruleset2.getRuleByName(<span class="jxr_string">"DummyBasicMockRule"</span>));
-<a class="jxr_linenumber" name="L670" href="#L670">670</a> 
-<a class="jxr_linenumber" name="L671" href="#L671">671</a>         RuleSetReferenceId ref3 = createRuleSetReferenceId(<span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;\n"</span> +
-<a class="jxr_linenumber" name="L672" href="#L672">672</a>                 <span class="jxr_string">"&lt;ruleset name=\&quot;Custom ruleset for tests\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L673" href="#L673">673</a>                 <span class="jxr_string">"    xmlns=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L674" href="#L674">674</a>                 <span class="jxr_string">"    xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;\n"</span> +
-<a class="jxr_linenumber" name="L675" href="#L675">675</a>                 <span class="jxr_string">"    xsi:schemaLocation=\&quot;http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L676" href="#L676">676</a>                 <span class="jxr_string">"  &lt;description&gt;Custom ruleset for tests&lt;/description&gt;\n"</span> +
-<a class="jxr_linenumber" name="L677" href="#L677">677</a>                 <span class="jxr_string">"  &lt;rule ref=\&quot;rulesets/dummy/basic.xml\&quot;/&gt;\n"</span> +
-<a class="jxr_linenumber" name="L678" href="#L678">678</a>                 <span class="jxr_string">"  &lt;rule ref=\&quot;rulesets/dummy/basic.xml\&quot;&gt;\n"</span> +
-<a class="jxr_linenumber" name="L679" href="#L679">679</a>                 <span class="jxr_string">"    &lt;exclude name=\&quot;DummyBasicMockRule\&quot;/&gt;\n"</span> +
-<a class="jxr_linenumber" name="L680" href="#L680">680</a>                 <span class="jxr_string">"  &lt;/rule&gt;\n"</span> +
-<a class="jxr_linenumber" name="L681" href="#L681">681</a>                 <span class="jxr_string">"&lt;/ruleset&gt;\n"</span>);
-<a class="jxr_linenumber" name="L682" href="#L682">682</a>         RuleSetFactory ruleSetFactory3 = <strong class="jxr_keyword">new</strong> RuleSetFactory();
-<a class="jxr_linenumber" name="L683" href="#L683">683</a>         RuleSet ruleset3 = ruleSetFactory3.createRuleSet(ref3);
-<a class="jxr_linenumber" name="L684" href="#L684">684</a>         Assert.assertNotNull(ruleset3.getRuleByName(<span class="jxr_string">"DummyBasicMockRule"</span>));
-<a class="jxr_linenumber" name="L685" href="#L685">685</a> }
+<a class="jxr_linenumber" name="L630" href="#L630">630</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE_ORIGINAL_NAME = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L631" href="#L631">631</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L632" href="#L632">632</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L633" href="#L633">633</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L634" href="#L634">634</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L635" href="#L635">635</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L636" href="#L636">636</a> 			+ <span class="jxr_string">" &lt;rule "</span>
+<a class="jxr_linenumber" name="L637" href="#L637">637</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L638" href="#L638">638</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; message=\&quot;TestMessageOverride\&quot;&gt; "</span>
+<a class="jxr_linenumber" name="L639" href="#L639">639</a> 			+ PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L640" href="#L640">640</a> 
+<a class="jxr_linenumber" name="L641" href="#L641">641</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_MISPELLED_XREF = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L642" href="#L642">642</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L643" href="#L643">643</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">" &lt;rule "</span>
+<a class="jxr_linenumber" name="L644" href="#L644">644</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L645" href="#L645">645</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/FooMockRule1\&quot;&gt; "</span>
+<a class="jxr_linenumber" name="L646" href="#L646">646</a> 			+ PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L647" href="#L647">647</a> 
+<a class="jxr_linenumber" name="L648" href="#L648">648</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE_ORIGINAL_NAME_ONE_ELEM = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L649" href="#L649">649</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L650" href="#L650">650</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L651" href="#L651">651</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L652" href="#L652">652</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L653" href="#L653">653</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L654" href="#L654">654</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; message=\&quot;TestMessageOverride\&quot;/&gt; "</span>
+<a class="jxr_linenumber" name="L655" href="#L655">655</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L656" href="#L656">656</a> 
+<a class="jxr_linenumber" name="L657" href="#L657">657</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L658" href="#L658">658</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L659" href="#L659">659</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L660" href="#L660">660</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L661" href="#L661">661</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L662" href="#L662">662</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L663" href="#L663">663</a> 			+ <span class="jxr_string">" &lt;rule "</span>
+<a class="jxr_linenumber" name="L664" href="#L664">664</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L665" href="#L665">665</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; "</span>
+<a class="jxr_linenumber" name="L666" href="#L666">666</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L667" href="#L667">667</a> 			+ <span class="jxr_string">"  name=\&quot;TestNameOverride\&quot; "</span>
+<a class="jxr_linenumber" name="L668" href="#L668">668</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L669" href="#L669">669</a> 			+ <span class="jxr_string">"  message=\&quot;Test message override\&quot;&gt; "</span>
+<a class="jxr_linenumber" name="L670" href="#L670">670</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L671" href="#L671">671</a> 			+ <span class="jxr_string">"  &lt;description&gt;Test description override&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L672" href="#L672">672</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L673" href="#L673">673</a> 			+ <span class="jxr_string">"  &lt;example&gt;Test example override&lt;/example&gt;"</span>
+<a class="jxr_linenumber" name="L674" href="#L674">674</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L675" href="#L675">675</a> 			+ <span class="jxr_string">"  &lt;priority&gt;3&lt;/priority&gt;"</span>
+<a class="jxr_linenumber" name="L676" href="#L676">676</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L677" href="#L677">677</a> 			+ <span class="jxr_string">"  &lt;properties&gt;"</span>
+<a class="jxr_linenumber" name="L678" href="#L678">678</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L679" href="#L679">679</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test2\&quot; description=\&quot;test2\&quot; type=\&quot;String\&quot; value=\&quot;override2\&quot;/&gt;"</span>
+<a class="jxr_linenumber" name="L680" href="#L680">680</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L681" href="#L681">681</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test3\&quot; description=\&quot;test3\&quot; type=\&quot;String\&quot;&gt;&lt;value&gt;override3&lt;/value&gt;&lt;/property&gt;"</span>
+<a class="jxr_linenumber" name="L682" href="#L682">682</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L683" href="#L683">683</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test4\&quot; description=\&quot;test4\&quot; type=\&quot;String\&quot; value=\&quot;new property\&quot;/&gt;"</span>
+<a class="jxr_linenumber" name="L684" href="#L684">684</a> 			+ PMD.EOL + <span class="jxr_string">"  &lt;/properties&gt;"</span> + PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L685" href="#L685">685</a> 			+ <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
 <a class="jxr_linenumber" name="L686" href="#L686">686</a> 
-<a class="jxr_linenumber" name="L687" href="#L687">687</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE_ORIGINAL_NAME = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L687" href="#L687">687</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_INTERNAL = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
 <a class="jxr_linenumber" name="L688" href="#L688">688</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L689" href="#L689">689</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L690" href="#L690">690</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L691" href="#L691">691</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L692" href="#L692">692</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L693" href="#L693">693</a> 			+ <span class="jxr_string">" &lt;rule "</span>
+<a class="jxr_linenumber" name="L693" href="#L693">693</a> 			+ <span class="jxr_string">"&lt;rule "</span>
 <a class="jxr_linenumber" name="L694" href="#L694">694</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L695" href="#L695">695</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; message=\&quot;TestMessageOverride\&quot;&gt; "</span>
-<a class="jxr_linenumber" name="L696" href="#L696">696</a> 			+ PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L697" href="#L697">697</a> 
-<a class="jxr_linenumber" name="L698" href="#L698">698</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_MISPELLED_XREF = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L699" href="#L699">699</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L700" href="#L700">700</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">" &lt;rule "</span>
-<a class="jxr_linenumber" name="L701" href="#L701">701</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L702" href="#L702">702</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/FooMockRule1\&quot;&gt; "</span>
-<a class="jxr_linenumber" name="L703" href="#L703">703</a> 			+ PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L695" href="#L695">695</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L696" href="#L696">696</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L697" href="#L697">697</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L698" href="#L698">698</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L699" href="#L699">699</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L700" href="#L700">700</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L701" href="#L701">701</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span>
+<a class="jxr_linenumber" name="L702" href="#L702">702</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleName\&quot; name=\&quot;MockRuleNameRef\&quot;/&gt; "</span>
+<a class="jxr_linenumber" name="L703" href="#L703">703</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
 <a class="jxr_linenumber" name="L704" href="#L704">704</a> 
-<a class="jxr_linenumber" name="L705" href="#L705">705</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE_ORIGINAL_NAME_ONE_ELEM = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L705" href="#L705">705</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_INTERNAL_CHAIN = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
 <a class="jxr_linenumber" name="L706" href="#L706">706</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L707" href="#L707">707</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L708" href="#L708">708</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L709" href="#L709">709</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L710" href="#L710">710</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L711" href="#L711">711</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; message=\&quot;TestMessageOverride\&quot;/&gt; "</span>
-<a class="jxr_linenumber" name="L712" href="#L712">712</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L713" href="#L713">713</a> 
-<a class="jxr_linenumber" name="L714" href="#L714">714</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_OVERRIDE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L715" href="#L715">715</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L716" href="#L716">716</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L717" href="#L717">717</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L718" href="#L718">718</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L719" href="#L719">719</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L720" href="#L720">720</a> 			+ <span class="jxr_string">" &lt;rule "</span>
+<a class="jxr_linenumber" name="L711" href="#L711">711</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L712" href="#L712">712</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L713" href="#L713">713</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L714" href="#L714">714</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L715" href="#L715">715</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L716" href="#L716">716</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L717" href="#L717">717</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L718" href="#L718">718</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L719" href="#L719">719</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span>
+<a class="jxr_linenumber" name="L720" href="#L720">720</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleName\&quot; name=\&quot;MockRuleNameRef\&quot;&gt;&lt;priority&gt;2&lt;/priority&gt;&lt;/rule&gt; "</span>
 <a class="jxr_linenumber" name="L721" href="#L721">721</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L722" href="#L722">722</a> 			+ <span class="jxr_string">"  ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot; "</span>
-<a class="jxr_linenumber" name="L723" href="#L723">723</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L724" href="#L724">724</a> 			+ <span class="jxr_string">"  name=\&quot;TestNameOverride\&quot; "</span>
-<a class="jxr_linenumber" name="L725" href="#L725">725</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L726" href="#L726">726</a> 			+ <span class="jxr_string">"  message=\&quot;Test message override\&quot;&gt; "</span>
-<a class="jxr_linenumber" name="L727" href="#L727">727</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L728" href="#L728">728</a> 			+ <span class="jxr_string">"  &lt;description&gt;Test description override&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L729" href="#L729">729</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L730" href="#L730">730</a> 			+ <span class="jxr_string">"  &lt;example&gt;Test example override&lt;/example&gt;"</span>
-<a class="jxr_linenumber" name="L731" href="#L731">731</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L732" href="#L732">732</a> 			+ <span class="jxr_string">"  &lt;priority&gt;3&lt;/priority&gt;"</span>
-<a class="jxr_linenumber" name="L733" href="#L733">733</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L734" href="#L734">734</a> 			+ <span class="jxr_string">"  &lt;properties&gt;"</span>
-<a class="jxr_linenumber" name="L735" href="#L735">735</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L736" href="#L736">736</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test2\&quot; description=\&quot;test2\&quot; type=\&quot;String\&quot; value=\&quot;override2\&quot;/&gt;"</span>
-<a class="jxr_linenumber" name="L737" href="#L737">737</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L738" href="#L738">738</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test3\&quot; description=\&quot;test3\&quot; type=\&quot;String\&quot;&gt;&lt;value&gt;override3&lt;/value&gt;&lt;/property&gt;"</span>
-<a class="jxr_linenumber" name="L739" href="#L739">739</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L740" href="#L740">740</a> 			+ <span class="jxr_string">"   &lt;property name=\&quot;test4\&quot; description=\&quot;test4\&quot; type=\&quot;String\&quot; value=\&quot;new property\&quot;/&gt;"</span>
-<a class="jxr_linenumber" name="L741" href="#L741">741</a> 			+ PMD.EOL + <span class="jxr_string">"  &lt;/properties&gt;"</span> + PMD.EOL + <span class="jxr_string">" &lt;/rule&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L742" href="#L742">742</a> 			+ <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L743" href="#L743">743</a> 
-<a class="jxr_linenumber" name="L744" href="#L744">744</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_INTERNAL = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L722" href="#L722">722</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleNameRef\&quot; name=\&quot;MockRuleNameRefRef\&quot;&gt;&lt;priority&gt;1&lt;/priority&gt;&lt;/rule&gt; "</span>
+<a class="jxr_linenumber" name="L723" href="#L723">723</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L724" href="#L724">724</a> 
+<a class="jxr_linenumber" name="L725" href="#L725">725</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_EXTERNAL = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L726" href="#L726">726</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L727" href="#L727">727</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L728" href="#L728">728</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L729" href="#L729">729</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L730" href="#L730">730</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L731" href="#L731">731</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L732" href="#L732">732</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L733" href="#L733">733</a> 			+ <span class="jxr_string">"name=\&quot;ExternalRefRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L734" href="#L734">734</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L735" href="#L735">735</a> 			+ <span class="jxr_string">"ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot;/&gt;"</span>
+<a class="jxr_linenumber" name="L736" href="#L736">736</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L737" href="#L737">737</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleName\&quot; name=\&quot;ExternalRefRuleNameRef\&quot;/&gt; "</span>
+<a class="jxr_linenumber" name="L738" href="#L738">738</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L739" href="#L739">739</a> 
+<a class="jxr_linenumber" name="L740" href="#L740">740</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_EXTERNAL_CHAIN = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L741" href="#L741">741</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L742" href="#L742">742</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L743" href="#L743">743</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L744" href="#L744">744</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L745" href="#L745">745</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L746" href="#L746">746</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L746" href="#L746">746</a> 			+ <span class="jxr_string">"&lt;rule "</span>
 <a class="jxr_linenumber" name="L747" href="#L747">747</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L748" href="#L748">748</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L748" href="#L748">748</a> 			+ <span class="jxr_string">"name=\&quot;ExternalRefRuleName\&quot; "</span>
 <a class="jxr_linenumber" name="L749" href="#L749">749</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L750" href="#L750">750</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L750" href="#L750">750</a> 			+ <span class="jxr_string">"ref=\&quot;net/sourceforge/pmd/TestRuleset2.xml/TestRule\&quot;/&gt;"</span>
 <a class="jxr_linenumber" name="L751" href="#L751">751</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L752" href="#L752">752</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L752" href="#L752">752</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleName\&quot; name=\&quot;ExternalRefRuleNameRef\&quot;&gt;&lt;priority&gt;2&lt;/priority&gt;&lt;/rule&gt; "</span>
 <a class="jxr_linenumber" name="L753" href="#L753">753</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L754" href="#L754">754</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L755" href="#L755">755</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L756" href="#L756">756</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L757" href="#L757">757</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L758" href="#L758">758</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span>
-<a class="jxr_linenumber" name="L759" href="#L759">759</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleName\&quot; name=\&quot;MockRuleNameRef\&quot;/&gt; "</span>
-<a class="jxr_linenumber" name="L760" href="#L760">760</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L761" href="#L761">761</a> 
-<a class="jxr_linenumber" name="L762" href="#L762">762</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_INTERNAL_CHAIN = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L763" href="#L763">763</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L764" href="#L764">764</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L765" href="#L765">765</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L766" href="#L766">766</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L767" href="#L767">767</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L768" href="#L768">768</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L769" href="#L769">769</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L770" href="#L770">770</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L771" href="#L771">771</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L772" href="#L772">772</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L773" href="#L773">773</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L774" href="#L774">774</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L775" href="#L775">775</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L776" href="#L776">776</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span>
-<a class="jxr_linenumber" name="L777" href="#L777">777</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleName\&quot; name=\&quot;MockRuleNameRef\&quot;&gt;&lt;priority&gt;2&lt;/priority&gt;&lt;/rule&gt; "</span>
-<a class="jxr_linenumber" name="L778" href="#L778">778</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L779" href="#L779">779</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;MockRuleNameRef\&quot; name=\&quot;MockRuleNameRefRef\&quot;&gt;&lt;priority&gt;1&lt;/priority&gt;&lt;/rule&gt; "</span>
-<a class="jxr_linenumber" name="L780" href="#L780">780</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L781" href="#L781">781</a> 
-<a class="jxr_linenumber" name="L782" href="#L782">782</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_EXTERNAL = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L754" href="#L754">754</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleNameRef\&quot; name=\&quot;ExternalRefRuleNameRefRef\&quot;&gt;&lt;priority&gt;1&lt;/priority&gt;&lt;/rule&gt; "</span>
+<a class="jxr_linenumber" name="L755" href="#L755">755</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L756" href="#L756">756</a> 
+<a class="jxr_linenumber" name="L757" href="#L757">757</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String EMPTY_RULESET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L758" href="#L758">758</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L759" href="#L759">759</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L760" href="#L760">760</a> 
+<a class="jxr_linenumber" name="L761" href="#L761">761</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String SINGLE_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L762" href="#L762">762</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L763" href="#L763">763</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L764" href="#L764">764</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L765" href="#L765">765</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L766" href="#L766">766</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L767" href="#L767">767</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L768" href="#L768">768</a> 
+<a class="jxr_linenumber" name="L769" href="#L769">769</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MULTIPLE_RULES = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L770" href="#L770">770</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L771" href="#L771">771</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L772" href="#L772">772</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName1\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L773" href="#L773">773</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L774" href="#L774">774</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L775" href="#L775">775</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName2\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L776" href="#L776">776</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L777" href="#L777">777</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L778" href="#L778">778</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L779" href="#L779">779</a> 
+<a class="jxr_linenumber" name="L780" href="#L780">780</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String PROPERTIES = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L781" href="#L781">781</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L782" href="#L782">782</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L783" href="#L783">783</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L784" href="#L784">784</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L784" href="#L784">784</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L785" href="#L785">785</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L786" href="#L786">786</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L786" href="#L786">786</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName\&quot; "</span>
 <a class="jxr_linenumber" name="L787" href="#L787">787</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L788" href="#L788">788</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L788" href="#L788">788</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
 <a class="jxr_linenumber" name="L789" href="#L789">789</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L790" href="#L790">790</a> 			+ <span class="jxr_string">"name=\&quot;ExternalRefRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L790" href="#L790">790</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L791" href="#L791">791</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L792" href="#L792">792</a> 			+ <span class="jxr_string">"ref=\&quot;net/sourceforge/pmd/TestRuleset1.xml/MockRule1\&quot;/&gt;"</span>
+<a class="jxr_linenumber" name="L792" href="#L792">792</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc2&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L793" href="#L793">793</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L794" href="#L794">794</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleName\&quot; name=\&quot;ExternalRefRuleNameRef\&quot;/&gt; "</span>
-<a class="jxr_linenumber" name="L795" href="#L795">795</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L796" href="#L796">796</a> 
-<a class="jxr_linenumber" name="L797" href="#L797">797</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REF_INTERNAL_TO_EXTERNAL_CHAIN = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L798" href="#L798">798</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L799" href="#L799">799</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L800" href="#L800">800</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L801" href="#L801">801</a> 			+ <span class="jxr_string">" &lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L802" href="#L802">802</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L803" href="#L803">803</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L804" href="#L804">804</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L805" href="#L805">805</a> 			+ <span class="jxr_string">"name=\&quot;ExternalRefRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L806" href="#L806">806</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L807" href="#L807">807</a> 			+ <span class="jxr_string">"ref=\&quot;net/sourceforge/pmd/TestRuleset2.xml/TestRule\&quot;/&gt;"</span>
-<a class="jxr_linenumber" name="L808" href="#L808">808</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L809" href="#L809">809</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleName\&quot; name=\&quot;ExternalRefRuleNameRef\&quot;&gt;&lt;priority&gt;2&lt;/priority&gt;&lt;/rule&gt; "</span>
-<a class="jxr_linenumber" name="L810" href="#L810">810</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L811" href="#L811">811</a> 			+ <span class="jxr_string">" &lt;rule ref=\&quot;ExternalRefRuleNameRef\&quot; name=\&quot;ExternalRefRuleNameRefRef\&quot;&gt;&lt;priority&gt;1&lt;/priority&gt;&lt;/rule&gt; "</span>
-<a class="jxr_linenumber" name="L812" href="#L812">812</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L813" href="#L813">813</a> 
-<a class="jxr_linenumber" name="L814" href="#L814">814</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String EMPTY_RULESET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L815" href="#L815">815</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L816" href="#L816">816</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L817" href="#L817">817</a> 
-<a class="jxr_linenumber" name="L818" href="#L818">818</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String SINGLE_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L819" href="#L819">819</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L820" href="#L820">820</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L821" href="#L821">821</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L822" href="#L822">822</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L823" href="#L823">823</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L824" href="#L824">824</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L825" href="#L825">825</a> 
-<a class="jxr_linenumber" name="L826" href="#L826">826</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MULTIPLE_RULES = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L827" href="#L827">827</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L828" href="#L828">828</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L829" href="#L829">829</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName1\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L830" href="#L830">830</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L831" href="#L831">831</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L832" href="#L832">832</a> 			+ <span class="jxr_string">"&lt;/rule&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName2\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L833" href="#L833">833</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L834" href="#L834">834</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L835" href="#L835">835</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L836" href="#L836">836</a> 
-<a class="jxr_linenumber" name="L837" href="#L837">837</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String PROPERTIES = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L794" href="#L794">794</a> 			+ <span class="jxr_string">"&lt;properties&gt;"</span>
+<a class="jxr_linenumber" name="L795" href="#L795">795</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L796" href="#L796">796</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooBoolean\&quot; description=\&quot;test\&quot; type=\&quot;Boolean\&quot; value=\&quot;true\&quot; /&gt;"</span>
+<a class="jxr_linenumber" name="L797" href="#L797">797</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L798" href="#L798">798</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooChar\&quot; description=\&quot;test\&quot; type=\&quot;Character\&quot; value=\&quot;B\&quot; /&gt;"</span>
+<a class="jxr_linenumber" name="L799" href="#L799">799</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L800" href="#L800">800</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooInt\&quot; description=\&quot;test\&quot; type=\&quot;Integer\&quot; min=\&quot;1\&quot; max=\&quot;10\&quot; value=\&quot;3\&quot; /&gt;"</span>
+<a class="jxr_linenumber" name="L801" href="#L801">801</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L802" href="#L802">802</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooFloat\&quot; description=\&quot;test\&quot; type=\&quot;Float\&quot; min=\&quot;1.0\&quot; max=\&quot;1.0\&quot; value=\&quot;1.0\&quot;  /&gt;"</span>
+<a class="jxr_linenumber" name="L803" href="#L803">803</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L804" href="#L804">804</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooDouble\&quot; description=\&quot;test\&quot; type=\&quot;Double\&quot; min=\&quot;1.0\&quot; max=\&quot;9.0\&quot; value=\&quot;3.0\&quot;  /&gt;"</span>
+<a class="jxr_linenumber" name="L805" href="#L805">805</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L806" href="#L806">806</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooString\&quot; description=\&quot;test\&quot; type=\&quot;String\&quot; value=\&quot;bar\&quot; /&gt;"</span>
+<a class="jxr_linenumber" name="L807" href="#L807">807</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/properties&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L808" href="#L808">808</a> 
+<a class="jxr_linenumber" name="L809" href="#L809">809</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String XPATH = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L810" href="#L810">810</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L811" href="#L811">811</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L812" href="#L812">812</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L813" href="#L813">813</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L814" href="#L814">814</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L815" href="#L815">815</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + PMD.EOL
+<a class="jxr_linenumber" name="L816" href="#L816">816</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc2&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;properties&gt;"</span>
+<a class="jxr_linenumber" name="L817" href="#L817">817</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L818" href="#L818">818</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;xpath\&quot; description=\&quot;test\&quot; type=\&quot;String\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L819" href="#L819">819</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;value&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;![CDATA[ //Block ]]&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L820" href="#L820">820</a> 			+ <span class="jxr_string">"&lt;/value&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/property&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/properties&gt;"</span>
+<a class="jxr_linenumber" name="L821" href="#L821">821</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L822" href="#L822">822</a> 
+<a class="jxr_linenumber" name="L823" href="#L823">823</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String PRIORITY = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L824" href="#L824">824</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L825" href="#L825">825</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L826" href="#L826">826</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L827" href="#L827">827</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L828" href="#L828">828</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L829" href="#L829">829</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L830" href="#L830">830</a> 
+<a class="jxr_linenumber" name="L831" href="#L831">831</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String LANGUAGE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L832" href="#L832">832</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L833" href="#L833">833</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L834" href="#L834">834</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L835" href="#L835">835</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L836" href="#L836">836</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L837" href="#L837">837</a> 			+ <span class="jxr_string">"&lt;rule "</span>
 <a class="jxr_linenumber" name="L838" href="#L838">838</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L839" href="#L839">839</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L839" href="#L839">839</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
 <a class="jxr_linenumber" name="L840" href="#L840">840</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L841" href="#L841">841</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L841" href="#L841">841</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
 <a class="jxr_linenumber" name="L842" href="#L842">842</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L843" href="#L843">843</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L844" href="#L844">844</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L845" href="#L845">845</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L846" href="#L846">846</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L847" href="#L847">847</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L848" href="#L848">848</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L849" href="#L849">849</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc2&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L850" href="#L850">850</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L851" href="#L851">851</a> 			+ <span class="jxr_string">"&lt;properties&gt;"</span>
-<a class="jxr_linenumber" name="L852" href="#L852">852</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L853" href="#L853">853</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooBoolean\&quot; description=\&quot;test\&quot; type=\&quot;Boolean\&quot; value=\&quot;true\&quot; /&gt;"</span>
-<a class="jxr_linenumber" name="L854" href="#L854">854</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L855" href="#L855">855</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooChar\&quot; description=\&quot;test\&quot; type=\&quot;Character\&quot; value=\&quot;B\&quot; /&gt;"</span>
-<a class="jxr_linenumber" name="L856" href="#L856">856</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L857" href="#L857">857</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooInt\&quot; description=\&quot;test\&quot; type=\&quot;Integer\&quot; min=\&quot;1\&quot; max=\&quot;10\&quot; value=\&quot;3\&quot; /&gt;"</span>
-<a class="jxr_linenumber" name="L858" href="#L858">858</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L859" href="#L859">859</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooFloat\&quot; description=\&quot;test\&quot; type=\&quot;Float\&quot; min=\&quot;1.0\&quot; max=\&quot;1.0\&quot; value=\&quot;1.0\&quot;  /&gt;"</span>
-<a class="jxr_linenumber" name="L860" href="#L860">860</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L861" href="#L861">861</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooDouble\&quot; description=\&quot;test\&quot; type=\&quot;Double\&quot; min=\&quot;1.0\&quot; max=\&quot;9.0\&quot; value=\&quot;3.0\&quot;  /&gt;"</span>
-<a class="jxr_linenumber" name="L862" href="#L862">862</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L863" href="#L863">863</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;fooString\&quot; description=\&quot;test\&quot; type=\&quot;String\&quot; value=\&quot;bar\&quot; /&gt;"</span>
-<a class="jxr_linenumber" name="L864" href="#L864">864</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/properties&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L865" href="#L865">865</a> 
-<a class="jxr_linenumber" name="L866" href="#L866">866</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String XPATH = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L867" href="#L867">867</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L868" href="#L868">868</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L869" href="#L869">869</a> 			+ <span class="jxr_string">"&lt;rule name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L870" href="#L870">870</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L871" href="#L871">871</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L872" href="#L872">872</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + PMD.EOL
-<a class="jxr_linenumber" name="L873" href="#L873">873</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc2&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;properties&gt;"</span>
-<a class="jxr_linenumber" name="L874" href="#L874">874</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L875" href="#L875">875</a> 			+ <span class="jxr_string">"&lt;property name=\&quot;xpath\&quot; description=\&quot;test\&quot; type=\&quot;String\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L876" href="#L876">876</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;value&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;![CDATA[ //Block ]]&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L877" href="#L877">877</a> 			+ <span class="jxr_string">"&lt;/value&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/property&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/properties&gt;"</span>
-<a class="jxr_linenumber" name="L878" href="#L878">878</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L879" href="#L879">879</a> 
-<a class="jxr_linenumber" name="L880" href="#L880">880</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String PRIORITY = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L881" href="#L881">881</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L882" href="#L882">882</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L883" href="#L883">883</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L884" href="#L884">884</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L885" href="#L885">885</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L886" href="#L886">886</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L887" href="#L887">887</a> 
-<a class="jxr_linenumber" name="L888" href="#L888">888</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String LANGUAGE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L843" href="#L843">843</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; language=\&quot;dummy\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L844" href="#L844">844</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L845" href="#L845">845</a> 
+<a class="jxr_linenumber" name="L846" href="#L846">846</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_LANGUAGE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L847" href="#L847">847</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L848" href="#L848">848</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L849" href="#L849">849</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L850" href="#L850">850</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L851" href="#L851">851</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L852" href="#L852">852</a> 			+ <span class="jxr_string">" language=\&quot;bogus\&quot;&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L853" href="#L853">853</a> 
+<a class="jxr_linenumber" name="L854" href="#L854">854</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MINIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L855" href="#L855">855</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L856" href="#L856">856</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L857" href="#L857">857</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L858" href="#L858">858</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L859" href="#L859">859</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L860" href="#L860">860</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L861" href="#L861">861</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L862" href="#L862">862</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L863" href="#L863">863</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L864" href="#L864">864</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L865" href="#L865">865</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L866" href="#L866">866</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
+<a class="jxr_linenumber" name="L867" href="#L867">867</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L868" href="#L868">868</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
+<a class="jxr_linenumber" name="L869" href="#L869">869</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L870" href="#L870">870</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;1.4\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L871" href="#L871">871</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L872" href="#L872">872</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L873" href="#L873">873</a> 
+<a class="jxr_linenumber" name="L874" href="#L874">874</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_MINIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L875" href="#L875">875</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L876" href="#L876">876</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L877" href="#L877">877</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L878" href="#L878">878</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L879" href="#L879">879</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L880" href="#L880">880</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L881" href="#L881">881</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L882" href="#L882">882</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L883" href="#L883">883</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L884" href="#L884">884</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L885" href="#L885">885</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L886" href="#L886">886</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
+<a class="jxr_linenumber" name="L887" href="#L887">887</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L888" href="#L888">888</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
 <a class="jxr_linenumber" name="L889" href="#L889">889</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L890" href="#L890">890</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L890" href="#L890">890</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;bogus\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L891" href="#L891">891</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L892" href="#L892">892</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L893" href="#L893">893</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L894" href="#L894">894</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L892" href="#L892">892</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L893" href="#L893">893</a> 
+<a class="jxr_linenumber" name="L894" href="#L894">894</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MAXIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
 <a class="jxr_linenumber" name="L895" href="#L895">895</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L896" href="#L896">896</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L896" href="#L896">896</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L897" href="#L897">897</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L898" href="#L898">898</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L898" href="#L898">898</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L899" href="#L899">899</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L900" href="#L900">900</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; language=\&quot;dummy\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L901" href="#L901">901</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L902" href="#L902">902</a> 
-<a class="jxr_linenumber" name="L903" href="#L903">903</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_LANGUAGE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L904" href="#L904">904</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L905" href="#L905">905</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L906" href="#L906">906</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L907" href="#L907">907</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L908" href="#L908">908</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L909" href="#L909">909</a> 			+ <span class="jxr_string">" language=\&quot;bogus\&quot;&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L910" href="#L910">910</a> 
-<a class="jxr_linenumber" name="L911" href="#L911">911</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MINIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L912" href="#L912">912</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L913" href="#L913">913</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L914" href="#L914">914</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L915" href="#L915">915</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L916" href="#L916">916</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L917" href="#L917">917</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L918" href="#L918">918</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L919" href="#L919">919</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L920" href="#L920">920</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L921" href="#L921">921</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L922" href="#L922">922</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L923" href="#L923">923</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
-<a class="jxr_linenumber" name="L924" href="#L924">924</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L925" href="#L925">925</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
-<a class="jxr_linenumber" name="L926" href="#L926">926</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L927" href="#L927">927</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;1.4\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L928" href="#L928">928</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L929" href="#L929">929</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L930" href="#L930">930</a> 
-<a class="jxr_linenumber" name="L931" href="#L931">931</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_MINIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L932" href="#L932">932</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L933" href="#L933">933</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L934" href="#L934">934</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L935" href="#L935">935</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L936" href="#L936">936</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L937" href="#L937">937</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L938" href="#L938">938</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L939" href="#L939">939</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L940" href="#L940">940</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L941" href="#L941">941</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L942" href="#L942">942</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L943" href="#L943">943</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
-<a class="jxr_linenumber" name="L944" href="#L944">944</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L945" href="#L945">945</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
-<a class="jxr_linenumber" name="L946" href="#L946">946</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L947" href="#L947">947</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;bogus\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L948" href="#L948">948</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L949" href="#L949">949</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L950" href="#L950">950</a> 
-<a class="jxr_linenumber" name="L951" href="#L951">951</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String MAXIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L952" href="#L952">952</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L953" href="#L953">953</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L954" href="#L954">954</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L955" href="#L955">955</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L956" href="#L956">956</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L957" href="#L957">957</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L958" href="#L958">958</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L959" href="#L959">959</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L960" href="#L960">960</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L961" href="#L961">961</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L962" href="#L962">962</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L963" href="#L963">963</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
-<a class="jxr_linenumber" name="L964" href="#L964">964</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L965" href="#L965">965</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
-<a class="jxr_linenumber" name="L966" href="#L966">966</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L967" href="#L967">967</a> 			+ <span class="jxr_string">" maximumLanguageVersion=\&quot;1.7\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L968" href="#L968">968</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L969" href="#L969">969</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L900" href="#L900">900</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L901" href="#L901">901</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L902" href="#L902">902</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L903" href="#L903">903</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L904" href="#L904">904</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L905" href="#L905">905</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L906" href="#L906">906</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
+<a class="jxr_linenumber" name="L907" href="#L907">907</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L908" href="#L908">908</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
+<a class="jxr_linenumber" name="L909" href="#L909">909</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L910" href="#L910">910</a> 			+ <span class="jxr_string">" maximumLanguageVersion=\&quot;1.7\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L911" href="#L911">911</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L912" href="#L912">912</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L913" href="#L913">913</a> 
+<a class="jxr_linenumber" name="L914" href="#L914">914</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_MAXIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L915" href="#L915">915</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L916" href="#L916">916</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L917" href="#L917">917</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L918" href="#L918">918</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L919" href="#L919">919</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L920" href="#L920">920</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L921" href="#L921">921</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L922" href="#L922">922</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L923" href="#L923">923</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L924" href="#L924">924</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L925" href="#L925">925</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L926" href="#L926">926</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
+<a class="jxr_linenumber" name="L927" href="#L927">927</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L928" href="#L928">928</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
+<a class="jxr_linenumber" name="L929" href="#L929">929</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L930" href="#L930">930</a> 			+ <span class="jxr_string">" maximumLanguageVersion=\&quot;bogus\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L931" href="#L931">931</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L932" href="#L932">932</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L933" href="#L933">933</a> 
+<a class="jxr_linenumber" name="L934" href="#L934">934</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INVERTED_MINIMUM_MAXIMUM_LANGUAGE_VERSIONS = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L935" href="#L935">935</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L936" href="#L936">936</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L937" href="#L937">937</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L938" href="#L938">938</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L939" href="#L939">939</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L940" href="#L940">940</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L941" href="#L941">941</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L942" href="#L942">942</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L943" href="#L943">943</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L944" href="#L944">944</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L945" href="#L945">945</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L946" href="#L946">946</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; "</span>
+<a class="jxr_linenumber" name="L947" href="#L947">947</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L948" href="#L948">948</a> 			+ <span class="jxr_string">"language=\&quot;dummy\&quot;"</span>
+<a class="jxr_linenumber" name="L949" href="#L949">949</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L950" href="#L950">950</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;1.7\&quot;"</span>
+<a class="jxr_linenumber" name="L951" href="#L951">951</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L952" href="#L952">952</a> 			+ <span class="jxr_string">"maximumLanguageVersion=\&quot;1.4\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L953" href="#L953">953</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L954" href="#L954">954</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L955" href="#L955">955</a> 
+<a class="jxr_linenumber" name="L956" href="#L956">956</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DIRECT_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L957" href="#L957">957</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L958" href="#L958">958</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L959" href="#L959">959</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L960" href="#L960">960</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L961" href="#L961">961</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L962" href="#L962">962</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L963" href="#L963">963</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L964" href="#L964">964</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L965" href="#L965">965</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L966" href="#L966">966</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L967" href="#L967">967</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L968" href="#L968">968</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; deprecated=\&quot;true\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L969" href="#L969">969</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
 <a class="jxr_linenumber" name="L970" href="#L970">970</a> 
-<a class="jxr_linenumber" name="L971" href="#L971">971</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCORRECT_MAXIMUM_LANGUAGE_VERSION = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L972" href="#L972">972</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L973" href="#L973">973</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L974" href="#L974">974</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L975" href="#L975">975</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L976" href="#L976">976</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L977" href="#L977">977</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L978" href="#L978">978</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L979" href="#L979">979</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L971" href="#L971">971</a> 	<em class="jxr_comment">// Note: Update this RuleSet name to a different RuleSet with deprecated</em>
+<a class="jxr_linenumber" name="L972" href="#L972">972</a> 	<em class="jxr_comment">// Rules when the Rules are finally removed.</em>
+<a class="jxr_linenumber" name="L973" href="#L973">973</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DEPRECATED_RULE_RULESET_NAME = <span class="jxr_string">"net/sourceforge/pmd/TestRuleset1.xml"</span>;
+<a class="jxr_linenumber" name="L974" href="#L974">974</a> 
+<a class="jxr_linenumber" name="L975" href="#L975">975</a> 	<em class="jxr_comment">// Note: Update this Rule name to a different deprecated Rule when the one</em>
+<a class="jxr_linenumber" name="L976" href="#L976">976</a> 	<em class="jxr_comment">// listed here is finally removed.</em>
+<a class="jxr_linenumber" name="L977" href="#L977">977</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DEPRECATED_RULE_NAME = <span class="jxr_string">"MockRule3"</span>;
+<a class="jxr_linenumber" name="L978" href="#L978">978</a> 
+<a class="jxr_linenumber" name="L979" href="#L979">979</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REFERENCE_TO_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
 <a class="jxr_linenumber" name="L980" href="#L980">980</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L981" href="#L981">981</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L981" href="#L981">981</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L982" href="#L982">982</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L983" href="#L983">983</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;"</span>
+<a class="jxr_linenumber" name="L983" href="#L983">983</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L984" href="#L984">984</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L985" href="#L985">985</a> 			+ <span class="jxr_string">" language=\&quot;dummy\&quot;"</span>
+<a class="jxr_linenumber" name="L985" href="#L985">985</a> 			+ <span class="jxr_string">"&lt;rule "</span>
 <a class="jxr_linenumber" name="L986" href="#L986">986</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L987" href="#L987">987</a> 			+ <span class="jxr_string">" maximumLanguageVersion=\&quot;bogus\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L988" href="#L988">988</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L989" href="#L989">989</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L990" href="#L990">990</a> 
-<a class="jxr_linenumber" name="L991" href="#L991">991</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INVERTED_MINIMUM_MAXIMUM_LANGUAGE_VERSIONS = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L992" href="#L992">992</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L993" href="#L993">993</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L994" href="#L994">994</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L995" href="#L995">995</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L996" href="#L996">996</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L997" href="#L997">997</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L998" href="#L998">998</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L999" href="#L999">999</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
-<a class="jxr_linenumber" name="L1000" href="#L1000">1000</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1001" href="#L1001">1001</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
-<a class="jxr_linenumber" name="L1002" href="#L1002">1002</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1003" href="#L1003">1003</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; "</span>
-<a class="jxr_linenumber" name="L1004" href="#L1004">1004</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1005" href="#L1005">1005</a> 			+ <span class="jxr_string">"language=\&quot;dummy\&quot;"</span>
-<a class="jxr_linenumber" name="L1006" href="#L1006">1006</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1007" href="#L1007">1007</a> 			+ <span class="jxr_string">" minimumLanguageVersion=\&quot;1.7\&quot;"</span>
-<a class="jxr_linenumber" name="L1008" href="#L1008">1008</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1009" href="#L1009">1009</a> 			+ <span class="jxr_string">"maximumLanguageVersion=\&quot;1.4\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1010" href="#L1010">1010</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1011" href="#L1011">1011</a> 			+ <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L987" href="#L987">987</a> 			+ <span class="jxr_string">"ref=\&quot;"</span>
+<a class="jxr_linenumber" name="L988" href="#L988">988</a> 			+ DEPRECATED_RULE_RULESET_NAME
+<a class="jxr_linenumber" name="L989" href="#L989">989</a> 			+ <span class="jxr_string">"/"</span>
+<a class="jxr_linenumber" name="L990" href="#L990">990</a> 			+ DEPRECATED_RULE_NAME + <span class="jxr_string">"\&quot;&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L991" href="#L991">991</a> 
+<a class="jxr_linenumber" name="L992" href="#L992">992</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REFERENCE_TO_RULESET_WITH_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L993" href="#L993">993</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L994" href="#L994">994</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L995" href="#L995">995</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L996" href="#L996">996</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L997" href="#L997">997</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L998" href="#L998">998</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L999" href="#L999">999</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1000" href="#L1000">1000</a> 			+ <span class="jxr_string">"ref=\&quot;"</span>
+<a class="jxr_linenumber" name="L1001" href="#L1001">1001</a> 			+ DEPRECATED_RULE_RULESET_NAME
+<a class="jxr_linenumber" name="L1002" href="#L1002">1002</a> 			+ <span class="jxr_string">"\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L1003" href="#L1003">1003</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L1004" href="#L1004">1004</a> 
+<a class="jxr_linenumber" name="L1005" href="#L1005">1005</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DFA = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L1006" href="#L1006">1006</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
+<a class="jxr_linenumber" name="L1007" href="#L1007">1007</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L1008" href="#L1008">1008</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
+<a class="jxr_linenumber" name="L1009" href="#L1009">1009</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL + <span class="jxr_string">"dfa=\&quot;true\&quot; "</span>
+<a class="jxr_linenumber" name="L1010" href="#L1010">1010</a> 			+ PMD.EOL + <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L1011" href="#L1011">1011</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
 <a class="jxr_linenumber" name="L1012" href="#L1012">1012</a> 
-<a class="jxr_linenumber" name="L1013" href="#L1013">1013</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DIRECT_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L1013" href="#L1013">1013</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCLUDE_EXCLUDE_RULESET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
 <a class="jxr_linenumber" name="L1014" href="#L1014">1014</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L1015" href="#L1015">1015</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
 <a class="jxr_linenumber" name="L1016" href="#L1016">1016</a> 			+ PMD.EOL
 <a class="jxr_linenumber" name="L1017" href="#L1017">1017</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
 <a class="jxr_linenumber" name="L1018" href="#L1018">1018</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1019" href="#L1019">1019</a> 			+ <span class="jxr_string">"&lt;rule "</span>
+<a class="jxr_linenumber" name="L1019" href="#L1019">1019</a> 			+ <span class="jxr_string">"&lt;include-pattern&gt;include1&lt;/include-pattern&gt;"</span>
 <a class="jxr_linenumber" name="L1020" href="#L1020">1020</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1021" href="#L1021">1021</a> 			+ <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span>
+<a class="jxr_linenumber" name="L1021" href="#L1021">1021</a> 			+ <span class="jxr_string">"&lt;include-pattern&gt;include2&lt;/include-pattern&gt;"</span>
 <a class="jxr_linenumber" name="L1022" href="#L1022">1022</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1023" href="#L1023">1023</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span>
+<a class="jxr_linenumber" name="L1023" href="#L1023">1023</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude1&lt;/exclude-pattern&gt;"</span>
 <a class="jxr_linenumber" name="L1024" href="#L1024">1024</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1025" href="#L1025">1025</a> 			+ <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot; deprecated=\&quot;true\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1026" href="#L1026">1026</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1027" href="#L1027">1027</a> 
-<a class="jxr_linenumber" name="L1028" href="#L1028">1028</a> 	<em class="jxr_comment">// Note: Update this RuleSet name to a different RuleSet with deprecated</em>
-<a class="jxr_linenumber" name="L1029" href="#L1029">1029</a> 	<em class="jxr_comment">// Rules when the Rules are finally removed.</em>
-<a class="jxr_linenumber" name="L1030" href="#L1030">1030</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DEPRECATED_RULE_RULESET_NAME = <span class="jxr_string">"net/sourceforge/pmd/TestRuleset1.xml"</span>;
-<a class="jxr_linenumber" name="L1031" href="#L1031">1031</a> 
-<a class="jxr_linenumber" name="L1032" href="#L1032">1032</a> 	<em class="jxr_comment">// Note: Update this Rule name to a different deprecated Rule when the one</em>
-<a class="jxr_linenumber" name="L1033" href="#L1033">1033</a> 	<em class="jxr_comment">// listed here is finally removed.</em>
-<a class="jxr_linenumber" name="L1034" href="#L1034">1034</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DEPRECATED_RULE_NAME = <span class="jxr_string">"MockRule3"</span>;
-<a class="jxr_linenumber" name="L1035" href="#L1035">1035</a> 
-<a class="jxr_linenumber" name="L1036" href="#L1036">1036</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REFERENCE_TO_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L1037" href="#L1037">1037</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1038" href="#L1038">1038</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1039" href="#L1039">1039</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1040" href="#L1040">1040</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L1041" href="#L1041">1041</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1042" href="#L1042">1042</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L1043" href="#L1043">1043</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1044" href="#L1044">1044</a> 			+ <span class="jxr_string">"ref=\&quot;"</span>
-<a class="jxr_linenumber" name="L1045" href="#L1045">1045</a> 			+ DEPRECATED_RULE_RULESET_NAME
-<a class="jxr_linenumber" name="L1046" href="#L1046">1046</a> 			+ <span class="jxr_string">"/"</span>
-<a class="jxr_linenumber" name="L1047" href="#L1047">1047</a> 			+ DEPRECATED_RULE_NAME + <span class="jxr_string">"\&quot;&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1048" href="#L1048">1048</a> 
-<a class="jxr_linenumber" name="L1049" href="#L1049">1049</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String REFERENCE_TO_RULESET_WITH_DEPRECATED_RULE = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L1050" href="#L1050">1050</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1051" href="#L1051">1051</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1052" href="#L1052">1052</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1053" href="#L1053">1053</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L1054" href="#L1054">1054</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1055" href="#L1055">1055</a> 			+ <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L1056" href="#L1056">1056</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1057" href="#L1057">1057</a> 			+ <span class="jxr_string">"ref=\&quot;"</span>
-<a class="jxr_linenumber" name="L1058" href="#L1058">1058</a> 			+ DEPRECATED_RULE_RULESET_NAME
-<a class="jxr_linenumber" name="L1059" href="#L1059">1059</a> 			+ <span class="jxr_string">"\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1060" href="#L1060">1060</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1061" href="#L1061">1061</a> 
-<a class="jxr_linenumber" name="L1062" href="#L1062">1062</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DFA = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L1063" href="#L1063">1063</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span> + PMD.EOL
-<a class="jxr_linenumber" name="L1064" href="#L1064">1064</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;rule "</span>
-<a class="jxr_linenumber" name="L1065" href="#L1065">1065</a> 			+ PMD.EOL + <span class="jxr_string">"name=\&quot;MockRuleName\&quot; "</span> + PMD.EOL
-<a class="jxr_linenumber" name="L1066" href="#L1066">1066</a> 			+ <span class="jxr_string">"message=\&quot;avoid the mock rule\&quot; "</span> + PMD.EOL + <span class="jxr_string">"dfa=\&quot;true\&quot; "</span>
-<a class="jxr_linenumber" name="L1067" href="#L1067">1067</a> 			+ PMD.EOL + <span class="jxr_string">"class=\&quot;net.sourceforge.pmd.lang.rule.MockRule\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1068" href="#L1068">1068</a> 			+ <span class="jxr_string">"&lt;priority&gt;3&lt;/priority&gt;"</span> + PMD.EOL + <span class="jxr_string">"&lt;/rule&gt;&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1069" href="#L1069">1069</a> 
-<a class="jxr_linenumber" name="L1070" href="#L1070">1070</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String INCLUDE_EXCLUDE_RULESET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L1071" href="#L1071">1071</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1072" href="#L1072">1072</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1073" href="#L1073">1073</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1074" href="#L1074">1074</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L1075" href="#L1075">1075</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1076" href="#L1076">1076</a> 			+ <span class="jxr_string">"&lt;include-pattern&gt;include1&lt;/include-pattern&gt;"</span>
-<a class="jxr_linenumber" name="L1077" href="#L1077">1077</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1078" href="#L1078">1078</a> 			+ <span class="jxr_string">"&lt;include-pattern&gt;include2&lt;/include-pattern&gt;"</span>
-<a class="jxr_linenumber" name="L1079" href="#L1079">1079</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1080" href="#L1080">1080</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude1&lt;/exclude-pattern&gt;"</span>
-<a class="jxr_linenumber" name="L1081" href="#L1081">1081</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1082" href="#L1082">1082</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude2&lt;/exclude-pattern&gt;"</span>
-<a class="jxr_linenumber" name="L1083" href="#L1083">1083</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1084" href="#L1084">1084</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude3&lt;/exclude-pattern&gt;"</span>
-<a class="jxr_linenumber" name="L1085" href="#L1085">1085</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1086" href="#L1086">1086</a> 			+ <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1087" href="#L1087">1087</a> 
-<a class="jxr_linenumber" name="L1088" href="#L1088">1088</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String EXTERNAL_REFERENCE_RULE_SET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
-<a class="jxr_linenumber" name="L1089" href="#L1089">1089</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1090" href="#L1090">1090</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
-<a class="jxr_linenumber" name="L1091" href="#L1091">1091</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1092" href="#L1092">1092</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
-<a class="jxr_linenumber" name="L1093" href="#L1093">1093</a> 			+ PMD.EOL
-<a class="jxr_linenumber" name="L1094" href="#L1094">1094</a> 			+ <span class="jxr_string">"&lt;rule ref=\&quot;net/sourceforge/pmd/external-reference-ruleset.xml/MockRule\&quot;/&gt;"</span>
-<a class="jxr_linenumber" name="L1095" href="#L1095">1095</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
-<a class="jxr_linenumber" name="L1096" href="#L1096">1096</a> 
-<a class="jxr_linenumber" name="L1097" href="#L1097">1097</a> 	<strong class="jxr_keyword">private</strong> Rule loadFirstRule(String ruleSetXml)
-<a class="jxr_linenumber" name="L1098" href="#L1098">1098</a> 			<strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
-<a class="jxr_linenumber" name="L1099" href="#L1099">1099</a> 		RuleSet rs = loadRuleSet(ruleSetXml);
-<a class="jxr_linenumber" name="L1100" href="#L1100">1100</a> 		<strong class="jxr_keyword">return</strong> rs.getRules().iterator().next();
-<a class="jxr_linenumber" name="L1101" href="#L1101">1101</a> 	}
-<a class="jxr_linenumber" name="L1102" href="#L1102">1102</a> 
-<a class="jxr_linenumber" name="L1103" href="#L1103">1103</a> 	<strong class="jxr_keyword">private</strong> RuleSet loadRuleSet(String ruleSetXml)
-<a class="jxr_linenumber" name="L1104" href="#L1104">1104</a> 			<strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
-<a class="jxr_linenumber" name="L1105" href="#L1105">1105</a> 		RuleSetFactory rsf = <strong class="jxr_keyword">new</strong> RuleSetFactory();
-<a class="jxr_linenumber" name="L1106" href="#L1106">1106</a> 		<strong class="jxr_keyword">return</strong> rsf.createRuleSet(createRuleSetReferenceId(ruleSetXml));
-<a class="jxr_linenumber" name="L1107" href="#L1107">1107</a> 	}
-<a class="jxr_linenumber" name="L1108" href="#L1108">1108</a> 
-<a class="jxr_linenumber" name="L1109" href="#L1109">1109</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> RuleSetReferenceId createRuleSetReferenceId(<strong class="jxr_keyword">final</strong> String ruleSetXml) {
-<a class="jxr_linenumber" name="L1110" href="#L1110">1110</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> RuleSetReferenceId(<strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L1111" href="#L1111">1111</a>             @Override
-<a class="jxr_linenumber" name="L1112" href="#L1112">1112</a>             <strong class="jxr_keyword">public</strong> InputStream getInputStream(ClassLoader classLoader) <strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
-<a class="jxr_linenumber" name="L1113" href="#L1113">1113</a>                 <strong class="jxr_keyword">try</strong> {
-<a class="jxr_linenumber" name="L1114" href="#L1114">1114</a>                     <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> ByteArrayInputStream(ruleSetXml.getBytes(<span class="jxr_string">"UTF-8"</span>));
-<a class="jxr_linenumber" name="L1115" href="#L1115">1115</a>                 } <strong class="jxr_keyword">catch</strong> (UnsupportedEncodingException e) {
-<a class="jxr_linenumber" name="L1116" href="#L1116">1116</a>                     <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
-<a class="jxr_linenumber" name="L1117" href="#L1117">1117</a>                 }
-<a class="jxr_linenumber" name="L1118" href="#L1118">1118</a>             }
-<a class="jxr_linenumber" name="L1119" href="#L1119">1119</a>         };
-<a class="jxr_linenumber" name="L1120" href="#L1120">1120</a>     }
-<a class="jxr_linenumber" name="L1121" href="#L1121">1121</a> }
+<a class="jxr_linenumber" name="L1025" href="#L1025">1025</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude2&lt;/exclude-pattern&gt;"</span>
+<a class="jxr_linenumber" name="L1026" href="#L1026">1026</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1027" href="#L1027">1027</a> 			+ <span class="jxr_string">"&lt;exclude-pattern&gt;exclude3&lt;/exclude-pattern&gt;"</span>
+<a class="jxr_linenumber" name="L1028" href="#L1028">1028</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1029" href="#L1029">1029</a> 			+ <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L1030" href="#L1030">1030</a> 
+<a class="jxr_linenumber" name="L1031" href="#L1031">1031</a> 	<strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String EXTERNAL_REFERENCE_RULE_SET = <span class="jxr_string">"&lt;?xml version=\&quot;1.0\&quot;?&gt;"</span>
+<a class="jxr_linenumber" name="L1032" href="#L1032">1032</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1033" href="#L1033">1033</a> 			+ <span class="jxr_string">"&lt;ruleset name=\&quot;test\&quot;&gt;"</span>
+<a class="jxr_linenumber" name="L1034" href="#L1034">1034</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1035" href="#L1035">1035</a> 			+ <span class="jxr_string">"&lt;description&gt;testdesc&lt;/description&gt;"</span>
+<a class="jxr_linenumber" name="L1036" href="#L1036">1036</a> 			+ PMD.EOL
+<a class="jxr_linenumber" name="L1037" href="#L1037">1037</a> 			+ <span class="jxr_string">"&lt;rule ref=\&quot;net/sourceforge/pmd/external-reference-ruleset.xml/MockRule\&quot;/&gt;"</span>
+<a class="jxr_linenumber" name="L1038" href="#L1038">1038</a> 			+ PMD.EOL + <span class="jxr_string">"&lt;/ruleset&gt;"</span>;
+<a class="jxr_linenumber" name="L1039" href="#L1039">1039</a> 
+<a class="jxr_linenumber" name="L1040" href="#L1040">1040</a> 	<strong class="jxr_keyword">private</strong> Rule loadFirstRule(String ruleSetXml)
+<a class="jxr_linenumber" name="L1041" href="#L1041">1041</a> 			<strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
+<a class="jxr_linenumber" name="L1042" href="#L1042">1042</a> 		RuleSet rs = loadRuleSet(ruleSetXml);
+<a class="jxr_linenumber" name="L1043" href="#L1043">1043</a> 		<strong class="jxr_keyword">return</strong> rs.getRules().iterator().next();
+<a class="jxr_linenumber" name="L1044" href="#L1044">1044</a> 	}
+<a class="jxr_linenumber" name="L1045" href="#L1045">1045</a> 
+<a class="jxr_linenumber" name="L1046" href="#L1046">1046</a> 	<strong class="jxr_keyword">private</strong> RuleSet loadRuleSet(String ruleSetXml)
+<a class="jxr_linenumber" name="L1047" href="#L1047">1047</a> 			<strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
+<a class="jxr_linenumber" name="L1048" href="#L1048">1048</a> 		RuleSetFactory rsf = <strong class="jxr_keyword">new</strong> RuleSetFactory();
+<a class="jxr_linenumber" name="L1049" href="#L1049">1049</a> 		<strong class="jxr_keyword">return</strong> rsf.createRuleSet(createRuleSetReferenceId(ruleSetXml));
+<a class="jxr_linenumber" name="L1050" href="#L1050">1050</a> 	}
+<a class="jxr_linenumber" name="L1051" href="#L1051">1051</a> 
+<a class="jxr_linenumber" name="L1052" href="#L1052">1052</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> RuleSetReferenceId createRuleSetReferenceId(<strong class="jxr_keyword">final</strong> String ruleSetXml) {
+<a class="jxr_linenumber" name="L1053" href="#L1053">1053</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> RuleSetReferenceId(<strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L1054" href="#L1054">1054</a>             @Override
+<a class="jxr_linenumber" name="L1055" href="#L1055">1055</a>             <strong class="jxr_keyword">public</strong> InputStream getInputStream(ClassLoader classLoader) <strong class="jxr_keyword">throws</strong> RuleSetNotFoundException {
+<a class="jxr_linenumber" name="L1056" href="#L1056">1056</a>                 <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1057" href="#L1057">1057</a>                     <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> ByteArrayInputStream(ruleSetXml.getBytes(<span class="jxr_string">"UTF-8"</span>));
+<a class="jxr_linenumber" name="L1058" href="#L1058">1058</a>                 } <strong class="jxr_keyword">catch</strong> (UnsupportedEncodingException e) {
+<a class="jxr_linenumber" name="L1059" href="#L1059">1059</a>                     <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">null</strong>;
+<a class="jxr_linenumber" name="L1060" href="#L1060">1060</a>                 }
+<a class="jxr_linenumber" name="L1061" href="#L1061">1061</a>             }
+<a class="jxr_linenumber" name="L1062" href="#L1062">1062</a>         };
+<a class="jxr_linenumber" name="L1063" href="#L1063">1063</a>     }
+<a class="jxr_linenumber" name="L1064" href="#L1064">1064</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2002&#x2013;2017 <a href="https://pmd.github.io/">PMD</a>. All rights reserved.</div>

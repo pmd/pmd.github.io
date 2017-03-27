@@ -29,59 +29,55 @@ public class ClasspathClassLoader extends URLClassLoader {
 
 <span class="fc" id="L30">    private static final Logger LOG = Logger.getLogger(ClasspathClassLoader.class.getName());</span>
 
-    static {
-<span class="fc" id="L33">        registerAsParallelCapable();</span>
+    public ClasspathClassLoader(String classpath, ClassLoader parent) throws IOException {
+<span class="fc" id="L33">        super(initURLs(classpath), parent);</span>
 <span class="fc" id="L34">    }</span>
 
-    public ClasspathClassLoader(String classpath, ClassLoader parent) throws IOException {
-<span class="fc" id="L37">        super(initURLs(classpath), parent);</span>
-<span class="fc" id="L38">    }</span>
-
     private static URL[] initURLs(String classpath) throws IOException {
-<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (classpath == null) {</span>
-<span class="nc" id="L42">            throw new IllegalArgumentException(&quot;classpath argument cannot be null&quot;);</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (classpath == null) {</span>
+<span class="nc" id="L38">            throw new IllegalArgumentException(&quot;classpath argument cannot be null&quot;);</span>
         }
-<span class="fc" id="L44">        final List&lt;URL&gt; urls = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (classpath.startsWith(&quot;file://&quot;)) {</span>
+<span class="fc" id="L40">        final List&lt;URL&gt; urls = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (classpath.startsWith(&quot;file://&quot;)) {</span>
             // Treat as file URL
-<span class="nc" id="L47">            addFileURLs(urls, new URL(classpath));</span>
+<span class="nc" id="L43">            addFileURLs(urls, new URL(classpath));</span>
         } else {
             // Treat as classpath
-<span class="fc" id="L50">            addClasspathURLs(urls, classpath);</span>
+<span class="fc" id="L46">            addClasspathURLs(urls, classpath);</span>
         }
-<span class="fc" id="L52">        return urls.toArray(new URL[urls.size()]);</span>
+<span class="fc" id="L48">        return urls.toArray(new URL[urls.size()]);</span>
     }
 
     private static void addClasspathURLs(final List&lt;URL&gt; urls, final String classpath) throws MalformedURLException {
-<span class="fc" id="L56">        StringTokenizer toker = new StringTokenizer(classpath, File.pathSeparator);</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        while (toker.hasMoreTokens()) {</span>
-<span class="fc" id="L58">            String token = toker.nextToken();</span>
-<span class="fc" id="L59">            LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, token);</span>
-<span class="fc" id="L60">            urls.add(createURLFromPath(token));</span>
-<span class="fc" id="L61">        }</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L52">        StringTokenizer toker = new StringTokenizer(classpath, File.pathSeparator);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        while (toker.hasMoreTokens()) {</span>
+<span class="fc" id="L54">            String token = toker.nextToken();</span>
+<span class="fc" id="L55">            LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, token);</span>
+<span class="fc" id="L56">            urls.add(createURLFromPath(token));</span>
+<span class="fc" id="L57">        }</span>
+<span class="fc" id="L58">    }</span>
 
     private static void addFileURLs(List&lt;URL&gt; urls, URL fileURL) throws IOException {
-<span class="nc" id="L65">        BufferedReader in = null;</span>
+<span class="nc" id="L61">        BufferedReader in = null;</span>
         try {
-<span class="nc" id="L67">            in = new BufferedReader(new InputStreamReader(fileURL.openStream()));</span>
+<span class="nc" id="L63">            in = new BufferedReader(new InputStreamReader(fileURL.openStream()));</span>
             String line;
-<span class="nc bnc" id="L69" title="All 2 branches missed.">            while ((line = in.readLine()) != null) {</span>
-<span class="nc" id="L70">                LOG.log(Level.FINE, &quot;Read classpath entry line: &lt;{0}&gt;&quot;, line);</span>
-<span class="nc" id="L71">                line = line.trim();</span>
-<span class="nc bnc" id="L72" title="All 2 branches missed.">                if (line.length() &gt; 0) {</span>
-<span class="nc" id="L73">                    LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, line);</span>
-<span class="nc" id="L74">                    urls.add(createURLFromPath(line));</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            while ((line = in.readLine()) != null) {</span>
+<span class="nc" id="L66">                LOG.log(Level.FINE, &quot;Read classpath entry line: &lt;{0}&gt;&quot;, line);</span>
+<span class="nc" id="L67">                line = line.trim();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">                if (line.length() &gt; 0) {</span>
+<span class="nc" id="L69">                    LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, line);</span>
+<span class="nc" id="L70">                    urls.add(createURLFromPath(line));</span>
                 }
             }
         } finally {
-<span class="nc" id="L78">            IOUtils.closeQuietly(in);</span>
-<span class="nc" id="L79">        }</span>
-<span class="nc" id="L80">    }</span>
+<span class="nc" id="L74">            IOUtils.closeQuietly(in);</span>
+<span class="nc" id="L75">        }</span>
+<span class="nc" id="L76">    }</span>
 
     private static URL createURLFromPath(String path) throws MalformedURLException {
-<span class="fc" id="L83">        File file = new File(path);</span>
-<span class="fc" id="L84">        return file.getAbsoluteFile().toURI().toURL();</span>
+<span class="fc" id="L79">        File file = new File(path);</span>
+<span class="fc" id="L80">        return file.getAbsoluteFile().toURI().toURL();</span>
     }
 
     /**
@@ -89,14 +85,14 @@ public class ClasspathClassLoader extends URLClassLoader {
      */
     @Override
     public String toString() {
-<span class="nc" id="L92">        StringBuilder sb = new StringBuilder(getClass().getSimpleName());</span>
-<span class="nc" id="L93">        sb.append(&quot;[[&quot;);</span>
-<span class="nc" id="L94">        StringUtil.asStringOn(sb, getURLs(), &quot;:&quot;);</span>
-<span class="nc" id="L95">        sb.append(&quot;] parent: &quot;)</span>
+<span class="nc" id="L88">        StringBuilder sb = new StringBuilder(getClass().getSimpleName());</span>
+<span class="nc" id="L89">        sb.append(&quot;[[&quot;);</span>
+<span class="nc" id="L90">        StringUtil.asStringOn(sb, getURLs(), &quot;:&quot;);</span>
+<span class="nc" id="L91">        sb.append(&quot;] parent: &quot;)</span>
           .append(getParent())
           .append(']');
 
-<span class="nc" id="L99">        return sb.toString();</span>
+<span class="nc" id="L95">        return sb.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

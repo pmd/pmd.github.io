@@ -3,70 +3,69 @@
  */
 package net.sourceforge.pmd.lang.ecmascript.ast;
 
-import org.mozilla.javascript.ast.AstNode;
-
 import net.sourceforge.pmd.lang.ast.AbstractNode;
-import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
+
+import org.mozilla.javascript.ast.AstNode;
 
 public abstract class AbstractEcmascriptNode&lt;T extends AstNode&gt; extends AbstractNode implements EcmascriptNode&lt;T&gt; {
 
     protected final T node;
 
     public AbstractEcmascriptNode(T node) {
-<span class="fc" id="L16">	super(node.getType());</span>
-<span class="fc" id="L17">	this.node = node;</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L15">	super(node.getType());</span>
+<span class="fc" id="L16">	this.node = node;</span>
+<span class="fc" id="L17">    }</span>
 
     /* package private */
     void calculateLineNumbers(SourceCodePositioner positioner) {
-<span class="fc" id="L22">	int startOffset = node.getAbsolutePosition();</span>
-<span class="fc" id="L23">	int endOffset = startOffset + node.getLength();</span>
+<span class="fc" id="L21">	int startOffset = node.getAbsolutePosition();</span>
+<span class="fc" id="L22">	int endOffset = startOffset + node.getLength();</span>
 
-<span class="fc" id="L25">	this.beginLine = positioner.lineNumberFromOffset(startOffset);</span>
-<span class="fc" id="L26">	this.beginColumn = positioner.columnFromOffset(this.beginLine, startOffset);</span>
-<span class="fc" id="L27">	this.endLine = positioner.lineNumberFromOffset(endOffset);</span>
-<span class="fc" id="L28">	this.endColumn = positioner.columnFromOffset(this.endLine, endOffset) - 1; // end column is inclusive</span>
-<span class="pc bpc" id="L29" title="1 of 2 branches missed.">	if (this.endColumn &lt; 0) {</span>
-<span class="nc" id="L30">	    this.endColumn = 0;</span>
+<span class="fc" id="L24">	this.beginLine = positioner.lineNumberFromOffset(startOffset);</span>
+<span class="fc" id="L25">	this.beginColumn = positioner.columnFromOffset(startOffset);</span>
+<span class="fc" id="L26">	this.endLine = positioner.lineNumberFromOffset(endOffset);</span>
+<span class="fc" id="L27">	this.endColumn = positioner.columnFromOffset(endOffset) - 1; // end column is inclusive</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">	if (this.endColumn &lt; 0) {</span>
+<span class="nc" id="L29">	    this.endColumn = 0;</span>
 	}
-<span class="fc" id="L32">    }</span>
+<span class="fc" id="L31">    }</span>
 
     /**
      * Accept the visitor. *
      */
     public Object jjtAccept(EcmascriptParserVisitor visitor, Object data) {
-<span class="nc" id="L38">	return visitor.visit(this, data);</span>
+<span class="nc" id="L37">	return visitor.visit(this, data);</span>
     }
 
     /**
      * Accept the visitor. *
      */
     public Object childrenAccept(EcmascriptParserVisitor visitor, Object data) {
-<span class="fc bfc" id="L45" title="All 2 branches covered.">	if (children != null) {</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">	    for (int i = 0; i &lt; children.length; ++i) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">	if (children != null) {</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">	    for (int i = 0; i &lt; children.length; ++i) {</span>
 		@SuppressWarnings(&quot;unchecked&quot;) // we know that the children here are all EcmascriptNodes
-<span class="fc" id="L48">		EcmascriptNode&lt;T&gt; ecmascriptNode = (EcmascriptNode&lt;T&gt;) children[i];</span>
-<span class="fc" id="L49">		ecmascriptNode.jjtAccept(visitor, data);</span>
+<span class="fc" id="L47">		EcmascriptNode&lt;T&gt; ecmascriptNode = (EcmascriptNode&lt;T&gt;) children[i];</span>
+<span class="fc" id="L48">		ecmascriptNode.jjtAccept(visitor, data);</span>
 	    }
 	}
-<span class="fc" id="L52">	return data;</span>
+<span class="fc" id="L51">	return data;</span>
     }
     
     public T getNode() {
-<span class="fc" id="L56">	return node;</span>
+<span class="fc" id="L55">	return node;</span>
     }
 
     public String getJsDoc() {
-<span class="nc" id="L60">	return node.getJsDoc();</span>
+<span class="nc" id="L59">	return node.getJsDoc();</span>
     }
 
     public boolean hasSideEffects() {
-<span class="nc" id="L64">	return node.hasSideEffects();</span>
+<span class="nc" id="L63">	return node.hasSideEffects();</span>
     }
 
     @Override
     public String toString() {
-<span class="fc" id="L69">	return node.shortName();</span>
+<span class="fc" id="L68">	return node.shortName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

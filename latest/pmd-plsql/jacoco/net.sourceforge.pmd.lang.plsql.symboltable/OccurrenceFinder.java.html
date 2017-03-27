@@ -15,47 +15,46 @@ import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.Scope;
 
 <span class="fc" id="L17">public class OccurrenceFinder extends PLSQLParserVisitorAdapter {</span>
-<span class="fc" id="L18">    private static final Logger LOGGER = Logger.getLogger(OccurrenceFinder.class.getName());</span>
+<span class="fc" id="L18">    private final static Logger LOGGER = Logger.getLogger(OccurrenceFinder.class.getName()); </span>
 
-    @Override
     public Object visit(ASTPrimaryExpression node, Object data) {
-<span class="fc" id="L22">        NameFinder nameFinder = new NameFinder(node);</span>
+<span class="fc" id="L21">        NameFinder nameFinder = new NameFinder(node);</span>
 
         // Maybe do some sort of State pattern thingy for when NameDeclaration
         // is empty/not empty
-<span class="fc" id="L26">        Set&lt;NameDeclaration&gt; declarations = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L25">        Set&lt;NameDeclaration&gt; declarations = new HashSet&lt;&gt;();</span>
 
-<span class="fc" id="L28">        List&lt;PLSQLNameOccurrence&gt; names = nameFinder.getNames();</span>
-<span class="pc bpc" id="L29" title="1 of 2 branches missed.">        for (PLSQLNameOccurrence occ: names) {</span>
-<span class="fc" id="L30">            Search search = new Search(occ);</span>
-<span class="pc bpc" id="L31" title="1 of 2 branches missed.">            if (declarations.isEmpty()) {</span>
+<span class="fc" id="L27">        List&lt;PLSQLNameOccurrence&gt; names = nameFinder.getNames();</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        for (PLSQLNameOccurrence occ: names) {</span>
+<span class="fc" id="L29">            Search search = new Search(occ);</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">            if (declarations.isEmpty()) {</span>
                 // doing the first name lookup
-<span class="fc" id="L33">                search.execute();</span>
-<span class="fc" id="L34">                declarations.addAll(search.getResult());</span>
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">                if (declarations.isEmpty()) {</span>
+<span class="fc" id="L32">                search.execute();</span>
+<span class="fc" id="L33">                declarations.addAll(search.getResult());</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">                if (declarations.isEmpty()) {</span>
                     // we can't find it, so just give up
                     // when we decide to do full symbol resolution
                     // force this to either find a symbol or throw a SymbolNotFoundException
-<span class="fc" id="L39">                    break;</span>
+<span class="fc" id="L38">                    break;</span>
                 }
             } else {
-<span class="nc" id="L42">                Set&lt;NameDeclaration&gt; additionalDeclarations = new HashSet&lt;&gt;();</span>
-<span class="nc bnc" id="L43" title="All 2 branches missed.">                for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L41">                Set&lt;NameDeclaration&gt; additionalDeclarations = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">                for (NameDeclaration decl : declarations) {</span>
                     // now we've got a scope we're starting with, so work from there
-<span class="nc" id="L45">                    Scope scope = decl.getScope();</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">                    if (null == scope) {</span>
-<span class="nc bnc" id="L47" title="All 2 branches missed.">                        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L48">                            LOGGER.finest(&quot;NameOccurrence has no Scope:&quot; </span>
+<span class="nc" id="L44">                    Scope scope = decl.getScope();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">                    if (null == scope) {</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">                        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L47">                            LOGGER.finest(&quot;NameOccurrence has no Scope:&quot; </span>
                                           + decl.getClass().getCanonicalName() 
                                           +&quot;=&gt;&quot;+decl.getImage()
                                         );
                         }
                       break;
                     }
-<span class="nc" id="L55">                    search.execute(scope);</span>
-<span class="nc" id="L56">                    Set&lt;NameDeclaration&gt; found = search.getResult();</span>
-<span class="nc" id="L57">                    additionalDeclarations.addAll(found);</span>
-<span class="nc bnc" id="L58" title="All 2 branches missed.">                    if (found.isEmpty()) {</span>
+<span class="nc" id="L54">                    search.execute(scope);</span>
+<span class="nc" id="L55">                    Set&lt;NameDeclaration&gt; found = search.getResult();</span>
+<span class="nc" id="L56">                    additionalDeclarations.addAll(found);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                    if (found.isEmpty()) {</span>
                         // nothing found
                         // This seems to be a lack of type resolution here.
                         // Theoretically we have the previous declaration node and know from there the Type of
@@ -65,13 +64,13 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
                         // we can't find it, so just give up
                         // when we decide to do full symbol resolution
                         // force this to either find a symbol or throw a SymbolNotFoundException
-<span class="nc" id="L68">                        break;</span>
+<span class="nc" id="L67">                        break;</span>
                     }
-<span class="nc" id="L70">                }</span>
-<span class="nc" id="L71">                declarations.addAll(additionalDeclarations);</span>
+<span class="nc" id="L69">                }</span>
+<span class="nc" id="L70">                declarations.addAll(additionalDeclarations);</span>
             }
-<span class="nc" id="L73">        }</span>
-<span class="fc" id="L74">        return super.visit(node, data);</span>
+<span class="nc" id="L72">        }</span>
+<span class="fc" id="L73">        return super.visit(node, data);</span>
     }
 
 }

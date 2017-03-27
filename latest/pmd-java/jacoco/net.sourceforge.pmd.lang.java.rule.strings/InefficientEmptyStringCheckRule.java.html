@@ -4,49 +4,63 @@
 package net.sourceforge.pmd.lang.java.rule.strings;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
 import net.sourceforge.pmd.lang.java.rule.AbstractInefficientZeroCheck;
 import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
 
 /**
  * This rule finds code which inefficiently determines empty strings. This code
- * &lt;p/&gt;
- * 
+ *
  * &lt;pre&gt;
  *         if(str.trim().length()==0){....
  * &lt;/pre&gt;
- * 
- * &lt;p/&gt; is quite inefficient as trim() causes a new String to be created.
- * Smarter code to check for an empty string would be: &lt;p/&gt;
- * 
+ *
+ * &lt;p&gt;
+ * is quite inefficient as trim() causes a new String to be created. Smarter
+ * code to check for an empty string would be:
+ * &lt;/p&gt;
+ *
  * &lt;pre&gt;
  * Character.isWhitespace(str.charAt(i));
  * &lt;/pre&gt;
- * 
+ *
  * @author acaplan
  */
-<span class="fc" id="L27">public class InefficientEmptyStringCheckRule extends AbstractInefficientZeroCheck {</span>
+<span class="fc" id="L29">public class InefficientEmptyStringCheckRule extends AbstractInefficientZeroCheck {</span>
 
-    /**
-     * Determine if we're dealing with String.length method
-     * 
-     * @param occ
-     *            The name occurrence
-     * @return true if it's String.length, else false
-     */
+    @Override
     public boolean isTargetMethod(JavaNameOccurrence occ) {
-<span class="fc bfc" id="L37" title="All 4 branches covered.">        if (occ.getNameForWhichThisIsAQualifier() != null</span>
+<span class="fc bfc" id="L33" title="All 4 branches covered.">        if (occ.getNameForWhichThisIsAQualifier() != null</span>
                 &amp;&amp; occ.getNameForWhichThisIsAQualifier().getImage().indexOf(&quot;trim&quot;) != -1) {
-<span class="fc" id="L39">            Node pExpression = occ.getLocation().jjtGetParent().jjtGetParent();</span>
-<span class="fc bfc" id="L40" title="All 4 branches covered.">            if (pExpression.jjtGetNumChildren() &gt;= 3</span>
-                    &amp;&amp; &quot;length&quot;.equals(pExpression.jjtGetChild(2).getImage())) {
-<span class="fc" id="L42">                return true;</span>
+<span class="fc" id="L35">            Node pExpression = occ.getLocation().jjtGetParent().jjtGetParent();</span>
+<span class="fc bfc" id="L36" title="All 4 branches covered.">            if (pExpression.jjtGetNumChildren() &gt; 2 &amp;&amp; &quot;length&quot;.equals(pExpression.jjtGetChild(2).getImage())) {</span>
+<span class="fc" id="L37">                return true;</span>
             }
         }
-<span class="fc" id="L45">        return false;</span>
+<span class="fc" id="L40">        return false;</span>
     }
 
+    @Override
     public boolean appliesToClassName(String name) {
-<span class="fc" id="L49">        return &quot;String&quot;.equals(name);</span>
+<span class="fc" id="L45">        return &quot;String&quot;.equals(name);</span>
+    }
+
+    @Override
+    public Object visit(ASTPrimaryExpression node, Object data) {
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt; 3) {</span>
+            // Check last suffix
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            if (!&quot;isEmpty&quot;.equals(node.jjtGetChild(node.jjtGetNumChildren() - 2).getImage())) {</span>
+<span class="fc" id="L54">                return data;</span>
+            }
+
+<span class="fc" id="L57">            Node prevCall = node.jjtGetChild(node.jjtGetNumChildren() - 4);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            String target = prevCall.jjtGetNumChildren() &gt; 0 ? prevCall.jjtGetChild(0).getImage() : prevCall.getImage();</span>
+<span class="fc bfc" id="L59" title="All 6 branches covered.">            if (target != null &amp;&amp; (&quot;trim&quot;.equals(target) || target.endsWith(&quot;.trim&quot;))) {</span>
+<span class="fc" id="L60">                addViolation(data, node);</span>
+            }
+        }
+<span class="fc" id="L63">        return data;</span>
     }
 
 }

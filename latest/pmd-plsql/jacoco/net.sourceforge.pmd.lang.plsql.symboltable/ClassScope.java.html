@@ -15,28 +15,25 @@ import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.plsql.ast.ASTName;
 import net.sourceforge.pmd.lang.plsql.ast.AbstractPLSQLNode;
 import net.sourceforge.pmd.lang.symboltable.AbstractScope;
-import net.sourceforge.pmd.lang.symboltable.Applier;
-import net.sourceforge.pmd.lang.symboltable.ImageFinderFunction;
 import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
 public class ClassScope extends AbstractScope {
-<span class="fc" id="L24">    private static final Logger LOGGER = Logger.getLogger(ClassScope.class.getName());</span>
+<span class="fc" id="L22">    private final static Logger LOGGER = Logger.getLogger(ClassScope.class.getName());</span>
 
     // FIXME - this breaks given sufficiently nested code
-<span class="fc" id="L27">    private static ThreadLocal&lt;Integer&gt; anonymousInnerClassCounter = new ThreadLocal&lt;Integer&gt;() {</span>
-        @Override
+<span class="fc" id="L25">    private static ThreadLocal&lt;Integer&gt; anonymousInnerClassCounter = new ThreadLocal&lt;Integer&gt;() {</span>
         protected Integer initialValue() {
-<span class="nc" id="L30">            return Integer.valueOf(1);</span>
+<span class="nc" id="L27">            return Integer.valueOf(1);</span>
         }
     };
 
     private String className;
 
-<span class="fc" id="L36">    public ClassScope(String className) {</span>
-<span class="fc" id="L37">        this.className = AbstractPLSQLNode.getCanonicalImage(className);</span>
-<span class="fc" id="L38">        anonymousInnerClassCounter.set(Integer.valueOf(1));</span>
-<span class="fc" id="L39">    }</span>
+<span class="fc" id="L33">    public ClassScope(String className) {</span>
+<span class="fc" id="L34">        this.className = AbstractPLSQLNode.getCanonicalImage(className);</span>
+<span class="fc" id="L35">        anonymousInnerClassCounter.set(Integer.valueOf(1));</span>
+<span class="fc" id="L36">    }</span>
 
     /**
      * This is only for anonymous inner classes
@@ -45,89 +42,89 @@ public class ClassScope extends AbstractScope {
      * right, the parent scope needs to be passed in when instantiating a
      * ClassScope
      */
-<span class="nc" id="L48">    public ClassScope() {</span>
+<span class="nc" id="L45">    public ClassScope() {</span>
         // this.className = getParent().getEnclosingClassScope().getClassName()
         // + &quot;$&quot; + String.valueOf(anonymousInnerClassCounter);
-<span class="nc" id="L51">        int v = anonymousInnerClassCounter.get().intValue();</span>
-<span class="nc" id="L52">        this.className = &quot;Anonymous$&quot; + v;</span>
-<span class="nc" id="L53">        anonymousInnerClassCounter.set(v + 1);</span>
-<span class="nc" id="L54">    }</span>
+<span class="nc" id="L48">        int v = anonymousInnerClassCounter.get().intValue();</span>
+<span class="nc" id="L49">        this.className = &quot;Anonymous$&quot; + v;</span>
+<span class="nc" id="L50">        anonymousInnerClassCounter.set(v + 1);</span>
+<span class="nc" id="L51">    }</span>
 
     @Override
     public void addDeclaration(NameDeclaration declaration) {
-<span class="pc bpc" id="L58" title="3 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
-<span class="nc" id="L59">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
+<span class="pc bpc" id="L55" title="3 of 4 branches missed.">        if (declaration instanceof VariableNameDeclaration &amp;&amp; getDeclarations().keySet().contains(declaration)) {</span>
+<span class="nc" id="L56">            throw new RuntimeException(declaration + &quot; is already in the symbol table&quot;);</span>
         }
-<span class="fc" id="L61">        super.addDeclaration(declaration);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L58">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L59">    }</span>
 
     @Override
     public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occ) {
-<span class="nc" id="L66">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence) occ;</span>
-<span class="nc" id="L67">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(occurrence);</span>
-<span class="nc" id="L68">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
-<span class="nc bnc" id="L69" title="All 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; occurrence.isMethodOrConstructorInvocation()) {</span>
-<span class="nc bnc" id="L70" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
-<span class="nc" id="L71">                List&lt;NameOccurrence&gt; nameOccurrences = methodNames.get(decl);</span>
-<span class="nc bnc" id="L72" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
+<span class="nc" id="L63">        PLSQLNameOccurrence occurrence = (PLSQLNameOccurrence) occ;</span>
+<span class="nc" id="L64">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(occurrence);</span>
+<span class="nc" id="L65">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L68">                List&lt;NameOccurrence&gt; nameOccurrences = methodNames.get(decl);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
                     // TODO may be a class name: Foo.this.super();
                 } else {
-<span class="nc" id="L75">                    nameOccurrences.add(occurrence);</span>
-<span class="nc" id="L76">                    Node n = occurrence.getLocation();</span>
-<span class="nc bnc" id="L77" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
-<span class="nc" id="L78">                        ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="nc" id="L72">                    nameOccurrences.add(occurrence);</span>
+<span class="nc" id="L73">                    Node n = occurrence.getLocation();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
+<span class="nc" id="L75">                        ((ASTName) n).setNameDeclaration(decl);</span>
                     } // TODO what to do with PrimarySuffix case?
                 }
-<span class="nc" id="L81">            }</span>
-<span class="nc bnc" id="L82" title="All 4 branches missed.">        } else if (!declarations.isEmpty() &amp;&amp; !occurrence.isThisOrSuper()) {</span>
-<span class="nc" id="L83">            Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
-<span class="nc bnc" id="L84" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
-<span class="nc" id="L85">                List&lt;NameOccurrence&gt; nameOccurrences = variableNames.get(decl);</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
+<span class="nc" id="L78">            }</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        } else if (!declarations.isEmpty() &amp;&amp; !occurrence.isThisOrSuper()) {</span>
+<span class="nc" id="L80">            Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            for (NameDeclaration decl : declarations) {</span>
+<span class="nc" id="L82">                List&lt;NameOccurrence&gt; nameOccurrences = variableNames.get(decl);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                if (nameOccurrences == null) {</span>
                     // TODO may be a class name
                 } else {
-<span class="nc" id="L89">                    nameOccurrences.add(occurrence);</span>
-<span class="nc" id="L90">                    Node n = occurrence.getLocation();</span>
-<span class="nc bnc" id="L91" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
-<span class="nc" id="L92">                        ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="nc" id="L86">                    nameOccurrences.add(occurrence);</span>
+<span class="nc" id="L87">                    Node n = occurrence.getLocation();</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                    if (n instanceof ASTName) {</span>
+<span class="nc" id="L89">                        ((ASTName) n).setNameDeclaration(decl);</span>
                     } // TODO what to do with PrimarySuffix case?
                 }
-<span class="nc" id="L95">            }</span>
+<span class="nc" id="L92">            }</span>
         }
-<span class="nc" id="L97">        return declarations;</span>
+<span class="nc" id="L94">        return declarations;</span>
     }
 
     public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
-<span class="nc" id="L101">        return getDeclarations(VariableNameDeclaration.class);</span>
+<span class="nc" id="L98">        return getDeclarations(VariableNameDeclaration.class);</span>
     }
 
     public Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; getMethodDeclarations() {
-<span class="nc" id="L105">        return getDeclarations(MethodNameDeclaration.class);</span>
+<span class="nc" id="L102">        return getDeclarations(MethodNameDeclaration.class);</span>
     }
 
     public Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; getClassDeclarations() {
-<span class="nc" id="L109">        return getDeclarations(ClassNameDeclaration.class);</span>
+<span class="nc" id="L106">        return getDeclarations(ClassNameDeclaration.class);</span>
     }
 
     public ClassScope getEnclosingClassScope() {
-<span class="nc" id="L113">        return this;</span>
+<span class="nc" id="L110">        return this;</span>
     }
 
     public String getClassName() {
-<span class="nc" id="L117">        return this.className;</span>
+<span class="nc" id="L114">        return this.className;</span>
     }
 
     protected Set&lt;NameDeclaration&gt; findVariableHere(PLSQLNameOccurrence occurrence) {
-<span class="nc" id="L121">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
-<span class="nc" id="L122">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
-<span class="nc" id="L123">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
-<span class="nc bnc" id="L124" title="All 4 branches missed.">        if (occurrence.isThisOrSuper() || occurrence.getImage().equals(className)) {</span>
-<span class="nc bnc" id="L125" title="All 4 branches missed.">            if (variableDeclarations.isEmpty() &amp;&amp; methodDeclarations.isEmpty()) {</span>
+<span class="nc" id="L118">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L119">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
+<span class="nc" id="L120">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
+<span class="nc bnc" id="L121" title="All 4 branches missed.">        if (occurrence.isThisOrSuper() || occurrence.getImage().equals(className)) {</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">            if (variableDeclarations.isEmpty() &amp;&amp; methodDeclarations.isEmpty()) {</span>
                 // this could happen if you do this:
                 // public class Foo {
                 // private String x = super.toString();
                 // }
-<span class="nc" id="L130">                return result;</span>
+<span class="nc" id="L127">                return result;</span>
             }
             // return any name declaration, since all we really want is to get
             // the scope
@@ -138,78 +135,77 @@ public class ClassScope extends AbstractScope {
             // }
             // we'll look up Foo just to get a handle to the class scope
             // and then we'll look up X.
-<span class="nc bnc" id="L141" title="All 2 branches missed.">            if (!variableDeclarations.isEmpty()) {</span>
-<span class="nc" id="L142">                result.add(variableDeclarations.keySet().iterator().next());</span>
-<span class="nc" id="L143">                return result;</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (!variableDeclarations.isEmpty()) {</span>
+<span class="nc" id="L139">                result.add(variableDeclarations.keySet().iterator().next());</span>
+<span class="nc" id="L140">                return result;</span>
             }
-<span class="nc" id="L145">            result.add(methodDeclarations.keySet().iterator().next());</span>
-<span class="nc" id="L146">            return result;</span>
+<span class="nc" id="L142">            result.add(methodDeclarations.keySet().iterator().next());</span>
+<span class="nc" id="L143">            return result;</span>
         }
 
-<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (occurrence.isMethodOrConstructorInvocation()) {</span>
-<span class="nc bnc" id="L150" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
-<span class="nc bnc" id="L151" title="All 2 branches missed.">                if (mnd.getImage().equals(occurrence.getImage())) {</span>
-<span class="nc" id="L152">                    int args = occurrence.getArgumentCount();</span>
-<span class="nc bnc" id="L153" title="All 6 branches missed.">                    if (args == mnd.getParameterCount() || mnd.isVarargs() &amp;&amp; args &gt;= mnd.getParameterCount() - 1) {</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                if (mnd.getImage().equals(occurrence.getImage())) {</span>
+<span class="nc" id="L149">                    int args = occurrence.getArgumentCount();</span>
+<span class="nc bnc" id="L150" title="All 6 branches missed.">                    if (args == mnd.getParameterCount() || mnd.isVarargs() &amp;&amp; args &gt;= mnd.getParameterCount() - 1) {</span>
                         // FIXME if several methods have the same name
                         // and parameter count, only one will get caught here
                         // we need to make some attempt at type lookup and
                         // discrimination
                         // or, failing that, mark this as a usage of all those
                         // methods
-<span class="nc" id="L160">                        result.add(mnd);</span>
+<span class="nc" id="L157">                        result.add(mnd);</span>
                     }
                 }
-<span class="nc" id="L163">            }</span>
-<span class="nc" id="L164">            return result;</span>
+<span class="nc" id="L160">            }</span>
+<span class="nc" id="L161">            return result;</span>
         }
 
-<span class="nc" id="L167">        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L168">        images.add(occurrence.getImage());</span>
+<span class="nc" id="L164">        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L165">        images.add(occurrence.getImage());</span>
 
-<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (null == occurrence.getImage()) {</span>
-<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L172">                LOGGER.finest(&quot;occurrence==&quot; + occurrence.toString() + &quot;with Argumanet Count == &quot;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (null == occurrence.getImage()) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L169">                LOGGER.finest(&quot;occurrence==&quot; + occurrence.toString() + &quot;with Argumanet Count == &quot;</span>
                         + occurrence.getArgumentCount() + &quot; for className=&quot; + className);
             }
         }
 
-<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (occurrence.getImage().startsWith(className)) {</span>
-<span class="nc" id="L178">            images.add(clipClassName(occurrence.getImage()));</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (occurrence.getImage().startsWith(className)) {</span>
+<span class="nc" id="L175">            images.add(clipClassName(occurrence.getImage()));</span>
         }
-<span class="nc" id="L180">        ImageFinderFunction finder = new ImageFinderFunction(images);</span>
-<span class="nc" id="L181">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
-<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (finder.getDecl() != null) {</span>
-<span class="nc" id="L183">            result.add(finder.getDecl());</span>
+<span class="nc" id="L177">        ImageFinderFunction finder = new ImageFinderFunction(images);</span>
+<span class="nc" id="L178">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        if (finder.getDecl() != null) {</span>
+<span class="nc" id="L180">            result.add(finder.getDecl());</span>
         }
-<span class="nc" id="L185">        return result;</span>
+<span class="nc" id="L182">        return result;</span>
     }
 
-    @Override
     public String toString() {
-<span class="nc" id="L190">        String res = &quot;ClassScope (&quot; + className + &quot;): &quot;;</span>
-<span class="nc" id="L191">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classNames = getClassDeclarations();</span>
-<span class="nc" id="L192">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
-<span class="nc" id="L193">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
-<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (!classNames.isEmpty()) {</span>
-<span class="nc" id="L195">            res += &quot;(&quot; + classNames.keySet() + &quot;)&quot;;</span>
+<span class="nc" id="L186">        String res = &quot;ClassScope (&quot; + className + &quot;): &quot;;</span>
+<span class="nc" id="L187">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classNames = getClassDeclarations();</span>
+<span class="nc" id="L188">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodNames = getMethodDeclarations();</span>
+<span class="nc" id="L189">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableNames = getVariableDeclarations();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        if (!classNames.isEmpty()) {</span>
+<span class="nc" id="L191">            res += &quot;(&quot; + classNames.keySet() + &quot;)&quot;;</span>
         }
-<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (!methodNames.isEmpty()) {</span>
-<span class="nc bnc" id="L198" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodNames.keySet()) {</span>
-<span class="nc" id="L199">                res += mnd.toString();</span>
-<span class="nc" id="L200">                int usages = methodNames.get(mnd).size();</span>
-<span class="nc" id="L201">                res += &quot;(begins at line &quot; + mnd.getNode().getBeginLine() + &quot;, &quot; + usages + &quot; usages)&quot;;</span>
-<span class="nc" id="L202">                res += &quot;,&quot;;</span>
-<span class="nc" id="L203">            }</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (!methodNames.isEmpty()) {</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodNames.keySet()) {</span>
+<span class="nc" id="L195">                res += mnd.toString();</span>
+<span class="nc" id="L196">                int usages = methodNames.get(mnd).size();</span>
+<span class="nc" id="L197">                res += &quot;(begins at line &quot; + mnd.getNode().getBeginLine() + &quot;, &quot; + usages + &quot; usages)&quot;;</span>
+<span class="nc" id="L198">                res += &quot;,&quot;;</span>
+<span class="nc" id="L199">            }</span>
         }
-<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (!variableNames.isEmpty()) {</span>
-<span class="nc" id="L206">            res += &quot;(&quot; + variableNames.keySet() + &quot;)&quot;;</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (!variableNames.isEmpty()) {</span>
+<span class="nc" id="L202">            res += &quot;(&quot; + variableNames.keySet() + &quot;)&quot;;</span>
         }
-<span class="nc" id="L208">        return res;</span>
+<span class="nc" id="L204">        return res;</span>
     }
 
     private String clipClassName(String s) {
-<span class="nc" id="L212">        return s.substring(s.indexOf('.') + 1);</span>
+<span class="nc" id="L208">        return s.substring(s.indexOf('.') + 1);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

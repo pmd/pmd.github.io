@@ -3,16 +3,16 @@
  */
 package net.sourceforge.pmd.lang.java.symboltable;
 
+
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
-import net.sourceforge.pmd.lang.symboltable.Applier;
-import net.sourceforge.pmd.lang.symboltable.ImageFinderFunction;
 import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 import net.sourceforge.pmd.lang.symboltable.Scope;
@@ -23,25 +23,25 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
  */
 public class SourceFileScope extends AbstractJavaScope {
 
-    private final String packageImage;
-    private final TypeSet types;
+    private String packageImage;
+    private TypeSet types;
 
-    public SourceFileScope(final ClassLoader classLoader) {
-<span class="fc" id="L30">        this(classLoader, &quot;&quot;);</span>
+    public SourceFileScope() {
+<span class="fc" id="L30">        this(&quot;&quot;);</span>
 <span class="fc" id="L31">    }</span>
 
-<span class="fc" id="L33">    public SourceFileScope(final ClassLoader classLoader, final String packageImage) {</span>
-<span class="fc" id="L34">        this.types = new TypeSet(classLoader);</span>
-<span class="fc" id="L35">        this.packageImage = packageImage;</span>
-<span class="fc" id="L36">        types.setASTCompilationUnitPackage(packageImage);</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L33">    public SourceFileScope(String packageImage) {</span>
+<span class="fc" id="L34">        this.packageImage = packageImage;</span>
+<span class="fc" id="L35">    }</span>
 
     /**
      * Configures the type resolution for the symbol table.
      * @param classLoader the class loader to use to find additional classes
      * @param imports the import declarations
      */
-    public void configureImports(final List&lt;ASTImportDeclaration&gt; imports) {
+    public void configureImports(ClassLoader classLoader, List&lt;ASTImportDeclaration&gt; imports) {
+<span class="fc" id="L43">        this.types = new TypeSet(classLoader);</span>
+<span class="fc" id="L44">        types.setASTCompilationUnitPackage(packageImage);</span>
 <span class="fc bfc" id="L45" title="All 2 branches covered.">        for (ASTImportDeclaration i : imports) {</span>
 <span class="fc bfc" id="L46" title="All 2 branches covered.">            if (i.isImportOnDemand()) {</span>
 <span class="fc" id="L47">                types.addImport(i.getImportedName() + &quot;.*&quot;);</span>
@@ -72,11 +72,15 @@ public class SourceFileScope extends AbstractJavaScope {
      * @return the class or &lt;code&gt;null&lt;/code&gt; if no class could be found
      */
     public Class&lt;?&gt; resolveType(String name) {
-<span class="fc" id="L75">        return types.findClass(name);</span>
+        try {
+<span class="fc" id="L76">            return types.findClass(name);</span>
+<span class="fc" id="L77">        } catch (ClassNotFoundException e) {</span>
+<span class="fc" id="L78">            return null;</span>
+        }
     }
 
     public String getPackageName() {
-<span class="fc" id="L79">        return packageImage;</span>
+<span class="fc" id="L83">        return packageImage;</span>
     }
 
     /**
@@ -85,11 +89,11 @@ public class SourceFileScope extends AbstractJavaScope {
      */
     @Override
     public void addDeclaration(NameDeclaration declaration) {
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (!(declaration instanceof ClassNameDeclaration)) {</span>
-<span class="nc" id="L89">            throw new IllegalArgumentException(&quot;A SourceFileScope can only contain classes.&quot;);</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (!(declaration instanceof ClassNameDeclaration)) {</span>
+<span class="nc" id="L93">            throw new IllegalArgumentException(&quot;A SourceFileScope can only contain classes.&quot;);</span>
         }
-<span class="fc" id="L91">        super.addDeclaration(declaration);</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L95">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L96">    }</span>
 
     /**
      * Convenience method that casts the declarations to {@link ClassNameDeclaration}s.
@@ -97,26 +101,27 @@ public class SourceFileScope extends AbstractJavaScope {
      * @return all class name declarations
      */
     public Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; getClassDeclarations() {
-<span class="fc" id="L100">        return getDeclarations(ClassNameDeclaration.class);</span>
+<span class="fc" id="L104">        return getDeclarations(ClassNameDeclaration.class);</span>
     }
 
     public String toString() {
-<span class="nc" id="L104">        return &quot;SourceFileScope: &quot; + glomNames(getClassDeclarations().keySet());</span>
+<span class="nc" id="L108">        return &quot;SourceFileScope: &quot; + glomNames(getClassDeclarations().keySet());</span>
     }
 
     public ClassNameDeclaration findClassNameDeclaration(String name) {
-<span class="fc" id="L108">        ImageFinderFunction finder = new ImageFinderFunction(name);</span>
-<span class="fc" id="L109">        Applier.apply(finder, getClassDeclarations().keySet().iterator());</span>
-<span class="fc" id="L110">        return (ClassNameDeclaration)finder.getDecl();</span>
+<span class="fc" id="L112">        ImageFinderFunction finder = new ImageFinderFunction(name);</span>
+<span class="fc" id="L113">        Applier.apply(finder, getClassDeclarations().keySet().iterator());</span>
+<span class="fc" id="L114">        return (ClassNameDeclaration)finder.getDecl();</span>
     }
 
     protected Set&lt;NameDeclaration&gt; findVariableHere(JavaNameOccurrence occ) {
-<span class="fc" id="L114">        ImageFinderFunction finder = new ImageFinderFunction(occ.getImage());</span>
-<span class="fc" id="L115">        Applier.apply(finder, getDeclarations().keySet().iterator());</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
-<span class="fc" id="L117">            return Collections.singleton(finder.getDecl());</span>
+<span class="fc" id="L118">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L119">        ImageFinderFunction finder = new ImageFinderFunction(occ.getImage());</span>
+<span class="fc" id="L120">        Applier.apply(finder, getDeclarations().keySet().iterator());</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
+<span class="fc" id="L122">            result.add(finder.getDecl());</span>
         }
-<span class="fc" id="L119">        return Collections.emptySet();</span>
+<span class="fc" id="L124">        return result;</span>
     }
 
     /**
@@ -125,17 +130,12 @@ public class SourceFileScope extends AbstractJavaScope {
      * @return set of all types in this source file.
      */
     public Map&lt;String, Node&gt; getQualifiedTypeNames() {
-<span class="fc" id="L128">        return getSubTypes(null, this);</span>
+<span class="fc" id="L133">        return getSubTypes(null, this);</span>
     }
 
     private Map&lt;String, Node&gt; getSubTypes(String qualifyingName, Scope subType) {
-<span class="fc" id="L132">        Set&lt;ClassNameDeclaration&gt; classDeclarations = subType.getDeclarations(ClassNameDeclaration.class).keySet();</span>
-<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (classDeclarations.isEmpty()) {</span>
-<span class="fc" id="L134">            return Collections.emptyMap();</span>
-        }
-
-<span class="fc" id="L137">        Map&lt;String, Node&gt; types = new HashMap&lt;&gt;((int) (classDeclarations.size() / 0.75f) + 1);</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (ClassNameDeclaration c : classDeclarations) {</span>
+<span class="fc" id="L137">        Map&lt;String, Node&gt; types = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (ClassNameDeclaration c : subType.getDeclarations(ClassNameDeclaration.class).keySet()) {</span>
 <span class="fc" id="L139">            String typeName = c.getName();</span>
 <span class="fc bfc" id="L140" title="All 2 branches covered.">            if (qualifyingName != null) {</span>
 <span class="fc" id="L141">                typeName = qualifyingName + &quot;.&quot; + typeName;</span>

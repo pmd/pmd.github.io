@@ -22,13 +22,13 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 
     public boolean isVarargs() {
 <span class="fc" id="L24">        ASTFormalParameters params = (ASTFormalParameters) node.jjtGetChild(0);</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (params.getParameterCount() == 0) {</span>
-<span class="fc" id="L26">            return false;</span>
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        for (int i = 0; i &lt; ((ASTMethodDeclarator) node).getParameterCount(); i++) {</span>
+<span class="fc" id="L26">            ASTFormalParameter p = (ASTFormalParameter) params.jjtGetChild(i);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">            if (p.isVarargs()) {</span>
+<span class="fc" id="L28">            	return true;</span>
+            }
         }
-
-        // If it's a varargs, it HAS to be the last parameter
-<span class="fc" id="L30">        ASTFormalParameter p = (ASTFormalParameter) params.jjtGetChild(params.getParameterCount() - 1);</span>
-<span class="fc" id="L31">        return p.isVarargs();</span>
+<span class="fc" id="L31">        return false;</span>
     }
 
     public ASTMethodDeclarator getMethodNameDeclaratorNode() {
@@ -36,7 +36,7 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
     }
 
     public String getParameterDisplaySignature() {
-<span class="fc" id="L39">        StringBuilder sb = new StringBuilder(&quot;(&quot;);</span>
+<span class="fc" id="L39">    	StringBuilder sb = new StringBuilder(&quot;(&quot;);</span>
 <span class="fc" id="L40">        ASTFormalParameters params = (ASTFormalParameters) node.jjtGetChild(0);</span>
         // TODO - this can be optimized - add [0] then ,[n] in a loop.
         //        no need to trim at the end
@@ -44,7 +44,7 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 <span class="fc" id="L44">            ASTFormalParameter p = (ASTFormalParameter) params.jjtGetChild(i);</span>
 <span class="fc" id="L45">            sb.append(p.getTypeNode().getTypeImage());</span>
 <span class="fc bfc" id="L46" title="All 2 branches covered.">            if (p.isVarargs()) {</span>
-<span class="fc" id="L47">                sb.append(&quot;...&quot;);</span>
+<span class="fc" id="L47">            	sb.append(&quot;...&quot;);</span>
             }
 <span class="fc" id="L49">            sb.append(',');</span>
         }
@@ -57,15 +57,15 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (!(o instanceof MethodNameDeclaration)) {</span>
-<span class="nc" id="L61">            return false;</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (!(o instanceof MethodNameDeclaration)) {</span>
+<span class="fc" id="L61">            return false;</span>
         }
 
 <span class="fc" id="L64">        MethodNameDeclaration other = (MethodNameDeclaration) o;</span>
 
         // compare name
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (!other.node.getImage().equals(node.getImage())) {</span>
-<span class="nc" id="L68">            return false;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (!other.node.getImage().equals(node.getImage())) {</span>
+<span class="fc" id="L68">            return false;</span>
         }
 
         // compare parameter count - this catches the case where there are no params, too
@@ -82,15 +82,15 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 
             // Compare vararg
 <span class="fc bfc" id="L84" title="All 2 branches covered.">            if (myParam.isVarargs() != otherParam.isVarargs()) {</span>
-<span class="fc" id="L85">                return false;</span>
+<span class="fc" id="L85">            	return false;</span>
             }
 
 <span class="fc" id="L88">            Node myTypeNode = myParam.getTypeNode().jjtGetChild(0);</span>
 <span class="fc" id="L89">            Node otherTypeNode = otherParam.getTypeNode().jjtGetChild(0);</span>
 
             // compare primitive vs reference type
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            if (myTypeNode.getClass() != otherTypeNode.getClass()) {</span>
-<span class="nc" id="L93">                return false;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (myTypeNode.getClass() != otherTypeNode.getClass()) {</span>
+<span class="fc" id="L93">                return false;</span>
             }
 
             // simple comparison of type images
@@ -107,8 +107,8 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 <span class="fc" id="L107">                otherTypeImg = otherTypeNode.jjtGetChild(0).getImage();</span>
             }
 
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            if (!myTypeImg.equals(otherTypeImg)) {</span>
-<span class="nc" id="L111">                return false;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            if (!myTypeImg.equals(otherTypeImg)) {</span>
+<span class="fc" id="L111">                return false;</span>
             }
 
             // if type is ASTPrimitiveType and is an array, make sure the other one is also
@@ -118,29 +118,12 @@ public class MethodNameDeclaration extends AbstractNameDeclaration {
 
     @Override
     public int hashCode() {
-<span class="fc" id="L121">        int hash = node.getImage().hashCode() * 31 + ((ASTMethodDeclarator) node).getParameterCount();</span>
-
-<span class="fc" id="L123">        ASTFormalParameters myParams = (ASTFormalParameters) node.jjtGetChild(0);</span>
-<span class="fc bfc" id="L124" title="All 2 branches covered.">        for (int i = 0; i &lt; ((ASTMethodDeclarator) node).getParameterCount(); i++) {</span>
-<span class="fc" id="L125">            ASTFormalParameter myParam = (ASTFormalParameter) myParams.jjtGetChild(i);</span>
-<span class="fc" id="L126">            Node myTypeNode = myParam.getTypeNode().jjtGetChild(0);</span>
-
-            String myTypeImg;
-<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (myTypeNode instanceof ASTPrimitiveType) {</span>
-<span class="fc" id="L130">                myTypeImg = myTypeNode.getImage();</span>
-            } else {
-<span class="fc" id="L132">                myTypeImg = myTypeNode.jjtGetChild(0).getImage();</span>
-            }
-
-<span class="fc" id="L135">            hash = hash * 31 + myTypeImg.hashCode();</span>
-        }
-
-<span class="fc" id="L138">        return hash;</span>
+<span class="fc" id="L121">        return node.getImage().hashCode() + ((ASTMethodDeclarator) node).getParameterCount();</span>
     }
 
     @Override
     public String toString() {
-<span class="nc" id="L143">        return &quot;Method &quot; + node.getImage() + &quot;, line &quot; + node.getBeginLine() + &quot;, params = &quot; + ((ASTMethodDeclarator) node).getParameterCount();</span>
+<span class="nc" id="L126">        return &quot;Method &quot; + node.getImage() + &quot;, line &quot; + node.getBeginLine() + &quot;, params = &quot; + ((ASTMethodDeclarator) node).getParameterCount();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

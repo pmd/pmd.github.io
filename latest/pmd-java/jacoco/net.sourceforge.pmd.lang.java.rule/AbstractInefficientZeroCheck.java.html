@@ -26,8 +26,6 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
  */
 <span class="fc" id="L27">public abstract class AbstractInefficientZeroCheck extends AbstractJavaRule {</span>
 
-<span class="fc" id="L29">    private static Map&lt;String, String&gt; inverse = new HashMap&lt;&gt;();</span>
-
     public abstract boolean appliesToClassName(String name);
 
     public abstract boolean isTargetMethod(JavaNameOccurrence occ);
@@ -38,41 +36,41 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      * @return map
      */
     public Map&lt;String, List&lt;String&gt;&gt; getComparisonTargets() {
-<span class="fc" id="L41">        Map&lt;String, List&lt;String&gt;&gt; rules = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L42">        rules.put(&quot;==&quot;, Arrays.asList(&quot;0&quot;));</span>
-<span class="fc" id="L43">        rules.put(&quot;!=&quot;, Arrays.asList(&quot;0&quot;));</span>
-<span class="fc" id="L44">        rules.put(&quot;&gt;&quot;, Arrays.asList(&quot;0&quot;));</span>
-<span class="fc" id="L45">        rules.put(&quot;&lt;&quot;, Arrays.asList(&quot;0&quot;));</span>
-<span class="fc" id="L46">        return rules;</span>
+<span class="fc" id="L39">        Map&lt;String, List&lt;String&gt;&gt; rules = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L40">        rules.put(&quot;==&quot;, Arrays.asList(&quot;0&quot;));</span>
+<span class="fc" id="L41">        rules.put(&quot;!=&quot;, Arrays.asList(&quot;0&quot;));</span>
+<span class="fc" id="L42">        rules.put(&quot;&gt;&quot;, Arrays.asList(&quot;0&quot;));</span>
+<span class="fc" id="L43">        rules.put(&quot;&lt;&quot;, Arrays.asList(&quot;0&quot;));</span>
+<span class="fc" id="L44">        return rules;</span>
     }
 
+<span class="fc" id="L47">    private static Map&lt;String, String&gt; inverse = new HashMap&lt;&gt;();</span>
     static {
-<span class="fc" id="L50">        inverse.put(&quot;&lt;&quot;, &quot;&gt;&quot;);</span>
-<span class="fc" id="L51">        inverse.put(&quot;&gt;&quot;, &quot;&lt;&quot;);</span>
-<span class="fc" id="L52">        inverse.put(&quot;&lt;=&quot;, &quot;&gt;=&quot;);</span>
-<span class="fc" id="L53">        inverse.put(&quot;&gt;=&quot;, &quot;&lt;=&quot;);</span>
-<span class="fc" id="L54">        inverse.put(&quot;==&quot;, &quot;==&quot;);</span>
-<span class="fc" id="L55">        inverse.put(&quot;!=&quot;, &quot;!=&quot;);</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L49">        inverse.put(&quot;&lt;&quot;, &quot;&gt;&quot;);</span>
+<span class="fc" id="L50">        inverse.put(&quot;&gt;&quot;, &quot;&lt;&quot;);</span>
+<span class="fc" id="L51">        inverse.put(&quot;&lt;=&quot;, &quot;&gt;=&quot;);</span>
+<span class="fc" id="L52">        inverse.put(&quot;&gt;=&quot;, &quot;&lt;=&quot;);</span>
+<span class="fc" id="L53">        inverse.put(&quot;==&quot;, &quot;==&quot;);</span>
+<span class="fc" id="L54">        inverse.put(&quot;!=&quot;, &quot;!=&quot;);</span>
+<span class="fc" id="L55">    }</span>
 
-    @Override
     public Object visit(ASTVariableDeclaratorId node, Object data) {
-<span class="fc" id="L60">        Node nameNode = node.getTypeNameNode();</span>
-<span class="pc bpc" id="L61" title="1 of 6 branches missed.">        if (nameNode == null || nameNode instanceof ASTPrimitiveType</span>
+<span class="fc" id="L58">        Node nameNode = node.getTypeNameNode();</span>
+<span class="pc bpc" id="L59" title="1 of 6 branches missed.">        if (nameNode == null || nameNode instanceof ASTPrimitiveType</span>
                 || !appliesToClassName(node.getNameDeclaration().getTypeImage())) {
-<span class="fc" id="L63">            return data;</span>
+<span class="fc" id="L61">            return data;</span>
         }
 
-<span class="fc" id="L66">        List&lt;NameOccurrence&gt; declars = node.getUsages();</span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (NameOccurrence occ : declars) {</span>
-<span class="fc" id="L68">            JavaNameOccurrence jocc = (JavaNameOccurrence) occ;</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">            if (!isTargetMethod(jocc)) {</span>
-<span class="fc" id="L70">                continue;</span>
+<span class="fc" id="L64">        List&lt;NameOccurrence&gt; declars = node.getUsages();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (NameOccurrence occ : declars) {</span>
+<span class="fc" id="L66">            JavaNameOccurrence jocc = (JavaNameOccurrence) occ;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if (!isTargetMethod(jocc)) {</span>
+<span class="fc" id="L68">                continue;</span>
             }
-<span class="fc" id="L72">            Node expr = jocc.getLocation().jjtGetParent().jjtGetParent().jjtGetParent();</span>
-<span class="fc" id="L73">            checkNodeAndReport(data, jocc.getLocation(), expr);</span>
-<span class="fc" id="L74">        }</span>
-<span class="fc" id="L75">        return data;</span>
+<span class="fc" id="L70">            Node expr = jocc.getLocation().jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="fc" id="L71">            checkNodeAndReport(data, jocc.getLocation(), expr);</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">        return data;</span>
     }
 
     /**
@@ -87,12 +85,12 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      *            the ==, &lt;, &gt; expression
      */
     protected void checkNodeAndReport(Object data, Node location, Node expr) {
-<span class="pc bpc" id="L90" title="1 of 8 branches missed.">        if ((expr instanceof ASTEqualityExpression || expr instanceof ASTRelationalExpression</span>
+<span class="pc bpc" id="L88" title="1 of 8 branches missed.">        if ((expr instanceof ASTEqualityExpression || expr instanceof ASTRelationalExpression</span>
                 &amp;&amp; getComparisonTargets().containsKey(expr.getImage()))
                 &amp;&amp; isCompare(expr)) {
-<span class="fc" id="L93">            addViolation(data, location);</span>
+<span class="fc" id="L91">            addViolation(data, location);</span>
         }
-<span class="fc" id="L95">    }</span>
+<span class="fc" id="L93">    }</span>
 
     /**
      * We only need to report if this is comparing against one of the comparison
@@ -104,34 +102,34 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      * @see #getComparisonTargets()
      */
     private boolean isCompare(Node equality) {
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (isLiteralLeftHand(equality)) {</span>
-<span class="fc" id="L108">            return checkComparison(inverse.get(equality.getImage()), equality, 0);</span>
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        } else if (isLiteralRightHand(equality)) {</span>
-<span class="fc" id="L110">            return checkComparison(equality.getImage(), equality, 1);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (isLiteralLeftHand(equality)) {</span>
+<span class="fc" id="L106">            return checkComparison(inverse.get(equality.getImage()), equality, 0);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        } else if (isLiteralRightHand(equality)) {</span>
+<span class="fc" id="L108">            return checkComparison(equality.getImage(), equality, 1);</span>
         }
-<span class="fc" id="L112">        return false;</span>
+<span class="fc" id="L110">        return false;</span>
     }
 
     private boolean isLiteralLeftHand(Node equality) {
-<span class="fc" id="L116">        return isLiteral(equality, 0);</span>
+<span class="fc" id="L114">        return isLiteral(equality, 0);</span>
     }
 
     private boolean isLiteralRightHand(Node equality) {
-<span class="fc" id="L120">        return isLiteral(equality, 1);</span>
+<span class="fc" id="L118">        return isLiteral(equality, 1);</span>
     }
 
     private boolean isLiteral(Node equality, int child) {
-<span class="fc" id="L124">        Node target = equality.jjtGetChild(child);</span>
-<span class="fc" id="L125">        target = getFirstChildOrThis(target);</span>
-<span class="fc" id="L126">        target = getFirstChildOrThis(target);</span>
-<span class="fc" id="L127">        return target instanceof ASTLiteral;</span>
+<span class="fc" id="L122">        Node target = equality.jjtGetChild(child);</span>
+<span class="fc" id="L123">        target = getFirstChildOrThis(target);</span>
+<span class="fc" id="L124">        target = getFirstChildOrThis(target);</span>
+<span class="fc" id="L125">        return target instanceof ASTLiteral;</span>
     }
 
     private Node getFirstChildOrThis(Node node) {
-<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt; 0) {</span>
-<span class="fc" id="L132">            return node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc" id="L130">            return node.jjtGetChild(0);</span>
         }
-<span class="fc" id="L134">        return node;</span>
+<span class="fc" id="L132">        return node;</span>
     }
 
     /**
@@ -146,11 +144,11 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      * @see #getComparisonTargets()
      */
     private boolean checkComparison(String operator, Node equality, int i) {
-<span class="fc" id="L149">        Node target = equality</span>
+<span class="fc" id="L147">        Node target = equality</span>
                 .jjtGetChild(i)
                 .jjtGetChild(0)
                 .jjtGetChild(0);
-<span class="pc bpc" id="L153" title="1 of 4 branches missed.">        return target instanceof ASTLiteral &amp;&amp; getComparisonTargets().get(operator).contains(target.getImage());</span>
+<span class="pc bpc" id="L151" title="1 of 4 branches missed.">        return target instanceof ASTLiteral &amp;&amp; getComparisonTargets().get(operator).contains(target.getImage());</span>
     }
 
 }

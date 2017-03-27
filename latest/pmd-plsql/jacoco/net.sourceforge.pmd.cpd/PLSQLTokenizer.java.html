@@ -14,7 +14,7 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserTokenManager;
 import net.sourceforge.pmd.lang.plsql.ast.Token;
 
 <span class="fc" id="L16">public class PLSQLTokenizer implements Tokenizer{</span>
-<span class="fc" id="L17">    private static final Logger LOGGER = Logger.getLogger(PLSQLTokenizer.class.getName());</span>
+<span class="fc" id="L17">    private final static Logger LOGGER = Logger.getLogger(PLSQLTokenizer.class.getName());</span>
 
     public static final String IGNORE_COMMENTS = &quot;ignore_comments&quot;;
     public static final String IGNORE_IDENTIFIERS = &quot;ignore_identifiers&quot;;
@@ -52,29 +52,28 @@ import net.sourceforge.pmd.lang.plsql.ast.Token;
          * a Reader).
          * @param tokenEntries  Derived based on PLSQL Abstract Syntax Tree (derived from PLDOc parser.) 
          */
-	@Override
-    public void tokenize (SourceCode sourceCode, Tokens tokenEntries )
+	public void tokenize (SourceCode sourceCode, Tokens tokenEntries )
 	{
-<span class="fc" id="L58">        long encounteredTokens = 0;</span>
-<span class="fc" id="L59">        long addedTokens = 0;</span>
+<span class="fc" id="L57">        long encounteredTokens = 0;</span>
+<span class="fc" id="L58">        long addedTokens = 0;</span>
 
-<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L62">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreComments==&quot;+ignoreComments);</span>
-<span class="nc" id="L63">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreIdentifiers==&quot;+ignoreIdentifiers);</span>
-<span class="nc" id="L64">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreLiterals==&quot;+ignoreLiterals);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L61">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreComments==&quot;+ignoreComments);</span>
+<span class="nc" id="L62">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreIdentifiers==&quot;+ignoreIdentifiers);</span>
+<span class="nc" id="L63">    		LOGGER.fine(&quot;PLSQLTokenizer: ignoreLiterals==&quot;+ignoreLiterals);</span>
         }
 
-<span class="fc" id="L67">		String fileName = sourceCode.getFileName();</span>
-<span class="fc" id="L68">		StringBuilder sb = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L66">		String fileName = sourceCode.getFileName();</span>
+<span class="fc" id="L67">		StringBuilder sb = sourceCode.getCodeBuffer();</span>
 
-<span class="fc" id="L70">		PLSQLParserTokenManager tokenMgr = new PLSQLParserTokenManager( new SimpleCharStream( new StringReader(sb.toString()))); </span>
-<span class="fc" id="L71">		Token currentToken = tokenMgr.getNextToken();</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">		while (currentToken.image.length()  &gt; 0)</span>
+<span class="fc" id="L69">		PLSQLParserTokenManager tokenMgr = new PLSQLParserTokenManager( new SimpleCharStream( new StringReader(sb.toString()))); </span>
+<span class="fc" id="L70">		Token currentToken = tokenMgr.getNextToken();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		while (currentToken.image.length()  &gt; 0)</span>
 		{
-<span class="fc" id="L74">			String image = currentToken.image;</span>
+<span class="fc" id="L73">			String image = currentToken.image;</span>
 
-<span class="fc" id="L76">                        encounteredTokens++;</span>
-<span class="pc bpc" id="L77" title="13 of 14 branches missed.">			if (ignoreComments &amp;&amp; </span>
+<span class="fc" id="L75">                        encounteredTokens++;</span>
+<span class="pc bpc" id="L76" title="13 of 14 branches missed.">			if (ignoreComments &amp;&amp; </span>
 			    ( currentToken.kind == PLSQLParserConstants.SINGLE_LINE_COMMENT
 			    ||currentToken.kind == PLSQLParserConstants.MULTI_LINE_COMMENT
 			    ||currentToken.kind == PLSQLParserConstants.FORMAL_COMMENT
@@ -83,16 +82,16 @@ import net.sourceforge.pmd.lang.plsql.ast.Token;
 			    ||currentToken.kind == PLSQLParserConstants.IN_FORMAL_COMMENT
 				)
 				) {
-<span class="nc" id="L86">				image = String.valueOf(currentToken.kind);</span>
+<span class="nc" id="L85">				image = String.valueOf(currentToken.kind);</span>
 			}
 
-<span class="pc bpc" id="L89" title="3 of 4 branches missed.">			if (ignoreIdentifiers &amp;&amp; </span>
+<span class="pc bpc" id="L88" title="3 of 4 branches missed.">			if (ignoreIdentifiers &amp;&amp; </span>
 			    currentToken.kind == PLSQLParserConstants.IDENTIFIER
 				) {
-<span class="nc" id="L92">				image = String.valueOf(currentToken.kind);</span>
+<span class="nc" id="L91">				image = String.valueOf(currentToken.kind);</span>
 			}
 
-<span class="pc bpc" id="L95" title="13 of 14 branches missed.">			if (ignoreLiterals</span>
+<span class="pc bpc" id="L94" title="13 of 14 branches missed.">			if (ignoreLiterals</span>
 				&amp;&amp; (   
 					   currentToken.kind == PLSQLParserConstants.UNSIGNED_NUMERIC_LITERAL 
 					|| currentToken.kind == PLSQLParserConstants.FLOAT_LITERAL
@@ -102,21 +101,21 @@ import net.sourceforge.pmd.lang.plsql.ast.Token;
 					|| currentToken.kind == PLSQLParserConstants.QUOTED_LITERAL
 					)
 				) {
-<span class="nc" id="L105">				image = String.valueOf(currentToken.kind);</span>
+<span class="nc" id="L104">				image = String.valueOf(currentToken.kind);</span>
 			}
 
-<span class="fc" id="L108">			tokenEntries.add(new TokenEntry(image, fileName, currentToken.beginLine));</span>
-<span class="fc" id="L109">                        addedTokens++;</span>
-<span class="fc" id="L110">			currentToken = tokenMgr.getNextToken();</span>
-<span class="fc" id="L111">		}</span>
-<span class="fc" id="L112">		tokenEntries.add(TokenEntry.getEOF() );</span>
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L114">            LOGGER.fine(sourceCode.getFileName() </span>
+<span class="fc" id="L107">			tokenEntries.add(new TokenEntry(image, fileName, currentToken.beginLine));</span>
+<span class="fc" id="L108">                        addedTokens++;</span>
+<span class="fc" id="L109">			currentToken = tokenMgr.getNextToken();</span>
+<span class="fc" id="L110">		}</span>
+<span class="fc" id="L111">		tokenEntries.add(TokenEntry.getEOF() );</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">		if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L113">            LOGGER.fine(sourceCode.getFileName() </span>
                         + &quot;: encountered &quot; + encounteredTokens + &quot; tokens;&quot;
                         + &quot; added &quot; + addedTokens + &quot; tokens&quot;
                        );
 		}
-<span class="fc" id="L119">	}</span>
+<span class="fc" id="L118">	}</span>
 
 
 

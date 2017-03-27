@@ -18,45 +18,42 @@ import net.sourceforge.pmd.lang.rule.AbstractRuleChainVisitor;
 import net.sourceforge.pmd.lang.rule.XPathRule;
 
 <span class="fc" id="L20">public class PLSQLRuleChainVisitor extends AbstractRuleChainVisitor {</span>
-<span class="fc" id="L21">    private static final Logger LOGGER = Logger.getLogger(PLSQLRuleChainVisitor.class.getName());</span>
-<span class="fc" id="L22">    private static final String CLASS_NAME = PLSQLRuleChainVisitor.class.getName();</span>
+<span class="fc" id="L21">   private final static Logger LOGGER = Logger.getLogger(PLSQLRuleChainVisitor.class.getName()); </span>
+<span class="fc" id="L22">   private final static String CLASS_NAME = PLSQLRuleChainVisitor.class.getName(); </span>
 
-	@Override
-    protected void indexNodes(List&lt;Node&gt; nodes, RuleContext ctx) {
-<span class="fc" id="L26">                LOGGER.entering(CLASS_NAME,&quot;indexNodes&quot;);</span>
-<span class="fc" id="L27">		PLSQLParserVisitor plsqlParserVistor = new PLSQLParserVisitorAdapter() {</span>
+	protected void indexNodes(List&lt;Node&gt; nodes, RuleContext ctx) {
+<span class="fc" id="L25">                LOGGER.entering(CLASS_NAME,&quot;indexNodes&quot;);</span>
+<span class="fc" id="L26">		PLSQLParserVisitor plsqlParserVistor = new PLSQLParserVisitorAdapter() {</span>
 			// Perform a visitation of the AST to index nodes which need
 			// visiting by type
-			@Override
-            public Object visit(PLSQLNode node, Object data) {
-<span class="fc" id="L32">				indexNode(node);</span>
-<span class="fc" id="L33">				return super.visit(node, data);</span>
+			public Object visit(PLSQLNode node, Object data) {
+<span class="fc" id="L30">				indexNode(node);</span>
+<span class="fc" id="L31">				return super.visit(node, data);</span>
 			}
 		};
 
-<span class="fc bfc" id="L37" title="All 2 branches covered.">		for (int i = 0; i &lt; nodes.size(); i++) {</span>
-<span class="fc" id="L38">			plsqlParserVistor.visit((ASTInput)nodes.get(i), ctx);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">		for (int i = 0; i &lt; nodes.size(); i++) {</span>
+<span class="fc" id="L36">			plsqlParserVistor.visit((ASTInput)nodes.get(i), ctx);</span>
 		}
-<span class="fc" id="L40">                LOGGER.exiting(CLASS_NAME,&quot;indexNodes&quot;);</span>
-<span class="fc" id="L41">	}</span>
+<span class="fc" id="L38">                LOGGER.exiting(CLASS_NAME,&quot;indexNodes&quot;);</span>
+<span class="fc" id="L39">	}</span>
 
-	@Override
-    protected void visit(Rule rule, Node node, RuleContext ctx) {
-<span class="fc" id="L45">                LOGGER.entering(CLASS_NAME,&quot;visit&quot;);</span>
+	protected void visit(Rule rule, Node node, RuleContext ctx) {
+<span class="nc" id="L42">                LOGGER.entering(CLASS_NAME,&quot;visit&quot;);</span>
 		// Rule better either be a PLSQLParserVisitor, or a XPathRule#
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L48">		LOGGER.fine(&quot;Rule=&quot;+rule);</span>
-<span class="nc" id="L49">		LOGGER.fine(&quot;Node=&quot;+node);</span>
-<span class="nc" id="L50">		LOGGER.fine(&quot;RuleContext=&quot;+ctx);</span>
-<span class="nc" id="L51">		LOGGER.fine(&quot;Rule Classname=&quot;+rule.getClass().getCanonicalName());</span>
-<span class="nc" id="L52">		LOGGER.fine(&quot;Rule Name=&quot;+rule.getName());</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L45">		LOGGER.fine(&quot;Rule=&quot;+rule);</span>
+<span class="nc" id="L46">		LOGGER.fine(&quot;Node=&quot;+node);</span>
+<span class="nc" id="L47">		LOGGER.fine(&quot;RuleContext=&quot;+ctx);</span>
+<span class="nc" id="L48">		LOGGER.fine(&quot;Rule Classname=&quot;+rule.getClass().getCanonicalName());</span>
+<span class="nc" id="L49">		LOGGER.fine(&quot;Rule Name=&quot;+rule.getName());</span>
                 }
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">		if (rule instanceof XPathRule) {</span>
-<span class="fc" id="L55">			((XPathRule)rule).evaluate(node, ctx);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (rule instanceof XPathRule) {</span>
+<span class="nc" id="L52">			((XPathRule)rule).evaluate(node, ctx);</span>
 		} else {
-<span class="nc" id="L57">			((PLSQLNode)node).jjtAccept((PLSQLParserVisitor)rule, ctx);</span>
+<span class="nc" id="L54">			((PLSQLNode)node).jjtAccept((PLSQLParserVisitor)rule, ctx);</span>
 		}
-<span class="fc" id="L59">                LOGGER.exiting(CLASS_NAME,&quot;visit&quot;);</span>
-<span class="fc" id="L60">	}</span>
+<span class="nc" id="L56">                LOGGER.exiting(CLASS_NAME,&quot;visit&quot;);</span>
+<span class="nc" id="L57">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -38,22 +38,27 @@ public class TokenEntry implements Comparable&lt;TokenEntry&gt; {
 <span class="fc" id="L38">    }</span>
 
 <span class="fc" id="L40">    public TokenEntry(String image, String tokenSrcID, int beginLine) {</span>
-<span class="fc" id="L41">        setImage(image);</span>
-<span class="fc" id="L42">        this.tokenSrcID = tokenSrcID;</span>
-<span class="fc" id="L43">        this.beginLine = beginLine;</span>
-<span class="fc" id="L44">        this.index = TOKEN_COUNT.get().getAndIncrement();</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L41">        Integer i = TOKENS.get().get(image);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (i == null) {</span>
+<span class="fc" id="L43">            i = TOKENS.get().size() + 1;</span>
+<span class="fc" id="L44">            TOKENS.get().put(image, i);</span>
+        }
+<span class="fc" id="L46">        this.identifier = i.intValue();</span>
+<span class="fc" id="L47">        this.tokenSrcID = tokenSrcID;</span>
+<span class="fc" id="L48">        this.beginLine = beginLine;</span>
+<span class="fc" id="L49">        this.index = TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L50">    }</span>
 
     public static TokenEntry getEOF() {
-<span class="fc" id="L48">        TOKEN_COUNT.get().getAndIncrement();</span>
-<span class="fc" id="L49">        return EOF;</span>
+<span class="fc" id="L53">        TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L54">        return EOF;</span>
     }
 
     public static void clearImages() {
-<span class="fc" id="L53">        TOKENS.get().clear();</span>
-<span class="fc" id="L54">        TOKENS.remove();</span>
-<span class="fc" id="L55">        TOKEN_COUNT.remove();</span>
-<span class="fc" id="L56">    }</span>
+<span class="fc" id="L58">        TOKENS.get().clear();</span>
+<span class="fc" id="L59">        TOKENS.remove();</span>
+<span class="fc" id="L60">        TOKEN_COUNT.remove();</span>
+<span class="fc" id="L61">    }</span>
     /**
      * Helper class to preserve and restore the current state
      * of the token entries.
@@ -62,75 +67,66 @@ public class TokenEntry implements Comparable&lt;TokenEntry&gt; {
         private int tokenCount;
         private Map&lt;String, Integer&gt; tokens;
         private List&lt;TokenEntry&gt; entries;
-<span class="nc" id="L65">        public State(List&lt;TokenEntry&gt; entries) {</span>
-<span class="nc" id="L66">            this.tokenCount = TokenEntry.TOKEN_COUNT.get().intValue();</span>
-<span class="nc" id="L67">            this.tokens = new HashMap&lt;&gt;(TokenEntry.TOKENS.get());</span>
-<span class="nc" id="L68">            this.entries = new ArrayList&lt;&gt;(entries);</span>
-<span class="nc" id="L69">        }</span>
+<span class="nc" id="L70">        public State(List&lt;TokenEntry&gt; entries) {</span>
+<span class="nc" id="L71">            this.tokenCount = TokenEntry.TOKEN_COUNT.get().intValue();</span>
+<span class="nc" id="L72">            this.tokens = new HashMap&lt;&gt;(TokenEntry.TOKENS.get());</span>
+<span class="nc" id="L73">            this.entries = new ArrayList&lt;&gt;(entries);</span>
+<span class="nc" id="L74">        }</span>
         public List&lt;TokenEntry&gt; restore() {
-<span class="nc" id="L71">            TokenEntry.TOKEN_COUNT.get().set(tokenCount);</span>
-<span class="nc" id="L72">            TOKENS.get().clear();</span>
-<span class="nc" id="L73">            TOKENS.get().putAll(tokens);</span>
-<span class="nc" id="L74">            return entries;</span>
+<span class="nc" id="L76">            TokenEntry.TOKEN_COUNT.get().set(tokenCount);</span>
+<span class="nc" id="L77">            TOKENS.get().clear();</span>
+<span class="nc" id="L78">            TOKENS.get().putAll(tokens);</span>
+<span class="nc" id="L79">            return entries;</span>
         }
     }
 
     public String getTokenSrcID() {
-<span class="fc" id="L79">        return tokenSrcID;</span>
+<span class="fc" id="L84">        return tokenSrcID;</span>
     }
 
     public int getBeginLine() {
-<span class="fc" id="L83">        return beginLine;</span>
+<span class="fc" id="L88">        return beginLine;</span>
     }
 
     public int getIdentifier() {
-<span class="fc" id="L87">        return this.identifier;</span>
+<span class="fc" id="L92">        return this.identifier;</span>
     }
 
     public int getIndex() {
-<span class="fc" id="L91">        return this.index;</span>
+<span class="fc" id="L96">        return this.index;</span>
     }
 
     public int hashCode() {
-<span class="fc" id="L95">        return hashCode;</span>
+<span class="fc" id="L100">        return hashCode;</span>
     }
 
     public void setHashCode(int hashCode) {
-<span class="fc" id="L99">        this.hashCode = hashCode;</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L104">        this.hashCode = hashCode;</span>
+<span class="fc" id="L105">    }</span>
 
     public boolean equals(Object o) {
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (!(o instanceof TokenEntry)) {</span>
-<span class="nc" id="L104">            return false;</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (!(o instanceof TokenEntry)) {</span>
+<span class="nc" id="L109">            return false;</span>
         }
-<span class="fc" id="L106">        TokenEntry other = (TokenEntry) o;</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        return other.hashCode == hashCode;</span>
+<span class="fc" id="L111">        TokenEntry other = (TokenEntry) o;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        return other.hashCode == hashCode;</span>
     }
 
     public int compareTo(TokenEntry other) {
-<span class="fc" id="L111">        return getIndex() - other.getIndex();</span>
+<span class="fc" id="L116">        return getIndex() - other.getIndex();</span>
     }
 
     @Override
     public String toString() {
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (this == EOF) {</span>
-<span class="nc" id="L117">            return &quot;EOF&quot;;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (this == EOF) {</span>
+<span class="nc" id="L122">            return &quot;EOF&quot;;</span>
         }
-<span class="nc bnc" id="L119" title="All 2 branches missed.">        for (Map.Entry&lt;String, Integer&gt; e : TOKENS.get().entrySet()) {</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">            if (e.getValue().intValue() == identifier) {</span>
-<span class="nc" id="L121">                return e.getKey();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">        for (Map.Entry&lt;String, Integer&gt; e : TOKENS.get().entrySet()) {</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (e.getValue().intValue() == identifier) {</span>
+<span class="nc" id="L126">                return e.getKey();</span>
             }
-<span class="nc" id="L123">        }</span>
-<span class="nc" id="L124">        return &quot;--unkown--&quot;;</span>
+<span class="nc" id="L128">        }</span>
+<span class="nc" id="L129">        return &quot;--unkown--&quot;;</span>
     }
-
-    final void setImage(String image) {
-<span class="fc" id="L128">        Integer i = TOKENS.get().get(image);</span>
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (i == null) {</span>
-<span class="fc" id="L130">            i = TOKENS.get().size() + 1;</span>
-<span class="fc" id="L131">            TOKENS.get().put(image, i);</span>
-        }
-<span class="fc" id="L133">        this.identifier = i.intValue();</span>
-<span class="fc" id="L134">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

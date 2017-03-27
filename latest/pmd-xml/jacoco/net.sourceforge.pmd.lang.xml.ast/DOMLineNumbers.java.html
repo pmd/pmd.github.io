@@ -3,9 +3,12 @@
  */
 package net.sourceforge.pmd.lang.xml.ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.NamedNodeMap;
@@ -13,141 +16,188 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.ProcessingInstruction;
 
-import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
-
 /**
  *
  */
 class DOMLineNumbers {
     private final Document document;
     private String xmlString;
-    private SourceCodePositioner sourceCodePositioner;
+    private List&lt;Integer&gt; lines;
 
-<span class="fc" id="L26">    public DOMLineNumbers(Document document, String xmlString) {</span>
-<span class="fc" id="L27">        this.document = document;</span>
-<span class="fc" id="L28">        this.xmlString = xmlString;</span>
-<span class="fc" id="L29">        this.sourceCodePositioner = new SourceCodePositioner(xmlString);</span>
+<span class="fc" id="L27">    public DOMLineNumbers(Document document, String xmlString) {</span>
+<span class="fc" id="L28">        this.document = document;</span>
+<span class="fc" id="L29">        this.xmlString = xmlString;</span>
 <span class="fc" id="L30">    }</span>
     
     public void determine() {
-<span class="fc" id="L33">        determineLocation(document, 0);</span>
-<span class="fc" id="L34">    }</span>
+<span class="fc" id="L33">        calculateLinesMap();</span>
+<span class="fc" id="L34">        determineLocation(document, 0);</span>
+<span class="fc" id="L35">    }</span>
     private int determineLocation(Node n, int index) {
-<span class="fc" id="L36">        int nextIndex = index;</span>
-<span class="fc" id="L37">        int nodeLength = 0;</span>
-<span class="fc" id="L38">        int textLength = 0;</span>
-<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
-<span class="fc" id="L40">            nextIndex = xmlString.indexOf(&quot;&lt;!DOCTYPE&quot;, nextIndex);</span>
-<span class="fc" id="L41">            nodeLength = &quot;&lt;!DOCTYPE&quot;.length();</span>
-<span class="fc bfc" id="L42" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
-<span class="fc" id="L43">            nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
-<span class="fc" id="L45">            nextIndex = xmlString.indexOf(&quot;&lt;&quot; + n.getNodeName(), nextIndex);</span>
-<span class="fc" id="L46">            nodeLength = xmlString.indexOf(&quot;&gt;&quot;, nextIndex) - nextIndex + 1;</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
-<span class="fc" id="L48">            nextIndex = xmlString.indexOf(&quot;&lt;![CDATA[&quot;, nextIndex);</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
-<span class="fc" id="L50">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
-<span class="fc" id="L51">            nextIndex = xmlString.indexOf(&quot;&lt;?&quot; + pi.getTarget(), nextIndex);</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
-<span class="fc" id="L53">            String te = unexpandEntities(n, n.getNodeValue(), true);</span>
-<span class="fc" id="L54">            int newIndex = xmlString.indexOf(te, nextIndex);</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">            if (newIndex == -1) {</span>
+<span class="fc" id="L37">        int nextIndex = index;</span>
+<span class="fc" id="L38">        int nodeLength = 0;</span>
+<span class="fc" id="L39">        int textLength = 0;</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
+<span class="fc" id="L41">            nextIndex = xmlString.indexOf(&quot;&lt;!DOCTYPE&quot;, nextIndex);</span>
+<span class="fc" id="L42">            nodeLength = &quot;&lt;!DOCTYPE&quot;.length();</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L44">            nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L46">            nextIndex = xmlString.indexOf(&quot;&lt;&quot; + n.getNodeName(), nextIndex);</span>
+<span class="fc" id="L47">            nodeLength = xmlString.indexOf(&quot;&gt;&quot;, nextIndex) - nextIndex + 1;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
+<span class="fc" id="L49">            nextIndex = xmlString.indexOf(&quot;&lt;![CDATA[&quot;, nextIndex);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
+<span class="fc" id="L51">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
+<span class="fc" id="L52">            nextIndex = xmlString.indexOf(&quot;&lt;?&quot; + pi.getTarget(), nextIndex);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="fc" id="L54">            String te = unexpandEntities(n, n.getNodeValue(), true);</span>
+<span class="fc" id="L55">            int newIndex = xmlString.indexOf(te, nextIndex);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">            if (newIndex == -1) {</span>
                 // try again without escaping the quotes
-<span class="fc" id="L57">                te = unexpandEntities(n, n.getNodeValue(), false);</span>
-<span class="fc" id="L58">                newIndex = xmlString.indexOf(te, nextIndex);</span>
+<span class="fc" id="L58">                te = unexpandEntities(n, n.getNodeValue(), false);</span>
+<span class="fc" id="L59">                newIndex = xmlString.indexOf(te, nextIndex);</span>
             }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (newIndex &gt; 0) {</span>
-<span class="fc" id="L61">                textLength = te.length();</span>
-<span class="fc" id="L62">                nextIndex = newIndex;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (newIndex &gt; 0) {</span>
+<span class="fc" id="L62">                textLength = te.length();</span>
+<span class="fc" id="L63">                nextIndex = newIndex;</span>
             }
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ENTITY_REFERENCE_NODE) {</span>
-<span class="fc" id="L65">            nextIndex = xmlString.indexOf(&quot;&amp;&quot; + n.getNodeName() + &quot;;&quot;, nextIndex);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.ENTITY_REFERENCE_NODE) {</span>
+<span class="fc" id="L66">            nextIndex = xmlString.indexOf(&quot;&amp;&quot; + n.getNodeName() + &quot;;&quot;, nextIndex);</span>
         }
-<span class="fc" id="L67">        setBeginLocation(n, nextIndex);</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (n.hasChildNodes()) {</span>
+<span class="fc" id="L68">        setBeginLocation(n, nextIndex);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (n.hasChildNodes()) {</span>
             // next nodes begin after the current start tag
-<span class="fc" id="L70">            nextIndex += nodeLength;</span>
-<span class="fc" id="L71">            NodeList childs = n.getChildNodes();</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">            for (int i = 0; i &lt; childs.getLength(); i++) {</span>
-<span class="fc" id="L73">                nextIndex = determineLocation(childs.item(i), nextIndex);</span>
+<span class="fc" id="L71">            nextIndex += nodeLength;</span>
+<span class="fc" id="L72">            NodeList childs = n.getChildNodes();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            for (int i = 0; i &lt; childs.getLength(); i++) {</span>
+<span class="fc" id="L74">                nextIndex = determineLocation(childs.item(i), nextIndex);</span>
             }
         }
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
-<span class="fc" id="L77">            nextIndex += 2 + n.getNodeName().length() + 1; // &lt;/nodename&gt;</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
-<span class="fc" id="L79">            Node nextSibling = n.getNextSibling();</span>
-<span class="fc bfc" id="L80" title="All 2 branches covered.">            if (nextSibling.getNodeType() == Node.ELEMENT_NODE) {</span>
-<span class="fc" id="L81">                nextIndex = xmlString.indexOf(&quot;&lt;&quot; + nextSibling.getNodeName(), nextIndex) - 1;</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            } else if (nextSibling.getNodeType() == Node.COMMENT_NODE) {</span>
-<span class="fc" id="L83">                nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (n.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L78">            nextIndex += 2 + n.getNodeName().length() + 1; // &lt;/nodename&gt;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {</span>
+<span class="fc" id="L80">            Node nextSibling = n.getNextSibling();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">            if (nextSibling.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L82">                nextIndex = xmlString.indexOf(&quot;&lt;&quot; + nextSibling.getNodeName(), nextIndex) - 1;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">            } else if (nextSibling.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L84">                nextIndex = xmlString.indexOf(&quot;&lt;!--&quot;, nextIndex);</span>
             } else {
-<span class="nc" id="L85">                nextIndex = xmlString.indexOf(&quot;&gt;&quot;, nextIndex);</span>
+<span class="nc" id="L86">                nextIndex = xmlString.indexOf(&quot;&gt;&quot;, nextIndex);</span>
             }
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
-<span class="fc" id="L88">            nextIndex += 4 + 3; // &lt;!-- and --&gt;</span>
-<span class="fc" id="L89">            nextIndex += n.getNodeValue().length();</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
-<span class="fc" id="L91">            nextIndex += textLength;</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
-<span class="fc" id="L93">            nextIndex += &quot;&lt;![CDATA[&quot;.length() + n.getNodeValue().length() + &quot;]]&gt;&quot;.length();</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
-<span class="fc" id="L95">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
-<span class="fc" id="L96">            nextIndex += &quot;&lt;?&quot;.length() + pi.getTarget().length() + &quot;?&gt;&quot;.length() + pi.getData().length();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.COMMENT_NODE) {</span>
+<span class="fc" id="L89">            nextIndex += 4 + 3; // &lt;!-- and --&gt;</span>
+<span class="fc" id="L90">            nextIndex += n.getNodeValue().length();</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="fc" id="L92">            nextIndex += textLength;</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.CDATA_SECTION_NODE) {</span>
+<span class="fc" id="L94">            nextIndex += &quot;&lt;![CDATA[&quot;.length() + n.getNodeValue().length() + &quot;]]&gt;&quot;.length();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        } else if (n.getNodeType() == Node.PROCESSING_INSTRUCTION_NODE) {</span>
+<span class="fc" id="L96">            ProcessingInstruction pi = (ProcessingInstruction)n;</span>
+<span class="fc" id="L97">            nextIndex += &quot;&lt;?&quot;.length() + pi.getTarget().length() + &quot;?&gt;&quot;.length() + pi.getData().length();</span>
         }
-<span class="fc" id="L98">        setEndLocation(n, nextIndex - 1);</span>
-<span class="fc" id="L99">        return nextIndex;</span>
+<span class="fc" id="L99">        setEndLocation(n, nextIndex - 1);</span>
+<span class="fc" id="L100">        return nextIndex;</span>
     }
 
     private String unexpandEntities(Node n, String te, boolean withQuotes) {
-<span class="fc" id="L103">        String result = te;</span>
-<span class="fc" id="L104">        DocumentType doctype = n.getOwnerDocument().getDoctype();</span>
+<span class="fc" id="L104">        String result = te;</span>
+<span class="fc" id="L105">        DocumentType doctype = n.getOwnerDocument().getDoctype();</span>
         // implicit entities
-<span class="fc" id="L106">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&amp;&quot;), &quot;&amp;amp;&quot;);</span>
-<span class="fc" id="L107">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&lt;&quot;), &quot;&amp;lt;&quot;);</span>
-<span class="fc" id="L108">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&gt;&quot;), &quot;&amp;gt;&quot;);</span>
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (withQuotes) {</span>
-<span class="fc" id="L110">            result = result.replaceAll(Matcher.quoteReplacement(&quot;\&quot;&quot;), &quot;&amp;quot;&quot;);</span>
-<span class="fc" id="L111">            result = result.replaceAll(Matcher.quoteReplacement(&quot;'&quot;), &quot;&amp;apos;&quot;);</span>
+<span class="fc" id="L107">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&amp;&quot;), &quot;&amp;amp;&quot;);</span>
+<span class="fc" id="L108">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&lt;&quot;), &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L109">        result = result.replaceAll(Matcher.quoteReplacement(&quot;&gt;&quot;), &quot;&amp;gt;&quot;);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (withQuotes) {</span>
+<span class="fc" id="L111">            result = result.replaceAll(Matcher.quoteReplacement(&quot;\&quot;&quot;), &quot;&amp;quot;&quot;);</span>
+<span class="fc" id="L112">            result = result.replaceAll(Matcher.quoteReplacement(&quot;'&quot;), &quot;&amp;apos;&quot;);</span>
         }
 
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (doctype != null) {</span>
-<span class="fc" id="L115">            NamedNodeMap entities = doctype.getEntities();</span>
-<span class="fc" id="L116">            String internalSubset = doctype.getInternalSubset();</span>
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">            if (internalSubset == null) {</span>
-<span class="nc" id="L118">                internalSubset = &quot;&quot;;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (doctype != null) {</span>
+<span class="fc" id="L116">            NamedNodeMap entities = doctype.getEntities();</span>
+<span class="fc" id="L117">            String internalSubset = doctype.getInternalSubset();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if (internalSubset == null) {</span>
+<span class="nc" id="L119">                internalSubset = &quot;&quot;;</span>
             }
-<span class="fc bfc" id="L120" title="All 2 branches covered.">            for (int i = 0; i &lt; entities.getLength(); i++) {</span>
-<span class="fc" id="L121">                Node item = entities.item(i);</span>
-<span class="fc" id="L122">                String entityName = item.getNodeName();</span>
-<span class="fc" id="L123">                Node firstChild = item.getFirstChild();</span>
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                if (firstChild != null) {</span>
-<span class="nc" id="L125">                    result = result.replaceAll(Matcher.quoteReplacement(firstChild.getNodeValue()), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">            for (int i = 0; i &lt; entities.getLength(); i++) {</span>
+<span class="fc" id="L122">                Node item = entities.item(i);</span>
+<span class="fc" id="L123">                String entityName = item.getNodeName();</span>
+<span class="fc" id="L124">                Node firstChild = item.getFirstChild();</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">                if (firstChild != null) {</span>
+<span class="nc" id="L126">                    result = result.replaceAll(Matcher.quoteReplacement(firstChild.getNodeValue()), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
                 } else {
-<span class="fc" id="L127">                    Matcher m = Pattern.compile(Matcher.quoteReplacement(&quot;&lt;!ENTITY &quot; + entityName + &quot; &quot;) + &quot;[']([^']*)[']&gt;&quot;).matcher(internalSubset);</span>
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">                    if (m.find()) {</span>
-<span class="fc" id="L129">                        result = result.replaceAll(Matcher.quoteReplacement(m.group(1)), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
+<span class="fc" id="L128">                    Matcher m = Pattern.compile(Matcher.quoteReplacement(&quot;&lt;!ENTITY &quot; + entityName + &quot; &quot;) + &quot;[']([^']*)[']&gt;&quot;).matcher(internalSubset);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">                    if (m.find()) {</span>
+<span class="fc" id="L130">                        result = result.replaceAll(Matcher.quoteReplacement(m.group(1)), &quot;&amp;&quot; + entityName + &quot;;&quot;);</span>
                     }
                 }
             }
         }
-<span class="fc" id="L134">        return result;</span>
+<span class="fc" id="L135">        return result;</span>
     }
     private void setBeginLocation(Node n, int index) {
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (n != null) {</span>
-<span class="fc" id="L138">            int line = sourceCodePositioner.lineNumberFromOffset(index);</span>
-<span class="fc" id="L139">            int column = sourceCodePositioner.columnFromOffset(line, index);</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (n != null) {</span>
+<span class="fc" id="L139">            int line = toLine(index);</span>
 <span class="fc" id="L140">            n.setUserData(XmlNode.BEGIN_LINE, line, null);</span>
-<span class="fc" id="L141">            n.setUserData(XmlNode.BEGIN_COLUMN, column, null);</span>
+<span class="fc" id="L141">            n.setUserData(XmlNode.BEGIN_COLUMN, toColumn(line, index), null);</span>
         }
 <span class="fc" id="L143">    }</span>
     private void setEndLocation(Node n, int index) {
 <span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (n != null) {</span>
-<span class="fc" id="L146">            int line = sourceCodePositioner.lineNumberFromOffset(index);</span>
-<span class="fc" id="L147">            int column = sourceCodePositioner.columnFromOffset(line, index);</span>
-<span class="fc" id="L148">            n.setUserData(XmlNode.END_LINE, line, null);</span>
-<span class="fc" id="L149">            n.setUserData(XmlNode.END_COLUMN, column, null);</span>
+<span class="fc" id="L146">            int line = toLine(index);</span>
+<span class="fc" id="L147">            n.setUserData(XmlNode.END_LINE, line, null);</span>
+<span class="fc" id="L148">            n.setUserData(XmlNode.END_COLUMN, toColumn(line, index), null);</span>
         }
-<span class="fc" id="L151">    }</span>
+<span class="fc" id="L150">    }</span>
+    
+    /**
+     * Calculates a list with the file offsets for each line.
+     */
+    private void calculateLinesMap() {
+<span class="fc" id="L156">        lines = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L158">        int index = -1;</span>
+<span class="fc" id="L159">        int count = StringUtils.countMatches(xmlString, &quot;\n&quot;);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (int line = 1; line &lt;= count; line++) {</span>
+<span class="fc" id="L161">            lines.add(index + 1);</span>
+<span class="fc" id="L162">            index = xmlString.indexOf(&quot;\n&quot;, index + 1); // fast forward till end of current line</span>
+        }
+<span class="fc" id="L164">        lines.add(index + 1);</span>
+<span class="fc" id="L165">    }</span>
+
+    private int toLine(int index) {
+<span class="fc" id="L168">        int low = 0;</span>
+<span class="fc" id="L169">        int high = lines.size() - 1;</span>
+
+        // binary search the best match
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        while (low &lt;= high) {</span>
+<span class="fc" id="L173">            int middle = (low + high) / 2;</span>
+<span class="fc" id="L174">            int middleStart = lines.get(middle);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            if (middleStart == index) {</span>
+<span class="fc" id="L176">                return middle + 1; // found</span>
+            }
+
+<span class="fc bfc" id="L179" title="All 2 branches covered.">            if (middleStart &gt; index) {</span>
+<span class="fc" id="L180">                high = middle - 1;</span>
+            } else {
+<span class="fc" id="L182">                low = middle + 1;</span>
+            }
+<span class="fc" id="L184">        }</span>
+
+<span class="fc" id="L186">        return low; // not found or last checked line, which is the best match;</span>
+    }
+
+    private int toColumn(int line, int index) {
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (line &lt;= 0) {</span>
+            // line couldn't be determined
+<span class="nc" id="L192">            return 0;</span>
+        }
+
+<span class="fc" id="L195">        Integer lineStart = lines.get(line - 1);</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">        if (lineStart == null) {</span>
+<span class="nc" id="L197">            lineStart = lines.get(lines.size() - 1);</span>
+        }
+<span class="fc" id="L199">        int column = index - lineStart;</span>
+<span class="fc" id="L200">        return column + 1;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
