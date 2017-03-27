@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractPropertySource.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">AbstractPropertySource.java</span></div><h1>AbstractPropertySource.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.util.CollectionUtil;
+
+/**
+ * Base class for objects which can be configured through properties. Rules and
+ * Reports are such objects.
+ * 
+ * @author Brian Remedios
+ */
+<span class="fc" id="L22">public abstract class AbstractPropertySource implements PropertySource {</span>
+
+    /** The list of known properties that can be configured. */
+<span class="fc" id="L25">    protected List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors = new ArrayList&lt;&gt;();</span>
+    /** The values for each property. */
+<span class="fc" id="L27">    protected Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertyValuesByDescriptor = new HashMap&lt;&gt;();</span>
+
+    /**
+     * Creates a copied list of the property descriptors and returns it.
+     * 
+     * @return a copy of the property descriptors.
+     */
+    protected List&lt;PropertyDescriptor&lt;?&gt;&gt; copyPropertyDescriptors() {
+<span class="nc" id="L35">        List&lt;PropertyDescriptor&lt;?&gt;&gt; copy = new ArrayList&lt;&gt;(propertyDescriptors.size());</span>
+<span class="nc" id="L36">        copy.addAll(propertyDescriptors);</span>
+<span class="nc" id="L37">        return copy;</span>
+    }
+
+    /**
+     * Creates a copied map of the values of the properties and returns it.
+     * 
+     * @return a copy of the values
+     */
+    protected Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; copyPropertyValues() {
+<span class="nc" id="L46">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; copy = new HashMap&lt;&gt;(</span>
+                propertyValuesByDescriptor.size());
+<span class="nc" id="L48">        copy.putAll(propertyValuesByDescriptor);</span>
+<span class="nc" id="L49">        return copy;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Set&lt;PropertyDescriptor&lt;?&gt;&gt; ignoredProperties() {
+<span class="nc" id="L56">        return Collections.emptySet();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void definePropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
+        // Check to ensure the property does not already exist.
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; descriptor : propertyDescriptors) {</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (descriptor.name().equals(propertyDescriptor.name())) {</span>
+<span class="nc" id="L66">                throw new IllegalArgumentException(&quot;There is already a PropertyDescriptor with name '&quot;</span>
+                        + propertyDescriptor.name() + &quot;' defined on Rule &quot; + getName() + &quot;.&quot;);
+            }
+<span class="fc" id="L69">        }</span>
+<span class="fc" id="L70">        propertyDescriptors.add(propertyDescriptor);</span>
+        // Sort in UI order
+<span class="fc" id="L72">        Collections.sort(propertyDescriptors);</span>
+<span class="fc" id="L73">    }</span>
+
+    /**
+     * Gets the name of the property source. This is e.g. the rule name or the report name.
+     * @return the name
+     */
+    public abstract String getName();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PropertyDescriptor&lt;?&gt; getPropertyDescriptor(String name) {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : propertyDescriptors) {</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (name.equals(propertyDescriptor.name())) {</span>
+<span class="fc" id="L88">                return propertyDescriptor;</span>
+            }
+<span class="fc" id="L90">        }</span>
+<span class="fc" id="L91">        return null;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDescriptor(PropertyDescriptor&lt;?&gt; descriptor) {
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (propertyValuesByDescriptor.isEmpty()) {</span>
+<span class="nc" id="L101">            propertyValuesByDescriptor = getPropertiesByPropertyDescriptor();</span>
+        }
+
+<span class="nc" id="L104">        return propertyValuesByDescriptor.containsKey(descriptor);</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List&lt;PropertyDescriptor&lt;?&gt;&gt; getPropertyDescriptors() {
+<span class="fc" id="L112">        return propertyDescriptors;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; T getProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor) {
+<span class="fc" id="L120">        checkValidPropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L121">        T result = propertyDescriptor.defaultValue();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (propertyValuesByDescriptor.containsKey(propertyDescriptor)) {</span>
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L124">            T value = (T) propertyValuesByDescriptor.get(propertyDescriptor);</span>
+<span class="fc" id="L125">            result = value;</span>
+        }
+<span class="fc" id="L127">        return result;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public &lt;T&gt; void setProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor, T value) {
+<span class="fc" id="L135">        checkValidPropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L136">        propertyValuesByDescriptor.put(propertyDescriptor, value);</span>
+<span class="fc" id="L137">    }</span>
+
+    private void checkValidPropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) {
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (!propertyDescriptors.contains(propertyDescriptor)) {</span>
+<span class="nc" id="L141">            throw new IllegalArgumentException(&quot;Property descriptor not defined for Rule &quot; + getName() + &quot;: &quot;</span>
+                    + propertyDescriptor);
+        }
+<span class="fc" id="L144">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; getPropertiesByPropertyDescriptor() {
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        if (propertyDescriptors.isEmpty()) {</span>
+<span class="nc" id="L152">            return Collections.emptyMap();</span>
+        }
+
+<span class="fc" id="L155">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; propertiesByPropertyDescriptor = new HashMap&lt;&gt;(</span>
+                propertyDescriptors.size());
+        // Fill with existing explicitly values
+<span class="fc" id="L158">        propertiesByPropertyDescriptor.putAll(this.propertyValuesByDescriptor);</span>
+
+        // Add default values for anything not yet set
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (PropertyDescriptor&lt;?&gt; propertyDescriptor : this.propertyDescriptors) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            if (!propertiesByPropertyDescriptor.containsKey(propertyDescriptor)) {</span>
+<span class="fc" id="L163">                propertiesByPropertyDescriptor.put(propertyDescriptor, propertyDescriptor.defaultValue());</span>
+            }
+<span class="fc" id="L165">        }</span>
+
+<span class="fc" id="L167">        return propertiesByPropertyDescriptor;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean usesDefaultValues() {
+
+<span class="nc" id="L176">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; valuesByProperty = getPropertiesByPropertyDescriptor();</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">        if (valuesByProperty.isEmpty()) {</span>
+<span class="nc" id="L178">            return true;</span>
+        }
+
+<span class="nc" id="L181">        Iterator&lt;Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt;&gt; iter = valuesByProperty.entrySet().iterator();</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
+<span class="nc" id="L184">            Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry = iter.next();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (!CollectionUtil.areEqual(entry.getKey().defaultValue(), entry.getValue())) {</span>
+<span class="nc" id="L186">                return false;</span>
+            }
+<span class="nc" id="L188">        }</span>
+
+<span class="nc" id="L190">        return true;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void useDefaultValueFor(PropertyDescriptor&lt;?&gt; desc) {
+<span class="nc" id="L198">        propertyValuesByDescriptor.remove(desc);</span>
+<span class="nc" id="L199">    }</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String dysfunctionReason() {
+<span class="fc" id="L206">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
