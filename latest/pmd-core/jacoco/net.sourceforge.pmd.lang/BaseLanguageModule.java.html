@@ -3,7 +3,12 @@
  */
 package net.sourceforge.pmd.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by christoferdutz on 21.09.14.
@@ -18,80 +23,98 @@ public abstract class BaseLanguageModule implements Language {
     protected Map&lt;String, LanguageVersion&gt; versions;
     protected LanguageVersion defaultVersion;
 
-<span class="fc" id="L21">    public BaseLanguageModule(String name, String shortName, String terseName, Class&lt;?&gt; ruleChainVisitorClass, String... extensions) {</span>
-<span class="fc" id="L22">        this.name = name;</span>
-<span class="fc" id="L23">        this.shortName = shortName;</span>
-<span class="fc" id="L24">        this.terseName = terseName;</span>
-<span class="fc" id="L25">        this.ruleChainVisitorClass = ruleChainVisitorClass;</span>
-<span class="fc" id="L26">        this.extensions = Arrays.asList(extensions);</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L26">    public BaseLanguageModule(String name, String shortName, String terseName, Class&lt;?&gt; ruleChainVisitorClass, String... extensions) {</span>
+<span class="fc" id="L27">        this.name = name;</span>
+<span class="fc" id="L28">        this.shortName = shortName;</span>
+<span class="fc" id="L29">        this.terseName = terseName;</span>
+<span class="fc" id="L30">        this.ruleChainVisitorClass = ruleChainVisitorClass;</span>
+<span class="fc" id="L31">        this.extensions = Arrays.asList(extensions);</span>
+<span class="fc" id="L32">    }</span>
 
     protected void addVersion(String version, LanguageVersionHandler languageVersionHandler, boolean isDefault) {
-<span class="fc bfc" id="L30" title="All 2 branches covered.">        if(versions == null) {</span>
-<span class="fc" id="L31">            versions = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if(versions == null) {</span>
+<span class="fc" id="L36">            versions = new HashMap&lt;&gt;();</span>
         }
-<span class="fc" id="L33">        LanguageVersion languageVersion = new LanguageVersion(this, version, languageVersionHandler);</span>
-<span class="fc" id="L34">        versions.put(version, languageVersion);</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">        if(isDefault) {</span>
-<span class="fc" id="L36">            defaultVersion = languageVersion;</span>
+<span class="fc" id="L38">        LanguageVersion languageVersion = new LanguageVersion(this, version, languageVersionHandler);</span>
+<span class="fc" id="L39">        versions.put(version, languageVersion);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if(isDefault) {</span>
+<span class="fc" id="L41">            defaultVersion = languageVersion;</span>
         }
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L43">    }</span>
 
     @Override
     public String getName() {
-<span class="fc" id="L42">        return name;</span>
+<span class="fc" id="L47">        return name;</span>
     }
 
     @Override
     public String getShortName() {
-<span class="nc bnc" id="L47" title="All 2 branches missed.">        return (shortName != null) ? shortName : name;</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        return (shortName != null) ? shortName : name;</span>
     }
 
     @Override
     public String getTerseName() {
-<span class="fc" id="L52">        return terseName;</span>
+<span class="fc" id="L57">        return terseName;</span>
     }
 
     @Override
     public Class&lt;?&gt; getRuleChainVisitorClass() {
-<span class="fc" id="L57">        return ruleChainVisitorClass;</span>
-    }
+<span class="fc" id="L62">        return ruleChainVisitorClass;</span>
+   }
 
     @Override
     public List&lt;String&gt; getExtensions() {
-<span class="fc" id="L62">        return Collections.unmodifiableList(extensions);</span>
+<span class="fc" id="L67">        return Collections.unmodifiableList(extensions);</span>
     }
 
     @Override
     public boolean hasExtension(String extension) {
-<span class="pc bpc" id="L67" title="1 of 4 branches missed.">        return extensions != null &amp;&amp; extensions.contains(extension);</span>
+<span class="pc bpc" id="L72" title="1 of 4 branches missed.">        return extensions != null &amp;&amp; extensions.contains(extension);</span>
     }
 
     @Override
     public List&lt;LanguageVersion&gt; getVersions() {
-<span class="fc" id="L72">        return new ArrayList&lt;&gt;(versions.values());</span>
+<span class="fc" id="L77">        return new ArrayList&lt;&gt;(versions.values());</span>
     }
 
     @Override
     public boolean hasVersion(String version) {
-<span class="nc bnc" id="L77" title="All 4 branches missed.">        return versions != null &amp;&amp; versions.containsKey(version);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        return versions != null &amp;&amp; versions.containsKey(version);</span>
     }
 
     public LanguageVersion getVersion(String versionName) {
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if(versions != null) {</span>
-<span class="fc" id="L82">            return versions.get(versionName);</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if(versions != null) {</span>
+<span class="fc" id="L87">            return versions.get(versionName);</span>
         }
-<span class="nc" id="L84">        return null;</span>
+<span class="nc" id="L89">        return null;</span>
     }
 
     @Override
     public LanguageVersion getDefaultVersion() {
-<span class="fc" id="L89">        return defaultVersion;</span>
+<span class="fc" id="L94">        return defaultVersion;</span>
     }
 
     @Override
     public String toString() {
-<span class="nc" id="L94">        return &quot;LanguageModule:&quot; + name + &quot;(&quot; + this.getClass().getSimpleName() + &quot;)&quot;;</span>
+<span class="nc" id="L99">        return &quot;LanguageModule:&quot; + name + &quot;(&quot; + this.getClass().getSimpleName() + &quot;)&quot;;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L104">        return name.hashCode();</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (obj == null) return false;</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (!(obj instanceof BaseLanguageModule)) return false;</span>
+<span class="fc" id="L111">        BaseLanguageModule other = (BaseLanguageModule)obj;</span>
+<span class="fc" id="L112">        return name.equals(other.name);</span>
+    }
+
+    @Override
+    public int compareTo(Language o) {
+<span class="fc" id="L117">        return getName().compareTo(o.getName());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

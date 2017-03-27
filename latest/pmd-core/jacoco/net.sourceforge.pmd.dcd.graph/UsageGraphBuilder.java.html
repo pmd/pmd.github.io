@@ -19,6 +19,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.signature.SignatureReader;
+
 import net.sourceforge.pmd.dcd.asm.PrintVisitor;
 import net.sourceforge.pmd.dcd.asm.TypeSignatureVisitor;
 import net.sourceforge.pmd.util.filter.Filter;
@@ -38,60 +39,60 @@ public class UsageGraphBuilder {
     protected final UsageGraph usageGraph;
     protected final Filter&lt;String&gt; classFilter;
 
-<span class="nc" id="L41">    public UsageGraphBuilder(Filter&lt;String&gt; classFilter) {</span>
-<span class="nc" id="L42">        this.classFilter = classFilter;</span>
-<span class="nc" id="L43">        this.usageGraph = new UsageGraph(classFilter);</span>
-<span class="nc" id="L44">    }</span>
+<span class="nc" id="L42">    public UsageGraphBuilder(Filter&lt;String&gt; classFilter) {</span>
+<span class="nc" id="L43">        this.classFilter = classFilter;</span>
+<span class="nc" id="L44">        this.usageGraph = new UsageGraph(classFilter);</span>
+<span class="nc" id="L45">    }</span>
 
     public void index(String name) {
         try {
-<span class="nc" id="L48">            String className = getClassName(name);</span>
-<span class="nc" id="L49">            String classResourceName = getResourceName(name);</span>
-<span class="nc bnc" id="L50" title="All 2 branches missed.">            if (classFilter.filter(className)) {</span>
-<span class="nc bnc" id="L51" title="All 2 branches missed.">                if (!usageGraph.isClass(className)) {</span>
-<span class="nc" id="L52">                    usageGraph.defineClass(className);</span>
-<span class="nc" id="L53">                    InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(</span>
+<span class="nc" id="L49">            String className = getClassName(name);</span>
+<span class="nc" id="L50">            String classResourceName = getResourceName(name);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (classFilter.filter(className)) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                if (!usageGraph.isClass(className)) {</span>
+<span class="nc" id="L53">                    usageGraph.defineClass(className);</span>
+<span class="nc" id="L54">                    InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(</span>
                             classResourceName + &quot;.class&quot;);
-<span class="nc" id="L55">                    ClassReader classReader = new ClassReader(inputStream);</span>
+<span class="nc" id="L56">                    ClassReader classReader = new ClassReader(inputStream);</span>
                     try {
-<span class="nc" id="L57">                        classReader.accept(getNewClassVisitor(), 0);</span>
+<span class="nc" id="L58">                        classReader.accept(getNewClassVisitor(), 0);</span>
                     } finally {
-<span class="nc" id="L59">                        IOUtils.closeQuietly(inputStream);</span>
-<span class="nc" id="L60">                    }</span>
+<span class="nc" id="L60">                        IOUtils.closeQuietly(inputStream);</span>
+<span class="nc" id="L61">                    }</span>
                 }
             }
-<span class="nc" id="L63">        } catch (IOException e) {</span>
-<span class="nc" id="L64">            throw new RuntimeException(&quot;For &quot; + name + &quot;: &quot; + e.getMessage(), e);</span>
-<span class="nc" id="L65">        }</span>
-<span class="nc" id="L66">    }</span>
+<span class="nc" id="L64">        } catch (IOException e) {</span>
+<span class="nc" id="L65">            throw new RuntimeException(&quot;For &quot; + name + &quot;: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L66">        }</span>
+<span class="nc" id="L67">    }</span>
 
     public UsageGraph getUsageGraph() {
-<span class="nc" id="L69">        return usageGraph;</span>
+<span class="nc" id="L70">        return usageGraph;</span>
     }
 
     private ClassVisitor getNewClassVisitor() {
-<span class="nc" id="L73">        return new MyClassVisitor();</span>
+<span class="nc" id="L74">        return new MyClassVisitor();</span>
     }
 
     // ASM visitor to on Class files to build a UsageGraph
     class MyClassVisitor extends ClassVisitor {
         private final PrintVisitor p;
-
-        protected void println(String s) {
-<span class="nc" id="L81">            p.println(s);</span>
-<span class="nc" id="L82">        }</span>
-
-        protected void printlnIndent(String s) {
-<span class="nc" id="L85">            p.printlnIndent(s);</span>
-<span class="nc" id="L86">        }</span>
-
-<span class="nc" id="L88">        public MyClassVisitor() {</span>
-<span class="nc" id="L89">            super(Opcodes.ASM5);</span>
-<span class="nc" id="L90">            p = new PrintVisitor();</span>
-<span class="nc" id="L91">        }</span>
-
         private String className;
 
+<span class="nc" id="L82">        public MyClassVisitor() {</span>
+<span class="nc" id="L83">            super(Opcodes.ASM5);</span>
+<span class="nc" id="L84">            p = new PrintVisitor();</span>
+<span class="nc" id="L85">        }</span>
+
+        protected void println(String s) {
+<span class="nc" id="L88">            p.println(s);</span>
+<span class="nc" id="L89">        }</span>
+
+        protected void printlnIndent(String s) {
+<span class="nc" id="L92">            p.printlnIndent(s);</span>
+<span class="nc" id="L93">        }</span>
+
+        @Override
         public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
             if (TRACE) {
                 println(&quot;visit:&quot;);
@@ -102,31 +103,35 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;superName: &quot; + superName);
                 printlnIndent(&quot;interfaces: &quot; + asList(interfaces));
             }
-<span class="nc" id="L105">            this.className = getClassName(name);</span>
-<span class="nc" id="L106">        }</span>
+<span class="nc" id="L106">            this.className = getClassName(name);</span>
+<span class="nc" id="L107">        }</span>
 
+        @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             if (TRACE) {
                 println(&quot;visitAnnotation:&quot;);
                 printlnIndent(&quot;desc: &quot; + desc);
                 printlnIndent(&quot;visible: &quot; + visible);
             }
-<span class="nc" id="L114">            return null;</span>
+<span class="nc" id="L116">            return null;</span>
         }
 
+        @Override
         public void visitAttribute(Attribute attr) {
             if (TRACE) {
                 println(&quot;visitAttribute:&quot;);
                 printlnIndent(&quot;attr: &quot; + attr);
             }
-<span class="nc" id="L122">        }</span>
+<span class="nc" id="L125">        }</span>
 
+        @Override
         public void visitEnd() {
             if (TRACE) {
                 println(&quot;visitEnd:&quot;);
             }
-<span class="nc" id="L128">        }</span>
+<span class="nc" id="L132">        }</span>
 
+        @Override
         public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
             if (TRACE) {
                 println(&quot;visitField:&quot;);
@@ -137,18 +142,19 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;value: &quot; + value);
             }
             if (INDEX) {
-<span class="nc" id="L140">                SignatureReader signatureReader = new SignatureReader(desc);</span>
-<span class="nc" id="L141">                TypeSignatureVisitor visitor = new TypeSignatureVisitor(p);</span>
-<span class="nc" id="L142">                signatureReader.acceptType(visitor);</span>
+<span class="nc" id="L145">                SignatureReader signatureReader = new SignatureReader(desc);</span>
+<span class="nc" id="L146">                TypeSignatureVisitor visitor = new TypeSignatureVisitor(p);</span>
+<span class="nc" id="L147">                signatureReader.acceptType(visitor);</span>
                 if (TRACE) {
                     printlnIndent(&quot;fieldType: &quot; + visitor.getFieldType());
                 }
 
-<span class="nc" id="L147">                usageGraph.defineField(className, name, desc);</span>
+<span class="nc" id="L152">                usageGraph.defineField(className, name, desc);</span>
             }
-<span class="nc" id="L149">            return null;</span>
+<span class="nc" id="L154">            return null;</span>
         }
 
+        @Override
         public void visitInnerClass(String name, String outerName, String innerName, int access) {
             if (TRACE) {
                 println(&quot;visitInnerClass:&quot;);
@@ -157,11 +163,12 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;innerName: &quot; + innerName);
                 printlnIndent(&quot;access: &quot; + access);
             }
-<span class="nc" id="L160">            index(name);</span>
-<span class="nc" id="L161">        }</span>
+<span class="nc" id="L166">            index(name);</span>
+<span class="nc" id="L167">        }</span>
 
+        @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-<span class="nc" id="L164">            MemberNode memberNode = null;</span>
+<span class="nc" id="L171">            MemberNode memberNode = null;</span>
             if (TRACE) {
                 println(&quot;visitMethod:&quot;);
                 printlnIndent(&quot;access: &quot; + access);
@@ -171,11 +178,12 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;exceptions: &quot; + asList(exceptions));
             }
             if (INDEX) {
-<span class="nc" id="L174">                memberNode = usageGraph.defineMethod(className, name, desc);</span>
+<span class="nc" id="L181">                memberNode = usageGraph.defineMethod(className, name, desc);</span>
             }
-<span class="nc" id="L176">            return getNewMethodVisitor(p, memberNode);</span>
+<span class="nc" id="L183">            return getNewMethodVisitor(p, memberNode);</span>
         }
 
+        @Override
         public void visitOuterClass(String owner, String name, String desc) {
             if (TRACE) {
                 println(&quot;visitOuterClass:&quot;);
@@ -183,75 +191,82 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;name: &quot; + name);
                 printlnIndent(&quot;desc: &quot; + desc);
             }
-<span class="nc" id="L186">        }</span>
+<span class="nc" id="L194">        }</span>
 
+        @Override
         public void visitSource(String source, String debug) {
             if (TRACE) {
                 println(&quot;visitSource:&quot;);
                 printlnIndent(&quot;source: &quot; + source);
                 printlnIndent(&quot;debug: &quot; + debug);
             }
-<span class="nc" id="L194">        }</span>
+<span class="nc" id="L203">        }</span>
     }
 
     protected MethodVisitor getNewMethodVisitor(PrintVisitor parent, MemberNode usingMemberNode) {
-<span class="nc" id="L198">        return new MyMethodVisitor(parent, usingMemberNode);</span>
+<span class="nc" id="L207">        return new MyMethodVisitor(parent, usingMemberNode);</span>
     }
 
     protected class MyMethodVisitor extends MethodVisitor {
         private final PrintVisitor p;
 
         protected void println(String s) {
-<span class="nc" id="L205">            p.println(s);</span>
-<span class="nc" id="L206">        }</span>
+<span class="nc" id="L214">            p.println(s);</span>
+<span class="nc" id="L215">        }</span>
 
         protected void printlnIndent(String s) {
-<span class="nc" id="L209">            p.printlnIndent(s);</span>
-<span class="nc" id="L210">        }</span>
+<span class="nc" id="L218">            p.printlnIndent(s);</span>
+<span class="nc" id="L219">        }</span>
 
         private final MemberNode usingMemberNode;
 
-<span class="nc" id="L214">        public MyMethodVisitor(PrintVisitor parent, MemberNode usingMemberNode) {</span>
-<span class="nc" id="L215">            super(Opcodes.ASM5);</span>
-<span class="nc" id="L216">            p = parent;</span>
-<span class="nc" id="L217">            this.usingMemberNode = usingMemberNode;</span>
-<span class="nc" id="L218">        }</span>
+<span class="nc" id="L223">        public MyMethodVisitor(PrintVisitor parent, MemberNode usingMemberNode) {</span>
+<span class="nc" id="L224">            super(Opcodes.ASM5);</span>
+<span class="nc" id="L225">            p = parent;</span>
+<span class="nc" id="L226">            this.usingMemberNode = usingMemberNode;</span>
+<span class="nc" id="L227">        }</span>
 
+        @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
             if (TRACE) {
                 println(&quot;visitAnnotation:&quot;);
                 printlnIndent(&quot;desc: &quot; + desc);
                 printlnIndent(&quot;visible: &quot; + visible);
             }
-<span class="nc" id="L226">            return null;</span>
+<span class="nc" id="L236">            return null;</span>
         }
 
+        @Override
         public AnnotationVisitor visitAnnotationDefault() {
             if (TRACE) {
                 println(&quot;visitAnnotationDefault:&quot;);
             }
-<span class="nc" id="L233">            return null;</span>
+<span class="nc" id="L244">            return null;</span>
         }
 
+        @Override
         public void visitAttribute(Attribute attr) {
             if (TRACE) {
                 println(&quot;visitAttribute:&quot;);
                 printlnIndent(&quot;attr: &quot; + attr);
             }
-<span class="nc" id="L241">        }</span>
+<span class="nc" id="L253">        }</span>
 
+        @Override
         public void visitCode() {
             if (TRACE) {
                 println(&quot;visitCode:&quot;);
             }
-<span class="nc" id="L247">        }</span>
+<span class="nc" id="L260">        }</span>
 
+        @Override
         public void visitEnd() {
             if (TRACE) {
                 println(&quot;visitEnd:&quot;);
             }
-<span class="nc" id="L253">        }</span>
+<span class="nc" id="L267">        }</span>
 
+        @Override
         public void visitFieldInsn(int opcode, String owner, String name, String desc) {
             if (TRACE) {
                 println(&quot;visitFieldInsn:&quot;);
@@ -261,11 +276,12 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;desc: &quot; + desc);
             }
             if (INDEX) {
-<span class="nc" id="L264">                String className = getClassName(owner);</span>
-<span class="nc" id="L265">                usageGraph.usageField(className, name, desc, usingMemberNode);</span>
+<span class="nc" id="L279">                String className = getClassName(owner);</span>
+<span class="nc" id="L280">                usageGraph.usageField(className, name, desc, usingMemberNode);</span>
             }
-<span class="nc" id="L267">        }</span>
+<span class="nc" id="L282">        }</span>
 
+        @Override
         public void visitFrame(int type, int local, Object[] local2, int stack, Object[] stack2) {
             if (TRACE) {
                 println(&quot;visitFrame:&quot;);
@@ -275,61 +291,69 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;stack: &quot; + stack);
                 printlnIndent(&quot;stack2: &quot; + asList(stack2));
             }
-<span class="nc" id="L278">        }</span>
+<span class="nc" id="L294">        }</span>
 
+        @Override
         public void visitIincInsn(int var, int increment) {
             if (TRACE) {
                 println(&quot;visitIincInsn:&quot;);
                 printlnIndent(&quot;var: &quot; + var);
                 printlnIndent(&quot;increment: &quot; + increment);
             }
-<span class="nc" id="L286">        }</span>
+<span class="nc" id="L303">        }</span>
 
+        @Override
         public void visitInsn(int opcode) {
             if (TRACE) {
                 println(&quot;visitInsn:&quot;);
                 printlnIndent(&quot;opcode: &quot; + opcode);
             }
-<span class="nc" id="L293">        }</span>
+<span class="nc" id="L311">        }</span>
 
+        @Override
         public void visitIntInsn(int opcode, int operand) {
             if (TRACE) {
                 println(&quot;visitIntInsn:&quot;);
                 printlnIndent(&quot;opcode: &quot; + opcode);
                 printlnIndent(&quot;operand: &quot; + operand);
             }
-<span class="nc" id="L301">        }</span>
+<span class="nc" id="L320">        }</span>
 
+        @Override
         public void visitJumpInsn(int opcode, Label label) {
             if (TRACE) {
                 println(&quot;visitJumpInsn:&quot;);
                 printlnIndent(&quot;opcode: &quot; + opcode);
                 printlnIndent(&quot;label: &quot; + label);
             }
-<span class="nc" id="L309">        }</span>
+<span class="nc" id="L329">        }</span>
 
+        @Override
         public void visitLabel(Label label) {
             if (TRACE) {
                 println(&quot;visitLabel:&quot;);
                 printlnIndent(&quot;label: &quot; + label);
             }
-<span class="nc" id="L316">        }</span>
+<span class="nc" id="L337">        }</span>
 
+        @Override
         public void visitLdcInsn(Object cst) {
             if (TRACE) {
                 println(&quot;visitLdcInsn:&quot;);
                 printlnIndent(&quot;cst: &quot; + cst);
             }
-<span class="nc" id="L323">        }</span>
+<span class="nc" id="L345">        }</span>
 
+        @Override
         public void visitLineNumber(int line, Label start) {
             if (TRACE) {
                 println(&quot;visitLineNumber:&quot;);
                 printlnIndent(&quot;line: &quot; + line);
                 printlnIndent(&quot;start: &quot; + start);
             }
-<span class="nc" id="L331">        }</span>
+<span class="nc" id="L354">        }</span>
 
+        @Override
         public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
             if (TRACE) {
                 println(&quot;visitLocalVariable:&quot;);
@@ -340,8 +364,9 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;end: &quot; + end);
                 printlnIndent(&quot;index: &quot; + index);
             }
-<span class="nc" id="L343">        }</span>
+<span class="nc" id="L367">        }</span>
 
+        @Override
         public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
             if (TRACE) {
                 println(&quot;visitLookupSwitchInsn:&quot;);
@@ -349,16 +374,18 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;keys: &quot; + asList(keys));
                 printlnIndent(&quot;labels: &quot; + asList(labels));
             }
-<span class="nc" id="L352">        }</span>
+<span class="nc" id="L377">        }</span>
 
+        @Override
         public void visitMaxs(int maxStack, int maxLocals) {
             if (TRACE) {
                 println(&quot;visitMaxs:&quot;);
                 printlnIndent(&quot;maxStack: &quot; + maxStack);
                 printlnIndent(&quot;maxLocals: &quot; + maxLocals);
             }
-<span class="nc" id="L360">        }</span>
+<span class="nc" id="L386">        }</span>
 
+        @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (TRACE) {
                 println(&quot;visitMethodInsn:&quot;);
@@ -369,19 +396,21 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;itf: &quot; + itf);
             }
             if (INDEX) {
-<span class="nc" id="L372">                String className = getClassName(owner);</span>
-<span class="nc" id="L373">                usageGraph.usageMethod(className, name, desc, usingMemberNode);</span>
+<span class="nc" id="L399">                String className = getClassName(owner);</span>
+<span class="nc" id="L400">                usageGraph.usageMethod(className, name, desc, usingMemberNode);</span>
             }
-<span class="nc" id="L375">        }</span>
+<span class="nc" id="L402">        }</span>
 
+        @Override
         public void visitMultiANewArrayInsn(String desc, int dims) {
             if (TRACE) {
                 println(&quot;visitMultiANewArrayInsn:&quot;);
                 printlnIndent(&quot;desc: &quot; + desc);
                 printlnIndent(&quot;dims: &quot; + dims);
             }
-<span class="nc" id="L383">        }</span>
+<span class="nc" id="L411">        }</span>
 
+        @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
             if (TRACE) {
                 println(&quot;visitParameterAnnotation:&quot;);
@@ -389,9 +418,10 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;desc: &quot; + desc);
                 printlnIndent(&quot;visible: &quot; + visible);
             }
-<span class="nc" id="L392">            return null;</span>
+<span class="nc" id="L421">            return null;</span>
         }
 
+        @Override
         public void visitTableSwitchInsn(int min, int max, Label dflt,
                 Label... labels) {
             if (TRACE) {
@@ -401,8 +431,9 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;dflt: &quot; + dflt);
                 printlnIndent(&quot;labels: &quot; + asList(labels));
             }
-<span class="nc" id="L404">        }</span>
+<span class="nc" id="L434">        }</span>
 
+        @Override
         public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
             if (TRACE) {
                 println(&quot;visitTryCatchBlock:&quot;);
@@ -411,46 +442,48 @@ public class UsageGraphBuilder {
                 printlnIndent(&quot;handler: &quot; + handler);
                 printlnIndent(&quot;type: &quot; + type);
             }
-<span class="nc" id="L414">        }</span>
+<span class="nc" id="L445">        }</span>
 
+        @Override
         public void visitTypeInsn(int opcode, String desc) {
             if (TRACE) {
                 println(&quot;visitTypeInsn:&quot;);
                 printlnIndent(&quot;opcode: &quot; + opcode);
                 printlnIndent(&quot;desc: &quot; + desc);
             }
-<span class="nc" id="L422">        }</span>
+<span class="nc" id="L454">        }</span>
 
+        @Override
         public void visitVarInsn(int opcode, int var) {
             if (TRACE) {
                 println(&quot;visitVarInsn:&quot;);
                 printlnIndent(&quot;opcode: &quot; + opcode);
                 printlnIndent(&quot;var: &quot; + var);
             }
-<span class="nc" id="L430">        }</span>
+<span class="nc" id="L463">        }</span>
     }
 
     private static String getResourceName(String name) {
-<span class="nc" id="L434">        return name.replace('.', '/');</span>
+<span class="nc" id="L467">        return name.replace('.', '/');</span>
     }
 
     static String getClassName(String name) {
-<span class="nc" id="L438">        return name.replace('/', '.');</span>
+<span class="nc" id="L471">        return name.replace('/', '.');</span>
     }
 
     private static List&lt;Integer&gt; asList(int[] array) {
-<span class="nc" id="L442">        List&lt;Integer&gt; list = null;</span>
-<span class="nc bnc" id="L443" title="All 2 branches missed.">        if (array != null) {</span>
-<span class="nc" id="L444">            list = new ArrayList&lt;&gt;(array.length);</span>
-<span class="nc bnc" id="L445" title="All 2 branches missed.">            for (int i : array) {</span>
-<span class="nc" id="L446">                list.add(i);</span>
+<span class="nc" id="L475">        List&lt;Integer&gt; list = null;</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">        if (array != null) {</span>
+<span class="nc" id="L477">            list = new ArrayList&lt;&gt;(array.length);</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">            for (int i : array) {</span>
+<span class="nc" id="L479">                list.add(i);</span>
             }
         }
-<span class="nc" id="L449">        return list;</span>
+<span class="nc" id="L482">        return list;</span>
     }
 
     private static List&lt;Object&gt; asList(Object[] array) {
-<span class="nc bnc" id="L453" title="All 2 branches missed.">        return array != null ? Arrays.asList(array) : null;</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">        return array != null ? Arrays.asList(array) : null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

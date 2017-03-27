@@ -22,8 +22,8 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
  *         TODO What about initializers?  This only processes methods and constructors
  */
 <span class="fc" id="L24">public class DataFlowFacade extends PLSQLParserVisitorAdapter {</span>
-<span class="fc" id="L25">    private final static String CLASS_PATH= DataFlowFacade.class.getCanonicalName();</span>
-<span class="fc" id="L26">    private final static Logger LOGGER = Logger.getLogger(DataFlowFacade.class.getName()); </span>
+<span class="fc" id="L25">    private static final String CLASS_PATH = DataFlowFacade.class.getCanonicalName();</span>
+<span class="fc" id="L26">    private static final Logger LOGGER = Logger.getLogger(DataFlowFacade.class.getName());</span>
 
     private StatementAndBraceFinder sbf;
     private VariableAccessVisitor vav;
@@ -34,10 +34,11 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
 <span class="fc" id="L34">        node.jjtAccept(this, null);</span>
 <span class="fc" id="L35">    }</span>
 
+    @Override
     public Object visit(ASTMethodDeclaration node, Object data) {
-<span class="nc" id="L38">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTMethodDeclaration)&quot;);</span>
-<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L40">        LOGGER.finest(&quot;visit(ASTMethodDeclaration): &quot; </span>
+<span class="nc" id="L39">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTMethodDeclaration)&quot;);</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L41">        LOGGER.finest(&quot;visit(ASTMethodDeclaration): &quot; </span>
                       + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                       + node.getBeginLine() 
                       +&quot;, column &quot; + node.getBeginColumn()
@@ -45,27 +46,28 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
                 );
         }
 
-<span class="nc" id="L48">        super.visit(node, data) ;</span>
-<span class="nc" id="L49">        sbf.buildDataFlowFor(node);</span>
-<span class="nc" id="L50">        vav.compute(node);</span>
-<span class="nc" id="L51">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTMethodDeclaration)&quot;);</span>
-<span class="nc" id="L52">        return data;</span>
+<span class="nc" id="L49">        super.visit(node, data) ;</span>
+<span class="nc" id="L50">        sbf.buildDataFlowFor(node);</span>
+<span class="nc" id="L51">        vav.compute(node);</span>
+<span class="nc" id="L52">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTMethodDeclaration)&quot;);</span>
+<span class="nc" id="L53">        return data;</span>
     }
 
+    @Override
     public Object visit(ASTTriggerUnit node, Object data) {
-<span class="nc" id="L56">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTriggerUnit)&quot;);</span>
-<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L58">        LOGGER.finest(&quot;visit(ASTTriggerUnit): &quot; </span>
+<span class="nc" id="L58">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTriggerUnit)&quot;);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L60">        LOGGER.finest(&quot;visit(ASTTriggerUnit): &quot; </span>
                       + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                       + node.getBeginLine() 
                       +&quot;, column &quot; + node.getBeginColumn()
                       + &quot; --- &quot; + new Throwable().getStackTrace()
                 );
         }
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (node.hasDescendantOfType(ASTCompoundTriggerBlock.class))</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (node.hasDescendantOfType(ASTCompoundTriggerBlock.class))</span>
         {
-<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L68">          LOGGER.finest(&quot;visit(ASTTriggerUnit): treating ASTTriggerUnit like a PackageBody &quot; </span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L70">          LOGGER.finest(&quot;visit(ASTTriggerUnit): treating ASTTriggerUnit like a PackageBody &quot; </span>
                         + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                         + node.getBeginLine() 
                         +&quot;, column &quot; + node.getBeginColumn()
@@ -73,78 +75,73 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserVisitorAdapter;
                       );
             }
           //Pass
-<span class="nc" id="L76">          super.visit(node, data) ;</span>
+<span class="nc" id="L78">          super.visit(node, data) ;</span>
         }
         {
-<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L80">          LOGGER.finest(&quot;visit(ASTTriggerUnit): treating ASTTriggerUnit as standalone &quot; </span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L82">          LOGGER.finest(&quot;visit(ASTTriggerUnit): treating ASTTriggerUnit as standalone &quot; </span>
                         + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                         + node.getBeginLine() 
                         +&quot;, column &quot; + node.getBeginColumn()
                         + &quot; --- &quot; + new Throwable().getStackTrace()
                       );
             }
-<span class="nc" id="L87">          sbf.buildDataFlowFor(node);</span>
-<span class="nc" id="L88">          vav.compute(node);</span>
+<span class="nc" id="L89">          sbf.buildDataFlowFor(node);</span>
+<span class="nc" id="L90">          vav.compute(node);</span>
         }
-<span class="nc" id="L90">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTTriggerUnit)&quot;);</span>
-<span class="nc" id="L91">        return data;</span>
+<span class="nc" id="L92">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTTriggerUnit)&quot;);</span>
+<span class="nc" id="L93">        return data;</span>
     }
 
+    @Override
     public Object visit(ASTTriggerTimingPointSection node, Object data) {
-<span class="nc" id="L95">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
-<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L97">        LOGGER.finest(&quot;visit(ASTTriggerTimingPointSection): &quot; </span>
+<span class="nc" id="L98">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L100">        LOGGER.finest(&quot;visit(ASTTriggerTimingPointSection): &quot; </span>
                       + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                       + node.getBeginLine() 
                       +&quot;, column &quot; + node.getBeginColumn()
                       + &quot; --- &quot; + new Throwable().getStackTrace()
                 );
         }
-<span class="nc" id="L104">        sbf.buildDataFlowFor(node);</span>
-<span class="nc" id="L105">        vav.compute(node);</span>
-<span class="nc" id="L106">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
-<span class="nc" id="L107">        return data;</span>
+<span class="nc" id="L107">        sbf.buildDataFlowFor(node);</span>
+<span class="nc" id="L108">        vav.compute(node);</span>
+<span class="nc" id="L109">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
+<span class="nc" id="L110">        return data;</span>
     }
 
+    @Override
     public Object visit(ASTProgramUnit node, Object data) {
-<span class="fc" id="L111">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L113">        LOGGER.finest(&quot;visit(ASTProgramUnit): &quot; </span>
+<span class="fc" id="L115">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L117">        LOGGER.finest(&quot;visit(ASTProgramUnit): &quot; </span>
                       + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                       + node.getBeginLine() 
                       +&quot;, column &quot; + node.getBeginColumn()
                       + &quot; --- &quot; + new Throwable().getStackTrace()
                 );
         }
-<span class="fc" id="L120">        sbf.buildDataFlowFor(node);</span>
-<span class="fc" id="L121">        vav.compute(node);</span>
-<span class="fc" id="L122">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
-<span class="fc" id="L123">        return data;</span>
+<span class="fc" id="L124">        sbf.buildDataFlowFor(node);</span>
+<span class="fc" id="L125">        vav.compute(node);</span>
+<span class="fc" id="L126">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTProgramUnit)&quot;);</span>
+<span class="fc" id="L127">        return data;</span>
     }
 
+    @Override
     public Object visit(ASTTypeMethod node, Object data) {
-<span class="nc" id="L127">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTypeMethod)&quot;);</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L129">        LOGGER.finest(&quot;visit(ASTTypeMethod): &quot; </span>
+<span class="nc" id="L132">        LOGGER.entering(CLASS_PATH,&quot;visit(ASTTypeMethod)&quot;);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L134">        LOGGER.finest(&quot;visit(ASTTypeMethod): &quot; </span>
                       + node.getClass().getCanonicalName() + &quot; @ line &quot; 
                       + node.getBeginLine() 
                       +&quot;, column &quot; + node.getBeginColumn()
                       + &quot; --- &quot; + new Throwable().getStackTrace()
                 );
         }
-<span class="nc" id="L136">        sbf.buildDataFlowFor(node);</span>
-<span class="nc" id="L137">        vav.compute(node);</span>
-<span class="nc" id="L138">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTTypeMethod)&quot;);</span>
-<span class="nc" id="L139">        return data;</span>
+<span class="nc" id="L141">        sbf.buildDataFlowFor(node);</span>
+<span class="nc" id="L142">        vav.compute(node);</span>
+<span class="nc" id="L143">        LOGGER.exiting(CLASS_PATH,&quot;visit(ASTTypeMethod)&quot;);</span>
+<span class="nc" id="L144">        return data;</span>
     }
-
-    /*
-    public Object visit(ASTConstructorDeclaration node, Object data) {
-        sbf.buildDataFlowFor(node);
-        vav.compute(node);
-        return data;
-    }
-    */
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

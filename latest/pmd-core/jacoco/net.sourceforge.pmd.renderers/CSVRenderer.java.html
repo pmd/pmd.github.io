@@ -37,85 +37,93 @@ public class CSVRenderer extends AbstractIncrementingRenderer {
 
     @SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L39">	private static final ColumnDescriptor&lt;RuleViolation&gt;[] ALL_COLUMNS = new ColumnDescriptor[] {</span>
-<span class="fc" id="L40">    	new ColumnDescriptor&lt;&gt;(&quot;problem&quot;, 	&quot;Problem&quot;, 		new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(idx); }} ),</span>
-<span class="fc" id="L41">    	new ColumnDescriptor&lt;&gt;(&quot;package&quot;,	&quot;Package&quot;, 		new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return rv.getPackageName(); }} ),</span>
-<span class="fc" id="L42">    	new ColumnDescriptor&lt;&gt;(&quot;file&quot;,		&quot;File&quot;, 		new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return rv.getFilename(); }} ),</span>
-<span class="fc" id="L43">    	new ColumnDescriptor&lt;&gt;(&quot;priority&quot;,	&quot;Priority&quot;, 	new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(rv.getRule().getPriority().getPriority()); }} ),</span>
-<span class="fc" id="L44">    	new ColumnDescriptor&lt;&gt;(&quot;line&quot;,		&quot;Line&quot;, 		new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(rv.getBeginLine()); }} ),</span>
-<span class="fc" id="L45">    	new ColumnDescriptor&lt;&gt;(&quot;desc&quot;,		&quot;Description&quot;, 	new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return StringUtil.replaceString(rv.getDescription(), '\&quot;', &quot;'&quot;); }} ),</span>
-<span class="fc" id="L46">    	new ColumnDescriptor&lt;&gt;(&quot;ruleSet&quot;,	&quot;Rule set&quot;, 	new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return rv.getRule().getRuleSetName(); }} ),</span>
-<span class="fc" id="L47">    	new ColumnDescriptor&lt;&gt;(&quot;rule&quot;,		&quot;Rule&quot;, 		new Accessor&lt;RuleViolation&gt;() { public String get(int idx, RuleViolation rv, String cr) { return rv.getRule().getName(); }} )</span>
+<span class="fc" id="L40">    	new ColumnDescriptor&lt;&gt;(&quot;problem&quot;, 	&quot;Problem&quot;, 		new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L41">        public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(idx); }} ),</span>
+<span class="fc" id="L42">    	new ColumnDescriptor&lt;&gt;(&quot;package&quot;,	&quot;Package&quot;, 		new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L43">        public String get(int idx, RuleViolation rv, String cr) { return rv.getPackageName(); }} ),</span>
+<span class="fc" id="L44">    	new ColumnDescriptor&lt;&gt;(&quot;file&quot;,		&quot;File&quot;, 		new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L45">        public String get(int idx, RuleViolation rv, String cr) { return rv.getFilename(); }} ),</span>
+<span class="fc" id="L46">    	new ColumnDescriptor&lt;&gt;(&quot;priority&quot;,	&quot;Priority&quot;, 	new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L47">        public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(rv.getRule().getPriority().getPriority()); }} ),</span>
+<span class="fc" id="L48">    	new ColumnDescriptor&lt;&gt;(&quot;line&quot;,		&quot;Line&quot;, 		new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L49">        public String get(int idx, RuleViolation rv, String cr) { return Integer.toString(rv.getBeginLine()); }} ),</span>
+<span class="fc" id="L50">    	new ColumnDescriptor&lt;&gt;(&quot;desc&quot;,		&quot;Description&quot;, 	new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L51">        public String get(int idx, RuleViolation rv, String cr) { return StringUtil.replaceString(rv.getDescription(), '\&quot;', &quot;'&quot;); }} ),</span>
+<span class="fc" id="L52">    	new ColumnDescriptor&lt;&gt;(&quot;ruleSet&quot;,	&quot;Rule set&quot;, 	new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L53">        public String get(int idx, RuleViolation rv, String cr) { return rv.getRule().getRuleSetName(); }} ),</span>
+<span class="fc" id="L54">    	new ColumnDescriptor&lt;&gt;(&quot;rule&quot;,		&quot;Rule&quot;, 		new Accessor&lt;RuleViolation&gt;() { @Override</span>
+<span class="fc" id="L55">        public String get(int idx, RuleViolation rv, String cr) { return rv.getRule().getName(); }} )</span>
     	};
 
+    public CSVRenderer(ColumnDescriptor&lt;RuleViolation&gt;[] columns, String theSeparator, String theCR) {
+<span class="fc" id="L59">        super(NAME, &quot;Comma-separated values tabular format.&quot;);</span>
+
+<span class="fc" id="L61">        separator = theSeparator;</span>
+<span class="fc" id="L62">        cr = theCR;</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (ColumnDescriptor&lt;RuleViolation&gt; desc : columns) {</span>
+<span class="fc" id="L65">            definePropertyDescriptor(booleanPropertyFor(desc.id, desc.title));</span>
+        }
+<span class="fc" id="L67">    }</span>
+
+    public CSVRenderer() {
+<span class="fc" id="L70">        this(ALL_COLUMNS, DEFAULT_SEPARATOR, PMD.EOL);</span>
+<span class="fc" id="L71">    }</span>
 
     private static BooleanProperty booleanPropertyFor(String id, String label) {
 
-<span class="fc" id="L53">    	BooleanProperty prop = PROPERTY_DESCRIPTORS_BY_ID.get(id);</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">    	if (prop != null) {</span>
-<span class="fc" id="L55">    	    return prop;</span>
+<span class="fc" id="L75">    	BooleanProperty prop = PROPERTY_DESCRIPTORS_BY_ID.get(id);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">    	if (prop != null) {</span>
+<span class="fc" id="L77">    	    return prop;</span>
     	}
 
-<span class="fc" id="L58">    	prop = new BooleanProperty(id, &quot;Include &quot; + label + &quot; column&quot;, true, 1.0f);</span>
-<span class="fc" id="L59">    	PROPERTY_DESCRIPTORS_BY_ID.put(id, prop);</span>
-<span class="fc" id="L60">    	return prop;</span>
+<span class="fc" id="L80">    	prop = new BooleanProperty(id, &quot;Include &quot; + label + &quot; column&quot;, true, 1.0f);</span>
+<span class="fc" id="L81">    	PROPERTY_DESCRIPTORS_BY_ID.put(id, prop);</span>
+<span class="fc" id="L82">    	return prop;</span>
     }
-
-    public CSVRenderer(ColumnDescriptor&lt;RuleViolation&gt;[] columns, String theSeparator, String theCR) {
-<span class="fc" id="L64">    	super(NAME, &quot;Comma-separated values tabular format.&quot;);</span>
-
-<span class="fc" id="L66">    	separator = theSeparator;</span>
-<span class="fc" id="L67">    	cr = theCR;</span>
-
-<span class="fc bfc" id="L69" title="All 2 branches covered.">    	for (ColumnDescriptor&lt;RuleViolation&gt; desc : columns) {</span>
-<span class="fc" id="L70">    		definePropertyDescriptor(booleanPropertyFor(desc.id, desc.title));</span>
-    		}
-<span class="fc" id="L72">    }</span>
 
     private List&lt;ColumnDescriptor&lt;RuleViolation&gt;&gt; activeColumns() {
 
-<span class="fc" id="L76">    	List&lt;ColumnDescriptor&lt;RuleViolation&gt;&gt; actives = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L87">    	List&lt;ColumnDescriptor&lt;RuleViolation&gt;&gt; actives = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L78" title="All 2 branches covered.">     	for (ColumnDescriptor&lt;RuleViolation&gt; desc : ALL_COLUMNS) {</span>
-<span class="fc" id="L79">    		BooleanProperty prop = booleanPropertyFor(desc.id, null);</span>
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">    		if (getProperty(prop)) {</span>
-<span class="fc" id="L81">    			actives.add(desc);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">     	for (ColumnDescriptor&lt;RuleViolation&gt; desc : ALL_COLUMNS) {</span>
+<span class="fc" id="L90">    		BooleanProperty prop = booleanPropertyFor(desc.id, null);</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">    		if (getProperty(prop)) {</span>
+<span class="fc" id="L92">    			actives.add(desc);</span>
     			} else {
 //    				System.out.println(&quot;disabled: &quot; + prop);
     			}
     		}
-<span class="fc" id="L86">     	return actives;</span>
+<span class="fc" id="L97">     	return actives;</span>
     }
 
     private CSVWriter&lt;RuleViolation&gt; csvWriter() {
-<span class="fc bfc" id="L90" title="All 2 branches covered.">    	if (csvWriter != null) {</span>
-<span class="fc" id="L91">    	    return csvWriter;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">    	if (csvWriter != null) {</span>
+<span class="fc" id="L102">    	    return csvWriter;</span>
     	}
 
-<span class="fc" id="L94">    	csvWriter = new CSVWriter&lt;&gt;(activeColumns(), separator, cr);</span>
-<span class="fc" id="L95">    	return csvWriter;</span>
+<span class="fc" id="L105">    	csvWriter = new CSVWriter&lt;&gt;(activeColumns(), separator, cr);</span>
+<span class="fc" id="L106">    	return csvWriter;</span>
     }
-
-    public CSVRenderer() {
-<span class="fc" id="L99">    	this( ALL_COLUMNS, DEFAULT_SEPARATOR, PMD.EOL);</span>
-<span class="fc" id="L100">    }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void start() throws IOException {
-<span class="fc" id="L107">    	csvWriter().writeTitles(getWriter());</span>
-<span class="fc" id="L108">    }</span>
+<span class="fc" id="L114">    	csvWriter().writeTitles(getWriter());</span>
+<span class="fc" id="L115">    }</span>
 
-<span class="nc" id="L110">    public String defaultFileExtension() { return &quot;csv&quot;; }</span>
+    @Override
+<span class="nc" id="L118">    public String defaultFileExtension() { return &quot;csv&quot;; }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void renderFileViolations(Iterator&lt;RuleViolation&gt; violations) throws IOException {
-<span class="fc" id="L117">    	csvWriter().writeData(getWriter(), violations);</span>
-<span class="fc" id="L118">    }</span>
+<span class="fc" id="L125">    	csvWriter().writeData(getWriter(), violations);</span>
+<span class="fc" id="L126">    }</span>
 
 	 /**
 	  * We can't show any violations if we don't have any visible columns.
@@ -124,7 +132,7 @@ public class CSVRenderer extends AbstractIncrementingRenderer {
 	  */
     @Override
 	 public String dysfunctionReason() {
-<span class="nc bnc" id="L127" title="All 2 branches missed.">		 return activeColumns().isEmpty() ? &quot;No columns selected&quot; : null;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		 return activeColumns().isEmpty() ? &quot;No columns selected&quot; : null;</span>
 	 }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
@@ -20,149 +21,166 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 public class PMDASMVisitor extends ClassVisitor {
 
-    public PMDASMVisitor() {
-<span class="fc" id="L24">        super(Opcodes.ASM5);</span>
-<span class="fc" id="L25">    }</span>
+    private String outerName;
 
-<span class="fc" id="L27">    private Map&lt;String, String&gt; packages = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L26">    private Map&lt;String, String&gt; packages = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L29">    private AnnotationVisitor annotationVisitor = new PMDAnnotationVisitor(this);</span>
+<span class="fc" id="L28">    private AnnotationVisitor annotationVisitor = new PMDAnnotationVisitor(this);</span>
 
-<span class="fc" id="L31">    private FieldVisitor fieldVisitor = new PMDFieldVisitor(this);</span>
+<span class="fc" id="L30">    private FieldVisitor fieldVisitor = new PMDFieldVisitor(this);</span>
 
-<span class="fc" id="L33">    private SignatureVisitor sigVisitor = new PMDSignatureVisitor(this);</span>
+<span class="fc" id="L32">    private SignatureVisitor sigVisitor = new PMDSignatureVisitor(this);</span>
 
-<span class="fc" id="L35">    private MethodVisitor methodVisitor = new PMDMethodVisitor(this);</span>
+<span class="fc" id="L34">    private MethodVisitor methodVisitor = new PMDMethodVisitor(this);</span>
 
     public List&lt;String&gt; innerClasses;
 
+    public PMDASMVisitor(String outerName) {
+<span class="fc" id="L39">        super(Opcodes.ASM5);</span>
+<span class="fc" id="L40">        this.outerName = outerName;</span>
+<span class="fc" id="L41">    }</span>
+
     public Map&lt;String, String&gt; getPackages() {
-<span class="fc" id="L40">        return packages;</span>
+<span class="fc" id="L44">        return packages;</span>
     }
 
     public List&lt;String&gt; getInnerClasses() {
-<span class="fc" id="L44">        return innerClasses;</span>
+<span class="fc" id="L48">        return innerClasses;</span>
     }
 
     private String parseClassName(String name) {
-<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (name == null) {</span>
-<span class="fc" id="L49">            return null;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (name == null) {</span>
+<span class="fc" id="L53">            return null;</span>
         }
 
-<span class="fc" id="L52">        String className = name;</span>
-<span class="fc" id="L53">        int n = name.lastIndexOf('/');</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (n &gt; -1) {</span>
-<span class="fc" id="L55">            className = name.substring(n + 1);</span>
+<span class="fc" id="L56">        String className = name;</span>
+<span class="fc" id="L57">        int n = name.lastIndexOf('/');</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (n &gt; -1) {</span>
+<span class="fc" id="L59">            className = name.substring(n + 1);</span>
         }
-<span class="fc" id="L57">        name = name.replace('/', '.');</span>
-<span class="fc" id="L58">        packages.put(className, name);</span>
-<span class="fc" id="L59">        n = className.indexOf('$');</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (n &gt; -1) {</span>
+<span class="fc" id="L61">        name = name.replace('/', '.');</span>
+<span class="fc" id="L62">        packages.put(className, name);</span>
+<span class="fc" id="L63">        n = className.indexOf('$');</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (n &gt; -1) {</span>
             //TODO I don't think the first one, with Class$Inner is needed - come back and check
-<span class="fc" id="L62">            packages.put(className.substring(n + 1), name);</span>
-<span class="fc" id="L63">            packages.put(className.replace('$', '.'), name);</span>
+<span class="fc" id="L66">            packages.put(className.substring(n + 1), name);</span>
+<span class="fc" id="L67">            packages.put(className.replace('$', '.'), name);</span>
         }
 
-<span class="fc" id="L66">        return name;</span>
+<span class="fc" id="L70">        return name;</span>
     }
 
     private void parseClassName(String[] names) {
-<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (names != null) {</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">            for (String s : names) {</span>
-<span class="fc" id="L72">                parseClassName(s);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (names != null) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            for (String s : names) {</span>
+<span class="fc" id="L76">                parseClassName(s);</span>
             }
         }
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L79">    }</span>
 
     private void extractSignature(String sig) {
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (sig != null) {</span>
-<span class="fc" id="L79">            new SignatureReader(sig).accept(sigVisitor);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (sig != null) {</span>
+<span class="fc" id="L83">            new SignatureReader(sig).accept(sigVisitor);</span>
         }
-<span class="fc" id="L81">    }</span>
+<span class="fc" id="L85">    }</span>
 
 	/* Start ClassVisitor implementations */
 
+    @Override
     public void visit(int version, int access, String name, String sig, String superName, String[] interfaces) {
-<span class="fc" id="L86">        parseClassName(name);</span>
-<span class="fc" id="L87">        parseClassName(interfaces);</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (sig != null) {</span>
-<span class="fc" id="L89">            extractSignature(sig);</span>
+<span class="fc" id="L91">        parseClassName(name);</span>
+<span class="fc" id="L92">        parseClassName(interfaces);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (sig != null) {</span>
+<span class="fc" id="L94">            extractSignature(sig);</span>
         }
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L96">    }</span>
 
+    @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-<span class="fc" id="L94">        addType(Type.getType(desc));</span>
-<span class="fc" id="L95">        return annotationVisitor;</span>
+<span class="fc" id="L100">        addType(Type.getType(desc));</span>
+<span class="fc" id="L101">        return annotationVisitor;</span>
     }
 
+    @Override
     public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (sig != null) {</span>
-<span class="fc" id="L100">            extractSignature(sig);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (sig != null) {</span>
+<span class="fc" id="L107">            extractSignature(sig);</span>
         }
 
-<span class="fc" id="L103">        addType(Type.getType(desc));</span>
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (value instanceof Type) {</span>
-<span class="nc" id="L105">            addType((Type) value);</span>
+<span class="fc" id="L110">        addType(Type.getType(desc));</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (value instanceof Type) {</span>
+<span class="nc" id="L112">            addType((Type) value);</span>
         }
-<span class="fc" id="L107">        return fieldVisitor;</span>
+<span class="fc" id="L114">        return fieldVisitor;</span>
     }
 
+    @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] exceptions) {
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (sig != null) {</span>
-<span class="fc" id="L112">            extractSignature(sig);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (sig != null) {</span>
+<span class="fc" id="L120">            extractSignature(sig);</span>
         }
-<span class="fc" id="L114">        addMethodDesc(desc);</span>
-<span class="fc" id="L115">        parseClassName(exceptions);</span>
-<span class="fc" id="L116">        return methodVisitor;</span>
+<span class="fc" id="L122">        addMethodDesc(desc);</span>
+<span class="fc" id="L123">        parseClassName(exceptions);</span>
+<span class="fc" id="L124">        return methodVisitor;</span>
     }
 
+    @Override
     public void visitSource(String source, String debug) {
-<span class="fc" id="L120">    }</span>
+<span class="fc" id="L129">    }</span>
 
+    @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-<span class="fc bfc" id="L123" title="All 2 branches covered.">        if (innerClasses == null) {</span>
-<span class="fc" id="L124">            innerClasses = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (!this.outerName.replace('.', '/').equals(outerName)) {</span>
+            // do not consider the inner class if it is not a member of our outer class
+<span class="fc" id="L135">            return;</span>
         }
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (!innerClasses.contains(name.replace('/', '.'))) {</span>
-<span class="fc" id="L127">            innerClasses.add(name.replace('/', '.'));</span>
-        }
-<span class="fc" id="L129">        packages.put(innerName, name.replace('/', '.'));</span>
-<span class="fc" id="L130">    }</span>
 
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (innerClasses == null) {</span>
+<span class="fc" id="L139">            innerClasses = new ArrayList&lt;&gt;();</span>
+        }
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (!innerClasses.contains(name.replace('/', '.'))) {</span>
+<span class="fc" id="L142">            innerClasses.add(name.replace('/', '.'));</span>
+        }
+<span class="fc" id="L144">        packages.put(innerName, name.replace('/', '.'));</span>
+<span class="fc" id="L145">    }</span>
+
+    @Override
     public void visitOuterClass(String owner, String name, String desc) {
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L149">    }</span>
 
+    @Override
     public void visitEnd() {
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L153">    }</span>
 
     private void addMethodDesc(String desc) {
-<span class="fc" id="L139">        addTypes(desc);</span>
-<span class="fc" id="L140">        addType(Type.getReturnType(desc));</span>
-<span class="fc" id="L141">    }</span>
+<span class="fc" id="L156">        addTypes(desc);</span>
+<span class="fc" id="L157">        addType(Type.getReturnType(desc));</span>
+<span class="fc" id="L158">    }</span>
 
     private void addTypes(String desc) {
-<span class="fc" id="L144">        Type[] types = Type.getArgumentTypes(desc);</span>
-<span class="fc bfc" id="L145" title="All 2 branches covered.">        for (Type type : types) {</span>
-<span class="fc" id="L146">            addType(type);</span>
+<span class="fc" id="L161">        Type[] types = Type.getArgumentTypes(desc);</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        for (Type type : types) {</span>
+<span class="fc" id="L163">            addType(type);</span>
         }
-<span class="fc" id="L148">    }</span>
+<span class="fc" id="L165">    }</span>
 
     private void addType(Type t) {
-<span class="fc bfc" id="L151" title="All 3 branches covered.">        switch (t.getSort()) {</span>
+<span class="fc bfc" id="L168" title="All 3 branches covered.">        switch (t.getSort()) {</span>
             case Type.ARRAY:
-<span class="fc" id="L153">                addType(t.getElementType());</span>
-<span class="fc" id="L154">                break;</span>
+<span class="fc" id="L170">                addType(t.getElementType());</span>
+<span class="fc" id="L171">                break;</span>
             case Type.OBJECT:
-<span class="fc" id="L156">                parseClassName(t.getClassName().replace('.', '/'));</span>
-<span class="fc" id="L157">                break;</span>
+<span class="fc" id="L173">                parseClassName(t.getClassName().replace('.', '/'));</span>
+<span class="fc" id="L174">                break;</span>
             default:
                 // Do nothing
                 break;
         }
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L179">    }</span>
 
+    @Override
     public void visitAttribute(Attribute attr) {
-<span class="nc" id="L165">    }</span>
+<span class="nc" id="L183">    }</span>
 
 	/*
      * Start visitors
@@ -173,156 +191,184 @@ public class PMDASMVisitor extends ClassVisitor {
         private PMDASMVisitor parent;
 
         public PMDFieldVisitor(PMDASMVisitor visitor) {
-<span class="fc" id="L176">            super(Opcodes.ASM5);</span>
-<span class="fc" id="L177">            parent = visitor;</span>
-<span class="fc" id="L178">        }</span>
+<span class="fc" id="L194">            super(Opcodes.ASM5);</span>
+<span class="fc" id="L195">            parent = visitor;</span>
+<span class="fc" id="L196">        }</span>
 
+        @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-<span class="fc" id="L181">            parent.addType(Type.getType(desc));</span>
-<span class="fc" id="L182">            return parent.annotationVisitor;</span>
+<span class="fc" id="L200">            parent.addType(Type.getType(desc));</span>
+<span class="fc" id="L201">            return parent.annotationVisitor;</span>
         }
 
+        @Override
         public void visitAttribute(Attribute attr) {
-<span class="nc" id="L186">        }</span>
+<span class="nc" id="L206">        }</span>
 
+        @Override
         public void visitEnd() {
-<span class="fc" id="L189">        }</span>
+<span class="fc" id="L210">        }</span>
     }
 
     private static class PMDAnnotationVisitor extends AnnotationVisitor {
         private PMDASMVisitor parent;
 
         public PMDAnnotationVisitor(PMDASMVisitor visitor) {
-<span class="fc" id="L196">            super(Opcodes.ASM5);</span>
-<span class="fc" id="L197">            parent = visitor;</span>
-<span class="fc" id="L198">        }</span>
+<span class="fc" id="L217">            super(Opcodes.ASM5);</span>
+<span class="fc" id="L218">            parent = visitor;</span>
+<span class="fc" id="L219">        }</span>
 
+        @Override
         public AnnotationVisitor visitAnnotation(String name, String desc) {
-<span class="nc" id="L201">            parent.addType(Type.getType(desc));</span>
-<span class="nc" id="L202">            return this;</span>
+<span class="nc" id="L223">            parent.addType(Type.getType(desc));</span>
+<span class="nc" id="L224">            return this;</span>
         }
 
+        @Override
         public void visitEnum(String name, String desc, String value) {
-<span class="fc" id="L206">            parent.addType(Type.getType(desc));</span>
-<span class="fc" id="L207">        }</span>
+<span class="nc" id="L229">            parent.addType(Type.getType(desc));</span>
+<span class="nc" id="L230">        }</span>
 
+        @Override
         public AnnotationVisitor visitArray(String name) {
-<span class="fc" id="L210">            return this;</span>
+<span class="fc" id="L234">            return this;</span>
         }
 
+        @Override
         public void visitEnd() {
-<span class="fc" id="L214">        }</span>
+<span class="fc" id="L239">        }</span>
 
+        @Override
         public void visit(String name, Object value) {
-<span class="fc bfc" id="L217" title="All 2 branches covered.">            if (value instanceof Type) {</span>
-<span class="fc" id="L218">                parent.addType((Type) value);</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            if (value instanceof Type) {</span>
+<span class="fc" id="L244">                parent.addType((Type) value);</span>
             }
-<span class="fc" id="L220">        }</span>
+<span class="fc" id="L246">        }</span>
     }
 
     private static class PMDSignatureVisitor extends SignatureVisitor {
         private PMDASMVisitor parent;
 
         public PMDSignatureVisitor(PMDASMVisitor visitor) {
-<span class="fc" id="L227">            super(Opcodes.ASM5);</span>
-<span class="fc" id="L228">            this.parent = visitor;</span>
-<span class="fc" id="L229">        }</span>
+<span class="fc" id="L253">            super(Opcodes.ASM5);</span>
+<span class="fc" id="L254">            this.parent = visitor;</span>
+<span class="fc" id="L255">        }</span>
 
+        @Override
         public void visitFormalTypeParameter(String name) {
-<span class="fc" id="L232">        }</span>
+<span class="fc" id="L259">        }</span>
 
+        @Override
         public SignatureVisitor visitClassBound() {
-<span class="fc" id="L235">            return this;</span>
+<span class="fc" id="L263">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitInterfaceBound() {
-<span class="fc" id="L239">            return this;</span>
+<span class="nc" id="L268">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitSuperclass() {
-<span class="fc" id="L243">            return this;</span>
+<span class="fc" id="L273">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitInterface() {
-<span class="fc" id="L247">            return this;</span>
+<span class="fc" id="L278">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitParameterType() {
-<span class="fc" id="L251">            return this;</span>
+<span class="fc" id="L283">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitReturnType() {
-<span class="fc" id="L255">            return this;</span>
+<span class="fc" id="L288">            return this;</span>
         }
 
+        @Override
         public SignatureVisitor visitExceptionType() {
-<span class="nc" id="L259">            return this;</span>
+<span class="nc" id="L293">            return this;</span>
         }
 
+        @Override
         public void visitBaseType(char descriptor) {
-<span class="fc" id="L263">        }</span>
+<span class="fc" id="L298">        }</span>
 
+        @Override
         public void visitTypeVariable(String name) {
-<span class="fc" id="L266">        }</span>
+<span class="fc" id="L302">        }</span>
 
+        @Override
         public SignatureVisitor visitArrayType() {
-<span class="fc" id="L269">            return this;</span>
+<span class="fc" id="L306">            return this;</span>
         }
 
+        @Override
         public void visitClassType(String name) {
-<span class="fc" id="L273">            parent.parseClassName(name);</span>
-<span class="fc" id="L274">        }</span>
+<span class="fc" id="L311">            parent.parseClassName(name);</span>
+<span class="fc" id="L312">        }</span>
 
+        @Override
         public void visitInnerClassType(String name) {
-<span class="nc" id="L277">            parent.parseClassName(name);</span>
-<span class="nc" id="L278">        }</span>
+<span class="nc" id="L316">            parent.parseClassName(name);</span>
+<span class="nc" id="L317">        }</span>
 
+        @Override
         public void visitTypeArgument() {
-<span class="fc" id="L281">        }</span>
+<span class="fc" id="L321">        }</span>
 
+        @Override
         public SignatureVisitor visitTypeArgument(char wildcard) {
-<span class="fc" id="L284">            return this;</span>
+<span class="fc" id="L325">            return this;</span>
         }
 
+        @Override
         public void visitEnd() {
-<span class="fc" id="L288">        }</span>
+<span class="fc" id="L330">        }</span>
     }
 
     private static class PMDMethodVisitor extends MethodVisitor {
         private PMDASMVisitor parent;
 
         public PMDMethodVisitor(PMDASMVisitor visitor) {
-<span class="fc" id="L295">            super(Opcodes.ASM5);</span>
-<span class="fc" id="L296">            parent = visitor;</span>
-<span class="fc" id="L297">        }</span>
+<span class="fc" id="L337">            super(Opcodes.ASM5);</span>
+<span class="fc" id="L338">            parent = visitor;</span>
+<span class="fc" id="L339">        }</span>
 
+        @Override
         public AnnotationVisitor visitParameterAnnotation(int parameter, String desc, boolean visible) {
-<span class="nc" id="L300">            parent.addType(Type.getType(desc));</span>
-<span class="nc" id="L301">            return parent.annotationVisitor;</span>
+<span class="nc" id="L343">            parent.addType(Type.getType(desc));</span>
+<span class="nc" id="L344">            return parent.annotationVisitor;</span>
         }
 
         public AnnotationVisitor visitAnnotation(String name, String desc) {
-<span class="nc" id="L305">            parent.addType(Type.getType(desc));</span>
-<span class="nc" id="L306">            return parent.annotationVisitor;</span>
+<span class="nc" id="L348">            parent.addType(Type.getType(desc));</span>
+<span class="nc" id="L349">            return parent.annotationVisitor;</span>
         }
 
+        @Override
         public void visitTypeInsn(int opcode, String desc) {
-<span class="fc bfc" id="L310" title="All 2 branches covered.">            if (desc.charAt(0) == '[') {</span>
-<span class="fc" id="L311">                parent.addType(Type.getType(desc));</span>
+<span class="fc bfc" id="L354" title="All 2 branches covered.">            if (desc.charAt(0) == '[') {</span>
+<span class="fc" id="L355">                parent.addType(Type.getType(desc));</span>
             } else {
-<span class="fc" id="L313">                parent.parseClassName(desc);</span>
+<span class="fc" id="L357">                parent.parseClassName(desc);</span>
             }
-<span class="fc" id="L315">        }</span>
+<span class="fc" id="L359">        }</span>
 
+        @Override
         public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-<span class="fc" id="L318">            parent.parseClassName(owner);</span>
-<span class="fc" id="L319">            parent.addType(Type.getType(desc));</span>
-<span class="fc" id="L320">        }</span>
+<span class="fc" id="L363">            parent.parseClassName(owner);</span>
+<span class="fc" id="L364">            parent.addType(Type.getType(desc));</span>
+<span class="fc" id="L365">        }</span>
 
+        @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-<span class="fc" id="L323">            parent.parseClassName(owner);</span>
-<span class="fc" id="L324">            parent.addMethodDesc(desc);</span>
-<span class="fc" id="L325">        }</span>
+<span class="fc" id="L369">            parent.parseClassName(owner);</span>
+<span class="fc" id="L370">            parent.addMethodDesc(desc);</span>
+<span class="fc" id="L371">        }</span>
 
         /**
          * the constant to be loaded on the stack. This parameter must be a non null
@@ -331,76 +377,96 @@ public class PMDASMVisitor extends ClassVisitor {
          *
          * @see org.objectweb.asm.MethodVisitor#visitLdcInsn(java.lang.Object)
          */
+        @Override
         public void visitLdcInsn(Object cst) {
-<span class="fc bfc" id="L335" title="All 2 branches covered.">            if (cst instanceof Type) {</span>
-<span class="fc" id="L336">                parent.addType((Type) cst);</span>
-<span class="fc bfc" id="L337" title="All 2 branches covered.">            } else if (cst instanceof String) {</span>
-<span class="fc" id="L338">                parent.parseClassName((String) cst);</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">            if (cst instanceof Type) {</span>
+<span class="fc" id="L383">                parent.addType((Type) cst);</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            } else if (cst instanceof String) {</span>
+<span class="fc" id="L385">                parent.parseClassName((String) cst);</span>
             }
-<span class="fc" id="L340">        }</span>
+<span class="fc" id="L387">        }</span>
 
+        @Override
         public void visitMultiANewArrayInsn(String desc, int dims) {
-<span class="nc" id="L343">            parent.addType(Type.getType(desc));</span>
-<span class="nc" id="L344">        }</span>
+<span class="nc" id="L391">            parent.addType(Type.getType(desc));</span>
+<span class="nc" id="L392">        }</span>
 
+        @Override
         public void visitLocalVariable(String name, String desc, String sig, Label start, Label end, int index) {
-<span class="fc" id="L347">            parent.extractSignature(sig);</span>
-<span class="fc" id="L348">        }</span>
+<span class="fc" id="L396">            parent.extractSignature(sig);</span>
+<span class="fc" id="L397">        }</span>
 
+        @Override
         public void visitCode() {
-<span class="fc" id="L351">        }</span>
+<span class="fc" id="L401">        }</span>
 
+        @Override
         public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
-<span class="fc" id="L354">        }</span>
+<span class="fc" id="L405">        }</span>
 
+        @Override
         public void visitInsn(int opcode) {
-<span class="fc" id="L357">        }</span>
+<span class="fc" id="L409">        }</span>
 
+        @Override
         public void visitIntInsn(int opcode, int operand) {
-<span class="fc" id="L360">        }</span>
+<span class="fc" id="L413">        }</span>
 
+        @Override
         public void visitVarInsn(int opcode, int var) {
-<span class="fc" id="L363">        }</span>
+<span class="fc" id="L417">        }</span>
 
+        @Override
         public void visitJumpInsn(int opcode, Label label) {
-<span class="fc" id="L366">        }</span>
+<span class="fc" id="L421">        }</span>
 
+        @Override
         public void visitLabel(Label label) {
-<span class="fc" id="L369">        }</span>
+<span class="fc" id="L425">        }</span>
 
+        @Override
         public void visitIincInsn(int var, int increment) {
-<span class="fc" id="L372">        }</span>
+<span class="fc" id="L429">        }</span>
 
+        @Override
         public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
-<span class="fc" id="L375">        }</span>
+<span class="nc" id="L433">        }</span>
 
+        @Override
         public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
-<span class="fc" id="L378">        }</span>
+<span class="fc" id="L437">        }</span>
 
+        @Override
         public void visitTryCatchBlock(Label start, Label end, Label handler, String type) {
-<span class="fc" id="L381">            parent.parseClassName(type);</span>
-<span class="fc" id="L382">        }</span>
+<span class="fc" id="L441">            parent.parseClassName(type);</span>
+<span class="fc" id="L442">        }</span>
 
+        @Override
         public void visitLineNumber(int line, Label start) {
-<span class="fc" id="L385">        }</span>
+<span class="fc" id="L446">        }</span>
 
+        @Override
         public void visitMaxs(int maxStack, int maxLocals) {
-<span class="fc" id="L388">        }</span>
+<span class="fc" id="L450">        }</span>
 
+        @Override
         public AnnotationVisitor visitAnnotationDefault() {
-<span class="fc" id="L391">            return parent.annotationVisitor;</span>
+<span class="nc" id="L454">            return parent.annotationVisitor;</span>
         }
 
+        @Override
         public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-<span class="fc" id="L395">            parent.addType(Type.getType(desc));</span>
-<span class="fc" id="L396">            return parent.annotationVisitor;</span>
+<span class="fc" id="L459">            parent.addType(Type.getType(desc));</span>
+<span class="fc" id="L460">            return parent.annotationVisitor;</span>
         }
 
+        @Override
         public void visitEnd() {
-<span class="fc" id="L400">        }</span>
+<span class="fc" id="L465">        }</span>
 
+        @Override
         public void visitAttribute(Attribute attr) {
-<span class="nc" id="L403">        }</span>
+<span class="nc" id="L469">        }</span>
 
     }
 }

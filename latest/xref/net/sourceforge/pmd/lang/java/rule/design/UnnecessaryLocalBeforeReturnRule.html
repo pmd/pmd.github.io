@@ -14,61 +14,61 @@
 <a class="jxr_linenumber" name="L6" href="#L6">6</a>   <strong class="jxr_keyword">import</strong> java.util.List;
 <a class="jxr_linenumber" name="L7" href="#L7">7</a>   <strong class="jxr_keyword">import</strong> java.util.Map;
 <a class="jxr_linenumber" name="L8" href="#L8">8</a>   
-<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.ast.Node;
-<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTAssertStatement;
-<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
-<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTExpression;
-<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
-<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTName;
-<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
-<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
-<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTExpression;
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTName;
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.ASTVariableInitializer;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.ast.AccessNode;
 <a class="jxr_linenumber" name="L18" href="#L18">18</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 <a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 <a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.symboltable.NameOccurrence;
-<a class="jxr_linenumber" name="L21" href="#L21">21</a>  
-<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/design/UnnecessaryLocalBeforeReturnRule.html">UnnecessaryLocalBeforeReturnRule</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/AbstractJavaRule.html">AbstractJavaRule</a> {
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.symboltable.Scope;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> net.sourceforge.pmd.lang.symboltable.ScopedNode;
 <a class="jxr_linenumber" name="L23" href="#L23">23</a>  
-<a class="jxr_linenumber" name="L24" href="#L24">24</a>      @Override
-<a class="jxr_linenumber" name="L25" href="#L25">25</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTMethodDeclaration.html">ASTMethodDeclaration</a> meth, Object data) {
-<a class="jxr_linenumber" name="L26" href="#L26">26</a>          <em class="jxr_comment">// skip void/abstract/native method</em>
-<a class="jxr_linenumber" name="L27" href="#L27">27</a>          <strong class="jxr_keyword">if</strong> (meth.isVoid() || meth.isAbstract() || meth.isNative()) {
-<a class="jxr_linenumber" name="L28" href="#L28">28</a>              <strong class="jxr_keyword">return</strong> data;
-<a class="jxr_linenumber" name="L29" href="#L29">29</a>          }
-<a class="jxr_linenumber" name="L30" href="#L30">30</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.visit(meth, data);
-<a class="jxr_linenumber" name="L31" href="#L31">31</a>      }
-<a class="jxr_linenumber" name="L32" href="#L32">32</a>  
-<a class="jxr_linenumber" name="L33" href="#L33">33</a>      @Override
-<a class="jxr_linenumber" name="L34" href="#L34">34</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn, Object data) {
-<a class="jxr_linenumber" name="L35" href="#L35">35</a>          <em class="jxr_comment">// skip returns of literals</em>
-<a class="jxr_linenumber" name="L36" href="#L36">36</a>          <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTName.html">ASTName</a> name = rtn.getFirstDescendantOfType(ASTName.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <strong class="jxr_keyword">if</strong> (name == <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L38" href="#L38">38</a>              <strong class="jxr_keyword">return</strong> data;
-<a class="jxr_linenumber" name="L39" href="#L39">39</a>          }
-<a class="jxr_linenumber" name="L40" href="#L40">40</a>  
-<a class="jxr_linenumber" name="L41" href="#L41">41</a>          <em class="jxr_comment">// skip 'complicated' expressions</em>
-<a class="jxr_linenumber" name="L42" href="#L42">42</a>          <strong class="jxr_keyword">if</strong> (rtn.findDescendantsOfType(ASTExpression.<strong class="jxr_keyword">class</strong>).size() &gt; 1 || rtn.findDescendantsOfType(ASTPrimaryExpression.<strong class="jxr_keyword">class</strong>).size() &gt; 1 || isMethodCall(rtn)) {
-<a class="jxr_linenumber" name="L43" href="#L43">43</a>              <strong class="jxr_keyword">return</strong> data;
-<a class="jxr_linenumber" name="L44" href="#L44">44</a>          }
-<a class="jxr_linenumber" name="L45" href="#L45">45</a>  
-<a class="jxr_linenumber" name="L46" href="#L46">46</a>          Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = name.getScope().getDeclarations(VariableNameDeclaration.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L47" href="#L47">47</a>          <strong class="jxr_keyword">for</strong> (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry: vars.entrySet()) {
-<a class="jxr_linenumber" name="L48" href="#L48">48</a>              <a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/VariableNameDeclaration.html">VariableNameDeclaration</a> key = entry.getKey();
-<a class="jxr_linenumber" name="L49" href="#L49">49</a>              List&lt;NameOccurrence&gt; usages = entry.getValue();
-<a class="jxr_linenumber" name="L50" href="#L50">50</a>  
-<a class="jxr_linenumber" name="L51" href="#L51">51</a>              <em class="jxr_comment">// skip, if there is an assert between declaration and return</em>
-<a class="jxr_linenumber" name="L52" href="#L52">52</a>              <strong class="jxr_keyword">if</strong> (hasAssertStatement(key, rtn)) {
-<a class="jxr_linenumber" name="L53" href="#L53">53</a>                  <strong class="jxr_keyword">continue</strong>;
-<a class="jxr_linenumber" name="L54" href="#L54">54</a>              }
-<a class="jxr_linenumber" name="L55" href="#L55">55</a>  
-<a class="jxr_linenumber" name="L56" href="#L56">56</a>              <strong class="jxr_keyword">for</strong> (NameOccurrence occ: usages) {
-<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  <strong class="jxr_keyword">if</strong> (occ.getLocation().equals(name)) {
-<a class="jxr_linenumber" name="L58" href="#L58">58</a>                      <em class="jxr_comment">// only check declarations that occur one line earlier</em>
-<a class="jxr_linenumber" name="L59" href="#L59">59</a>                      <strong class="jxr_keyword">if</strong> (key.getNode().getBeginLine() == name.getBeginLine() - 1) {
-<a class="jxr_linenumber" name="L60" href="#L60">60</a>                          String <strong class="jxr_keyword">var</strong> = name.getImage();
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>                          <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">var</strong>.indexOf('.') != -1) {
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>                              <strong class="jxr_keyword">var</strong> = <strong class="jxr_keyword">var</strong>.substring(0, <strong class="jxr_keyword">var</strong>.indexOf('.'));
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>                          }
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/design/UnnecessaryLocalBeforeReturnRule.html">UnnecessaryLocalBeforeReturnRule</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/rule/AbstractJavaRule.html">AbstractJavaRule</a> {
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>      @Override
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTMethodDeclaration.html">ASTMethodDeclaration</a> meth, Object data) {
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>          <em class="jxr_comment">// skip void/abstract/native method</em>
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>          <strong class="jxr_keyword">if</strong> (meth.isVoid() || meth.isAbstract() || meth.isNative()) {
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>              <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>          }
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>          <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">super</strong>.visit(meth, data);
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>      }
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>      @Override
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>      <strong class="jxr_keyword">public</strong> Object visit(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn, Object data) {
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>          <em class="jxr_comment">// skip returns of literals</em>
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>          <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTName.html">ASTName</a> name = rtn.getFirstDescendantOfType(ASTName.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>          <strong class="jxr_keyword">if</strong> (name == <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>              <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>          }
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>          <em class="jxr_comment">// skip 'complicated' expressions</em>
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>          <strong class="jxr_keyword">if</strong> (rtn.findDescendantsOfType(ASTExpression.<strong class="jxr_keyword">class</strong>).size() &gt; 1 || rtn.findDescendantsOfType(ASTPrimaryExpression.<strong class="jxr_keyword">class</strong>).size() &gt; 1 || isMethodCall(rtn)) {
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>              <strong class="jxr_keyword">return</strong> data;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>          }
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>          Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = name.getScope()
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>                  .getDeclarations(VariableNameDeclaration.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>          <strong class="jxr_keyword">for</strong> (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>              <a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/VariableNameDeclaration.html">VariableNameDeclaration</a> variableDeclaration = entry.getKey();
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>              List&lt;NameOccurrence&gt; usages = entry.getValue();
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>              <strong class="jxr_keyword">if</strong> (usages.size() == 1) { <em class="jxr_comment">// If there is more than 1 usage, then it's not only returned</em>
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>                  <a href="../../../../../../../net/sourceforge/pmd/lang/symboltable/NameOccurrence.html">NameOccurrence</a> occ = usages.get(0);
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>  
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>                  <strong class="jxr_keyword">if</strong> (occ.getLocation().equals(name) &amp;&amp; isNotAnnotated(variableDeclaration)) {
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>                      String <strong class="jxr_keyword">var</strong> = name.getImage();
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>                      <strong class="jxr_keyword">if</strong> (<strong class="jxr_keyword">var</strong>.indexOf('.') != -1) {
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>                          <strong class="jxr_keyword">var</strong> = <strong class="jxr_keyword">var</strong>.substring(0, <strong class="jxr_keyword">var</strong>.indexOf('.'));
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>                      }
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>                      <em class="jxr_comment">// Is the variable initialized with another member that is later used?</em>
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>                      <strong class="jxr_keyword">if</strong> (!isInitDataModifiedAfterInit(variableDeclaration, rtn)) {
 <a class="jxr_linenumber" name="L64" href="#L64">64</a>                          addViolation(data, rtn, <strong class="jxr_keyword">var</strong>);
 <a class="jxr_linenumber" name="L65" href="#L65">65</a>                      }
 <a class="jxr_linenumber" name="L66" href="#L66">66</a>                  }
@@ -77,50 +77,68 @@
 <a class="jxr_linenumber" name="L69" href="#L69">69</a>          <strong class="jxr_keyword">return</strong> data;
 <a class="jxr_linenumber" name="L70" href="#L70">70</a>      }
 <a class="jxr_linenumber" name="L71" href="#L71">71</a>  
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>  <em class="jxr_javadoccomment">     * Determine if the given return statement has any embedded method calls.</em>
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>  <em class="jxr_javadoccomment">     *</em>
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>  <em class="jxr_javadoccomment">     * @param rtn</em>
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>  <em class="jxr_javadoccomment">     *          return statement to analyze</em>
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>  <em class="jxr_javadoccomment">     * @return true if any method calls are made within the given return</em>
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isMethodCall(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn) {
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>       List&lt;ASTPrimarySuffix&gt; suffix = rtn.findDescendantsOfType( ASTPrimarySuffix.<strong class="jxr_keyword">class</strong> );
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>       <strong class="jxr_keyword">for</strong> ( ASTPrimarySuffix element: suffix ) {
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>          <strong class="jxr_keyword">if</strong> ( element.isArguments() ) {
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>            <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>          }
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>        }
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>        <strong class="jxr_keyword">return</strong> false;
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>      }
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>  
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>      <em class="jxr_javadoccomment">/**</em>
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>  <em class="jxr_javadoccomment">     * Checks whether there is an assert statement between the variable declaration</em>
-<a class="jxr_linenumber" name="L91" href="#L91">91</a>  <em class="jxr_javadoccomment">     * and the return statement, that uses the variable.</em>
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>  <em class="jxr_javadoccomment">     * @param variableDeclaration</em>
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>  <em class="jxr_javadoccomment">     * @param rtn</em>
-<a class="jxr_linenumber" name="L94" href="#L94">94</a>  <em class="jxr_javadoccomment">     * @return</em>
-<a class="jxr_linenumber" name="L95" href="#L95">95</a>  <em class="jxr_javadoccomment">     */</em>
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> hasAssertStatement(<a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/VariableNameDeclaration.html">VariableNameDeclaration</a> variableDeclaration, <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn) {
-<a class="jxr_linenumber" name="L97" href="#L97">97</a>          <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTBlockStatement.html">ASTBlockStatement</a> blockStatement = variableDeclaration.getAccessNodeParent().getFirstParentOfType(ASTBlockStatement.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L98" href="#L98">98</a>          <strong class="jxr_keyword">int</strong> startIndex = blockStatement.jjtGetChildIndex() + 1;
-<a class="jxr_linenumber" name="L99" href="#L99">99</a>          <strong class="jxr_keyword">int</strong> endIndex = rtn.getFirstParentOfType(ASTBlockStatement.<strong class="jxr_keyword">class</strong>).jjtGetChildIndex();
-<a class="jxr_linenumber" name="L100" href="#L100">100</a>         <a href="../../../../../../../net/sourceforge/pmd/lang/ast/Node.html">Node</a> block = blockStatement.jjtGetParent();
-<a class="jxr_linenumber" name="L101" href="#L101">101</a>         <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">int</strong> i = startIndex; i &lt; endIndex; i++) {
-<a class="jxr_linenumber" name="L102" href="#L102">102</a>             List&lt;ASTAssertStatement&gt; asserts = block.jjtGetChild(i).findDescendantsOfType(ASTAssertStatement.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L103" href="#L103">103</a>             <strong class="jxr_keyword">for</strong> (ASTAssertStatement assertStatement : asserts) {
-<a class="jxr_linenumber" name="L104" href="#L104">104</a>                 List&lt;ASTName&gt; names = assertStatement.findDescendantsOfType(ASTName.<strong class="jxr_keyword">class</strong>);
-<a class="jxr_linenumber" name="L105" href="#L105">105</a>                 <strong class="jxr_keyword">for</strong> (ASTName n : names) {
-<a class="jxr_linenumber" name="L106" href="#L106">106</a>                     <strong class="jxr_keyword">if</strong> (n.hasImageEqualTo(variableDeclaration.getName())) {
-<a class="jxr_linenumber" name="L107" href="#L107">107</a>                         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
-<a class="jxr_linenumber" name="L108" href="#L108">108</a>                     }
-<a class="jxr_linenumber" name="L109" href="#L109">109</a>                 }
-<a class="jxr_linenumber" name="L110" href="#L110">110</a>             }
-<a class="jxr_linenumber" name="L111" href="#L111">111</a>         }
-<a class="jxr_linenumber" name="L112" href="#L112">112</a> 
-<a class="jxr_linenumber" name="L113" href="#L113">113</a>         <strong class="jxr_keyword">return</strong> false;
-<a class="jxr_linenumber" name="L114" href="#L114">114</a>     }
-<a class="jxr_linenumber" name="L115" href="#L115">115</a> }
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isInitDataModifiedAfterInit(<strong class="jxr_keyword">final</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/VariableNameDeclaration.html">VariableNameDeclaration</a> variableDeclaration,
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>              <strong class="jxr_keyword">final</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn) {
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>          <strong class="jxr_keyword">final</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTVariableInitializer.html">ASTVariableInitializer</a> initializer = variableDeclaration.getAccessNodeParent()
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>                  .getFirstDescendantOfType(ASTVariableInitializer.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>          <strong class="jxr_keyword">if</strong> (initializer != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>              <strong class="jxr_keyword">final</strong> List&lt;ASTName&gt; referencedNames = initializer.findDescendantsOfType(ASTName.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>              <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> ASTName refName : referencedNames) {
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>                  <em class="jxr_comment">// TODO : Shouldn't the scope allow us to search for a var name occurrences directly, moving up through parent scopes?</em>
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>                  <a href="../../../../../../../net/sourceforge/pmd/lang/symboltable/Scope.html">Scope</a> scope = refName.getScope();
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>                  <strong class="jxr_keyword">do</strong> {
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>                      <strong class="jxr_keyword">final</strong> Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations = scope
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>                              .getDeclarations(VariableNameDeclaration.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>                      <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : declarations
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>                              .entrySet()) {
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>                          <strong class="jxr_keyword">if</strong> (entry.getKey().getName().equals(refName.getImage())) {
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>                              <em class="jxr_comment">// Variable found! Check usage locations</em>
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>                              <strong class="jxr_keyword">for</strong> (<strong class="jxr_keyword">final</strong> NameOccurrence occ : entry.getValue()) {
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>                                  <strong class="jxr_keyword">final</strong> <a href="../../../../../../../net/sourceforge/pmd/lang/symboltable/ScopedNode.html">ScopedNode</a> location = occ.getLocation();
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>                                  <em class="jxr_comment">// Is it used after initializing our "unnecessary" local but before the return statement?</em>
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>                                  <em class="jxr_comment">// TODO : should node define isAfter / isBefore helper methods?</em>
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>                                  <strong class="jxr_keyword">if</strong> ((location.getBeginLine() &gt; initializer.getEndLine()
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>                                          || (location.getBeginLine() == initializer.getEndLine() &amp;&amp; location.getBeginColumn() &gt;= initializer.getEndColumn()))
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>                                          &amp;&amp; (location.getEndLine() &lt; rtn.getBeginLine()
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>                                                  || (location.getEndLine() == rtn.getBeginLine()
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>                                                          &amp;&amp; location.getEndColumn() &lt;= rtn.getEndColumn()))) {
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>                                      <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>                                  }
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>                              }
+<a class="jxr_linenumber" name="L100" href="#L100">100</a> 
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>                             <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>                         }
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>                     }
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>                     scope = scope.getParent();
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>                 } <strong class="jxr_keyword">while</strong> (scope != <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>             }
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         }
+<a class="jxr_linenumber" name="L108" href="#L108">108</a> 
+<a class="jxr_linenumber" name="L109" href="#L109">109</a>         <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>     }
+<a class="jxr_linenumber" name="L111" href="#L111">111</a> 
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isNotAnnotated(<a href="../../../../../../../net/sourceforge/pmd/lang/java/symboltable/VariableNameDeclaration.html">VariableNameDeclaration</a> variableDeclaration) {
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>         <a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/AccessNode.html">AccessNode</a> accessNodeParent = variableDeclaration.getAccessNodeParent();
+<a class="jxr_linenumber" name="L114" href="#L114">114</a>         <strong class="jxr_keyword">return</strong> !accessNodeParent.hasDescendantOfType(ASTAnnotation.<strong class="jxr_keyword">class</strong>);
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>     }
+<a class="jxr_linenumber" name="L116" href="#L116">116</a> 
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="L118" href="#L118">118</a> <em class="jxr_javadoccomment">     * Determine if the given return statement has any embedded method calls.</em>
+<a class="jxr_linenumber" name="L119" href="#L119">119</a> <em class="jxr_javadoccomment">     *</em>
+<a class="jxr_linenumber" name="L120" href="#L120">120</a> <em class="jxr_javadoccomment">     * @param rtn</em>
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> <em class="jxr_javadoccomment">     *          return statement to analyze</em>
+<a class="jxr_linenumber" name="L122" href="#L122">122</a> <em class="jxr_javadoccomment">     * @return true if any method calls are made within the given return</em>
+<a class="jxr_linenumber" name="L123" href="#L123">123</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isMethodCall(<a href="../../../../../../../net/sourceforge/pmd/lang/java/ast/ASTReturnStatement.html">ASTReturnStatement</a> rtn) {
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>      List&lt;ASTPrimarySuffix&gt; suffix = rtn.findDescendantsOfType( ASTPrimarySuffix.<strong class="jxr_keyword">class</strong> );
+<a class="jxr_linenumber" name="L126" href="#L126">126</a>      <strong class="jxr_keyword">for</strong> ( ASTPrimarySuffix element: suffix ) {
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>         <strong class="jxr_keyword">if</strong> ( element.isArguments() ) {
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>           <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">true</strong>;
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>         }
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>       }
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>       <strong class="jxr_keyword">return</strong> false;
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>     }
+<a class="jxr_linenumber" name="L133" href="#L133">133</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2002&#x2013;2017 <a href="https://pmd.github.io/">PMD</a>. All rights reserved.</div>

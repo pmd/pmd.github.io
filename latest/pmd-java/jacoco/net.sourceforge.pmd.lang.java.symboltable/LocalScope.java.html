@@ -3,61 +3,61 @@
  */
 package net.sourceforge.pmd.lang.java.symboltable;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.symboltable.Applier;
 import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
 /**
  * A LocalScope can have variable declarations and class declarations within it.
  */
-<span class="fc" id="L19">public class LocalScope extends AbstractJavaScope {</span>
+<span class="fc" id="L20">public class LocalScope extends AbstractJavaScope {</span>
 
     public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
-<span class="fc" id="L22">        return getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc" id="L23">        return getDeclarations(VariableNameDeclaration.class);</span>
     }
 
     public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occurrence) {
-<span class="fc" id="L26">        JavaNameOccurrence javaOccurrence = (JavaNameOccurrence) occurrence;</span>
-<span class="fc" id="L27">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(javaOccurrence);</span>
-<span class="pc bpc" id="L28" title="1 of 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; !javaOccurrence.isThisOrSuper()) {</span>
-<span class="fc bfc" id="L29" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
-<span class="fc" id="L30">                List&lt;NameOccurrence&gt; nameOccurrences = getVariableDeclarations().get(decl);</span>
-<span class="fc" id="L31">                nameOccurrences.add(javaOccurrence);</span>
-<span class="fc" id="L32">                Node n = javaOccurrence.getLocation();</span>
-<span class="pc bpc" id="L33" title="1 of 2 branches missed.">                if (n instanceof ASTName) {</span>
-<span class="fc" id="L34">                    ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="fc" id="L27">        JavaNameOccurrence javaOccurrence = (JavaNameOccurrence) occurrence;</span>
+<span class="fc" id="L28">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(javaOccurrence);</span>
+<span class="pc bpc" id="L29" title="1 of 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; !javaOccurrence.isThisOrSuper()) {</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
+<span class="fc" id="L31">                List&lt;NameOccurrence&gt; nameOccurrences = getVariableDeclarations().get(decl);</span>
+<span class="fc" id="L32">                nameOccurrences.add(javaOccurrence);</span>
+<span class="fc" id="L33">                Node n = javaOccurrence.getLocation();</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">                if (n instanceof ASTName) {</span>
+<span class="fc" id="L35">                    ((ASTName) n).setNameDeclaration(decl);</span>
                 } // TODO what to do with PrimarySuffix case?
-<span class="fc" id="L36">            }</span>
+<span class="fc" id="L37">            }</span>
         }
-<span class="fc" id="L38">        return declarations;</span>
+<span class="fc" id="L39">        return declarations;</span>
     }
 
     public void addDeclaration(NameDeclaration nameDecl) {
-<span class="pc bpc" id="L42" title="1 of 4 branches missed.">        if (!(nameDecl instanceof VariableNameDeclaration || nameDecl instanceof ClassNameDeclaration)) {</span>
-<span class="nc" id="L43">            throw new IllegalArgumentException(</span>
+<span class="pc bpc" id="L43" title="1 of 4 branches missed.">        if (!(nameDecl instanceof VariableNameDeclaration || nameDecl instanceof ClassNameDeclaration)) {</span>
+<span class="nc" id="L44">            throw new IllegalArgumentException(</span>
                     &quot;A LocalScope can contain only VariableNameDeclarations or ClassNameDeclarations. &quot;
                             + &quot;Tried to add &quot; + nameDecl.getClass() + &quot;(&quot; + nameDecl + &quot;)&quot;);
         }
-<span class="fc" id="L47">        super.addDeclaration(nameDecl);</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L48">        super.addDeclaration(nameDecl);</span>
+<span class="fc" id="L49">    }</span>
 
     public Set&lt;NameDeclaration&gt; findVariableHere(JavaNameOccurrence occurrence) {
-<span class="fc" id="L51">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
 <span class="fc bfc" id="L52" title="All 4 branches covered.">        if (occurrence.isThisOrSuper() || occurrence.isMethodOrConstructorInvocation()) {</span>
-<span class="fc" id="L53">            return result;</span>
+<span class="fc" id="L53">            return Collections.emptySet();</span>
         }
 <span class="fc" id="L55">        DeclarationFinderFunction finder = new DeclarationFinderFunction(occurrence);</span>
 <span class="fc" id="L56">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
 <span class="fc bfc" id="L57" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
-<span class="fc" id="L58">            result.add(finder.getDecl());</span>
+<span class="fc" id="L58">            return Collections.singleton(finder.getDecl());</span>
         }
-<span class="fc" id="L60">        return result;</span>
+<span class="fc" id="L60">        return Collections.emptySet();</span>
     }
 
     public String toString() {

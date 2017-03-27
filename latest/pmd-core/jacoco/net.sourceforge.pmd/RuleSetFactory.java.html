@@ -20,6 +20,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
@@ -30,14 +37,6 @@ import net.sourceforge.pmd.lang.rule.properties.factories.PropertyDescriptorUtil
 import net.sourceforge.pmd.util.ResourceLoader;
 import net.sourceforge.pmd.util.StringUtil;
 
-import org.apache.commons.io.IOUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
 /**
  * RuleSetFactory is responsible for creating RuleSet instances from XML
  * content. By default Rules will be loaded using the ClassLoader for this
@@ -45,14 +44,21 @@ import org.xml.sax.SAXException;
  * warnings off.
  * By default, the ruleset compatibility filter is active, too. See {@link RuleSetFactoryCompatibility}.
  */
-<span class="fc" id="L48">public class RuleSetFactory {</span>
+<span class="fc" id="L47">public class RuleSetFactory {</span>
 
-<span class="fc" id="L50">    private static final Logger LOG = Logger.getLogger(RuleSetFactory.class.getName());</span>
+<span class="fc" id="L49">    private static final Logger LOG = Logger.getLogger(RuleSetFactory.class.getName());</span>
 
-<span class="fc" id="L52">    private ClassLoader classLoader = RuleSetFactory.class.getClassLoader();</span>
-<span class="fc" id="L53">    private RulePriority minimumPriority = RulePriority.LOW;</span>
-<span class="fc" id="L54">    private boolean warnDeprecated = false;</span>
-<span class="fc" id="L55">    private RuleSetFactoryCompatibility compatibilityFilter = new RuleSetFactoryCompatibility();</span>
+    private static final String DESCRIPTION = &quot;description&quot;;
+    private static final String UNEXPECTED_ELEMENT = &quot;Unexpected element &lt;&quot;;
+    private static final String PRIORITY = &quot;priority&quot;;
+    private static final String FOR_RULE = &quot;' for Rule &quot;;
+    private static final String MESSAGE = &quot;message&quot;;
+    private static final String EXTERNAL_INFO_URL = &quot;externalInfoUrl&quot;;
+
+<span class="fc" id="L58">    private ClassLoader classLoader = RuleSetFactory.class.getClassLoader();</span>
+<span class="fc" id="L59">    private RulePriority minimumPriority = RulePriority.LOW;</span>
+<span class="fc" id="L60">    private boolean warnDeprecated = false;</span>
+<span class="fc" id="L61">    private RuleSetFactoryCompatibility compatibilityFilter = new RuleSetFactoryCompatibility();</span>
 
     /**
      * Set the ClassLoader to use when loading Rules.
@@ -60,8 +66,8 @@ import org.xml.sax.SAXException;
      * @param classLoader The ClassLoader to use.
      */
     public void setClassLoader(ClassLoader classLoader) {
-<span class="fc" id="L63">        this.classLoader = classLoader;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L69">        this.classLoader = classLoader;</span>
+<span class="fc" id="L70">    }</span>
 
     /**
      * Set the minimum rule priority threshold for all Rules which are loaded
@@ -70,8 +76,8 @@ import org.xml.sax.SAXException;
      * @param minimumPriority The minimum priority.
      */
     public void setMinimumPriority(RulePriority minimumPriority) {
-<span class="fc" id="L73">        this.minimumPriority = minimumPriority;</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L79">        this.minimumPriority = minimumPriority;</span>
+<span class="fc" id="L80">    }</span>
 
     /**
      * Set whether warning messages should be logged for usage of deprecated
@@ -80,23 +86,23 @@ import org.xml.sax.SAXException;
      * @param warnDeprecated &lt;code&gt;true&lt;/code&gt; to log warning messages.
      */
     public void setWarnDeprecated(boolean warnDeprecated) {
-<span class="fc" id="L83">        this.warnDeprecated = warnDeprecated;</span>
-<span class="fc" id="L84">    }</span>
+<span class="fc" id="L89">        this.warnDeprecated = warnDeprecated;</span>
+<span class="fc" id="L90">    }</span>
 
     /**
      * Disable the ruleset compatibility filter. Disabling this filter will cause
      * exception when loading a ruleset, which uses references to old/not existing rules.
      */
     public void disableCompatibilityFilter() {
-<span class="nc" id="L91">        compatibilityFilter = null;</span>
-<span class="nc" id="L92">    }</span>
+<span class="nc" id="L97">        compatibilityFilter = null;</span>
+<span class="nc" id="L98">    }</span>
 
     /**
      * Gets the compatibility filter in order to adjust it, e.g. add additional filters.
      * @return the {@link RuleSetFactoryCompatibility}
      */
     public RuleSetFactoryCompatibility getCompatibilityFilter() {
-<span class="fc" id="L99">        return compatibilityFilter;</span>
+<span class="fc" id="L105">        return compatibilityFilter;</span>
     }
 
     /**
@@ -106,19 +112,19 @@ import org.xml.sax.SAXException;
      * @return An Iterator of RuleSet objects.
      */
     public Iterator&lt;RuleSet&gt; getRegisteredRuleSets() throws RuleSetNotFoundException {
-<span class="nc" id="L109">        String rulesetsProperties = null;</span>
+<span class="nc" id="L115">        String rulesetsProperties = null;</span>
         try {
-<span class="nc" id="L111">            List&lt;RuleSetReferenceId&gt; ruleSetReferenceIds = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">            for (Language language : LanguageRegistry.findWithRuleSupport()) {</span>
-<span class="nc" id="L113">                Properties props = new Properties();</span>
-<span class="nc" id="L114">                rulesetsProperties = &quot;rulesets/&quot; + language.getTerseName() + &quot;/rulesets.properties&quot;;</span>
-<span class="nc" id="L115">                props.load(ResourceLoader.loadResourceAsStream(rulesetsProperties));</span>
-<span class="nc" id="L116">                String rulesetFilenames = props.getProperty(&quot;rulesets.filenames&quot;);</span>
-<span class="nc" id="L117">                ruleSetReferenceIds.addAll(RuleSetReferenceId.parse(rulesetFilenames));</span>
-<span class="nc" id="L118">            }</span>
-<span class="nc" id="L119">            return createRuleSets(ruleSetReferenceIds).getRuleSetsIterator();</span>
-<span class="nc" id="L120">        } catch (IOException ioe) {</span>
-<span class="nc" id="L121">            throw new RuntimeException(&quot;Couldn't find &quot; + rulesetsProperties</span>
+<span class="nc" id="L117">            List&lt;RuleSetReferenceId&gt; ruleSetReferenceIds = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            for (Language language : LanguageRegistry.findWithRuleSupport()) {</span>
+<span class="nc" id="L119">                Properties props = new Properties();</span>
+<span class="nc" id="L120">                rulesetsProperties = &quot;rulesets/&quot; + language.getTerseName() + &quot;/rulesets.properties&quot;;</span>
+<span class="nc" id="L121">                props.load(ResourceLoader.loadResourceAsStream(rulesetsProperties));</span>
+<span class="nc" id="L122">                String rulesetFilenames = props.getProperty(&quot;rulesets.filenames&quot;);</span>
+<span class="nc" id="L123">                ruleSetReferenceIds.addAll(RuleSetReferenceId.parse(rulesetFilenames));</span>
+<span class="nc" id="L124">            }</span>
+<span class="nc" id="L125">            return createRuleSets(ruleSetReferenceIds).getRuleSetsIterator();</span>
+<span class="nc" id="L126">        } catch (IOException ioe) {</span>
+<span class="nc" id="L127">            throw new RuntimeException(&quot;Couldn't find &quot; + rulesetsProperties</span>
                     + &quot;; please ensure that the rulesets directory is on the classpath.  The current classpath is: &quot;
                     + System.getProperty(&quot;java.class.path&quot;));
         }
@@ -136,7 +142,7 @@ import org.xml.sax.SAXException;
      * @throws RuleSetNotFoundException if unable to find a resource.
      */
     public synchronized RuleSets createRuleSets(String referenceString) throws RuleSetNotFoundException {
-<span class="fc" id="L139">        return createRuleSets(RuleSetReferenceId.parse(referenceString));</span>
+<span class="fc" id="L145">        return createRuleSets(RuleSetReferenceId.parse(referenceString));</span>
     }
 
     /**
@@ -150,12 +156,12 @@ import org.xml.sax.SAXException;
      */
     public synchronized RuleSets createRuleSets(List&lt;RuleSetReferenceId&gt; ruleSetReferenceIds)
             throws RuleSetNotFoundException {
-<span class="fc" id="L153">        RuleSets ruleSets = new RuleSets();</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (RuleSetReferenceId ruleSetReferenceId : ruleSetReferenceIds) {</span>
-<span class="fc" id="L155">            RuleSet ruleSet = createRuleSet(ruleSetReferenceId);</span>
-<span class="fc" id="L156">            ruleSets.addRuleSet(ruleSet);</span>
-<span class="fc" id="L157">        }</span>
-<span class="fc" id="L158">        return ruleSets;</span>
+<span class="fc" id="L159">        RuleSets ruleSets = new RuleSets();</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (RuleSetReferenceId ruleSetReferenceId : ruleSetReferenceIds) {</span>
+<span class="fc" id="L161">            RuleSet ruleSet = createRuleSet(ruleSetReferenceId);</span>
+<span class="fc" id="L162">            ruleSets.addRuleSet(ruleSet);</span>
+<span class="fc" id="L163">        }</span>
+<span class="fc" id="L164">        return ruleSets;</span>
     }
 
     /**
@@ -170,12 +176,12 @@ import org.xml.sax.SAXException;
      * @throws RuleSetNotFoundException if unable to find a resource.
      */
     public synchronized RuleSet createRuleSet(String referenceString) throws RuleSetNotFoundException {
-<span class="fc" id="L173">        List&lt;RuleSetReferenceId&gt; references = RuleSetReferenceId.parse(referenceString);</span>
-<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (references.isEmpty()) {</span>
-<span class="nc" id="L175">            throw new RuleSetNotFoundException(&quot;No RuleSetReferenceId can be parsed from the string: &lt;&quot;</span>
+<span class="fc" id="L179">        List&lt;RuleSetReferenceId&gt; references = RuleSetReferenceId.parse(referenceString);</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (references.isEmpty()) {</span>
+<span class="nc" id="L181">            throw new RuleSetNotFoundException(&quot;No RuleSetReferenceId can be parsed from the string: &lt;&quot;</span>
                     + referenceString + &quot;&gt;&quot;);
         }
-<span class="fc" id="L178">        return createRuleSet(references.get(0));</span>
+<span class="fc" id="L184">        return createRuleSet(references.get(0));</span>
     }
 
     /**
@@ -188,13 +194,12 @@ import org.xml.sax.SAXException;
      * @throws RuleSetNotFoundException if unable to find a resource.
      */
     public synchronized RuleSet createRuleSet(RuleSetReferenceId ruleSetReferenceId) throws RuleSetNotFoundException {
-<span class="fc" id="L191">        return createRuleSet(ruleSetReferenceId, false);</span>
+<span class="fc" id="L197">        return createRuleSet(ruleSetReferenceId, false);</span>
     }
 
     private synchronized RuleSet createRuleSet(RuleSetReferenceId ruleSetReferenceId,
             boolean withDeprecatedRuleReferences) throws RuleSetNotFoundException {
-<span class="fc" id="L196">        return parseRuleSetNode(ruleSetReferenceId, ruleSetReferenceId.getInputStream(this.classLoader),</span>
-                withDeprecatedRuleReferences);
+<span class="fc" id="L202">        return parseRuleSetNode(ruleSetReferenceId, withDeprecatedRuleReferences);</span>
     }
 
     /**
@@ -214,12 +219,12 @@ import org.xml.sax.SAXException;
      */
     private Rule createRule(RuleSetReferenceId ruleSetReferenceId, boolean withDeprecatedRuleReferences)
             throws RuleSetNotFoundException {
-<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        if (ruleSetReferenceId.isAllRules()) {</span>
-<span class="nc" id="L218">            throw new IllegalArgumentException(&quot;Cannot parse a single Rule from an all Rule RuleSet reference: &lt;&quot;</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">        if (ruleSetReferenceId.isAllRules()) {</span>
+<span class="nc" id="L223">            throw new IllegalArgumentException(&quot;Cannot parse a single Rule from an all Rule RuleSet reference: &lt;&quot;</span>
                     + ruleSetReferenceId + &quot;&gt;.&quot;);
         }
-<span class="fc" id="L221">        RuleSet ruleSet = createRuleSet(ruleSetReferenceId, withDeprecatedRuleReferences);</span>
-<span class="fc" id="L222">        return ruleSet.getRuleByName(ruleSetReferenceId.getRuleName());</span>
+<span class="fc" id="L226">        RuleSet ruleSet = createRuleSet(ruleSetReferenceId, withDeprecatedRuleReferences);</span>
+<span class="fc" id="L227">        return ruleSet.getRuleByName(ruleSetReferenceId.getRuleName());</span>
     }
 
     /**
@@ -227,75 +232,70 @@ import org.xml.sax.SAXException;
      * 
      * @param ruleSetReferenceId The RuleSetReferenceId of the RuleSet being
      *            parsed.
-     * @param inputStream InputStream containing the RuleSet XML configuration.
      * @param withDeprecatedRuleReferences whether rule references that are
      *            deprecated should be ignored or not
      * @return The new RuleSet.
      */
-    private RuleSet parseRuleSetNode(RuleSetReferenceId ruleSetReferenceId, InputStream inputStream,
-            boolean withDeprecatedRuleReferences) {
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (!ruleSetReferenceId.isExternal()) {</span>
-<span class="nc" id="L238">            throw new IllegalArgumentException(&quot;Cannot parse a RuleSet from a non-external reference: &lt;&quot;</span>
-                    + ruleSetReferenceId + &quot;&gt;.&quot;);
-        }
-        try {
-<span class="fc" id="L242">            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
-            InputSource inputSource;
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">            if (compatibilityFilter != null) {</span>
-<span class="fc" id="L245">                inputSource = new InputSource(compatibilityFilter.filterRuleSetFile(inputStream));</span>
-            } else {
-<span class="nc" id="L247">                inputSource = new InputSource(inputStream);</span>
+    private RuleSet parseRuleSetNode(RuleSetReferenceId ruleSetReferenceId,
+                                     boolean withDeprecatedRuleReferences) throws RuleSetNotFoundException {
+<span class="fc" id="L241">        try (InputStream inputStream = ruleSetReferenceId.getInputStream(this.classLoader)){</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            if (!ruleSetReferenceId.isExternal()) {</span>
+<span class="nc" id="L243">                throw new IllegalArgumentException(&quot;Cannot parse a RuleSet from a non-external reference: &lt;&quot;</span>
+                        + ruleSetReferenceId + &quot;&gt;.&quot;);
             }
-<span class="fc" id="L249">            Document document = builder.parse(inputSource);</span>
-<span class="fc" id="L250">            Element ruleSetElement = document.getDocumentElement();</span>
+<span class="fc" id="L246">            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+            InputSource inputSource;
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">            if (compatibilityFilter != null) {</span>
+<span class="fc" id="L249">                inputSource = new InputSource(compatibilityFilter.filterRuleSetFile(inputStream));</span>
+            } else {
+<span class="nc" id="L251">                inputSource = new InputSource(inputStream);</span>
+            }
+<span class="fc" id="L253">            Document document = builder.parse(inputSource);</span>
+<span class="fc" id="L254">            Element ruleSetElement = document.getDocumentElement();</span>
 
-<span class="fc" id="L252">            RuleSet ruleSet = new RuleSet();</span>
-<span class="fc" id="L253">            ruleSet.setFileName(ruleSetReferenceId.getRuleSetFileName());</span>
-<span class="fc" id="L254">            ruleSet.setName(ruleSetElement.getAttribute(&quot;name&quot;));</span>
+<span class="fc" id="L256">            RuleSet ruleSet = new RuleSet();</span>
+<span class="fc" id="L257">            ruleSet.setFileName(ruleSetReferenceId.getRuleSetFileName());</span>
+<span class="fc" id="L258">            ruleSet.setName(ruleSetElement.getAttribute(&quot;name&quot;));</span>
 
-<span class="fc" id="L256">            NodeList nodeList = ruleSetElement.getChildNodes();</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">            for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
-<span class="fc" id="L258">                Node node = nodeList.item(i);</span>
-<span class="fc bfc" id="L259" title="All 2 branches covered.">                if (node.getNodeType() == Node.ELEMENT_NODE) {</span>
-<span class="fc" id="L260">                    String nodeName = node.getNodeName();</span>
-<span class="fc bfc" id="L261" title="All 2 branches covered.">                    if (&quot;description&quot;.equals(nodeName)) {</span>
-<span class="fc" id="L262">                        ruleSet.setDescription(parseTextNode(node));</span>
-<span class="fc bfc" id="L263" title="All 2 branches covered.">                    } else if (&quot;include-pattern&quot;.equals(nodeName)) {</span>
-<span class="fc" id="L264">                        ruleSet.addIncludePattern(parseTextNode(node));</span>
-<span class="fc bfc" id="L265" title="All 2 branches covered.">                    } else if (&quot;exclude-pattern&quot;.equals(nodeName)) {</span>
-<span class="fc" id="L266">                        ruleSet.addExcludePattern(parseTextNode(node));</span>
-<span class="pc bpc" id="L267" title="1 of 2 branches missed.">                    } else if (&quot;rule&quot;.equals(nodeName)) {</span>
-<span class="fc" id="L268">                        parseRuleNode(ruleSetReferenceId, ruleSet, node, withDeprecatedRuleReferences);</span>
+<span class="fc" id="L260">            NodeList nodeList = ruleSetElement.getChildNodes();</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
+<span class="fc" id="L262">                Node node = nodeList.item(i);</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">                if (node.getNodeType() == Node.ELEMENT_NODE) {</span>
+<span class="fc" id="L264">                    String nodeName = node.getNodeName();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">                    if (DESCRIPTION.equals(nodeName)) {</span>
+<span class="fc" id="L266">                        ruleSet.setDescription(parseTextNode(node));</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">                    } else if (&quot;include-pattern&quot;.equals(nodeName)) {</span>
+<span class="fc" id="L268">                        ruleSet.addIncludePattern(parseTextNode(node));</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">                    } else if (&quot;exclude-pattern&quot;.equals(nodeName)) {</span>
+<span class="fc" id="L270">                        ruleSet.addExcludePattern(parseTextNode(node));</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">                    } else if (&quot;rule&quot;.equals(nodeName)) {</span>
+<span class="fc" id="L272">                        parseRuleNode(ruleSetReferenceId, ruleSet, node, withDeprecatedRuleReferences);</span>
                     } else {
-<span class="nc" id="L270">                        throw new IllegalArgumentException(&quot;Unexpected element &lt;&quot; + node.getNodeName()</span>
+<span class="nc" id="L274">                        throw new IllegalArgumentException(UNEXPECTED_ELEMENT + node.getNodeName()</span>
                                 + &quot;&gt; encountered as child of &lt;ruleset&gt; element.&quot;);
                     }
                 }
             }
 
-<span class="fc" id="L276">            return ruleSet;</span>
-<span class="nc" id="L277">        } catch (ClassNotFoundException cnfe) {</span>
-<span class="nc" id="L278">            return classNotFoundProblem(cnfe);</span>
-<span class="nc" id="L279">        } catch (InstantiationException ie) {</span>
-<span class="nc" id="L280">            return classNotFoundProblem(ie);</span>
-<span class="nc" id="L281">        } catch (IllegalAccessException iae) {</span>
-<span class="nc" id="L282">            return classNotFoundProblem(iae);</span>
-<span class="nc" id="L283">        } catch (ParserConfigurationException pce) {</span>
-<span class="nc" id="L284">            return classNotFoundProblem(pce);</span>
-<span class="fc" id="L285">        } catch (RuleSetNotFoundException rsnfe) {</span>
-<span class="nc" id="L286">            return classNotFoundProblem(rsnfe);</span>
-<span class="nc" id="L287">        } catch (IOException ioe) {</span>
-<span class="nc" id="L288">            return classNotFoundProblem(ioe);</span>
-<span class="nc" id="L289">        } catch (SAXException se) {</span>
-<span class="nc" id="L290">            return classNotFoundProblem(se);</span>
-        } finally {
-<span class="pc" id="L292">            IOUtils.closeQuietly(inputStream);</span>
+<span class="fc" id="L280">            return ruleSet;</span>
+<span class="pc bpc" id="L281" title="4 of 8 branches missed.">        } catch (ClassNotFoundException cnfe) {</span>
+<span class="nc" id="L282">            return classNotFoundProblem(cnfe);</span>
+<span class="nc" id="L283">        } catch (InstantiationException ie) {</span>
+<span class="nc" id="L284">            return classNotFoundProblem(ie);</span>
+<span class="nc" id="L285">        } catch (IllegalAccessException iae) {</span>
+<span class="nc" id="L286">            return classNotFoundProblem(iae);</span>
+<span class="nc" id="L287">        } catch (ParserConfigurationException pce) {</span>
+<span class="nc" id="L288">            return classNotFoundProblem(pce);</span>
+<span class="nc" id="L289">        } catch (IOException ioe) {</span>
+<span class="nc" id="L290">            return classNotFoundProblem(ioe);</span>
+<span class="nc" id="L291">        } catch (SAXException se) {</span>
+<span class="nc" id="L292">            return classNotFoundProblem(se);</span>
         }
     }
 
     private static RuleSet classNotFoundProblem(Exception ex) throws RuntimeException {
-<span class="fc" id="L297">        ex.printStackTrace();</span>
-<span class="fc" id="L298">        throw new RuntimeException(&quot;Couldn't find the class &quot; + ex.getMessage());</span>
+<span class="nc" id="L297">        ex.printStackTrace();</span>
+<span class="nc" id="L298">        throw new RuntimeException(&quot;Couldn't find the class &quot; + ex.getMessage());</span>
     }
 
     /**
@@ -349,7 +349,7 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L349">                String excludedRuleName = excludeElement.getAttribute(&quot;name&quot;);</span>
 <span class="fc" id="L350">                ruleSetReference.addExclude(excludedRuleName);</span>
 <span class="fc" id="L351">                excludedRulesCheck.add(excludedRuleName);</span>
-<span class="fc bfc" id="L352" title="All 2 branches covered.">            } else if (isElementNode(child, &quot;priority&quot;)) {</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">            } else if (isElementNode(child, PRIORITY)) {</span>
 <span class="fc" id="L353">                priority = parseTextNode(child).trim();</span>
             }
         }
@@ -409,7 +409,7 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L409">            String languageName = ruleElement.getAttribute(&quot;language&quot;);</span>
 <span class="fc" id="L410">            Language language = LanguageRegistry.findLanguageByTerseName(languageName);</span>
 <span class="fc bfc" id="L411" title="All 2 branches covered.">            if (language == null) {</span>
-<span class="fc" id="L412">                throw new IllegalArgumentException(&quot;Unknown Language '&quot; + languageName + &quot;' for Rule &quot; + rule.getName()</span>
+<span class="fc" id="L412">                throw new IllegalArgumentException(&quot;Unknown Language '&quot; + languageName + FOR_RULE + rule.getName()</span>
                         + &quot;, supported Languages are &quot;
                         + LanguageRegistry.commaSeparatedTerseNamesForLanguage(LanguageRegistry.findWithRuleSupport()));
             }
@@ -427,7 +427,7 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L427">            LanguageVersion minimumLanguageVersion = language.getVersion(minimumLanguageVersionName);</span>
 <span class="fc bfc" id="L428" title="All 2 branches covered.">            if (minimumLanguageVersion == null) {</span>
 <span class="fc" id="L429">                throw new IllegalArgumentException(&quot;Unknown minimum Language Version '&quot; + minimumLanguageVersionName</span>
-                        + &quot;' for Language '&quot; + language.getTerseName() + &quot;' for Rule &quot; + rule.getName()
+                        + &quot;' for Language '&quot; + language.getTerseName() + FOR_RULE + rule.getName()
                         + &quot;; supported Language Versions are: &quot;
                         + LanguageRegistry.commaSeparatedTerseNamesForLanguageVersion(language.getVersions()));
             }
@@ -439,7 +439,7 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L439">            LanguageVersion maximumLanguageVersion = language.getVersion(maximumLanguageVersionName);</span>
 <span class="fc bfc" id="L440" title="All 2 branches covered.">            if (maximumLanguageVersion == null) {</span>
 <span class="fc" id="L441">                throw new IllegalArgumentException(&quot;Unknown maximum Language Version '&quot; + maximumLanguageVersionName</span>
-                        + &quot;' for Language '&quot; + language.getTerseName() + &quot;' for Rule &quot; + rule.getName()
+                        + &quot;' for Language '&quot; + language.getTerseName() + FOR_RULE + rule.getName()
                         + &quot;; supported Language Versions are: &quot;
                         + LanguageRegistry.commaSeparatedTerseNamesForLanguageVersion(language.getVersions()));
             }
@@ -450,7 +450,7 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L450">            throw new IllegalArgumentException(&quot;The minimum Language Version '&quot;</span>
                     + rule.getMinimumLanguageVersion().getTerseName()
                     + &quot;' must be prior to the maximum Language Version '&quot;
-                    + rule.getMaximumLanguageVersion().getTerseName() + &quot;' for Rule &quot; + rule.getName()
+                    + rule.getMaximumLanguageVersion().getTerseName() + FOR_RULE + rule.getName()
                     + &quot;; perhaps swap them around?&quot;);
         }
 
@@ -458,9 +458,9 @@ import org.xml.sax.SAXException;
 <span class="fc bfc" id="L458" title="All 2 branches covered.">        if (StringUtil.isNotEmpty(since)) {</span>
 <span class="fc" id="L459">            rule.setSince(since);</span>
         }
-<span class="fc" id="L461">        rule.setMessage(ruleElement.getAttribute(&quot;message&quot;));</span>
+<span class="fc" id="L461">        rule.setMessage(ruleElement.getAttribute(MESSAGE));</span>
 <span class="fc" id="L462">        rule.setRuleSetName(ruleSet.getName());</span>
-<span class="fc" id="L463">        rule.setExternalInfoUrl(ruleElement.getAttribute(&quot;externalInfoUrl&quot;));</span>
+<span class="fc" id="L463">        rule.setExternalInfoUrl(ruleElement.getAttribute(EXTERNAL_INFO_URL));</span>
 
 <span class="fc bfc" id="L465" title="All 2 branches covered.">        if (hasAttributeSetTrue(ruleElement, &quot;dfa&quot;)) {</span>
 <span class="fc" id="L466">            rule.setUsesDFA();</span>
@@ -477,16 +477,16 @@ import org.xml.sax.SAXException;
 <span class="fc" id="L477">                continue;</span>
             }
 <span class="fc" id="L479">            String nodeName = node.getNodeName();</span>
-<span class="fc bfc" id="L480" title="All 2 branches covered.">            if (nodeName.equals(&quot;description&quot;)) {</span>
+<span class="fc bfc" id="L480" title="All 2 branches covered.">            if (nodeName.equals(DESCRIPTION)) {</span>
 <span class="fc" id="L481">                rule.setDescription(parseTextNode(node));</span>
 <span class="fc bfc" id="L482" title="All 2 branches covered.">            } else if (nodeName.equals(&quot;example&quot;)) {</span>
 <span class="fc" id="L483">                rule.addExample(parseTextNode(node));</span>
-<span class="fc bfc" id="L484" title="All 2 branches covered.">            } else if (nodeName.equals(&quot;priority&quot;)) {</span>
+<span class="fc bfc" id="L484" title="All 2 branches covered.">            } else if (nodeName.equals(PRIORITY)) {</span>
 <span class="fc" id="L485">                rule.setPriority(RulePriority.valueOf(Integer.parseInt(parseTextNode(node).trim())));</span>
 <span class="pc bpc" id="L486" title="1 of 2 branches missed.">            } else if (nodeName.equals(&quot;properties&quot;)) {</span>
 <span class="fc" id="L487">                parsePropertiesNode(rule, node);</span>
             } else {
-<span class="nc" id="L489">                throw new IllegalArgumentException(&quot;Unexpected element &lt;&quot; + nodeName</span>
+<span class="nc" id="L489">                throw new IllegalArgumentException(UNEXPECTED_ELEMENT + nodeName</span>
                         + &quot;&gt; encountered as child of &lt;rule&gt; element for Rule &quot; + rule.getName());
             }
 
@@ -584,25 +584,25 @@ import org.xml.sax.SAXException;
 <span class="fc bfc" id="L584" title="All 2 branches covered.">        if (ruleElement.hasAttribute(&quot;name&quot;)) {</span>
 <span class="fc" id="L585">            ruleReference.setName(ruleElement.getAttribute(&quot;name&quot;));</span>
         }
-<span class="fc bfc" id="L587" title="All 2 branches covered.">        if (ruleElement.hasAttribute(&quot;message&quot;)) {</span>
-<span class="fc" id="L588">            ruleReference.setMessage(ruleElement.getAttribute(&quot;message&quot;));</span>
+<span class="fc bfc" id="L587" title="All 2 branches covered.">        if (ruleElement.hasAttribute(MESSAGE)) {</span>
+<span class="fc" id="L588">            ruleReference.setMessage(ruleElement.getAttribute(MESSAGE));</span>
         }
-<span class="pc bpc" id="L590" title="1 of 2 branches missed.">        if (ruleElement.hasAttribute(&quot;externalInfoUrl&quot;)) {</span>
-<span class="nc" id="L591">            ruleReference.setExternalInfoUrl(ruleElement.getAttribute(&quot;externalInfoUrl&quot;));</span>
+<span class="pc bpc" id="L590" title="1 of 2 branches missed.">        if (ruleElement.hasAttribute(EXTERNAL_INFO_URL)) {</span>
+<span class="nc" id="L591">            ruleReference.setExternalInfoUrl(ruleElement.getAttribute(EXTERNAL_INFO_URL));</span>
         }
 <span class="fc bfc" id="L593" title="All 2 branches covered.">        for (int i = 0; i &lt; ruleElement.getChildNodes().getLength(); i++) {</span>
 <span class="fc" id="L594">            Node node = ruleElement.getChildNodes().item(i);</span>
 <span class="fc bfc" id="L595" title="All 2 branches covered.">            if (node.getNodeType() == Node.ELEMENT_NODE) {</span>
-<span class="fc bfc" id="L596" title="All 2 branches covered.">                if (node.getNodeName().equals(&quot;description&quot;)) {</span>
+<span class="fc bfc" id="L596" title="All 2 branches covered.">                if (node.getNodeName().equals(DESCRIPTION)) {</span>
 <span class="fc" id="L597">                    ruleReference.setDescription(parseTextNode(node));</span>
 <span class="fc bfc" id="L598" title="All 2 branches covered.">                } else if (node.getNodeName().equals(&quot;example&quot;)) {</span>
 <span class="fc" id="L599">                    ruleReference.addExample(parseTextNode(node));</span>
-<span class="fc bfc" id="L600" title="All 2 branches covered.">                } else if (node.getNodeName().equals(&quot;priority&quot;)) {</span>
+<span class="fc bfc" id="L600" title="All 2 branches covered.">                } else if (node.getNodeName().equals(PRIORITY)) {</span>
 <span class="fc" id="L601">                    ruleReference.setPriority(RulePriority.valueOf(Integer.parseInt(parseTextNode(node))));</span>
 <span class="pc bpc" id="L602" title="1 of 2 branches missed.">                } else if (node.getNodeName().equals(&quot;properties&quot;)) {</span>
 <span class="fc" id="L603">                    parsePropertiesNode(ruleReference, node);</span>
                 } else {
-<span class="nc" id="L605">                    throw new IllegalArgumentException(&quot;Unexpected element &lt;&quot; + node.getNodeName()</span>
+<span class="nc" id="L605">                    throw new IllegalArgumentException(UNEXPECTED_ELEMENT + node.getNodeName()</span>
                             + &quot;&gt; encountered as child of &lt;rule&gt; element for Rule &quot; + ruleReference.getName());
                 }
             }
@@ -625,34 +625,28 @@ import org.xml.sax.SAXException;
      */
     private boolean containsRule(RuleSetReferenceId ruleSetReferenceId, String ruleName) {
 <span class="fc" id="L627">        boolean found = false;</span>
-<span class="fc" id="L628">        InputStream ruleset = null;</span>
-        try {
-<span class="fc" id="L630">            ruleset = ruleSetReferenceId.getInputStream(classLoader);</span>
-<span class="fc" id="L631">            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
-<span class="fc" id="L632">            Document document = builder.parse(ruleset);</span>
-<span class="fc" id="L633">            Element ruleSetElement = document.getDocumentElement();</span>
+<span class="pc" id="L628">        try (InputStream ruleSet = ruleSetReferenceId.getInputStream(classLoader)) {</span>
+<span class="fc" id="L629">            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+<span class="fc" id="L630">            Document document = builder.parse(ruleSet);</span>
+<span class="fc" id="L631">            Element ruleSetElement = document.getDocumentElement();</span>
 
-<span class="fc" id="L635">            NodeList rules = ruleSetElement.getElementsByTagName(&quot;rule&quot;);</span>
-<span class="fc bfc" id="L636" title="All 2 branches covered.">            for (int i = 0; i &lt; rules.getLength(); i++) {</span>
-<span class="fc" id="L637">                Element rule = (Element) rules.item(i);</span>
-<span class="fc bfc" id="L638" title="All 2 branches covered.">                if (rule.hasAttribute(&quot;name&quot;)) {</span>
-<span class="fc bfc" id="L639" title="All 2 branches covered.">                    if (rule.getAttribute(&quot;name&quot;).equals(ruleName)) {</span>
-<span class="fc" id="L640">                        found = true;</span>
-<span class="fc" id="L641">                        break;</span>
-                    }
+<span class="fc" id="L633">            NodeList rules = ruleSetElement.getElementsByTagName(&quot;rule&quot;);</span>
+<span class="fc bfc" id="L634" title="All 2 branches covered.">            for (int i = 0; i &lt; rules.getLength(); i++) {</span>
+<span class="fc" id="L635">                Element rule = (Element) rules.item(i);</span>
+<span class="fc bfc" id="L636" title="All 4 branches covered.">                if (rule.hasAttribute(&quot;name&quot;) &amp;&amp; rule.getAttribute(&quot;name&quot;).equals(ruleName)) {</span>
+<span class="fc" id="L637">                    found = true;</span>
+<span class="fc" id="L638">                    break;</span>
                 }
             }
-<span class="nc" id="L645">        } catch (Exception e) {</span>
-<span class="nc" id="L646">            throw new RuntimeException(e);</span>
-        } finally {
-<span class="pc" id="L648">            IOUtils.closeQuietly(ruleset);</span>
-<span class="fc" id="L649">        }</span>
+<span class="pc bpc" id="L641" title="6 of 8 branches missed.">        } catch (Exception e) {</span>
+<span class="nc" id="L642">            throw new RuntimeException(e);</span>
+<span class="fc" id="L643">        }</span>
 
-<span class="fc" id="L651">        return found;</span>
+<span class="fc" id="L645">        return found;</span>
     }
 
     private static boolean isElementNode(Node node, String name) {
-<span class="fc bfc" id="L655" title="All 4 branches covered.">        return node.getNodeType() == Node.ELEMENT_NODE &amp;&amp; node.getNodeName().equals(name);</span>
+<span class="fc bfc" id="L649" title="All 4 branches covered.">        return node.getNodeType() == Node.ELEMENT_NODE &amp;&amp; node.getNodeName().equals(name);</span>
     }
 
     /**
@@ -662,25 +656,25 @@ import org.xml.sax.SAXException;
      * @param propertiesNode Must be a properties element node.
      */
     private static void parsePropertiesNode(Rule rule, Node propertiesNode) {
-<span class="fc bfc" id="L665" title="All 2 branches covered.">        for (int i = 0; i &lt; propertiesNode.getChildNodes().getLength(); i++) {</span>
-<span class="fc" id="L666">            Node node = propertiesNode.getChildNodes().item(i);</span>
-<span class="fc bfc" id="L667" title="All 2 branches covered.">            if (isElementNode(node, &quot;property&quot;)) {</span>
-<span class="fc" id="L668">                parsePropertyNodeBR(rule, node);</span>
+<span class="fc bfc" id="L659" title="All 2 branches covered.">        for (int i = 0; i &lt; propertiesNode.getChildNodes().getLength(); i++) {</span>
+<span class="fc" id="L660">            Node node = propertiesNode.getChildNodes().item(i);</span>
+<span class="fc bfc" id="L661" title="All 2 branches covered.">            if (isElementNode(node, &quot;property&quot;)) {</span>
+<span class="fc" id="L662">                parsePropertyNodeBR(rule, node);</span>
             }
         }
-<span class="fc" id="L671">    }</span>
+<span class="fc" id="L665">    }</span>
 
     private static String valueFrom(Node parentNode) {
 
-<span class="fc" id="L675">        final NodeList nodeList = parentNode.getChildNodes();</span>
+<span class="fc" id="L669">        final NodeList nodeList = parentNode.getChildNodes();</span>
 
-<span class="pc bpc" id="L677" title="1 of 2 branches missed.">        for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
-<span class="fc" id="L678">            Node node = nodeList.item(i);</span>
-<span class="fc bfc" id="L679" title="All 2 branches covered.">            if (isElementNode(node, &quot;value&quot;)) {</span>
-<span class="fc" id="L680">                return parseTextNode(node);</span>
+<span class="pc bpc" id="L671" title="1 of 2 branches missed.">        for (int i = 0; i &lt; nodeList.getLength(); i++) {</span>
+<span class="fc" id="L672">            Node node = nodeList.item(i);</span>
+<span class="fc bfc" id="L673" title="All 2 branches covered.">            if (isElementNode(node, &quot;value&quot;)) {</span>
+<span class="fc" id="L674">                return parseTextNode(node);</span>
             }
         }
-<span class="nc" id="L683">        return null;</span>
+<span class="nc" id="L677">        return null;</span>
     }
 
     /**
@@ -728,58 +722,58 @@ import org.xml.sax.SAXException;
     // }
     // }
     private static &lt;T&gt; void setValue(Rule rule, PropertyDescriptor&lt;T&gt; desc, String strValue) {
-<span class="fc" id="L731">        T realValue = desc.valueFrom(strValue);</span>
-<span class="fc" id="L732">        rule.setProperty(desc, realValue);</span>
-<span class="fc" id="L733">    }</span>
+<span class="fc" id="L725">        T realValue = desc.valueFrom(strValue);</span>
+<span class="fc" id="L726">        rule.setProperty(desc, realValue);</span>
+<span class="fc" id="L727">    }</span>
 
     private static void parsePropertyNodeBR(Rule rule, Node propertyNode) {
 
-<span class="fc" id="L737">        Element propertyElement = (Element) propertyNode;</span>
-<span class="fc" id="L738">        String typeId = propertyElement.getAttribute(PropertyDescriptorFields.TYPE);</span>
-<span class="fc" id="L739">        String strValue = propertyElement.getAttribute(PropertyDescriptorFields.VALUE);</span>
-<span class="fc bfc" id="L740" title="All 2 branches covered.">        if (StringUtil.isEmpty(strValue)) {</span>
-<span class="fc" id="L741">            strValue = valueFrom(propertyElement);</span>
+<span class="fc" id="L731">        Element propertyElement = (Element) propertyNode;</span>
+<span class="fc" id="L732">        String typeId = propertyElement.getAttribute(PropertyDescriptorFields.TYPE);</span>
+<span class="fc" id="L733">        String strValue = propertyElement.getAttribute(PropertyDescriptorFields.VALUE);</span>
+<span class="fc bfc" id="L734" title="All 2 branches covered.">        if (StringUtil.isEmpty(strValue)) {</span>
+<span class="fc" id="L735">            strValue = valueFrom(propertyElement);</span>
         }
 
         // Setting of existing property, or defining a new property?
-<span class="fc bfc" id="L745" title="All 2 branches covered.">        if (StringUtil.isEmpty(typeId)) {</span>
-<span class="fc" id="L746">            String name = propertyElement.getAttribute(PropertyDescriptorFields.NAME);</span>
+<span class="fc bfc" id="L739" title="All 2 branches covered.">        if (StringUtil.isEmpty(typeId)) {</span>
+<span class="fc" id="L740">            String name = propertyElement.getAttribute(PropertyDescriptorFields.NAME);</span>
 
-<span class="fc" id="L748">            PropertyDescriptor&lt;?&gt; propertyDescriptor = rule.getPropertyDescriptor(name);</span>
-<span class="pc bpc" id="L749" title="1 of 2 branches missed.">            if (propertyDescriptor == null) {</span>
-<span class="nc" id="L750">                throw new IllegalArgumentException(&quot;Cannot set non-existant property '&quot; + name + &quot;' on Rule &quot;</span>
+<span class="fc" id="L742">            PropertyDescriptor&lt;?&gt; propertyDescriptor = rule.getPropertyDescriptor(name);</span>
+<span class="pc bpc" id="L743" title="1 of 2 branches missed.">            if (propertyDescriptor == null) {</span>
+<span class="nc" id="L744">                throw new IllegalArgumentException(&quot;Cannot set non-existant property '&quot; + name + &quot;' on Rule &quot;</span>
                         + rule.getName());
             } else {
-<span class="fc" id="L753">                setValue(rule, propertyDescriptor, strValue);</span>
+<span class="fc" id="L747">                setValue(rule, propertyDescriptor, strValue);</span>
             }
-<span class="fc" id="L755">            return;</span>
+<span class="fc" id="L749">            return;</span>
         }
 
-<span class="fc" id="L758">        net.sourceforge.pmd.PropertyDescriptorFactory pdFactory = PropertyDescriptorUtil.factoryFor(typeId);</span>
-<span class="pc bpc" id="L759" title="1 of 2 branches missed.">        if (pdFactory == null) {</span>
-<span class="nc" id="L760">            throw new RuntimeException(&quot;No property descriptor factory for type: &quot; + typeId);</span>
+<span class="fc" id="L752">        net.sourceforge.pmd.PropertyDescriptorFactory pdFactory = PropertyDescriptorUtil.factoryFor(typeId);</span>
+<span class="pc bpc" id="L753" title="1 of 2 branches missed.">        if (pdFactory == null) {</span>
+<span class="nc" id="L754">            throw new RuntimeException(&quot;No property descriptor factory for type: &quot; + typeId);</span>
         }
 
-<span class="fc" id="L763">        Map&lt;String, Boolean&gt; valueKeys = pdFactory.expectedFields();</span>
-<span class="fc" id="L764">        Map&lt;String, String&gt; values = new HashMap&lt;&gt;(valueKeys.size());</span>
+<span class="fc" id="L757">        Map&lt;String, Boolean&gt; valueKeys = pdFactory.expectedFields();</span>
+<span class="fc" id="L758">        Map&lt;String, String&gt; values = new HashMap&lt;&gt;(valueKeys.size());</span>
 
         // populate a map of values for an individual descriptor
-<span class="fc bfc" id="L767" title="All 2 branches covered.">        for (Map.Entry&lt;String, Boolean&gt; entry : valueKeys.entrySet()) {</span>
-<span class="fc" id="L768">            String valueStr = propertyElement.getAttribute(entry.getKey());</span>
-<span class="fc bfc" id="L769" title="All 4 branches covered.">            if (entry.getValue() &amp;&amp; StringUtil.isEmpty(valueStr)) {</span>
-<span class="fc" id="L770">                System.out.println(&quot;Missing required value for: &quot; + entry.getKey()); // debug</span>
+<span class="fc bfc" id="L761" title="All 2 branches covered.">        for (Map.Entry&lt;String, Boolean&gt; entry : valueKeys.entrySet()) {</span>
+<span class="fc" id="L762">            String valueStr = propertyElement.getAttribute(entry.getKey());</span>
+<span class="fc bfc" id="L763" title="All 4 branches covered.">            if (entry.getValue() &amp;&amp; StringUtil.isEmpty(valueStr)) {</span>
+<span class="fc" id="L764">                System.out.println(&quot;Missing required value for: &quot; + entry.getKey()); // debug</span>
                                                                                      // pt
                                                                                      // TODO
             }
-<span class="fc" id="L774">            values.put(entry.getKey(), valueStr);</span>
-<span class="fc" id="L775">        }</span>
+<span class="fc" id="L768">            values.put(entry.getKey(), valueStr);</span>
+<span class="fc" id="L769">        }</span>
 
-<span class="fc" id="L777">        PropertyDescriptor&lt;?&gt; desc = pdFactory.createWith(values);</span>
-<span class="fc" id="L778">        PropertyDescriptorWrapper&lt;?&gt; wrapper = new PropertyDescriptorWrapper&lt;&gt;(desc);</span>
+<span class="fc" id="L771">        PropertyDescriptor&lt;?&gt; desc = pdFactory.createWith(values);</span>
+<span class="fc" id="L772">        PropertyDescriptorWrapper&lt;?&gt; wrapper = new PropertyDescriptorWrapper&lt;&gt;(desc);</span>
 
-<span class="fc" id="L780">        rule.definePropertyDescriptor(wrapper);</span>
-<span class="fc" id="L781">        setValue(rule, desc, strValue);</span>
-<span class="fc" id="L782">    }</span>
+<span class="fc" id="L774">        rule.definePropertyDescriptor(wrapper);</span>
+<span class="fc" id="L775">        setValue(rule, desc, strValue);</span>
+<span class="fc" id="L776">    }</span>
 
     /**
      * Parse a String from a textually type node.
@@ -789,20 +783,20 @@ import org.xml.sax.SAXException;
      */
     private static String parseTextNode(Node node) {
 
-<span class="fc" id="L792">        final int nodeCount = node.getChildNodes().getLength();</span>
-<span class="fc bfc" id="L793" title="All 2 branches covered.">        if (nodeCount == 0) {</span>
-<span class="fc" id="L794">            return &quot;&quot;;</span>
+<span class="fc" id="L786">        final int nodeCount = node.getChildNodes().getLength();</span>
+<span class="fc bfc" id="L787" title="All 2 branches covered.">        if (nodeCount == 0) {</span>
+<span class="fc" id="L788">            return &quot;&quot;;</span>
         }
 
-<span class="fc" id="L797">        StringBuilder buffer = new StringBuilder();</span>
+<span class="fc" id="L791">        StringBuilder buffer = new StringBuilder();</span>
 
-<span class="fc bfc" id="L799" title="All 2 branches covered.">        for (int i = 0; i &lt; nodeCount; i++) {</span>
-<span class="fc" id="L800">            Node childNode = node.getChildNodes().item(i);</span>
-<span class="pc bpc" id="L801" title="1 of 4 branches missed.">            if (childNode.getNodeType() == Node.CDATA_SECTION_NODE || childNode.getNodeType() == Node.TEXT_NODE) {</span>
-<span class="fc" id="L802">                buffer.append(childNode.getNodeValue());</span>
+<span class="fc bfc" id="L793" title="All 2 branches covered.">        for (int i = 0; i &lt; nodeCount; i++) {</span>
+<span class="fc" id="L794">            Node childNode = node.getChildNodes().item(i);</span>
+<span class="pc bpc" id="L795" title="1 of 4 branches missed.">            if (childNode.getNodeType() == Node.CDATA_SECTION_NODE || childNode.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="fc" id="L796">                buffer.append(childNode.getNodeValue());</span>
             }
         }
-<span class="fc" id="L805">        return buffer.toString();</span>
+<span class="fc" id="L799">        return buffer.toString();</span>
     }
 
     /**
@@ -815,13 +809,13 @@ import org.xml.sax.SAXException;
      *         &lt;code&gt;false&lt;/code&gt; otherwise.
      */
     private boolean isRuleName(Element ruleElement, String ruleName) {
-<span class="pc bpc" id="L818" title="1 of 2 branches missed.">        if (ruleElement.hasAttribute(&quot;name&quot;)) {</span>
-<span class="fc" id="L819">            return ruleElement.getAttribute(&quot;name&quot;).equals(ruleName);</span>
-<span class="nc bnc" id="L820" title="All 2 branches missed.">        } else if (ruleElement.hasAttribute(&quot;ref&quot;)) {</span>
-<span class="nc" id="L821">            RuleSetReferenceId ruleSetReferenceId = RuleSetReferenceId.parse(ruleElement.getAttribute(&quot;ref&quot;)).get(0);</span>
-<span class="nc bnc" id="L822" title="All 4 branches missed.">            return ruleSetReferenceId.getRuleName() != null &amp;&amp; ruleSetReferenceId.getRuleName().equals(ruleName);</span>
+<span class="pc bpc" id="L812" title="1 of 2 branches missed.">        if (ruleElement.hasAttribute(&quot;name&quot;)) {</span>
+<span class="fc" id="L813">            return ruleElement.getAttribute(&quot;name&quot;).equals(ruleName);</span>
+<span class="nc bnc" id="L814" title="All 2 branches missed.">        } else if (ruleElement.hasAttribute(&quot;ref&quot;)) {</span>
+<span class="nc" id="L815">            RuleSetReferenceId ruleSetReferenceId = RuleSetReferenceId.parse(ruleElement.getAttribute(&quot;ref&quot;)).get(0);</span>
+<span class="nc bnc" id="L816" title="All 4 branches missed.">            return ruleSetReferenceId.getRuleName() != null &amp;&amp; ruleSetReferenceId.getRuleName().equals(ruleName);</span>
         } else {
-<span class="nc" id="L824">            return false;</span>
+<span class="nc" id="L818">            return false;</span>
         }
     }
 }

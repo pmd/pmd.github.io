@@ -4,10 +4,17 @@
 package net.sourceforge.pmd;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import net.sourceforge.pmd.ant.SourceLanguage;
 import net.sourceforge.pmd.lang.Language;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.util.ResourceLoader;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +44,7 @@ public class AbstractLanguageVersionTest {
 
     private String name;
     private String version;
+    private String simpleTerseName;
     private String terseName;
     private LanguageVersion expected;
 
@@ -47,15 +55,16 @@ public class AbstractLanguageVersionTest {
      * @param version the specific version of the language version
      * @param expected the expected {@link LanguageVersion} instance
      */
-<span class="nc" id="L50">    public AbstractLanguageVersionTest(String name, String terseName, String version, LanguageVersion expected) {</span>
-<span class="nc" id="L51">        this.name = name;</span>
-<span class="nc" id="L52">        this.version = version;</span>
-<span class="nc" id="L53">        this.terseName = terseName;</span>
-<span class="nc bnc" id="L54" title="All 4 branches missed.">        if (version != null &amp;&amp; !version.isEmpty()) {</span>
-<span class="nc" id="L55">            this.terseName += &quot; &quot; + version;</span>
+<span class="nc" id="L58">    public AbstractLanguageVersionTest(String name, String terseName, String version, LanguageVersion expected) {</span>
+<span class="nc" id="L59">        this.name = name;</span>
+<span class="nc" id="L60">        this.version = version;</span>
+<span class="nc" id="L61">        this.simpleTerseName = terseName;</span>
+<span class="nc" id="L62">        this.terseName = terseName;</span>
+<span class="nc bnc" id="L63" title="All 4 branches missed.">        if (version != null &amp;&amp; !version.isEmpty()) {</span>
+<span class="nc" id="L64">            this.terseName += &quot; &quot; + version;</span>
         }
-<span class="nc" id="L57">        this.expected = expected;</span>
-<span class="nc" id="L58">    }</span>
+<span class="nc" id="L66">        this.expected = expected;</span>
+<span class="nc" id="L67">    }</span>
 
     /**
      * Checks that the expected {@link LanguageVersion} can be found by the combination of
@@ -63,25 +72,54 @@ public class AbstractLanguageVersionTest {
      */
     @Test
     public void testGetLanguageVersionForTerseName() {
-<span class="nc" id="L66">        assertEquals(expected, LanguageRegistry.findLanguageVersionByTerseName(terseName));</span>
-<span class="nc" id="L67">    }</span>
+<span class="nc" id="L75">        assertEquals(expected, LanguageRegistry.findLanguageVersionByTerseName(terseName));</span>
+<span class="nc" id="L76">    }</span>
 
     /**
      * Checks that the expected {@link LanguageVersion} can be found via {@link #name} and {@link #version}.
      */
     @Test
     public void testFindVersionsForLanguageNameAndVersion() {
-<span class="nc" id="L74">        SourceLanguage sourceLanguage = new SourceLanguage();</span>
-<span class="nc" id="L75">        sourceLanguage.setName(name);</span>
-<span class="nc" id="L76">        sourceLanguage.setVersion(version);</span>
+<span class="nc" id="L83">        SourceLanguage sourceLanguage = new SourceLanguage();</span>
+<span class="nc" id="L84">        sourceLanguage.setName(name);</span>
+<span class="nc" id="L85">        sourceLanguage.setVersion(version);</span>
 
-<span class="nc" id="L78">        Language language = LanguageRegistry.getLanguage(sourceLanguage.getName());</span>
-<span class="nc" id="L79">        LanguageVersion languageVersion = null;</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">        if(language != null) {</span>
-<span class="nc" id="L81">            languageVersion = language.getVersion(sourceLanguage.getVersion());</span>
+<span class="nc" id="L87">        Language language = LanguageRegistry.getLanguage(sourceLanguage.getName());</span>
+<span class="nc" id="L88">        LanguageVersion languageVersion = null;</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if(language != null) {</span>
+<span class="nc" id="L90">            languageVersion = language.getVersion(sourceLanguage.getVersion());</span>
         }
 
-<span class="nc" id="L84">        assertEquals(expected, languageVersion);</span>
-<span class="nc" id="L85">    }</span>
+<span class="nc" id="L93">        assertEquals(expected, languageVersion);</span>
+<span class="nc" id="L94">    }</span>
+
+    /**
+     * Makes sure, that for each language a &quot;rulesets.properties&quot; file exists.
+     * @throws Exception any error
+     */
+    @Test
+    public void testRegisteredRulesets() throws Exception {
+        // only check for languages, that support rules
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        if (expected == null || expected.getLanguage().getRuleChainVisitorClass() == null)</span>
+<span class="nc" id="L104">            return;</span>
+
+<span class="nc" id="L106">        Properties props = new Properties();</span>
+<span class="nc" id="L107">        String rulesetsProperties = &quot;rulesets/&quot; + simpleTerseName + &quot;/rulesets.properties&quot;;</span>
+<span class="nc" id="L108">        props.load(ResourceLoader.loadResourceAsStream(rulesetsProperties));</span>
+<span class="nc" id="L109">        String rulesetFilenames = props.getProperty(&quot;rulesets.filenames&quot;);</span>
+<span class="nc" id="L110">        assertNotNull(rulesetFilenames);</span>
+
+<span class="nc" id="L112">        RuleSetFactory factory = new RuleSetFactory();</span>
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        if (rulesetFilenames.trim().isEmpty()) return;</span>
+
+<span class="nc" id="L116">        String[] rulesets = rulesetFilenames.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        for (String r : rulesets) {</span>
+<span class="nc" id="L118">            InputStream stream = ResourceLoader.loadResourceAsStream(r);</span>
+<span class="nc" id="L119">            assertNotNull(stream);</span>
+<span class="nc" id="L120">            RuleSet ruleset = factory.createRuleSet(r);</span>
+<span class="nc" id="L121">            assertNotNull(ruleset);</span>
+        }
+<span class="nc" id="L123">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

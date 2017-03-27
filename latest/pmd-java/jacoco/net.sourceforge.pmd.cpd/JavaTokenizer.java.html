@@ -4,6 +4,8 @@
 package net.sourceforge.pmd.cpd;
 
 import java.io.StringReader;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Properties;
 
 import net.sourceforge.pmd.lang.LanguageRegistry;
@@ -13,7 +15,7 @@ import net.sourceforge.pmd.lang.java.JavaLanguageModule;
 import net.sourceforge.pmd.lang.java.ast.JavaParserConstants;
 import net.sourceforge.pmd.lang.java.ast.Token;
 
-<span class="fc" id="L16">public class JavaTokenizer implements Tokenizer {</span>
+<span class="fc" id="L18">public class JavaTokenizer implements Tokenizer {</span>
 
     public static final String CPD_START = &quot;\&quot;CPD-START\&quot;&quot;;
     public static final String CPD_END = &quot;\&quot;CPD-END\&quot;&quot;;
@@ -21,65 +23,72 @@ import net.sourceforge.pmd.lang.java.ast.Token;
     private boolean ignoreAnnotations;
     private boolean ignoreLiterals;
     private boolean ignoreIdentifiers;
-
+    
     public void setProperties(Properties properties) {
-<span class="fc" id="L26">        ignoreAnnotations = Boolean.parseBoolean(properties.getProperty(IGNORE_ANNOTATIONS, &quot;false&quot;));</span>
-<span class="fc" id="L27">        ignoreLiterals = Boolean.parseBoolean(properties.getProperty(IGNORE_LITERALS, &quot;false&quot;));</span>
-<span class="fc" id="L28">        ignoreIdentifiers = Boolean.parseBoolean(properties.getProperty(IGNORE_IDENTIFIERS, &quot;false&quot;));</span>
-<span class="fc" id="L29">    }</span>
+<span class="fc" id="L28">        ignoreAnnotations = Boolean.parseBoolean(properties.getProperty(IGNORE_ANNOTATIONS, &quot;false&quot;));</span>
+<span class="fc" id="L29">        ignoreLiterals = Boolean.parseBoolean(properties.getProperty(IGNORE_LITERALS, &quot;false&quot;));</span>
+<span class="fc" id="L30">        ignoreIdentifiers = Boolean.parseBoolean(properties.getProperty(IGNORE_IDENTIFIERS, &quot;false&quot;));</span>
+<span class="fc" id="L31">    }</span>
 
     public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-<span class="fc" id="L32">        StringBuilder stringBuilder = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L34">        StringBuilder stringBuilder = sourceCode.getCodeBuffer();</span>
 
         // Note that Java version is irrelevant for tokenizing
-<span class="fc" id="L35">        LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(JavaLanguageModule.NAME).getVersion(&quot;1.4&quot;).getLanguageVersionHandler();</span>
-<span class="fc" id="L36">        String fileName = sourceCode.getFileName();</span>
-<span class="fc" id="L37">        TokenManager tokenMgr = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions()).getTokenManager(</span>
+<span class="fc" id="L37">        LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(JavaLanguageModule.NAME).getVersion(&quot;1.4&quot;).getLanguageVersionHandler();</span>
+<span class="fc" id="L38">        String fileName = sourceCode.getFileName();</span>
+<span class="fc" id="L39">        TokenManager tokenMgr = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions()).getTokenManager(</span>
                 fileName, new StringReader(stringBuilder.toString()));
-<span class="fc" id="L39">        Token currentToken = (Token) tokenMgr.getNextToken();</span>
+<span class="fc" id="L41">        Token currentToken = (Token) tokenMgr.getNextToken();</span>
 
-<span class="fc" id="L41">        TokenDiscarder discarder = new TokenDiscarder(ignoreAnnotations);</span>
+<span class="fc" id="L43">        TokenDiscarder discarder = new TokenDiscarder(ignoreAnnotations);</span>
+<span class="fc" id="L44">        ConstructorDetector constructorDetector = new ConstructorDetector(ignoreIdentifiers);</span>
 
-<span class="fc bfc" id="L43" title="All 2 branches covered.">        while (currentToken.image.length() &gt; 0) {</span>
-<span class="fc" id="L44">            discarder.updateState(currentToken);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        while (currentToken.image.length() &gt; 0) {</span>
+<span class="fc" id="L47">            discarder.updateState(currentToken);</span>
 
-<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (discarder.isDiscarding()) {</span>
-<span class="fc" id="L47">                currentToken = (Token) tokenMgr.getNextToken();</span>
-<span class="fc" id="L48">                continue;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (discarder.isDiscarding()) {</span>
+<span class="fc" id="L50">                currentToken = (Token) tokenMgr.getNextToken();</span>
+<span class="fc" id="L51">                continue;</span>
             }
 
-<span class="fc" id="L51">            processToken(tokenEntries, fileName, currentToken);</span>
-<span class="fc" id="L52">            currentToken = (Token) tokenMgr.getNextToken();</span>
+<span class="fc" id="L54">            processToken(tokenEntries, fileName, currentToken, constructorDetector);</span>
+<span class="fc" id="L55">            currentToken = (Token) tokenMgr.getNextToken();</span>
         }
-<span class="fc" id="L54">        tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L57">        tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L58">    }</span>
 
-    private void processToken(Tokens tokenEntries, String fileName, Token currentToken) {
-<span class="fc" id="L58">        String image = currentToken.image;</span>
-<span class="pc bpc" id="L59" title="3 of 10 branches missed.">        if (ignoreLiterals</span>
+    private void processToken(Tokens tokenEntries, String fileName, Token currentToken, ConstructorDetector constructorDetector) {
+<span class="fc" id="L61">        String image = currentToken.image;</span>
+        
+<span class="fc" id="L63">        constructorDetector.restoreConstructorToken(tokenEntries, currentToken);</span>
+        
+<span class="pc bpc" id="L65" title="3 of 10 branches missed.">        if (ignoreLiterals</span>
                 &amp;&amp; (currentToken.kind == JavaParserConstants.STRING_LITERAL
                 || currentToken.kind == JavaParserConstants.CHARACTER_LITERAL
                 || currentToken.kind == JavaParserConstants.DECIMAL_LITERAL
                 || currentToken.kind == JavaParserConstants.FLOATING_POINT_LITERAL)) {
-<span class="fc" id="L64">            image = String.valueOf(currentToken.kind);</span>
+<span class="fc" id="L70">            image = String.valueOf(currentToken.kind);</span>
         }
-<span class="fc bfc" id="L66" title="All 4 branches covered.">        if (ignoreIdentifiers &amp;&amp; currentToken.kind == JavaParserConstants.IDENTIFIER) {</span>
-<span class="fc" id="L67">            image = String.valueOf(currentToken.kind);</span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">        if (ignoreIdentifiers &amp;&amp; currentToken.kind == JavaParserConstants.IDENTIFIER) {</span>
+<span class="fc" id="L73">            image = String.valueOf(currentToken.kind);</span>
         }
-<span class="fc" id="L69">        tokenEntries.add(new TokenEntry(image, fileName, currentToken.beginLine));</span>
-<span class="fc" id="L70">    }</span>
+        
+<span class="fc" id="L76">        constructorDetector.processToken(currentToken);</span>
+        
+<span class="fc" id="L78">        tokenEntries.add(new TokenEntry(image, fileName, currentToken.beginLine));</span>
+<span class="fc" id="L79">    }</span>
 
     public void setIgnoreLiterals(boolean ignore) {
-<span class="fc" id="L73">        this.ignoreLiterals = ignore;</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L82">        this.ignoreLiterals = ignore;</span>
+<span class="fc" id="L83">    }</span>
 
     public void setIgnoreIdentifiers(boolean ignore) {
-<span class="fc" id="L77">        this.ignoreIdentifiers = ignore;</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L86">        this.ignoreIdentifiers = ignore;</span>
+<span class="fc" id="L87">    }</span>
 
     public void setIgnoreAnnotations(boolean ignoreAnnotations) {
-<span class="fc" id="L81">        this.ignoreAnnotations = ignoreAnnotations;</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L90">        this.ignoreAnnotations = ignoreAnnotations;</span>
+<span class="fc" id="L91">    }</span>
 
     /**
      * The {@link TokenDiscarder} consumes token by token and maintains state.
@@ -90,93 +99,197 @@ import net.sourceforge.pmd.lang.java.ast.Token;
      * Optionally, all annotations can be ignored, too.
      * &lt;/p&gt;
      */
-<span class="fc" id="L93">    private static class TokenDiscarder {</span>
-<span class="fc" id="L94">        private boolean isAnnotation = false;</span>
-<span class="fc" id="L95">        private boolean nextTokenEndsAnnotation = false;</span>
-<span class="fc" id="L96">        private int annotationStack = 0;</span>
+    private static class TokenDiscarder {
+<span class="fc" id="L103">        private boolean isAnnotation = false;</span>
+<span class="fc" id="L104">        private boolean nextTokenEndsAnnotation = false;</span>
+<span class="fc" id="L105">        private int annotationStack = 0;</span>
 
-<span class="fc" id="L98">        private boolean discardingSemicolon = false;</span>
-<span class="fc" id="L99">        private boolean discardingKeywords = false;</span>
-<span class="fc" id="L100">        private boolean discardingSuppressing = false;</span>
-<span class="fc" id="L101">        private boolean discardingAnnotations = false;</span>
-<span class="fc" id="L102">        private boolean ignoreAnnotations = false;</span>
+<span class="fc" id="L107">        private boolean discardingSemicolon = false;</span>
+<span class="fc" id="L108">        private boolean discardingKeywords = false;</span>
+<span class="fc" id="L109">        private boolean discardingSuppressing = false;</span>
+<span class="fc" id="L110">        private boolean discardingAnnotations = false;</span>
+<span class="fc" id="L111">        private boolean ignoreAnnotations = false;</span>
 
-<span class="fc" id="L104">        public TokenDiscarder(boolean ignoreAnnotations) {</span>
-<span class="fc" id="L105">            this.ignoreAnnotations = ignoreAnnotations;</span>
-<span class="fc" id="L106">        }</span>
+<span class="fc" id="L113">        public TokenDiscarder(boolean ignoreAnnotations) {</span>
+<span class="fc" id="L114">            this.ignoreAnnotations = ignoreAnnotations;</span>
+<span class="fc" id="L115">        }</span>
 
         public void updateState(Token currentToken) {
-<span class="fc" id="L109">            detectAnnotations(currentToken);</span>
+<span class="fc" id="L118">            detectAnnotations(currentToken);</span>
 
-<span class="fc" id="L111">            skipSemicolon(currentToken);</span>
-<span class="fc" id="L112">            skipPackageAndImport(currentToken);</span>
-<span class="fc" id="L113">            skipCPDSuppression(currentToken);</span>
-<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (ignoreAnnotations) {</span>
-<span class="fc" id="L115">                skipAnnotations();</span>
+<span class="fc" id="L120">            skipSemicolon(currentToken);</span>
+<span class="fc" id="L121">            skipPackageAndImport(currentToken);</span>
+<span class="fc" id="L122">            skipCPDSuppression(currentToken);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (ignoreAnnotations) {</span>
+<span class="fc" id="L124">                skipAnnotations();</span>
             }
-<span class="fc" id="L117">        }</span>
+<span class="fc" id="L126">        }</span>
 
         public void skipPackageAndImport(Token currentToken) {
-<span class="fc bfc" id="L120" title="All 4 branches covered.">            if (currentToken.kind == JavaParserConstants.PACKAGE || currentToken.kind == JavaParserConstants.IMPORT) {</span>
-<span class="fc" id="L121">                discardingKeywords = true;</span>
-<span class="fc bfc" id="L122" title="All 4 branches covered.">            } else if (discardingKeywords &amp;&amp; currentToken.kind == JavaParserConstants.SEMICOLON) {</span>
-<span class="fc" id="L123">                discardingKeywords = false;</span>
+<span class="fc bfc" id="L129" title="All 4 branches covered.">            if (currentToken.kind == JavaParserConstants.PACKAGE || currentToken.kind == JavaParserConstants.IMPORT) {</span>
+<span class="fc" id="L130">                discardingKeywords = true;</span>
+<span class="fc bfc" id="L131" title="All 4 branches covered.">            } else if (discardingKeywords &amp;&amp; currentToken.kind == JavaParserConstants.SEMICOLON) {</span>
+<span class="fc" id="L132">                discardingKeywords = false;</span>
             }
-<span class="fc" id="L125">        }</span>
+<span class="fc" id="L134">        }</span>
 
         public void skipSemicolon(Token currentToken) {
-<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.SEMICOLON) {</span>
-<span class="fc" id="L129">                discardingSemicolon = true;</span>
-<span class="pc bpc" id="L130" title="1 of 4 branches missed.">            } else if (discardingSemicolon &amp;&amp; currentToken.kind != JavaParserConstants.SEMICOLON) {</span>
-<span class="fc" id="L131">                discardingSemicolon = false;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.SEMICOLON) {</span>
+<span class="fc" id="L138">                discardingSemicolon = true;</span>
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">            } else if (discardingSemicolon &amp;&amp; currentToken.kind != JavaParserConstants.SEMICOLON) {</span>
+<span class="fc" id="L140">                discardingSemicolon = false;</span>
             }
-<span class="fc" id="L133">        }</span>
+<span class="fc" id="L142">        }</span>
 
         public void skipCPDSuppression(Token currentToken) {
             //if processing an annotation, look for a CPD-START or CPD-END
-<span class="fc bfc" id="L137" title="All 2 branches covered.">            if (isAnnotation) {</span>
-<span class="fc bfc" id="L138" title="All 6 branches covered.">                if (!discardingSuppressing &amp;&amp; currentToken.kind == JavaParserConstants.STRING_LITERAL &amp;&amp; CPD_START.equals(currentToken.image)) {</span>
-<span class="fc" id="L139">                    discardingSuppressing = true;</span>
-<span class="fc bfc" id="L140" title="All 6 branches covered.">                } else if (discardingSuppressing &amp;&amp; currentToken.kind == JavaParserConstants.STRING_LITERAL &amp;&amp; CPD_END.equals(currentToken.image)) {</span>
-<span class="fc" id="L141">                    discardingSuppressing = false;</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (isAnnotation) {</span>
+<span class="fc bfc" id="L147" title="All 6 branches covered.">                if (!discardingSuppressing &amp;&amp; currentToken.kind == JavaParserConstants.STRING_LITERAL &amp;&amp; CPD_START.equals(currentToken.image)) {</span>
+<span class="fc" id="L148">                    discardingSuppressing = true;</span>
+<span class="fc bfc" id="L149" title="All 6 branches covered.">                } else if (discardingSuppressing &amp;&amp; currentToken.kind == JavaParserConstants.STRING_LITERAL &amp;&amp; CPD_END.equals(currentToken.image)) {</span>
+<span class="fc" id="L150">                    discardingSuppressing = false;</span>
                 }
             }
-<span class="fc" id="L144">        }</span>
+<span class="fc" id="L153">        }</span>
 
         public void skipAnnotations() {
-<span class="fc bfc" id="L147" title="All 4 branches covered.">            if (!discardingAnnotations &amp;&amp; isAnnotation) {</span>
-<span class="fc" id="L148">                discardingAnnotations = true;</span>
-<span class="fc bfc" id="L149" title="All 4 branches covered.">            } else if (discardingAnnotations &amp;&amp; !isAnnotation) {</span>
-<span class="fc" id="L150">                discardingAnnotations = false;</span>
+<span class="fc bfc" id="L156" title="All 4 branches covered.">            if (!discardingAnnotations &amp;&amp; isAnnotation) {</span>
+<span class="fc" id="L157">                discardingAnnotations = true;</span>
+<span class="fc bfc" id="L158" title="All 4 branches covered.">            } else if (discardingAnnotations &amp;&amp; !isAnnotation) {</span>
+<span class="fc" id="L159">                discardingAnnotations = false;</span>
             }
-<span class="fc" id="L152">        }</span>
+<span class="fc" id="L161">        }</span>
 
         public boolean isDiscarding() {
-<span class="fc bfc" id="L155" title="All 8 branches covered.">            boolean result = discardingSemicolon || discardingKeywords || discardingAnnotations || discardingSuppressing;</span>
-<span class="fc" id="L156">            return result;</span>
+<span class="fc bfc" id="L164" title="All 8 branches covered.">            boolean result = discardingSemicolon || discardingKeywords || discardingAnnotations || discardingSuppressing;</span>
+<span class="fc" id="L165">            return result;</span>
         }
 
         public void detectAnnotations(Token currentToken) {
-<span class="fc bfc" id="L160" title="All 4 branches covered.">            if (isAnnotation &amp;&amp; nextTokenEndsAnnotation) {</span>
-<span class="fc" id="L161">                isAnnotation = false;</span>
-<span class="fc" id="L162">                nextTokenEndsAnnotation = false;</span>
+<span class="fc bfc" id="L169" title="All 4 branches covered.">            if (isAnnotation &amp;&amp; nextTokenEndsAnnotation) {</span>
+<span class="fc" id="L170">                isAnnotation = false;</span>
+<span class="fc" id="L171">                nextTokenEndsAnnotation = false;</span>
             }
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (isAnnotation) {</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">                if (currentToken.kind == JavaParserConstants.LPAREN) {</span>
-<span class="fc" id="L166">                    annotationStack++;</span>
-<span class="fc bfc" id="L167" title="All 2 branches covered.">                } else if (currentToken.kind == JavaParserConstants.RPAREN) {</span>
-<span class="fc" id="L168">                    annotationStack--;</span>
-<span class="fc bfc" id="L169" title="All 2 branches covered.">                    if (annotationStack == 0) {</span>
-<span class="fc" id="L170">                        nextTokenEndsAnnotation = true;</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">            if (isAnnotation) {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">                if (currentToken.kind == JavaParserConstants.LPAREN) {</span>
+<span class="fc" id="L175">                    annotationStack++;</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                } else if (currentToken.kind == JavaParserConstants.RPAREN) {</span>
+<span class="fc" id="L177">                    annotationStack--;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                    if (annotationStack == 0) {</span>
+<span class="fc" id="L179">                        nextTokenEndsAnnotation = true;</span>
                     }
-<span class="pc bpc" id="L172" title="1 of 6 branches missed.">                } else if (annotationStack == 0 &amp;&amp; currentToken.kind != JavaParserConstants.IDENTIFIER &amp;&amp;  currentToken.kind != JavaParserConstants.LPAREN) {</span>
-<span class="fc" id="L173">                    isAnnotation = false;</span>
+<span class="pc bpc" id="L181" title="1 of 6 branches missed.">                } else if (annotationStack == 0 &amp;&amp; currentToken.kind != JavaParserConstants.IDENTIFIER &amp;&amp;  currentToken.kind != JavaParserConstants.LPAREN) {</span>
+<span class="fc" id="L182">                    isAnnotation = false;</span>
                 }
             }
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.AT) {</span>
-<span class="fc" id="L177">                isAnnotation = true;</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.AT) {</span>
+<span class="fc" id="L186">                isAnnotation = true;</span>
             }
-<span class="fc" id="L179">        }</span>
+<span class="fc" id="L188">        }</span>
+    }
+    
+    /**
+     * The {@link ConstructorDetector} consumes token by token and maintains state.
+     * It can detect, whether the current token belongs to a constructor method identifier
+     * and if so, is able to restore it when using ignoreIdentifiers.
+     */
+    private static class ConstructorDetector {
+        private boolean ignoreIdentifiers;
+        
+        private Deque&lt;TypeDeclaration&gt; classMembersIndentations;
+        private int currentNestingLevel;
+        private boolean storeNextIdentifier;
+        private String prevIdentifier;
+        
+<span class="fc" id="L204">        public ConstructorDetector(boolean ignoreIdentifiers) {</span>
+<span class="fc" id="L205">            this.ignoreIdentifiers = ignoreIdentifiers;</span>
+            
+<span class="fc" id="L207">            currentNestingLevel = 0;</span>
+<span class="fc" id="L208">            classMembersIndentations = new LinkedList&lt;TypeDeclaration&gt;();</span>
+<span class="fc" id="L209">        }</span>
+        
+        public void processToken(Token currentToken) {
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if (!ignoreIdentifiers) {</span>
+<span class="fc" id="L213">                return;</span>
+            }
+            
+<span class="fc bfc" id="L216" title="All 5 branches covered.">            switch (currentToken.kind) {</span>
+            case JavaParserConstants.IDENTIFIER:
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                if (&quot;enum&quot;.equals(currentToken.image)) {</span>
+                    // If declaring an enum, add a new block nesting level at which constructors may exist
+<span class="fc" id="L220">                    pushTypeDeclaration();</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">                } else if (storeNextIdentifier) {</span>
+<span class="fc" id="L222">                    classMembersIndentations.peek().name = currentToken.image;</span>
+<span class="fc" id="L223">                    storeNextIdentifier = false;</span>
+                }
+                
+                // Store this token
+<span class="fc" id="L227">                prevIdentifier = currentToken.image;</span>
+<span class="fc" id="L228">                break;</span>
+                
+            case JavaParserConstants.CLASS:
+                // If declaring a class, add a new block nesting level at which constructors may exist
+<span class="fc" id="L232">                pushTypeDeclaration();</span>
+<span class="fc" id="L233">                break;</span>
+                
+            case JavaParserConstants.LBRACE:
+<span class="fc" id="L236">                currentNestingLevel++;</span>
+<span class="fc" id="L237">                break;</span>
+                
+            case JavaParserConstants.RBRACE:
+                // Discard completed blocks
+<span class="pc bpc" id="L241" title="1 of 4 branches missed.">                if (!classMembersIndentations.isEmpty() &amp;&amp;</span>
+                        classMembersIndentations.peek().indentationLevel == currentNestingLevel) {
+<span class="fc" id="L243">                    classMembersIndentations.pop();</span>
+                }
+<span class="fc" id="L245">                currentNestingLevel--;</span>
+<span class="fc" id="L246">                break;</span>
+
+            default:
+                /*
+                 * Did we find a &quot;class&quot; token not followed by an identifier? i.e:
+                 * expectThrows(IllegalStateException.class, () -&gt; {
+                 *  newSearcher(r).search(parentQuery.build(), c);
+                 * });
+                 */
+<span class="fc bfc" id="L255" title="All 2 branches covered.">                if (storeNextIdentifier) {</span>
+<span class="fc" id="L256">                    classMembersIndentations.pop();</span>
+<span class="fc" id="L257">                    storeNextIdentifier = false;</span>
+                }
+                break;
+            }
+<span class="fc" id="L261">        }</span>
+        
+        private void pushTypeDeclaration() {
+<span class="fc" id="L264">            TypeDeclaration cd = new TypeDeclaration(currentNestingLevel + 1);</span>
+<span class="fc" id="L265">            classMembersIndentations.push(cd);</span>
+<span class="fc" id="L266">            storeNextIdentifier = true;</span>
+<span class="fc" id="L267">        }</span>
+
+        public void restoreConstructorToken(Tokens tokenEntries, Token currentToken) {
+<span class="fc bfc" id="L270" title="All 2 branches covered.">            if (!ignoreIdentifiers) {</span>
+<span class="fc" id="L271">                return;</span>
+            }
+            
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if (currentToken.kind == JavaParserConstants.LPAREN) {</span>
+                // was the previous token a constructor? If so, restore the identifier
+<span class="pc bpc" id="L276" title="1 of 4 branches missed.">                if (!classMembersIndentations.isEmpty()</span>
+                        &amp;&amp; classMembersIndentations.peek().name.equals(prevIdentifier)) {
+<span class="fc" id="L278">                    int lastTokenIndex = tokenEntries.size() - 1;</span>
+<span class="fc" id="L279">                    TokenEntry lastToken = tokenEntries.getTokens().get(lastTokenIndex);</span>
+<span class="fc" id="L280">                    lastToken.setImage(prevIdentifier);</span>
+                }
+            }
+<span class="fc" id="L283">        }</span>
+    }
+    
+<span class="fc" id="L286">    private static class TypeDeclaration {</span>
+        int indentationLevel;
+        String name;
+        
+<span class="fc" id="L290">        public TypeDeclaration(int indentationLevel) {</span>
+<span class="fc" id="L291">            this.indentationLevel = indentationLevel;</span>
+<span class="fc" id="L292">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

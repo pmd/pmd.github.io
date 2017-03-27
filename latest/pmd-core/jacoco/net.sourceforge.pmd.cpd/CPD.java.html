@@ -16,16 +16,16 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FilenameUtils;
+
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 import net.sourceforge.pmd.util.FileFinder;
 import net.sourceforge.pmd.util.database.DBMSMetadata;
 import net.sourceforge.pmd.util.database.DBURI;
 import net.sourceforge.pmd.util.database.SourceObject;
 
-import org.apache.commons.io.FilenameUtils;
-
 public class CPD {
-<span class="fc" id="L28">    private final static Logger LOGGER = Logger.getLogger(CPD.class.getName()); </span>
+<span class="fc" id="L28">    private static final Logger LOGGER = Logger.getLogger(CPD.class.getName());</span>
 
 	private CPDConfiguration configuration;
 
@@ -33,129 +33,128 @@ public class CPD {
 <span class="fc" id="L33">    private CPDListener listener = new CPDNullListener();</span>
 <span class="fc" id="L34">    private Tokens tokens = new Tokens();</span>
     private MatchAlgorithm matchAlgorithm;
+<span class="fc" id="L36">    private Set&lt;String&gt; current = new HashSet&lt;&gt;();</span>
 
-<span class="fc" id="L37">    public CPD(CPDConfiguration theConfiguration) {</span>
-<span class="fc" id="L38">    	configuration = theConfiguration;</span>
+<span class="fc" id="L38">    public CPD(CPDConfiguration theConfiguration) {</span>
+<span class="fc" id="L39">    	configuration = theConfiguration;</span>
         // before we start any tokenizing (add(File...)), we need to reset the static TokenEntry status
-<span class="fc" id="L40">        TokenEntry.clearImages();</span>
-<span class="fc" id="L41">    }</span>
+<span class="fc" id="L41">        TokenEntry.clearImages();</span>
+<span class="fc" id="L42">    }</span>
 
     public void setCpdListener(CPDListener cpdListener) {
-<span class="fc" id="L44">        this.listener = cpdListener;</span>
-<span class="fc" id="L45">    }</span>
+<span class="fc" id="L45">        this.listener = cpdListener;</span>
+<span class="fc" id="L46">    }</span>
 
     public void go() {
-<span class="fc" id="L48">        matchAlgorithm = new MatchAlgorithm(source, tokens,configuration.getMinimumTileSize(),listener);</span>
-<span class="fc" id="L49">        matchAlgorithm.findMatches();</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L49">        matchAlgorithm = new MatchAlgorithm(source, tokens,configuration.getMinimumTileSize(),listener);</span>
+<span class="fc" id="L50">        matchAlgorithm.findMatches();</span>
+<span class="fc" id="L51">    }</span>
 
     public Iterator&lt;Match&gt; getMatches() {
-<span class="fc" id="L53">        return matchAlgorithm.matches();</span>
+<span class="fc" id="L54">        return matchAlgorithm.matches();</span>
     }
 
     public void addAllInDirectory(File dir) throws IOException {
-<span class="nc" id="L57">        addDirectory(dir, false);</span>
-<span class="nc" id="L58">    }</span>
+<span class="nc" id="L58">        addDirectory(dir, false);</span>
+<span class="nc" id="L59">    }</span>
 
     public void addRecursively(File dir) throws IOException {
-<span class="fc" id="L61">        addDirectory(dir, true);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L62">        addDirectory(dir, true);</span>
+<span class="fc" id="L63">    }</span>
 
     public void add(List&lt;File&gt; files) throws IOException {
-<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (File f: files) {</span>
-<span class="fc" id="L66">            add(f);</span>
-<span class="fc" id="L67">        }</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (File f: files) {</span>
+<span class="fc" id="L67">            add(f);</span>
+<span class="fc" id="L68">        }</span>
+<span class="fc" id="L69">    }</span>
 
     private void addDirectory(File dir, boolean recurse) throws IOException {
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (!dir.exists()) {</span>
-<span class="nc" id="L72">            throw new FileNotFoundException(&quot;Couldn't find directory &quot; + dir);</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (!dir.exists()) {</span>
+<span class="nc" id="L73">            throw new FileNotFoundException(&quot;Couldn't find directory &quot; + dir);</span>
         }
-<span class="fc" id="L74">        FileFinder finder = new FileFinder();</span>
+<span class="fc" id="L75">        FileFinder finder = new FileFinder();</span>
         // TODO - could use SourceFileSelector here
-<span class="fc" id="L76">        add(finder.findFilesFrom(dir, configuration.filenameFilter(), recurse));</span>
-<span class="fc" id="L77">    }</span>
-
-<span class="fc" id="L79">    private Set&lt;String&gt; current = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L77">        add(finder.findFilesFrom(dir, configuration.filenameFilter(), recurse));</span>
+<span class="fc" id="L78">    }</span>
 
     public void add(File file) throws IOException {
 
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (configuration.isSkipDuplicates()) {</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (configuration.isSkipDuplicates()) {</span>
             // TODO refactor this thing into a separate class
-<span class="nc" id="L85">            String signature = file.getName() + '_' + file.length();</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">            if (current.contains(signature)) {</span>
-<span class="nc" id="L87">                System.err.println(&quot;Skipping &quot; + file.getAbsolutePath() + &quot; since it appears to be a duplicate file and --skip-duplicate-files is set&quot;);</span>
-<span class="nc" id="L88">                return;</span>
+<span class="nc" id="L84">            String signature = file.getName() + '_' + file.length();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if (current.contains(signature)) {</span>
+<span class="nc" id="L86">                System.err.println(&quot;Skipping &quot; + file.getAbsolutePath() + &quot; since it appears to be a duplicate file and --skip-duplicate-files is set&quot;);</span>
+<span class="nc" id="L87">                return;</span>
             }
-<span class="nc" id="L90">            current.add(signature);</span>
+<span class="nc" id="L89">            current.add(signature);</span>
         }
 
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (!FilenameUtils.equalsNormalizedOnSystem(file.getAbsoluteFile().getCanonicalPath(), file.getAbsolutePath())) {</span>
-<span class="fc" id="L94">            System.err.println(&quot;Skipping &quot; + file + &quot; since it appears to be a symlink&quot;);</span>
-<span class="fc" id="L95">            return;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (!FilenameUtils.equalsNormalizedOnSystem(file.getAbsoluteFile().getCanonicalPath(), file.getAbsolutePath())) {</span>
+<span class="fc" id="L93">            System.err.println(&quot;Skipping &quot; + file + &quot; since it appears to be a symlink&quot;);</span>
+<span class="fc" id="L94">            return;</span>
         }
 
-<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (!file.exists()) {</span>
-<span class="fc" id="L99">            System.err.println(&quot;Skipping &quot; + file + &quot; since it doesn't exist (broken symlink?)&quot;);</span>
-<span class="fc" id="L100">            return;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (!file.exists()) {</span>
+<span class="fc" id="L98">            System.err.println(&quot;Skipping &quot; + file + &quot; since it doesn't exist (broken symlink?)&quot;);</span>
+<span class="fc" id="L99">            return;</span>
         }
 
-<span class="fc" id="L103">        SourceCode sourceCode = configuration.sourceCodeFor(file);</span>
-<span class="fc" id="L104">        add(sourceCode);</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L102">        SourceCode sourceCode = configuration.sourceCodeFor(file);</span>
+<span class="fc" id="L103">        add(sourceCode);</span>
+<span class="fc" id="L104">    }</span>
 
     public void add(DBURI dburi) throws IOException {
 
       try 
       {
-<span class="nc" id="L111">        DBMSMetadata dbmsmetadata = new DBMSMetadata(dburi) ; </span>
+<span class="nc" id="L110">        DBMSMetadata dbmsmetadata = new DBMSMetadata(dburi) ; </span>
 
-<span class="nc" id="L113">        List&lt;SourceObject&gt; sourceObjectList = dbmsmetadata.getSourceObjectList ();</span>
-<span class="nc" id="L114">        LOGGER.log(Level.FINER, &quot;Located {0} database source objects&quot;, sourceObjectList.size());</span>
+<span class="nc" id="L112">        List&lt;SourceObject&gt; sourceObjectList = dbmsmetadata.getSourceObjectList ();</span>
+<span class="nc" id="L113">        LOGGER.log(Level.FINER, &quot;Located {0} database source objects&quot;, sourceObjectList.size());</span>
 
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        for (SourceObject sourceObject: sourceObjectList )</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        for (SourceObject sourceObject: sourceObjectList )</span>
         {
           // Add DBURI as a faux-file 
-<span class="nc" id="L119">          String falseFilePath =  sourceObject.getPseudoFileName();</span>
-<span class="nc" id="L120">          LOGGER.log(Level.FINEST, &quot;Adding database source object {0}&quot;, falseFilePath);</span>
+<span class="nc" id="L118">          String falseFilePath =  sourceObject.getPseudoFileName();</span>
+<span class="nc" id="L119">          LOGGER.log(Level.FINEST, &quot;Adding database source object {0}&quot;, falseFilePath);</span>
 
-<span class="nc" id="L122">          SourceCode sourceCode = configuration.sourceCodeFor( dbmsmetadata.getSourceCode(sourceObject) </span>
+<span class="nc" id="L121">          SourceCode sourceCode = configuration.sourceCodeFor( dbmsmetadata.getSourceCode(sourceObject) </span>
                                                                ,falseFilePath
                                                              );
-<span class="nc" id="L125">          add(sourceCode);</span>
-<span class="nc" id="L126">        }</span>
+<span class="nc" id="L124">          add(sourceCode);</span>
+<span class="nc" id="L125">        }</span>
       }
-<span class="nc" id="L128">      catch (Exception sqlException)</span>
+<span class="nc" id="L127">      catch (Exception sqlException)</span>
       {
-<span class="nc" id="L130">        LOGGER.log(Level.SEVERE, &quot;Problem with Input URI&quot;, sqlException);</span>
-<span class="nc" id="L131">        throw new RuntimeException(&quot;Problem with DBURI: &quot;+dburi , sqlException ) ; </span>
-<span class="nc" id="L132">      }</span>
-<span class="nc" id="L133">    }</span>
+<span class="nc" id="L129">        LOGGER.log(Level.SEVERE, &quot;Problem with Input URI&quot;, sqlException);</span>
+<span class="nc" id="L130">        throw new RuntimeException(&quot;Problem with DBURI: &quot;+dburi , sqlException ) ; </span>
+<span class="nc" id="L131">      }</span>
+<span class="nc" id="L132">    }</span>
 
     private void add(SourceCode sourceCode) throws IOException {
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (configuration.isSkipLexicalErrors()) {</span>
-<span class="nc" id="L137">            addAndSkipLexicalErrors(sourceCode);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (configuration.isSkipLexicalErrors()) {</span>
+<span class="nc" id="L136">            addAndSkipLexicalErrors(sourceCode);</span>
         } else {
-<span class="fc" id="L139">            addAndThrowLexicalError(sourceCode);</span>
+<span class="fc" id="L138">            addAndThrowLexicalError(sourceCode);</span>
         }
-<span class="fc" id="L141">    }</span>
+<span class="fc" id="L140">    }</span>
 
     private void addAndThrowLexicalError(SourceCode sourceCode) throws IOException {
-<span class="fc" id="L144">        configuration.tokenizer().tokenize(sourceCode, tokens);</span>
-<span class="fc" id="L145">        listener.addedFile(1,  new File(sourceCode.getFileName()));</span>
-<span class="fc" id="L146">        source.put(sourceCode.getFileName(), sourceCode);</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L143">        configuration.tokenizer().tokenize(sourceCode, tokens);</span>
+<span class="fc" id="L144">        listener.addedFile(1,  new File(sourceCode.getFileName()));</span>
+<span class="fc" id="L145">        source.put(sourceCode.getFileName(), sourceCode);</span>
+<span class="fc" id="L146">    }</span>
 
     private void addAndSkipLexicalErrors(SourceCode sourceCode) throws IOException {
-<span class="nc" id="L150">        TokenEntry.State savedTokenEntry = new TokenEntry.State(tokens.getTokens());</span>
+<span class="nc" id="L149">        TokenEntry.State savedTokenEntry = new TokenEntry.State(tokens.getTokens());</span>
         try {
-<span class="nc" id="L152">            addAndThrowLexicalError(sourceCode);</span>
-<span class="nc" id="L153">        } catch (TokenMgrError e) {</span>
-<span class="nc" id="L154">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot;. Reason: &quot; + e.getMessage());</span>
-<span class="nc" id="L155">            tokens.getTokens().clear();</span>
-<span class="nc" id="L156">            tokens.getTokens().addAll(savedTokenEntry.restore());</span>
-<span class="nc" id="L157">        }</span>
-<span class="nc" id="L158">    }</span>
+<span class="nc" id="L151">            addAndThrowLexicalError(sourceCode);</span>
+<span class="nc" id="L152">        } catch (TokenMgrError e) {</span>
+<span class="nc" id="L153">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot;. Reason: &quot; + e.getMessage());</span>
+<span class="nc" id="L154">            tokens.getTokens().clear();</span>
+<span class="nc" id="L155">            tokens.getTokens().addAll(savedTokenEntry.restore());</span>
+<span class="nc" id="L156">        }</span>
+<span class="nc" id="L157">    }</span>
 
     /**
      * List names/paths of each source to be processed.
@@ -163,7 +162,7 @@ public class CPD {
      * @return names of sources to be processed 
      */
     public List&lt;String&gt; getSourcePaths() {
-<span class="nc" id="L166">        return new ArrayList&lt;&gt;(source.keySet());  </span>
+<span class="nc" id="L165">        return new ArrayList&lt;&gt;(source.keySet());  </span>
     }
 
     /**
@@ -172,12 +171,12 @@ public class CPD {
      * @return all Sources to be processed 
      */
     public List&lt;SourceCode&gt; getSources() {
-<span class="nc" id="L175">        return new ArrayList&lt;&gt;(source.values());  </span>
+<span class="nc" id="L174">        return new ArrayList&lt;&gt;(source.values());  </span>
     }
     
     
 	public static void main(String[] args) {
-<span class="nc" id="L180">		CPDCommandLineInterface.main(args);</span>
-<span class="nc" id="L181">	}</span>
+<span class="nc" id="L179">		CPDCommandLineInterface.main(args);</span>
+<span class="nc" id="L180">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

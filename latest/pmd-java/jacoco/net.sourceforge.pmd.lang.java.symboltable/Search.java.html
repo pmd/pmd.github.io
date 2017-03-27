@@ -3,6 +3,7 @@
  */
 package net.sourceforge.pmd.lang.java.symboltable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,53 +15,53 @@ public class Search {
     private static final boolean TRACE = false;
 
     private NameOccurrence occ;
-<span class="fc" id="L17">    private Set&lt;NameDeclaration&gt; declarations = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L18">    private Set&lt;NameDeclaration&gt; declarations = new HashSet&lt;&gt;();</span>
 
-<span class="fc" id="L19">    public Search(JavaNameOccurrence occ) {</span>
+<span class="fc" id="L20">    public Search(JavaNameOccurrence occ) {</span>
         if (TRACE) {
             System.out.println(&quot;new search for &quot; + (occ.isMethodOrConstructorInvocation() ? &quot;method&quot; : &quot;variable&quot;) + &quot; &quot; + occ);
         }
-<span class="fc" id="L23">        this.occ = occ;</span>
-<span class="fc" id="L24">    }</span>
+<span class="fc" id="L24">        this.occ = occ;</span>
+<span class="fc" id="L25">    }</span>
 
     public void execute() {
-<span class="fc" id="L27">        Set&lt;NameDeclaration&gt; found = searchUpward(occ, occ.getLocation().getScope());</span>
+<span class="fc" id="L28">        Set&lt;NameDeclaration&gt; found = searchUpward(occ, occ.getLocation().getScope());</span>
         if (TRACE) {
             System.out.println(&quot;found &quot; + found);
         }
-<span class="fc" id="L31">        declarations.addAll(found);</span>
-<span class="fc" id="L32">    }</span>
+<span class="fc" id="L32">        declarations.addAll(found);</span>
+<span class="fc" id="L33">    }</span>
 
     public void execute(Scope startingScope) {
-<span class="fc" id="L35">        Set&lt;NameDeclaration&gt; found = searchUpward(occ, startingScope);</span>
+<span class="fc" id="L36">        Set&lt;NameDeclaration&gt; found = searchUpward(occ, startingScope);</span>
         if (TRACE) {
             System.out.println(&quot;found &quot; + found);
         }
-<span class="fc" id="L39">        declarations.addAll(found);</span>
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L40">        declarations.addAll(found);</span>
+<span class="fc" id="L41">    }</span>
 
     public Set&lt;NameDeclaration&gt; getResult() {
-<span class="fc" id="L43">        return declarations;</span>
+<span class="fc" id="L44">        return declarations;</span>
     }
 
     private Set&lt;NameDeclaration&gt; searchUpward(NameOccurrence nameOccurrence, Scope scope) {
         if (TRACE) {
             System.out.println(&quot; checking scope &quot; + scope + &quot; for name occurrence &quot; + nameOccurrence);
         }
-<span class="fc" id="L50">        final boolean isInScope = scope.contains(nameOccurrence);</span>
-<span class="fc bfc" id="L51" title="All 4 branches covered.">        if (!isInScope &amp;&amp; scope.getParent() != null) {</span>
+<span class="fc" id="L51">        final boolean isInScope = scope.contains(nameOccurrence);</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">        if (!isInScope &amp;&amp; scope.getParent() != null) {</span>
             if (TRACE) {
                 System.out.println(&quot; moving up from &quot; + scope + &quot; to &quot; + scope.getParent());
             }
-<span class="fc" id="L55">            return searchUpward(nameOccurrence, scope.getParent());</span>
+<span class="fc" id="L56">            return searchUpward(nameOccurrence, scope.getParent());</span>
         }
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (isInScope) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (isInScope) {</span>
             if (TRACE) {
                 System.out.println(&quot; found it!&quot;);
             }
-<span class="fc" id="L61">            return scope.addNameOccurrence(nameOccurrence);</span>
+<span class="fc" id="L62">            return scope.addNameOccurrence(nameOccurrence);</span>
         }
-<span class="fc" id="L63">        return new HashSet&lt;&gt;();</span>
+<span class="fc" id="L64">        return Collections.emptySet();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

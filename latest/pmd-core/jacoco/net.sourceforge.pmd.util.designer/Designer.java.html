@@ -123,69 +123,131 @@ import net.sourceforge.pmd.util.StringUtil;
 
 public class Designer implements ClipboardOwner {
 
+<span class="nc" id="L126">    private boolean exitOnClose = true;</span>
+<span class="nc" id="L127">    private final CodeEditorTextPane codeEditorPane = new CodeEditorTextPane();</span>
+<span class="nc" id="L128">    private final TreeWidget astTreeWidget = new TreeWidget(new Object[0]);</span>
+<span class="nc" id="L129">    private DefaultListModel xpathResults = new DefaultListModel();</span>
+<span class="nc" id="L130">    private final JList xpathResultList = new JList(xpathResults);</span>
+<span class="nc" id="L131">    private final JTextArea xpathQueryArea = new JTextArea(15, 30);</span>
+<span class="nc" id="L132">    private final ButtonGroup xpathVersionButtonGroup = new ButtonGroup();</span>
+<span class="nc" id="L133">    private final TreeWidget symbolTableTreeWidget = new TreeWidget(new Object[0]);</span>
+<span class="nc" id="L134">    private final JFrame frame = new JFrame(&quot;PMD Rule Designer (v &quot; + PMD.VERSION + ')');</span>
+<span class="nc" id="L135">    private final DFAPanel dfaPanel = new DFAPanel();</span>
+<span class="nc" id="L136">    private final JRadioButtonMenuItem[] languageVersionMenuItems = new JRadioButtonMenuItem[getSupportedLanguageVersions().length];</span>
+<span class="fc" id="L137">    private static final String SETTINGS_FILE_NAME = System.getProperty(&quot;user.home&quot;)</span>
+            + System.getProperty(&quot;file.separator&quot;) + &quot;.pmd_designer.xml&quot;;
+
+<span class="nc" id="L140">    public Designer(String[] args) {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (args.length &gt; 0) {</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            exitOnClose = !args[0].equals(&quot;-noexitonclose&quot;);</span>
+        }
+
+<span class="nc" id="L145">        Initializer.initialize();</span>
+
+<span class="nc" id="L147">        xpathQueryArea.setFont(new Font(&quot;Verdana&quot;, Font.PLAIN, 16));</span>
+<span class="nc" id="L148">        JSplitPane controlSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createCodeEditorPanel(),</span>
+                createXPathQueryPanel());
+
+<span class="nc" id="L151">        JSplitPane astAndSymbolTablePane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, createASTPanel(),</span>
+                createSymbolTableResultPanel());
+
+<span class="nc" id="L154">        JSplitPane resultsSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, astAndSymbolTablePane,</span>
+                createXPathResultPanel());
+
+<span class="nc" id="L157">        JTabbedPane tabbed = new JTabbedPane();</span>
+<span class="nc" id="L158">        tabbed.addTab(&quot;Abstract Syntax Tree / XPath / Symbol Table&quot;, resultsSplitPane);</span>
+<span class="nc" id="L159">        tabbed.addTab(&quot;Data Flow Analysis&quot;, dfaPanel);</span>
+<span class="nc" id="L160">        tabbed.setMnemonicAt(0, KeyEvent.VK_A);</span>
+<span class="nc" id="L161">        tabbed.setMnemonicAt(1, KeyEvent.VK_D);</span>
+
+<span class="nc" id="L163">        JSplitPane containerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, controlSplitPane, tabbed);</span>
+<span class="nc" id="L164">        containerSplitPane.setContinuousLayout(true);</span>
+
+<span class="nc" id="L166">        JMenuBar menuBar = createMenuBar();</span>
+<span class="nc" id="L167">        frame.setJMenuBar(menuBar);</span>
+<span class="nc" id="L168">        frame.getContentPane().add(containerSplitPane);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        frame.setDefaultCloseOperation(exitOnClose ? JFrame.EXIT_ON_CLOSE : JFrame.DISPOSE_ON_CLOSE);</span>
+
+<span class="nc" id="L171">        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();</span>
+<span class="nc" id="L172">        int screenHeight = screenSize.height;</span>
+<span class="nc" id="L173">        int screenWidth = screenSize.width;</span>
+
+<span class="nc" id="L175">        frame.pack();</span>
+<span class="nc" id="L176">        frame.setSize(screenWidth * 3 / 4, screenHeight * 3 / 4);</span>
+<span class="nc" id="L177">        frame.setLocation((screenWidth - frame.getWidth()) / 2, (screenHeight - frame.getHeight()) / 2);</span>
+<span class="nc" id="L178">        frame.setVisible(true);</span>
+<span class="nc" id="L179">        int horozontalMiddleLocation = controlSplitPane.getMaximumDividerLocation() * 3 / 5;</span>
+<span class="nc" id="L180">        controlSplitPane.setDividerLocation(horozontalMiddleLocation);</span>
+<span class="nc" id="L181">        containerSplitPane.setDividerLocation(containerSplitPane.getMaximumDividerLocation() / 2);</span>
+<span class="nc" id="L182">        astAndSymbolTablePane.setDividerLocation(astAndSymbolTablePane.getMaximumDividerLocation() / 3);</span>
+<span class="nc" id="L183">        resultsSplitPane.setDividerLocation(horozontalMiddleLocation);</span>
+
+<span class="nc" id="L185">        loadSettings();</span>
+<span class="nc" id="L186">    }</span>
+
     private int getDefaultLanguageVersionSelectionIndex() {
-<span class="nc" id="L127">        return Arrays.asList(getSupportedLanguageVersions())</span>
+<span class="nc" id="L189">        return Arrays.asList(getSupportedLanguageVersions())</span>
                 .indexOf(LanguageRegistry.getLanguage(&quot;Java&quot;).getDefaultVersion());
     }
 
     private Node getCompilationUnit() {
-<span class="nc" id="L132">        LanguageVersionHandler languageVersionHandler = getLanguageVersionHandler();</span>
-<span class="nc" id="L133">        return getCompilationUnit(languageVersionHandler);</span>
+<span class="nc" id="L194">        LanguageVersionHandler languageVersionHandler = getLanguageVersionHandler();</span>
+<span class="nc" id="L195">        return getCompilationUnit(languageVersionHandler);</span>
     }
     static Node getCompilationUnit(LanguageVersionHandler languageVersionHandler, String code) {
-<span class="fc" id="L136">        Parser parser = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions());</span>
-<span class="fc" id="L137">        Node node = parser.parse(null, new StringReader(code));</span>
-<span class="fc" id="L138">        languageVersionHandler.getSymbolFacade().start(node);</span>
-<span class="fc" id="L139">        languageVersionHandler.getTypeResolutionFacade(Designer.class.getClassLoader()).start(node);</span>
-<span class="fc" id="L140">        return node;</span>
+<span class="fc" id="L198">        Parser parser = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions());</span>
+<span class="fc" id="L199">        Node node = parser.parse(null, new StringReader(code));</span>
+<span class="fc" id="L200">        languageVersionHandler.getSymbolFacade().start(node);</span>
+<span class="fc" id="L201">        languageVersionHandler.getTypeResolutionFacade(Designer.class.getClassLoader()).start(node);</span>
+<span class="fc" id="L202">        return node;</span>
     }
     private Node getCompilationUnit(LanguageVersionHandler languageVersionHandler) {
-<span class="nc" id="L143">        return getCompilationUnit(languageVersionHandler, codeEditorPane.getText());</span>
+<span class="nc" id="L205">        return getCompilationUnit(languageVersionHandler, codeEditorPane.getText());</span>
     }
 
 	private static LanguageVersion[] getSupportedLanguageVersions() {
-<span class="nc" id="L147">		List&lt;LanguageVersion&gt; languageVersions = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L148" title="All 2 branches missed.">		for (LanguageVersion languageVersion : LanguageRegistry.findAllVersions()) {</span>
-<span class="nc" id="L149">			LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
-<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (languageVersionHandler != null) {</span>
-<span class="nc" id="L151">				Parser parser = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions());</span>
-<span class="nc bnc" id="L152" title="All 4 branches missed.">				if (parser != null &amp;&amp; parser.canParse()) {</span>
-<span class="nc" id="L153">					languageVersions.add(languageVersion);</span>
+<span class="nc" id="L209">		List&lt;LanguageVersion&gt; languageVersions = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		for (LanguageVersion languageVersion : LanguageRegistry.findAllVersions()) {</span>
+<span class="nc" id="L211">			LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">			if (languageVersionHandler != null) {</span>
+<span class="nc" id="L213">				Parser parser = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions());</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">				if (parser != null &amp;&amp; parser.canParse()) {</span>
+<span class="nc" id="L215">					languageVersions.add(languageVersion);</span>
 				}
 			}
-<span class="nc" id="L156">		}</span>
-<span class="nc" id="L157">		return languageVersions.toArray(new LanguageVersion[languageVersions.size()]);</span>
+<span class="nc" id="L218">		}</span>
+<span class="nc" id="L219">		return languageVersions.toArray(new LanguageVersion[languageVersions.size()]);</span>
 	}
 
 	private LanguageVersion getLanguageVersion() {
-<span class="nc" id="L161">		return getSupportedLanguageVersions()[selectedLanguageVersionIndex()];</span>
+<span class="nc" id="L223">		return getSupportedLanguageVersions()[selectedLanguageVersionIndex()];</span>
 	}
 
 	private void setLanguageVersion(LanguageVersion languageVersion) {
-<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (languageVersion != null) {</span>
-<span class="nc" id="L166">			LanguageVersion[] versions = getSupportedLanguageVersions();</span>
-<span class="nc bnc" id="L167" title="All 2 branches missed.">			for (int i = 0; i &lt; versions.length; i++) {</span>
-<span class="nc" id="L168">				LanguageVersion version = versions[i];</span>
-<span class="nc bnc" id="L169" title="All 2 branches missed.">				if (languageVersion.equals(version)) {</span>
-<span class="nc" id="L170">					languageVersionMenuItems[i].setSelected(true);</span>
-<span class="nc" id="L171">					break;</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (languageVersion != null) {</span>
+<span class="nc" id="L228">			LanguageVersion[] versions = getSupportedLanguageVersions();</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			for (int i = 0; i &lt; versions.length; i++) {</span>
+<span class="nc" id="L230">				LanguageVersion version = versions[i];</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">				if (languageVersion.equals(version)) {</span>
+<span class="nc" id="L232">					languageVersionMenuItems[i].setSelected(true);</span>
+<span class="nc" id="L233">					break;</span>
 				}
 			}
 		}
-<span class="nc" id="L175">	}</span>
+<span class="nc" id="L237">	}</span>
 
 	private int selectedLanguageVersionIndex() {
-<span class="nc bnc" id="L178" title="All 2 branches missed.">		for (int i = 0; i &lt; languageVersionMenuItems.length; i++) {</span>
-<span class="nc bnc" id="L179" title="All 2 branches missed.">			if (languageVersionMenuItems[i].isSelected()) {</span>
-<span class="nc" id="L180">				return i;</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">		for (int i = 0; i &lt; languageVersionMenuItems.length; i++) {</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">			if (languageVersionMenuItems[i].isSelected()) {</span>
+<span class="nc" id="L242">				return i;</span>
 			}
 		}
-<span class="nc" id="L183">		throw new RuntimeException(&quot;Initial default language version not specified&quot;);</span>
+<span class="nc" id="L245">		throw new RuntimeException(&quot;Initial default language version not specified&quot;);</span>
 	}
 
 	private LanguageVersionHandler getLanguageVersionHandler() {
-<span class="nc" id="L187">		LanguageVersion languageVersion = getLanguageVersion();</span>
-<span class="nc" id="L188">		return languageVersion.getLanguageVersionHandler();</span>
+<span class="nc" id="L249">		LanguageVersion languageVersion = getLanguageVersion();</span>
+<span class="nc" id="L250">		return languageVersion.getLanguageVersionHandler();</span>
 	}
 
 	private class ExceptionNode implements TreeNode {
@@ -193,72 +255,81 @@ public class Designer implements ClipboardOwner {
 		private Object item;
 		private ExceptionNode[] kids;
 
-<span class="nc" id="L196">		public ExceptionNode(Object theItem) {</span>
-<span class="nc" id="L197">			item = theItem;</span>
+<span class="nc" id="L258">		public ExceptionNode(Object theItem) {</span>
+<span class="nc" id="L259">			item = theItem;</span>
 
-<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (item instanceof ParseException) {</span>
-<span class="nc" id="L200">				createKids();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			if (item instanceof ParseException) {</span>
+<span class="nc" id="L262">				createKids();</span>
 			}
-<span class="nc" id="L202">		}</span>
+<span class="nc" id="L264">		}</span>
 
 		// each line in the error message becomes a separate tree node
 		private void createKids() {
 
-<span class="nc" id="L207">			String message = ((ParseException) item).getMessage();</span>
-<span class="nc" id="L208">			String[] lines = StringUtil.substringsOf(message, PMD.EOL);</span>
+<span class="nc" id="L269">			String message = ((ParseException) item).getMessage();</span>
+<span class="nc" id="L270">			String[] lines = StringUtil.substringsOf(message, PMD.EOL);</span>
 
-<span class="nc" id="L210">			kids = new ExceptionNode[lines.length];</span>
-<span class="nc bnc" id="L211" title="All 2 branches missed.">			for (int i = 0; i &lt; lines.length; i++) {</span>
-<span class="nc" id="L212">				kids[i] = new ExceptionNode(lines[i]);</span>
+<span class="nc" id="L272">			kids = new ExceptionNode[lines.length];</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			for (int i = 0; i &lt; lines.length; i++) {</span>
+<span class="nc" id="L274">				kids[i] = new ExceptionNode(lines[i]);</span>
 			}
-<span class="nc" id="L214">		}</span>
+<span class="nc" id="L276">		}</span>
 
-		public int getChildCount() {
-<span class="nc bnc" id="L217" title="All 2 branches missed.">			return kids == null ? 0 : kids.length;</span>
+		@Override
+        public int getChildCount() {
+<span class="nc bnc" id="L280" title="All 2 branches missed.">			return kids == null ? 0 : kids.length;</span>
 		}
 
-		public boolean getAllowsChildren() {
-<span class="nc" id="L221">			return false;</span>
+		@Override
+        public boolean getAllowsChildren() {
+<span class="nc" id="L285">			return false;</span>
 		}
 
-		public boolean isLeaf() {
-<span class="nc bnc" id="L225" title="All 2 branches missed.">			return kids == null;</span>
+		@Override
+        public boolean isLeaf() {
+<span class="nc bnc" id="L290" title="All 2 branches missed.">			return kids == null;</span>
 		}
 
-		public TreeNode getParent() {
-<span class="nc" id="L229">			return null;</span>
+		@Override
+        public TreeNode getParent() {
+<span class="nc" id="L295">			return null;</span>
 		}
 
-		public TreeNode getChildAt(int childIndex) {
-<span class="nc" id="L233">			return kids[childIndex];</span>
+		@Override
+        public TreeNode getChildAt(int childIndex) {
+<span class="nc" id="L300">			return kids[childIndex];</span>
 		}
 
 		public String label() {
-<span class="nc" id="L237">			return item.toString();</span>
+<span class="nc" id="L304">			return item.toString();</span>
 		}
 
-		public Enumeration&lt;TreeNode&gt; children() {
-<span class="nc" id="L241">			Enumeration&lt;TreeNode&gt; e = new Enumeration&lt;TreeNode&gt;() {</span>
-<span class="nc" id="L242">				int i = 0;</span>
+		@Override
+        public Enumeration&lt;TreeNode&gt; children() {
+<span class="nc" id="L309">			Enumeration&lt;TreeNode&gt; e = new Enumeration&lt;TreeNode&gt;() {</span>
+<span class="nc" id="L310">				int i = 0;</span>
 
-				public boolean hasMoreElements() {
-<span class="nc bnc" id="L245" title="All 4 branches missed.">					return kids != null &amp;&amp; i &lt; kids.length;</span>
+				@Override
+                public boolean hasMoreElements() {
+<span class="nc bnc" id="L314" title="All 4 branches missed.">					return kids != null &amp;&amp; i &lt; kids.length;</span>
 				}
 
-				public ExceptionNode nextElement() {
-<span class="nc" id="L249">					return kids[i++];</span>
+				@Override
+                public ExceptionNode nextElement() {
+<span class="nc" id="L319">					return kids[i++];</span>
 				}
 			};
-<span class="nc" id="L252">			return e;</span>
+<span class="nc" id="L322">			return e;</span>
 		}
 
-		public int getIndex(TreeNode node) {
-<span class="nc bnc" id="L256" title="All 2 branches missed.">			for (int i = 0; i &lt; kids.length; i++) {</span>
-<span class="nc bnc" id="L257" title="All 2 branches missed.">				if (kids[i] == node) {</span>
-<span class="nc" id="L258">					return i;</span>
+		@Override
+        public int getIndex(TreeNode node) {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">			for (int i = 0; i &lt; kids.length; i++) {</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">				if (kids[i] == node) {</span>
+<span class="nc" id="L329">					return i;</span>
 				}
 			}
-<span class="nc" id="L261">			return -1;</span>
+<span class="nc" id="L332">			return -1;</span>
 		}
 	}
 
@@ -270,114 +341,123 @@ public class Designer implements ClipboardOwner {
 		private ASTTreeNode parent;
 		private ASTTreeNode[] kids;
 
-<span class="nc" id="L273">		public ASTTreeNode(Node theNode) {</span>
-<span class="nc" id="L274">			node = theNode;</span>
+<span class="nc" id="L344">		public ASTTreeNode(Node theNode) {</span>
+<span class="nc" id="L345">			node = theNode;</span>
 
-<span class="nc" id="L276">			Node parent = node.jjtGetParent();</span>
-<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (parent != null) {</span>
-<span class="nc" id="L278">				this.parent = new ASTTreeNode(parent);</span>
+<span class="nc" id="L347">			Node parent = node.jjtGetParent();</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (parent != null) {</span>
+<span class="nc" id="L349">				this.parent = new ASTTreeNode(parent);</span>
 			}
-<span class="nc" id="L280">		}</span>
+<span class="nc" id="L351">		}</span>
 
-<span class="nc" id="L282">		private ASTTreeNode(ASTTreeNode parent, Node theNode) {</span>
-<span class="nc" id="L283">			node = theNode;</span>
-<span class="nc" id="L284">			this.parent = parent;</span>
-<span class="nc" id="L285">		}</span>
+<span class="nc" id="L353">		private ASTTreeNode(ASTTreeNode parent, Node theNode) {</span>
+<span class="nc" id="L354">			node = theNode;</span>
+<span class="nc" id="L355">			this.parent = parent;</span>
+<span class="nc" id="L356">		}</span>
 
-		public int getChildCount() {
-<span class="nc" id="L288">			return node.jjtGetNumChildren();</span>
+		@Override
+        public int getChildCount() {
+<span class="nc" id="L360">			return node.jjtGetNumChildren();</span>
 		}
 
-		public boolean getAllowsChildren() {
-<span class="nc" id="L292">			return false;</span>
+		@Override
+        public boolean getAllowsChildren() {
+<span class="nc" id="L365">			return false;</span>
 		}
 
-		public boolean isLeaf() {
-<span class="nc bnc" id="L296" title="All 2 branches missed.">			return node.jjtGetNumChildren() == 0;</span>
+		@Override
+        public boolean isLeaf() {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			return node.jjtGetNumChildren() == 0;</span>
 		}
 
-		public TreeNode getParent() {
-<span class="nc" id="L300">			return parent;</span>
+		@Override
+        public TreeNode getParent() {
+<span class="nc" id="L375">			return parent;</span>
 		}
 
 		public Scope getScope() {
-<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (node instanceof ScopedNode) {</span>
-<span class="nc" id="L305">				return ((ScopedNode) node).getScope();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">			if (node instanceof ScopedNode) {</span>
+<span class="nc" id="L380">				return ((ScopedNode) node).getScope();</span>
 			}
-<span class="nc" id="L307">			return null;</span>
+<span class="nc" id="L382">			return null;</span>
 		}
 
-		public Enumeration&lt;TreeNode&gt; children() {
+		@Override
+        public Enumeration&lt;TreeNode&gt; children() {
 
-<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (getChildCount() &gt; 0) {</span>
-<span class="nc" id="L313">				getChildAt(0); // force it to build kids</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (getChildCount() &gt; 0) {</span>
+<span class="nc" id="L389">				getChildAt(0); // force it to build kids</span>
 			}
 
-<span class="nc" id="L316">			Enumeration&lt;TreeNode&gt; e = new Enumeration&lt;TreeNode&gt;() {</span>
-<span class="nc" id="L317">				int i = 0;</span>
+<span class="nc" id="L392">			Enumeration&lt;TreeNode&gt; e = new Enumeration&lt;TreeNode&gt;() {</span>
+<span class="nc" id="L393">				int i = 0;</span>
 
-				public boolean hasMoreElements() {
-<span class="nc bnc" id="L320" title="All 4 branches missed.">					return kids != null &amp;&amp; i &lt; kids.length;</span>
+				@Override
+                public boolean hasMoreElements() {
+<span class="nc bnc" id="L397" title="All 4 branches missed.">					return kids != null &amp;&amp; i &lt; kids.length;</span>
 				}
 
-				public ASTTreeNode nextElement() {
-<span class="nc" id="L324">					return kids[i++];</span>
+				@Override
+                public ASTTreeNode nextElement() {
+<span class="nc" id="L402">					return kids[i++];</span>
 				}
 			};
-<span class="nc" id="L327">			return e;</span>
+<span class="nc" id="L405">			return e;</span>
 		}
 
-		public TreeNode getChildAt(int childIndex) {
+		@Override
+        public TreeNode getChildAt(int childIndex) {
 
-<span class="nc bnc" id="L332" title="All 2 branches missed.">			if (kids == null) {</span>
-<span class="nc" id="L333">				kids = new ASTTreeNode[node.jjtGetNumChildren()];</span>
-<span class="nc bnc" id="L334" title="All 2 branches missed.">				for (int i = 0; i &lt; kids.length; i++) {</span>
-<span class="nc" id="L335">					kids[i] = new ASTTreeNode(this.parent, node.jjtGetChild(i));</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			if (kids == null) {</span>
+<span class="nc" id="L412">				kids = new ASTTreeNode[node.jjtGetNumChildren()];</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">				for (int i = 0; i &lt; kids.length; i++) {</span>
+<span class="nc" id="L414">					kids[i] = new ASTTreeNode(this.parent, node.jjtGetChild(i));</span>
 				}
 			}
-<span class="nc" id="L338">			return kids[childIndex];</span>
+<span class="nc" id="L417">			return kids[childIndex];</span>
 		}
 
-		public int getIndex(TreeNode node) {
+		@Override
+        public int getIndex(TreeNode node) {
 
-<span class="nc bnc" id="L343" title="All 2 branches missed.">			for (int i = 0; i &lt; kids.length; i++) {</span>
-<span class="nc bnc" id="L344" title="All 2 branches missed.">				if (kids[i] == node) {</span>
-<span class="nc" id="L345">					return i;</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			for (int i = 0; i &lt; kids.length; i++) {</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">				if (kids[i] == node) {</span>
+<span class="nc" id="L425">					return i;</span>
 				}
 			}
-<span class="nc" id="L348">			return -1;</span>
+<span class="nc" id="L428">			return -1;</span>
 		}
 
 		public String label() {
-<span class="nc" id="L352">			LanguageVersionHandler languageVersionHandler = getLanguageVersionHandler();</span>
-<span class="nc" id="L353">			StringWriter writer = new StringWriter();</span>
-<span class="nc" id="L354">			languageVersionHandler.getDumpFacade(writer, &quot;&quot;, false).start(node);</span>
-<span class="nc" id="L355">			return writer.toString();</span>
+<span class="nc" id="L432">			LanguageVersionHandler languageVersionHandler = getLanguageVersionHandler();</span>
+<span class="nc" id="L433">			StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L434">			languageVersionHandler.getDumpFacade(writer, &quot;&quot;, false).start(node);</span>
+<span class="nc" id="L435">			return writer.toString();</span>
 		}
 
 		public String getToolTipText() {
-<span class="nc" id="L359">			String tooltip = &quot;Line: &quot; + node.getBeginLine() + &quot; Column: &quot; + node.getBeginColumn();</span>
-<span class="nc" id="L360">			tooltip += &quot; &quot; + label();</span>
-<span class="nc" id="L361">			return tooltip;</span>
+<span class="nc" id="L439">			String tooltip = &quot;Line: &quot; + node.getBeginLine() + &quot; Column: &quot; + node.getBeginColumn();</span>
+<span class="nc" id="L440">			tooltip += &quot; &quot; + label();</span>
+<span class="nc" id="L441">			return tooltip;</span>
 		}
 
 		public List&lt;String&gt; getAttributes() {
-<span class="nc" id="L365">			List&lt;String&gt; result = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L366">			AttributeAxisIterator attributeAxisIterator = new AttributeAxisIterator(node);</span>
-<span class="nc bnc" id="L367" title="All 2 branches missed.">			while (attributeAxisIterator.hasNext()) {</span>
-<span class="nc" id="L368">				Attribute attribute = attributeAxisIterator.next();</span>
-<span class="nc" id="L369">				result.add(attribute.getName() + &quot;=&quot; + attribute.getStringValue());</span>
-<span class="nc" id="L370">			}</span>
-<span class="nc" id="L371">			return result;</span>
+<span class="nc" id="L445">			List&lt;String&gt; result = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L446">			AttributeAxisIterator attributeAxisIterator = new AttributeAxisIterator(node);</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">			while (attributeAxisIterator.hasNext()) {</span>
+<span class="nc" id="L448">				Attribute attribute = attributeAxisIterator.next();</span>
+<span class="nc" id="L449">				result.add(attribute.getName() + &quot;=&quot; + attribute.getStringValue());</span>
+<span class="nc" id="L450">			}</span>
+<span class="nc" id="L451">			return result;</span>
 		}
 	}
 
 	private TreeCellRenderer createNoImageTreeCellRenderer() {
-<span class="nc" id="L376">		DefaultTreeCellRenderer treeCellRenderer = new DefaultTreeCellRenderer();</span>
-<span class="nc" id="L377">		treeCellRenderer.setLeafIcon(null);</span>
-<span class="nc" id="L378">		treeCellRenderer.setOpenIcon(null);</span>
-<span class="nc" id="L379">		treeCellRenderer.setClosedIcon(null);</span>
-<span class="nc" id="L380">		return treeCellRenderer;</span>
+<span class="nc" id="L456">		DefaultTreeCellRenderer treeCellRenderer = new DefaultTreeCellRenderer();</span>
+<span class="nc" id="L457">		treeCellRenderer.setLeafIcon(null);</span>
+<span class="nc" id="L458">		treeCellRenderer.setOpenIcon(null);</span>
+<span class="nc" id="L459">		treeCellRenderer.setClosedIcon(null);</span>
+<span class="nc" id="L460">		return treeCellRenderer;</span>
 	}
 
 	// Special tree variant that knows how to retrieve node labels and
@@ -386,549 +466,502 @@ public class Designer implements ClipboardOwner {
 
 		private static final long serialVersionUID = 1L;
 
-<span class="nc" id="L389">		public TreeWidget(Object[] items) {</span>
-<span class="nc" id="L390">			super(items);</span>
-<span class="nc" id="L391">			setToolTipText(&quot;&quot;);</span>
-<span class="nc" id="L392">		}</span>
+<span class="nc" id="L469">		public TreeWidget(Object[] items) {</span>
+<span class="nc" id="L470">			super(items);</span>
+<span class="nc" id="L471">			setToolTipText(&quot;&quot;);</span>
+<span class="nc" id="L472">		}</span>
 
 		@Override
 		public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row,
 				boolean hasFocus) {
-<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (value == null) {</span>
-<span class="nc" id="L398">				return &quot;&quot;;</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">			if (value == null) {</span>
+<span class="nc" id="L478">				return &quot;&quot;;</span>
 			}
-<span class="nc bnc" id="L400" title="All 2 branches missed.">			if (value instanceof ASTTreeNode) {</span>
-<span class="nc" id="L401">				return ((ASTTreeNode) value).label();</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">			if (value instanceof ASTTreeNode) {</span>
+<span class="nc" id="L481">				return ((ASTTreeNode) value).label();</span>
 			}
-<span class="nc bnc" id="L403" title="All 2 branches missed.">			if (value instanceof ExceptionNode) {</span>
-<span class="nc" id="L404">				return ((ExceptionNode) value).label();</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">			if (value instanceof ExceptionNode) {</span>
+<span class="nc" id="L484">				return ((ExceptionNode) value).label();</span>
 			}
-<span class="nc" id="L406">			return value.toString();</span>
+<span class="nc" id="L486">			return value.toString();</span>
 		}
 
 		@Override
 		public String getToolTipText(MouseEvent e) {
-<span class="nc bnc" id="L411" title="All 2 branches missed.">			if (getRowForLocation(e.getX(), e.getY()) == -1) {</span>
-<span class="nc" id="L412">				return null;</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">			if (getRowForLocation(e.getX(), e.getY()) == -1) {</span>
+<span class="nc" id="L492">				return null;</span>
 			}
-<span class="nc" id="L414">			TreePath curPath = getPathForLocation(e.getX(), e.getY());</span>
-<span class="nc bnc" id="L415" title="All 2 branches missed.">			if (curPath.getLastPathComponent() instanceof ASTTreeNode) {</span>
-<span class="nc" id="L416">				return ((ASTTreeNode) curPath.getLastPathComponent()).getToolTipText();</span>
+<span class="nc" id="L494">			TreePath curPath = getPathForLocation(e.getX(), e.getY());</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">			if (curPath.getLastPathComponent() instanceof ASTTreeNode) {</span>
+<span class="nc" id="L496">				return ((ASTTreeNode) curPath.getLastPathComponent()).getToolTipText();</span>
 			} else {
-<span class="nc" id="L418">				return super.getToolTipText(e);</span>
+<span class="nc" id="L498">				return super.getToolTipText(e);</span>
 			}
 		}
 
 		public void expandAll(boolean expand) {
-<span class="nc" id="L423">			TreeNode root = (TreeNode) getModel().getRoot();</span>
-<span class="nc" id="L424">			expandAll(new TreePath(root), expand);</span>
-<span class="nc" id="L425">		}</span>
+<span class="nc" id="L503">			TreeNode root = (TreeNode) getModel().getRoot();</span>
+<span class="nc" id="L504">			expandAll(new TreePath(root), expand);</span>
+<span class="nc" id="L505">		}</span>
 
 		private void expandAll(TreePath parent, boolean expand) {
 			// Traverse children
-<span class="nc" id="L429">			TreeNode node = (TreeNode) parent.getLastPathComponent();</span>
-<span class="nc bnc" id="L430" title="All 2 branches missed.">			if (node.getChildCount() &gt;= 0) {</span>
-<span class="nc bnc" id="L431" title="All 2 branches missed.">				for (Enumeration&lt;? extends TreeNode&gt; e = node.children(); e.hasMoreElements();) {</span>
-<span class="nc" id="L432">					TreeNode n = e.nextElement();</span>
-<span class="nc" id="L433">					TreePath path = parent.pathByAddingChild(n);</span>
-<span class="nc" id="L434">					expandAll(path, expand);</span>
-<span class="nc" id="L435">				}</span>
+<span class="nc" id="L509">			TreeNode node = (TreeNode) parent.getLastPathComponent();</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			if (node.getChildCount() &gt;= 0) {</span>
+<span class="nc bnc" id="L511" title="All 2 branches missed.">				for (Enumeration&lt;? extends TreeNode&gt; e = node.children(); e.hasMoreElements();) {</span>
+<span class="nc" id="L512">					TreeNode n = e.nextElement();</span>
+<span class="nc" id="L513">					TreePath path = parent.pathByAddingChild(n);</span>
+<span class="nc" id="L514">					expandAll(path, expand);</span>
+<span class="nc" id="L515">				}</span>
 			}
 
-<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (expand) {</span>
-<span class="nc" id="L439">				expandPath(parent);</span>
+<span class="nc bnc" id="L518" title="All 2 branches missed.">			if (expand) {</span>
+<span class="nc" id="L519">				expandPath(parent);</span>
 			} else {
-<span class="nc" id="L441">				collapsePath(parent);</span>
+<span class="nc" id="L521">				collapsePath(parent);</span>
 			}
-<span class="nc" id="L443">		}</span>
+<span class="nc" id="L523">		}</span>
 	}
 
 	private void loadASTTreeData(TreeNode rootNode) {
-<span class="nc" id="L447">		astTreeWidget.setModel(new DefaultTreeModel(rootNode));</span>
-<span class="nc" id="L448">		astTreeWidget.setRootVisible(true);</span>
-<span class="nc" id="L449">		astTreeWidget.expandAll(true);</span>
-<span class="nc" id="L450">	}</span>
+<span class="nc" id="L527">		astTreeWidget.setModel(new DefaultTreeModel(rootNode));</span>
+<span class="nc" id="L528">		astTreeWidget.setRootVisible(true);</span>
+<span class="nc" id="L529">		astTreeWidget.expandAll(true);</span>
+<span class="nc" id="L530">	}</span>
 
 	private void loadSymbolTableTreeData(TreeNode rootNode) {
-<span class="nc bnc" id="L453" title="All 2 branches missed.">		if (rootNode != null) {</span>
-<span class="nc" id="L454">			symbolTableTreeWidget.setModel(new DefaultTreeModel(rootNode));</span>
-<span class="nc" id="L455">			symbolTableTreeWidget.expandAll(true);</span>
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		if (rootNode != null) {</span>
+<span class="nc" id="L534">			symbolTableTreeWidget.setModel(new DefaultTreeModel(rootNode));</span>
+<span class="nc" id="L535">			symbolTableTreeWidget.expandAll(true);</span>
 		} else {
-<span class="nc" id="L457">			symbolTableTreeWidget.setModel(null);</span>
+<span class="nc" id="L537">			symbolTableTreeWidget.setModel(null);</span>
 		}
-<span class="nc" id="L459">	}</span>
+<span class="nc" id="L539">	}</span>
 
-<span class="nc" id="L461">	private class ShowListener implements ActionListener {</span>
-		public void actionPerformed(ActionEvent ae) {
+<span class="nc" id="L541">	private class ShowListener implements ActionListener {</span>
+		@Override
+        public void actionPerformed(ActionEvent ae) {
 			TreeNode tn;
 			try {
-<span class="nc" id="L465">				Node lastCompilationUnit = getCompilationUnit();</span>
-<span class="nc" id="L466">				tn = new ASTTreeNode(lastCompilationUnit);</span>
-<span class="nc" id="L467">			} catch (ParseException pe) {</span>
-<span class="nc" id="L468">				tn = new ExceptionNode(pe);</span>
-<span class="nc" id="L469">			}</span>
+<span class="nc" id="L546">				Node lastCompilationUnit = getCompilationUnit();</span>
+<span class="nc" id="L547">				tn = new ASTTreeNode(lastCompilationUnit);</span>
+<span class="nc" id="L548">			} catch (ParseException pe) {</span>
+<span class="nc" id="L549">				tn = new ExceptionNode(pe);</span>
+<span class="nc" id="L550">			}</span>
 
-<span class="nc" id="L471">			loadASTTreeData(tn);</span>
-<span class="nc" id="L472">			loadSymbolTableTreeData(null);</span>
-<span class="nc" id="L473">		}</span>
+<span class="nc" id="L552">			loadASTTreeData(tn);</span>
+<span class="nc" id="L553">			loadSymbolTableTreeData(null);</span>
+<span class="nc" id="L554">		}</span>
 	}
 
-<span class="nc" id="L476">	private class DFAListener implements ActionListener {</span>
-		public void actionPerformed(ActionEvent ae) {
+<span class="nc" id="L557">	private class DFAListener implements ActionListener {</span>
+		@Override
+        public void actionPerformed(ActionEvent ae) {
 
-<span class="nc" id="L479">		    LanguageVersion languageVersion = getLanguageVersion();</span>
-<span class="nc" id="L480">			DFAGraphRule dfaGraphRule = languageVersion.getLanguageVersionHandler().getDFAGraphRule();</span>
-<span class="nc" id="L481">			RuleSet rs = new RuleSet();</span>
-<span class="nc bnc" id="L482" title="All 2 branches missed.">			if (dfaGraphRule != null) {</span>
-<span class="nc" id="L483">				rs.addRule(dfaGraphRule);</span>
+<span class="nc" id="L561">		    LanguageVersion languageVersion = getLanguageVersion();</span>
+<span class="nc" id="L562">			DFAGraphRule dfaGraphRule = languageVersion.getLanguageVersionHandler().getDFAGraphRule();</span>
+<span class="nc" id="L563">			RuleSet rs = new RuleSet();</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			if (dfaGraphRule != null) {</span>
+<span class="nc" id="L565">				rs.addRule(dfaGraphRule);</span>
 			}
-<span class="nc" id="L485">			RuleContext ctx = new RuleContext();</span>
-<span class="nc" id="L486">			ctx.setSourceCodeFilename(&quot;[no filename].&quot; + languageVersion.getLanguage().getExtensions().get(0));</span>
-<span class="nc" id="L487">			StringReader reader = new StringReader(codeEditorPane.getText());</span>
-<span class="nc" id="L488">			PMDConfiguration config = new PMDConfiguration();</span>
-<span class="nc" id="L489">			config.setDefaultLanguageVersion(languageVersion);</span>
+<span class="nc" id="L567">			RuleContext ctx = new RuleContext();</span>
+<span class="nc" id="L568">			ctx.setSourceCodeFilename(&quot;[no filename].&quot; + languageVersion.getLanguage().getExtensions().get(0));</span>
+<span class="nc" id="L569">			StringReader reader = new StringReader(codeEditorPane.getText());</span>
+<span class="nc" id="L570">			PMDConfiguration config = new PMDConfiguration();</span>
+<span class="nc" id="L571">			config.setDefaultLanguageVersion(languageVersion);</span>
 
 			try {
-<span class="nc" id="L492">				new SourceCodeProcessor(config).processSourceCode(reader, new RuleSets(rs), ctx);</span>
+<span class="nc" id="L574">				new SourceCodeProcessor(config).processSourceCode(reader, new RuleSets(rs), ctx);</span>
 				//	    } catch (PMDException pmde) {
 				//		loadTreeData(new ExceptionNode(pmde));
-<span class="nc" id="L495">			} catch (Exception e) {</span>
-<span class="nc" id="L496">				e.printStackTrace();</span>
-<span class="nc" id="L497">			}</span>
+<span class="nc" id="L577">			} catch (Exception e) {</span>
+<span class="nc" id="L578">				e.printStackTrace();</span>
+<span class="nc" id="L579">			}</span>
 
-<span class="nc bnc" id="L499" title="All 2 branches missed.">			if (dfaGraphRule != null) {</span>
-<span class="nc" id="L500">    			List&lt;DFAGraphMethod&gt; methods = dfaGraphRule.getMethods();</span>
-<span class="nc bnc" id="L501" title="All 4 branches missed.">    			if (methods != null &amp;&amp; !methods.isEmpty()) {</span>
-<span class="nc" id="L502">    				dfaPanel.resetTo(methods, codeEditorPane);</span>
-<span class="nc" id="L503">    				dfaPanel.repaint();</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">			if (dfaGraphRule != null) {</span>
+<span class="nc" id="L582">    			List&lt;DFAGraphMethod&gt; methods = dfaGraphRule.getMethods();</span>
+<span class="nc bnc" id="L583" title="All 4 branches missed.">    			if (methods != null &amp;&amp; !methods.isEmpty()) {</span>
+<span class="nc" id="L584">    				dfaPanel.resetTo(methods, codeEditorPane);</span>
+<span class="nc" id="L585">    				dfaPanel.repaint();</span>
     			}
 			}
-<span class="nc" id="L506">		}</span>
+<span class="nc" id="L588">		}</span>
 	}
 
-<span class="nc" id="L509">	private class XPathListener implements ActionListener {</span>
-		public void actionPerformed(ActionEvent ae) {
-<span class="nc" id="L511">			xpathResults.clear();</span>
-<span class="nc bnc" id="L512" title="All 2 branches missed.">			if (StringUtil.isEmpty(xpathQueryArea.getText())) {</span>
-<span class="nc" id="L513">				xpathResults.addElement(&quot;XPath query field is empty.&quot;);</span>
-<span class="nc" id="L514">				xpathResultList.repaint();</span>
-<span class="nc" id="L515">				codeEditorPane.requestFocus();</span>
-<span class="nc" id="L516">				return;</span>
+<span class="nc" id="L591">	private class XPathListener implements ActionListener {</span>
+		@Override
+        public void actionPerformed(ActionEvent ae) {
+<span class="nc" id="L594">			xpathResults.clear();</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">			if (StringUtil.isEmpty(xpathQueryArea.getText())) {</span>
+<span class="nc" id="L596">				xpathResults.addElement(&quot;XPath query field is empty.&quot;);</span>
+<span class="nc" id="L597">				xpathResultList.repaint();</span>
+<span class="nc" id="L598">				codeEditorPane.requestFocus();</span>
+<span class="nc" id="L599">				return;</span>
 			}
-<span class="nc" id="L518">			Node c = getCompilationUnit();</span>
+<span class="nc" id="L601">			Node c = getCompilationUnit();</span>
 			try {
-<span class="nc" id="L520">				XPathRule xpathRule = new XPathRule() {</span>
+<span class="nc" id="L603">				XPathRule xpathRule = new XPathRule() {</span>
 					@Override
 					public void addViolation(Object data, Node node, String arg) {
-<span class="nc" id="L523">						xpathResults.addElement(node);</span>
-<span class="nc" id="L524">					}</span>
+<span class="nc" id="L606">						xpathResults.addElement(node);</span>
+<span class="nc" id="L607">					}</span>
 				};
-<span class="nc" id="L526">				xpathRule.setMessage(&quot;&quot;);</span>
-<span class="nc" id="L527">				xpathRule.setLanguage(getLanguageVersion().getLanguage());</span>
-<span class="nc" id="L528">				xpathRule.setXPath(xpathQueryArea.getText());</span>
-<span class="nc" id="L529">				xpathRule.setVersion(xpathVersionButtonGroup.getSelection().getActionCommand());</span>
+<span class="nc" id="L609">				xpathRule.setMessage(&quot;&quot;);</span>
+<span class="nc" id="L610">				xpathRule.setLanguage(getLanguageVersion().getLanguage());</span>
+<span class="nc" id="L611">				xpathRule.setXPath(xpathQueryArea.getText());</span>
+<span class="nc" id="L612">				xpathRule.setVersion(xpathVersionButtonGroup.getSelection().getActionCommand());</span>
 
-<span class="nc" id="L531">				RuleSet ruleSet = new RuleSet();</span>
-<span class="nc" id="L532">				ruleSet.addRule(xpathRule);</span>
+<span class="nc" id="L614">				RuleSet ruleSet = new RuleSet();</span>
+<span class="nc" id="L615">				ruleSet.addRule(xpathRule);</span>
 
-<span class="nc" id="L534">				RuleSets ruleSets = new RuleSets(ruleSet);</span>
+<span class="nc" id="L617">				RuleSets ruleSets = new RuleSets(ruleSet);</span>
 
-<span class="nc" id="L536">				RuleContext ruleContext = new RuleContext();</span>
-<span class="nc" id="L537">				ruleContext.setLanguageVersion(getLanguageVersion());</span>
+<span class="nc" id="L619">				RuleContext ruleContext = new RuleContext();</span>
+<span class="nc" id="L620">				ruleContext.setLanguageVersion(getLanguageVersion());</span>
 
-<span class="nc" id="L539">				List&lt;Node&gt; nodes = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L540">				nodes.add(c);</span>
-<span class="nc" id="L541">				ruleSets.apply(nodes, ruleContext, xpathRule.getLanguage());</span>
+<span class="nc" id="L622">				List&lt;Node&gt; nodes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L623">				nodes.add(c);</span>
+<span class="nc" id="L624">				ruleSets.apply(nodes, ruleContext, xpathRule.getLanguage());</span>
 
-<span class="nc bnc" id="L543" title="All 2 branches missed.">				if (xpathResults.isEmpty()) {</span>
-<span class="nc" id="L544">					xpathResults.addElement(&quot;No matching nodes &quot; + System.currentTimeMillis());</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">				if (xpathResults.isEmpty()) {</span>
+<span class="nc" id="L627">					xpathResults.addElement(&quot;No matching nodes &quot; + System.currentTimeMillis());</span>
 				}
-<span class="nc" id="L546">			} catch (ParseException pe) {</span>
-<span class="nc" id="L547">				xpathResults.addElement(pe.fillInStackTrace().getMessage());</span>
-<span class="nc" id="L548">			}</span>
-<span class="nc" id="L549">			xpathResultList.repaint();</span>
-<span class="nc" id="L550">			xpathQueryArea.requestFocus();</span>
-<span class="nc" id="L551">		}</span>
+<span class="nc" id="L629">			} catch (ParseException pe) {</span>
+<span class="nc" id="L630">				xpathResults.addElement(pe.fillInStackTrace().getMessage());</span>
+<span class="nc" id="L631">			}</span>
+<span class="nc" id="L632">			xpathResultList.repaint();</span>
+<span class="nc" id="L633">			xpathQueryArea.requestFocus();</span>
+<span class="nc" id="L634">		}</span>
 	}
 
-<span class="nc" id="L554">	private class SymbolTableListener implements TreeSelectionListener {</span>
-		public void valueChanged(TreeSelectionEvent e) {
-<span class="nc bnc" id="L556" title="All 2 branches missed.">			if (e.getNewLeadSelectionPath() != null) {</span>
-<span class="nc" id="L557">				ASTTreeNode astTreeNode = (ASTTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();</span>
+<span class="nc" id="L637">	private class SymbolTableListener implements TreeSelectionListener {</span>
+		@Override
+        public void valueChanged(TreeSelectionEvent e) {
+<span class="nc bnc" id="L640" title="All 2 branches missed.">			if (e.getNewLeadSelectionPath() != null) {</span>
+<span class="nc" id="L641">				ASTTreeNode astTreeNode = (ASTTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();</span>
 
-<span class="nc" id="L559">				DefaultMutableTreeNode symbolTableTreeNode = new DefaultMutableTreeNode();</span>
-<span class="nc" id="L560">				DefaultMutableTreeNode selectedAstTreeNode = new DefaultMutableTreeNode(&quot;AST Node: &quot;</span>
+<span class="nc" id="L643">				DefaultMutableTreeNode symbolTableTreeNode = new DefaultMutableTreeNode();</span>
+<span class="nc" id="L644">				DefaultMutableTreeNode selectedAstTreeNode = new DefaultMutableTreeNode(&quot;AST Node: &quot;</span>
 						+ astTreeNode.label());
-<span class="nc" id="L562">				symbolTableTreeNode.add(selectedAstTreeNode);</span>
+<span class="nc" id="L646">				symbolTableTreeNode.add(selectedAstTreeNode);</span>
 
-<span class="nc" id="L564">				List&lt;Scope&gt; scopes = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L565">				Scope scope = astTreeNode.getScope();</span>
-<span class="nc bnc" id="L566" title="All 2 branches missed.">				while (scope != null) {</span>
-<span class="nc" id="L567">					scopes.add(scope);</span>
-<span class="nc" id="L568">					scope = scope.getParent();</span>
+<span class="nc" id="L648">				List&lt;Scope&gt; scopes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L649">				Scope scope = astTreeNode.getScope();</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">				while (scope != null) {</span>
+<span class="nc" id="L651">					scopes.add(scope);</span>
+<span class="nc" id="L652">					scope = scope.getParent();</span>
 				}
-<span class="nc" id="L570">				Collections.reverse(scopes);</span>
-<span class="nc bnc" id="L571" title="All 2 branches missed.">				for (int i = 0; i &lt; scopes.size(); i++) {</span>
-<span class="nc" id="L572">					scope = scopes.get(i);</span>
-<span class="nc" id="L573">					DefaultMutableTreeNode scopeTreeNode = new DefaultMutableTreeNode(&quot;Scope: &quot;</span>
+<span class="nc" id="L654">				Collections.reverse(scopes);</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">				for (int i = 0; i &lt; scopes.size(); i++) {</span>
+<span class="nc" id="L656">					scope = scopes.get(i);</span>
+<span class="nc" id="L657">					DefaultMutableTreeNode scopeTreeNode = new DefaultMutableTreeNode(&quot;Scope: &quot;</span>
 							+ scope.getClass().getSimpleName());
-<span class="nc" id="L575">					selectedAstTreeNode.add(scopeTreeNode);</span>
-<span class="nc bnc" id="L576" title="All 2 branches missed.">					for (Map.Entry&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : scope.getDeclarations().entrySet()) {</span>
-<span class="nc" id="L577">					    DefaultMutableTreeNode nameDeclarationTreeNode = new DefaultMutableTreeNode(</span>
+<span class="nc" id="L659">					selectedAstTreeNode.add(scopeTreeNode);</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">					for (Map.Entry&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : scope.getDeclarations().entrySet()) {</span>
+<span class="nc" id="L661">					    DefaultMutableTreeNode nameDeclarationTreeNode = new DefaultMutableTreeNode(</span>
 					            entry.getKey().getClass().getSimpleName() + &quot;: &quot; + entry.getKey());
-<span class="nc" id="L579">					    scopeTreeNode.add(nameDeclarationTreeNode);</span>
-<span class="nc bnc" id="L580" title="All 2 branches missed.">					    for (NameOccurrence nameOccurrence : entry.getValue()) {</span>
-<span class="nc" id="L581">					        DefaultMutableTreeNode nameOccurranceTreeNode = new DefaultMutableTreeNode(</span>
+<span class="nc" id="L663">					    scopeTreeNode.add(nameDeclarationTreeNode);</span>
+<span class="nc bnc" id="L664" title="All 2 branches missed.">					    for (NameOccurrence nameOccurrence : entry.getValue()) {</span>
+<span class="nc" id="L665">					        DefaultMutableTreeNode nameOccurranceTreeNode = new DefaultMutableTreeNode(</span>
 					                &quot;Name occurrence: &quot; + nameOccurrence);
-<span class="nc" id="L583">					        nameDeclarationTreeNode.add(nameOccurranceTreeNode);</span>
-<span class="nc" id="L584">					    }</span>
-<span class="nc" id="L585">					}</span>
+<span class="nc" id="L667">					        nameDeclarationTreeNode.add(nameOccurranceTreeNode);</span>
+<span class="nc" id="L668">					    }</span>
+<span class="nc" id="L669">					}</span>
 				}
 
-<span class="nc" id="L588">				List&lt;String&gt; attributes = astTreeNode.getAttributes();</span>
-<span class="nc" id="L589">				DefaultMutableTreeNode attributesNode = new DefaultMutableTreeNode(&quot;Attributes (accessible via XPath):&quot;);</span>
-<span class="nc" id="L590">				selectedAstTreeNode.add(attributesNode);</span>
-<span class="nc bnc" id="L591" title="All 2 branches missed.">				for (String attribute : attributes) {</span>
-<span class="nc" id="L592">					attributesNode.add(new DefaultMutableTreeNode(attribute));</span>
-<span class="nc" id="L593">				}</span>
+<span class="nc" id="L672">				List&lt;String&gt; attributes = astTreeNode.getAttributes();</span>
+<span class="nc" id="L673">				DefaultMutableTreeNode attributesNode = new DefaultMutableTreeNode(&quot;Attributes (accessible via XPath):&quot;);</span>
+<span class="nc" id="L674">				selectedAstTreeNode.add(attributesNode);</span>
+<span class="nc bnc" id="L675" title="All 2 branches missed.">				for (String attribute : attributes) {</span>
+<span class="nc" id="L676">					attributesNode.add(new DefaultMutableTreeNode(attribute));</span>
+<span class="nc" id="L677">				}</span>
 
-<span class="nc" id="L595">				loadSymbolTableTreeData(symbolTableTreeNode);</span>
+<span class="nc" id="L679">				loadSymbolTableTreeData(symbolTableTreeNode);</span>
 			}
-<span class="nc" id="L597">		}</span>
+<span class="nc" id="L681">		}</span>
 	}
 
-<span class="nc" id="L600">	private class CodeHighlightListener implements TreeSelectionListener {</span>
-		public void valueChanged(TreeSelectionEvent e) {
-<span class="nc bnc" id="L602" title="All 2 branches missed.">			if (e.getNewLeadSelectionPath() != null) {</span>
-<span class="nc" id="L603">				ASTTreeNode selected = (ASTTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();</span>
-<span class="nc bnc" id="L604" title="All 2 branches missed.">				if (selected != null) {</span>
-<span class="nc" id="L605">					codeEditorPane.select(selected.node);</span>
+<span class="nc" id="L684">	private class CodeHighlightListener implements TreeSelectionListener {</span>
+		@Override
+        public void valueChanged(TreeSelectionEvent e) {
+<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (e.getNewLeadSelectionPath() != null) {</span>
+<span class="nc" id="L688">				ASTTreeNode selected = (ASTTreeNode) e.getNewLeadSelectionPath().getLastPathComponent();</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">				if (selected != null) {</span>
+<span class="nc" id="L690">					codeEditorPane.select(selected.node);</span>
 				}
 			}
-<span class="nc" id="L608">		}</span>
+<span class="nc" id="L693">		}</span>
 	}
 
-<span class="nc" id="L611">	private class ASTListCellRenderer extends JLabel implements ListCellRenderer {</span>
+<span class="nc" id="L696">	private class ASTListCellRenderer extends JLabel implements ListCellRenderer {</span>
 		private static final long serialVersionUID = 1L;
 
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+		@Override
+        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
 				boolean cellHasFocus) {
 
-<span class="nc bnc" id="L617" title="All 2 branches missed.">			if (isSelected) {</span>
-<span class="nc" id="L618">				setBackground(list.getSelectionBackground());</span>
-<span class="nc" id="L619">				setForeground(list.getSelectionForeground());</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">			if (isSelected) {</span>
+<span class="nc" id="L704">				setBackground(list.getSelectionBackground());</span>
+<span class="nc" id="L705">				setForeground(list.getSelectionForeground());</span>
 			} else {
-<span class="nc" id="L621">				setBackground(list.getBackground());</span>
-<span class="nc" id="L622">				setForeground(list.getForeground());</span>
+<span class="nc" id="L707">				setBackground(list.getBackground());</span>
+<span class="nc" id="L708">				setForeground(list.getForeground());</span>
 			}
 
 			String text;
-<span class="nc bnc" id="L626" title="All 2 branches missed.">			if (value instanceof Node) {</span>
-<span class="nc" id="L627">				Node node = (Node) value;</span>
-<span class="nc" id="L628">				StringBuffer sb = new StringBuffer();</span>
-<span class="nc" id="L629">				String name = node.getClass().getName().substring(node.getClass().getName().lastIndexOf('.') + 1);</span>
-<span class="nc bnc" id="L630" title="All 2 branches missed.">				if (Proxy.isProxyClass(value.getClass())) {</span>
-<span class="nc" id="L631">					name = value.toString();</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">			if (value instanceof Node) {</span>
+<span class="nc" id="L713">				Node node = (Node) value;</span>
+<span class="nc" id="L714">				StringBuffer sb = new StringBuffer();</span>
+<span class="nc" id="L715">				String name = node.getClass().getName().substring(node.getClass().getName().lastIndexOf('.') + 1);</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">				if (Proxy.isProxyClass(value.getClass())) {</span>
+<span class="nc" id="L717">					name = value.toString();</span>
 				}
-<span class="nc" id="L633">				sb.append(name).append(&quot; at line &quot;).append(node.getBeginLine()).append(&quot; column &quot;).append(</span>
+<span class="nc" id="L719">				sb.append(name).append(&quot; at line &quot;).append(node.getBeginLine()).append(&quot; column &quot;).append(</span>
 						node.getBeginColumn()).append(PMD.EOL);
-<span class="nc" id="L635">				text = sb.toString();</span>
-<span class="nc" id="L636">			} else {</span>
-<span class="nc" id="L637">				text = value.toString();</span>
+<span class="nc" id="L721">				text = sb.toString();</span>
+<span class="nc" id="L722">			} else {</span>
+<span class="nc" id="L723">				text = value.toString();</span>
 			}
-<span class="nc" id="L639">			setText(text);</span>
-<span class="nc" id="L640">			return this;</span>
+<span class="nc" id="L725">			setText(text);</span>
+<span class="nc" id="L726">			return this;</span>
 		}
 	}
 
-<span class="nc" id="L644">	private class ASTSelectionListener implements ListSelectionListener {</span>
-		public void valueChanged(ListSelectionEvent e) {
-<span class="nc" id="L646">			ListSelectionModel lsm = (ListSelectionModel) e.getSource();</span>
-<span class="nc bnc" id="L647" title="All 2 branches missed.">			if (!lsm.isSelectionEmpty()) {</span>
-<span class="nc" id="L648">				Object o = xpathResults.get(lsm.getMinSelectionIndex());</span>
-<span class="nc bnc" id="L649" title="All 2 branches missed.">				if (o instanceof Node) {</span>
-<span class="nc" id="L650">					codeEditorPane.select((Node) o);</span>
+<span class="nc" id="L730">	private class ASTSelectionListener implements ListSelectionListener {</span>
+		@Override
+        public void valueChanged(ListSelectionEvent e) {
+<span class="nc" id="L733">			ListSelectionModel lsm = (ListSelectionModel) e.getSource();</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">			if (!lsm.isSelectionEmpty()) {</span>
+<span class="nc" id="L735">				Object o = xpathResults.get(lsm.getMinSelectionIndex());</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">				if (o instanceof Node) {</span>
+<span class="nc" id="L737">					codeEditorPane.select((Node) o);</span>
 				}
 			}
-<span class="nc" id="L653">		}</span>
+<span class="nc" id="L740">		}</span>
 	}
-
-<span class="nc" id="L656">	private boolean exitOnClose = true;</span>
-<span class="nc" id="L657">	private final CodeEditorTextPane codeEditorPane = new CodeEditorTextPane();</span>
-<span class="nc" id="L658">	private final TreeWidget astTreeWidget = new TreeWidget(new Object[0]);</span>
-<span class="nc" id="L659">	private DefaultListModel xpathResults = new DefaultListModel();</span>
-<span class="nc" id="L660">	private final JList xpathResultList = new JList(xpathResults);</span>
-<span class="nc" id="L661">	private final JTextArea xpathQueryArea = new JTextArea(15, 30);</span>
-<span class="nc" id="L662">	private final ButtonGroup xpathVersionButtonGroup = new ButtonGroup();</span>
-<span class="nc" id="L663">	private final TreeWidget symbolTableTreeWidget = new TreeWidget(new Object[0]);</span>
-<span class="nc" id="L664">	private final JFrame frame = new JFrame(&quot;PMD Rule Designer (v &quot; + PMD.VERSION + ')');</span>
-<span class="nc" id="L665">	private final DFAPanel dfaPanel = new DFAPanel();</span>
-<span class="nc" id="L666">	private final JRadioButtonMenuItem[] languageVersionMenuItems = new JRadioButtonMenuItem[getSupportedLanguageVersions().length];</span>
-
-<span class="nc" id="L668">	public Designer(String[] args) {</span>
-<span class="nc bnc" id="L669" title="All 2 branches missed.">		if (args.length &gt; 0) {</span>
-<span class="nc bnc" id="L670" title="All 2 branches missed.">			exitOnClose = !args[0].equals(&quot;-noexitonclose&quot;);</span>
-		}
-
-<span class="nc" id="L673">		Initializer.initialize();</span>
-
-<span class="nc" id="L675">		xpathQueryArea.setFont(new Font(&quot;Verdana&quot;, Font.PLAIN, 16));</span>
-<span class="nc" id="L676">		JSplitPane controlSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createCodeEditorPanel(),</span>
-				createXPathQueryPanel());
-
-<span class="nc" id="L679">		JSplitPane astAndSymbolTablePane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, createASTPanel(),</span>
-				createSymbolTableResultPanel());
-
-<span class="nc" id="L682">		JSplitPane resultsSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, astAndSymbolTablePane,</span>
-				createXPathResultPanel());
-
-<span class="nc" id="L685">		JTabbedPane tabbed = new JTabbedPane();</span>
-<span class="nc" id="L686">		tabbed.addTab(&quot;Abstract Syntax Tree / XPath / Symbol Table&quot;, resultsSplitPane);</span>
-<span class="nc" id="L687">		tabbed.addTab(&quot;Data Flow Analysis&quot;, dfaPanel);</span>
-<span class="nc" id="L688">		tabbed.setMnemonicAt(0, KeyEvent.VK_A);</span>
-<span class="nc" id="L689">		tabbed.setMnemonicAt(1, KeyEvent.VK_D);</span>
-
-<span class="nc" id="L691">		JSplitPane containerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, controlSplitPane, tabbed);</span>
-<span class="nc" id="L692">		containerSplitPane.setContinuousLayout(true);</span>
-
-<span class="nc" id="L694">		JMenuBar menuBar = createMenuBar();</span>
-<span class="nc" id="L695">		frame.setJMenuBar(menuBar);</span>
-<span class="nc" id="L696">		frame.getContentPane().add(containerSplitPane);</span>
-<span class="nc bnc" id="L697" title="All 2 branches missed.">		frame.setDefaultCloseOperation(exitOnClose ? JFrame.EXIT_ON_CLOSE : JFrame.DISPOSE_ON_CLOSE);</span>
-
-<span class="nc" id="L699">		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();</span>
-<span class="nc" id="L700">		int screenHeight = screenSize.height;</span>
-<span class="nc" id="L701">		int screenWidth = screenSize.width;</span>
-
-<span class="nc" id="L703">		frame.pack();</span>
-<span class="nc" id="L704">		frame.setSize(screenWidth * 3 / 4, screenHeight * 3 / 4);</span>
-<span class="nc" id="L705">		frame.setLocation((screenWidth - frame.getWidth()) / 2, (screenHeight - frame.getHeight()) / 2);</span>
-<span class="nc" id="L706">		frame.setVisible(true);</span>
-<span class="nc" id="L707">		int horozontalMiddleLocation = controlSplitPane.getMaximumDividerLocation() * 3 / 5;</span>
-<span class="nc" id="L708">		controlSplitPane.setDividerLocation(horozontalMiddleLocation);</span>
-<span class="nc" id="L709">		containerSplitPane.setDividerLocation(containerSplitPane.getMaximumDividerLocation() / 2);</span>
-<span class="nc" id="L710">		astAndSymbolTablePane.setDividerLocation(astAndSymbolTablePane.getMaximumDividerLocation() / 3);</span>
-<span class="nc" id="L711">		resultsSplitPane.setDividerLocation(horozontalMiddleLocation);</span>
-
-<span class="nc" id="L713">		loadSettings();</span>
-<span class="nc" id="L714">	}</span>
 
 	private JMenuBar createMenuBar() {
-<span class="nc" id="L717">		JMenuBar menuBar = new JMenuBar();</span>
-<span class="nc" id="L718">		JMenu menu = new JMenu(&quot;Language&quot;);</span>
-<span class="nc" id="L719">		ButtonGroup group = new ButtonGroup();</span>
+<span class="nc" id="L744">		JMenuBar menuBar = new JMenuBar();</span>
+<span class="nc" id="L745">		JMenu menu = new JMenu(&quot;Language&quot;);</span>
+<span class="nc" id="L746">		ButtonGroup group = new ButtonGroup();</span>
 
-<span class="nc" id="L721">		LanguageVersion[] languageVersions = getSupportedLanguageVersions();</span>
-<span class="nc bnc" id="L722" title="All 2 branches missed.">		for (int i = 0; i &lt; languageVersions.length; i++) {</span>
-<span class="nc" id="L723">			LanguageVersion languageVersion = languageVersions[i];</span>
-<span class="nc" id="L724">			JRadioButtonMenuItem button = new JRadioButtonMenuItem(languageVersion.getShortName());</span>
-<span class="nc" id="L725">			languageVersionMenuItems[i] = button;</span>
-<span class="nc" id="L726">			group.add(button);</span>
-<span class="nc" id="L727">			menu.add(button);</span>
+<span class="nc" id="L748">		LanguageVersion[] languageVersions = getSupportedLanguageVersions();</span>
+<span class="nc bnc" id="L749" title="All 2 branches missed.">		for (int i = 0; i &lt; languageVersions.length; i++) {</span>
+<span class="nc" id="L750">			LanguageVersion languageVersion = languageVersions[i];</span>
+<span class="nc" id="L751">			JRadioButtonMenuItem button = new JRadioButtonMenuItem(languageVersion.getShortName());</span>
+<span class="nc" id="L752">			languageVersionMenuItems[i] = button;</span>
+<span class="nc" id="L753">			group.add(button);</span>
+<span class="nc" id="L754">			menu.add(button);</span>
 		}
-<span class="nc" id="L729">		languageVersionMenuItems[getDefaultLanguageVersionSelectionIndex()].setSelected(true);</span>
-<span class="nc" id="L730">		menuBar.add(menu);</span>
+<span class="nc" id="L756">		languageVersionMenuItems[getDefaultLanguageVersionSelectionIndex()].setSelected(true);</span>
+<span class="nc" id="L757">		menuBar.add(menu);</span>
 
-<span class="nc" id="L732">		JMenu actionsMenu = new JMenu(&quot;Actions&quot;);</span>
-<span class="nc" id="L733">		JMenuItem copyXMLItem = new JMenuItem(&quot;Copy xml to clipboard&quot;);</span>
-<span class="nc" id="L734">		copyXMLItem.addActionListener(new ActionListener() {</span>
-			public void actionPerformed(ActionEvent e) {
-<span class="nc" id="L736">				copyXmlToClipboard();</span>
-<span class="nc" id="L737">			}</span>
+<span class="nc" id="L759">		JMenu actionsMenu = new JMenu(&quot;Actions&quot;);</span>
+<span class="nc" id="L760">		JMenuItem copyXMLItem = new JMenuItem(&quot;Copy xml to clipboard&quot;);</span>
+<span class="nc" id="L761">		copyXMLItem.addActionListener(new ActionListener() {</span>
+			@Override
+            public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L764">				copyXmlToClipboard();</span>
+<span class="nc" id="L765">			}</span>
 		});
-<span class="nc" id="L739">		actionsMenu.add(copyXMLItem);</span>
-<span class="nc" id="L740">		JMenuItem createRuleXMLItem = new JMenuItem(&quot;Create rule XML&quot;);</span>
-<span class="nc" id="L741">		createRuleXMLItem.addActionListener(new ActionListener() {</span>
-			public void actionPerformed(ActionEvent e) {
-<span class="nc" id="L743">				createRuleXML();</span>
-<span class="nc" id="L744">			}</span>
+<span class="nc" id="L767">		actionsMenu.add(copyXMLItem);</span>
+<span class="nc" id="L768">		JMenuItem createRuleXMLItem = new JMenuItem(&quot;Create rule XML&quot;);</span>
+<span class="nc" id="L769">		createRuleXMLItem.addActionListener(new ActionListener() {</span>
+			@Override
+            public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L772">				createRuleXML();</span>
+<span class="nc" id="L773">			}</span>
 		});
-<span class="nc" id="L746">		actionsMenu.add(createRuleXMLItem);</span>
-<span class="nc" id="L747">		menuBar.add(actionsMenu);</span>
+<span class="nc" id="L775">		actionsMenu.add(createRuleXMLItem);</span>
+<span class="nc" id="L776">		menuBar.add(actionsMenu);</span>
 
-<span class="nc" id="L749">		return menuBar;</span>
+<span class="nc" id="L778">		return menuBar;</span>
 	}
 
 	private void createRuleXML() {
-<span class="nc" id="L753">		CreateXMLRulePanel rulePanel = new CreateXMLRulePanel(xpathQueryArea, codeEditorPane);</span>
-<span class="nc" id="L754">		JFrame xmlframe = new JFrame(&quot;Create XML Rule&quot;);</span>
-<span class="nc" id="L755">		xmlframe.setContentPane(rulePanel);</span>
-<span class="nc" id="L756">		xmlframe.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
-<span class="nc" id="L757">		xmlframe.setSize(new Dimension(600, 700));</span>
-<span class="nc" id="L758">		xmlframe.addComponentListener(new java.awt.event.ComponentAdapter() {</span>
+<span class="nc" id="L782">		CreateXMLRulePanel rulePanel = new CreateXMLRulePanel(xpathQueryArea, codeEditorPane);</span>
+<span class="nc" id="L783">		JFrame xmlframe = new JFrame(&quot;Create XML Rule&quot;);</span>
+<span class="nc" id="L784">		xmlframe.setContentPane(rulePanel);</span>
+<span class="nc" id="L785">		xmlframe.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L786">		xmlframe.setSize(new Dimension(600, 700));</span>
+<span class="nc" id="L787">		xmlframe.addComponentListener(new java.awt.event.ComponentAdapter() {</span>
 			@Override
 			public void componentResized(ComponentEvent e) {
-<span class="nc" id="L761">				JFrame tmp = (JFrame) e.getSource();</span>
-<span class="nc bnc" id="L762" title="All 4 branches missed.">				if (tmp.getWidth() &lt; 600 || tmp.getHeight() &lt; 700) {</span>
-<span class="nc" id="L763">					tmp.setSize(600, 700);</span>
+<span class="nc" id="L790">				JFrame tmp = (JFrame) e.getSource();</span>
+<span class="nc bnc" id="L791" title="All 4 branches missed.">				if (tmp.getWidth() &lt; 600 || tmp.getHeight() &lt; 700) {</span>
+<span class="nc" id="L792">					tmp.setSize(600, 700);</span>
 				}
-<span class="nc" id="L765">			}</span>
+<span class="nc" id="L794">			}</span>
 		});
-<span class="nc" id="L767">		int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;</span>
-<span class="nc" id="L768">		int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;</span>
-<span class="nc" id="L769">		xmlframe.pack();</span>
-<span class="nc" id="L770">		xmlframe.setLocation((screenWidth - xmlframe.getWidth()) / 2, (screenHeight - xmlframe.getHeight()) / 2);</span>
-<span class="nc" id="L771">		xmlframe.setVisible(true);</span>
-<span class="nc" id="L772">	}</span>
+<span class="nc" id="L796">		int screenHeight = Toolkit.getDefaultToolkit().getScreenSize().height;</span>
+<span class="nc" id="L797">		int screenWidth = Toolkit.getDefaultToolkit().getScreenSize().width;</span>
+<span class="nc" id="L798">		xmlframe.pack();</span>
+<span class="nc" id="L799">		xmlframe.setLocation((screenWidth - xmlframe.getWidth()) / 2, (screenHeight - xmlframe.getHeight()) / 2);</span>
+<span class="nc" id="L800">		xmlframe.setVisible(true);</span>
+<span class="nc" id="L801">	}</span>
 
 	private JComponent createCodeEditorPanel() {
-<span class="nc" id="L775">		JPanel p = new JPanel();</span>
-<span class="nc" id="L776">		p.setLayout(new BorderLayout());</span>
-<span class="nc" id="L777">		codeEditorPane.setBorder(BorderFactory.createLineBorder(Color.black));</span>
-<span class="nc" id="L778">		makeTextComponentUndoable(codeEditorPane);</span>
+<span class="nc" id="L804">		JPanel p = new JPanel();</span>
+<span class="nc" id="L805">		p.setLayout(new BorderLayout());</span>
+<span class="nc" id="L806">		codeEditorPane.setBorder(BorderFactory.createLineBorder(Color.black));</span>
+<span class="nc" id="L807">		makeTextComponentUndoable(codeEditorPane);</span>
 
-<span class="nc" id="L780">		p.add(new JLabel(&quot;Source code:&quot;), BorderLayout.NORTH);</span>
-<span class="nc" id="L781">		p.add(new JScrollPane(codeEditorPane), BorderLayout.CENTER);</span>
+<span class="nc" id="L809">		p.add(new JLabel(&quot;Source code:&quot;), BorderLayout.NORTH);</span>
+<span class="nc" id="L810">		p.add(new JScrollPane(codeEditorPane), BorderLayout.CENTER);</span>
 
-<span class="nc" id="L783">		return p;</span>
+<span class="nc" id="L812">		return p;</span>
 	}
 
 	private JComponent createASTPanel() {
-<span class="nc" id="L787">		astTreeWidget.setCellRenderer(createNoImageTreeCellRenderer());</span>
-<span class="nc" id="L788">		TreeSelectionModel model = astTreeWidget.getSelectionModel();</span>
-<span class="nc" id="L789">		model.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);</span>
-<span class="nc" id="L790">		model.addTreeSelectionListener(new SymbolTableListener());</span>
-<span class="nc" id="L791">		model.addTreeSelectionListener(new CodeHighlightListener());</span>
-<span class="nc" id="L792">		return new JScrollPane(astTreeWidget);</span>
+<span class="nc" id="L816">		astTreeWidget.setCellRenderer(createNoImageTreeCellRenderer());</span>
+<span class="nc" id="L817">		TreeSelectionModel model = astTreeWidget.getSelectionModel();</span>
+<span class="nc" id="L818">		model.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);</span>
+<span class="nc" id="L819">		model.addTreeSelectionListener(new SymbolTableListener());</span>
+<span class="nc" id="L820">		model.addTreeSelectionListener(new CodeHighlightListener());</span>
+<span class="nc" id="L821">		return new JScrollPane(astTreeWidget);</span>
 	}
 
 	private JComponent createXPathResultPanel() {
-<span class="nc" id="L796">		xpathResults.addElement(&quot;No XPath results yet, run an XPath Query first.&quot;);</span>
-<span class="nc" id="L797">		xpathResultList.setBorder(BorderFactory.createLineBorder(Color.black));</span>
-<span class="nc" id="L798">		xpathResultList.setFixedCellWidth(300);</span>
-<span class="nc" id="L799">		xpathResultList.setCellRenderer(new ASTListCellRenderer());</span>
-<span class="nc" id="L800">		xpathResultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
-<span class="nc" id="L801">		xpathResultList.getSelectionModel().addListSelectionListener(new ASTSelectionListener());</span>
-<span class="nc" id="L802">		JScrollPane scrollPane = new JScrollPane();</span>
-<span class="nc" id="L803">		scrollPane.getViewport().setView(xpathResultList);</span>
-<span class="nc" id="L804">		return scrollPane;</span>
+<span class="nc" id="L825">		xpathResults.addElement(&quot;No XPath results yet, run an XPath Query first.&quot;);</span>
+<span class="nc" id="L826">		xpathResultList.setBorder(BorderFactory.createLineBorder(Color.black));</span>
+<span class="nc" id="L827">		xpathResultList.setFixedCellWidth(300);</span>
+<span class="nc" id="L828">		xpathResultList.setCellRenderer(new ASTListCellRenderer());</span>
+<span class="nc" id="L829">		xpathResultList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L830">		xpathResultList.getSelectionModel().addListSelectionListener(new ASTSelectionListener());</span>
+<span class="nc" id="L831">		JScrollPane scrollPane = new JScrollPane();</span>
+<span class="nc" id="L832">		scrollPane.getViewport().setView(xpathResultList);</span>
+<span class="nc" id="L833">		return scrollPane;</span>
 	}
 
 	private JPanel createXPathQueryPanel() {
-<span class="nc" id="L808">		JPanel p = new JPanel();</span>
-<span class="nc" id="L809">		p.setLayout(new BorderLayout());</span>
-<span class="nc" id="L810">		xpathQueryArea.setBorder(BorderFactory.createLineBorder(Color.black));</span>
-<span class="nc" id="L811">		makeTextComponentUndoable(xpathQueryArea);</span>
-<span class="nc" id="L812">		JScrollPane scrollPane = new JScrollPane(xpathQueryArea);</span>
-<span class="nc" id="L813">		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);</span>
-<span class="nc" id="L814">		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);</span>
-<span class="nc" id="L815">		final JButton b = createGoButton();</span>
+<span class="nc" id="L837">		JPanel p = new JPanel();</span>
+<span class="nc" id="L838">		p.setLayout(new BorderLayout());</span>
+<span class="nc" id="L839">		xpathQueryArea.setBorder(BorderFactory.createLineBorder(Color.black));</span>
+<span class="nc" id="L840">		makeTextComponentUndoable(xpathQueryArea);</span>
+<span class="nc" id="L841">		JScrollPane scrollPane = new JScrollPane(xpathQueryArea);</span>
+<span class="nc" id="L842">		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);</span>
+<span class="nc" id="L843">		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);</span>
+<span class="nc" id="L844">		final JButton b = createGoButton();</span>
 
-<span class="nc" id="L817">		JPanel topPanel = new JPanel();</span>
-<span class="nc" id="L818">		topPanel.setLayout(new BorderLayout());</span>
-<span class="nc" id="L819">		topPanel.add(new JLabel(&quot;XPath Query (if any):&quot;), BorderLayout.WEST);</span>
-<span class="nc" id="L820">		topPanel.add(createXPathVersionPanel(), BorderLayout.EAST);</span>
+<span class="nc" id="L846">		JPanel topPanel = new JPanel();</span>
+<span class="nc" id="L847">		topPanel.setLayout(new BorderLayout());</span>
+<span class="nc" id="L848">		topPanel.add(new JLabel(&quot;XPath Query (if any):&quot;), BorderLayout.WEST);</span>
+<span class="nc" id="L849">		topPanel.add(createXPathVersionPanel(), BorderLayout.EAST);</span>
 
-<span class="nc" id="L822">		p.add(topPanel, BorderLayout.NORTH);</span>
-<span class="nc" id="L823">		p.add(scrollPane, BorderLayout.CENTER);</span>
-<span class="nc" id="L824">		p.add(b, BorderLayout.SOUTH);</span>
+<span class="nc" id="L851">		p.add(topPanel, BorderLayout.NORTH);</span>
+<span class="nc" id="L852">		p.add(scrollPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L853">		p.add(b, BorderLayout.SOUTH);</span>
 
-<span class="nc" id="L826">		return p;</span>
+<span class="nc" id="L855">		return p;</span>
 	}
 
 	private JComponent createSymbolTableResultPanel() {
-<span class="nc" id="L830">		symbolTableTreeWidget.setCellRenderer(createNoImageTreeCellRenderer());</span>
-<span class="nc" id="L831">		return new JScrollPane(symbolTableTreeWidget);</span>
+<span class="nc" id="L859">		symbolTableTreeWidget.setCellRenderer(createNoImageTreeCellRenderer());</span>
+<span class="nc" id="L860">		return new JScrollPane(symbolTableTreeWidget);</span>
 	}
 
 	private JPanel createXPathVersionPanel() {
-<span class="nc" id="L835">		JPanel p = new JPanel();</span>
-<span class="nc" id="L836">		p.add(new JLabel(&quot;XPath Version:&quot;));</span>
-<span class="nc bnc" id="L837" title="All 2 branches missed.">		for (Object[] values : XPathRule.VERSION_DESCRIPTOR.choices()) {</span>
-<span class="nc" id="L838">			JRadioButton b = new JRadioButton();</span>
-<span class="nc" id="L839">			b.setText((String) values[0]);</span>
-<span class="nc" id="L840">			b.setActionCommand(b.getText());</span>
-<span class="nc bnc" id="L841" title="All 2 branches missed.">			if (values[0].equals(XPathRule.VERSION_DESCRIPTOR.defaultValue())) {</span>
-<span class="nc" id="L842">				b.setSelected(true);</span>
+<span class="nc" id="L864">		JPanel p = new JPanel();</span>
+<span class="nc" id="L865">		p.add(new JLabel(&quot;XPath Version:&quot;));</span>
+<span class="nc bnc" id="L866" title="All 2 branches missed.">		for (Object[] values : XPathRule.VERSION_DESCRIPTOR.choices()) {</span>
+<span class="nc" id="L867">			JRadioButton b = new JRadioButton();</span>
+<span class="nc" id="L868">			b.setText((String) values[0]);</span>
+<span class="nc" id="L869">			b.setActionCommand(b.getText());</span>
+<span class="nc bnc" id="L870" title="All 2 branches missed.">			if (values[0].equals(XPathRule.VERSION_DESCRIPTOR.defaultValue())) {</span>
+<span class="nc" id="L871">				b.setSelected(true);</span>
 			}
-<span class="nc" id="L844">			xpathVersionButtonGroup.add(b);</span>
-<span class="nc" id="L845">			p.add(b);</span>
+<span class="nc" id="L873">			xpathVersionButtonGroup.add(b);</span>
+<span class="nc" id="L874">			p.add(b);</span>
 		}
-<span class="nc" id="L847">		return p;</span>
+<span class="nc" id="L876">		return p;</span>
 	}
 
 	private JButton createGoButton() {
-<span class="nc" id="L851">		JButton b = new JButton(&quot;Go&quot;);</span>
-<span class="nc" id="L852">		b.setMnemonic('g');</span>
-<span class="nc" id="L853">		b.addActionListener(new ShowListener());</span>
-<span class="nc" id="L854">		b.addActionListener(new XPathListener());</span>
-<span class="nc" id="L855">		b.addActionListener(new DFAListener());</span>
-<span class="nc" id="L856">		b.addActionListener(new ActionListener() {</span>
-			public void actionPerformed(ActionEvent e) {
-<span class="nc" id="L858">				saveSettings();</span>
-<span class="nc" id="L859">			}</span>
+<span class="nc" id="L880">		JButton b = new JButton(&quot;Go&quot;);</span>
+<span class="nc" id="L881">		b.setMnemonic('g');</span>
+<span class="nc" id="L882">		b.addActionListener(new ShowListener());</span>
+<span class="nc" id="L883">		b.addActionListener(new XPathListener());</span>
+<span class="nc" id="L884">		b.addActionListener(new DFAListener());</span>
+<span class="nc" id="L885">		b.addActionListener(new ActionListener() {</span>
+			@Override
+            public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L888">				saveSettings();</span>
+<span class="nc" id="L889">			}</span>
 		});
-<span class="nc" id="L861">		return b;</span>
+<span class="nc" id="L891">		return b;</span>
 	}
 
 	private static void makeTextComponentUndoable(JTextComponent textConponent) {
-<span class="nc" id="L865">		final UndoManager undoManager = new UndoManager();</span>
-<span class="nc" id="L866">		textConponent.getDocument().addUndoableEditListener(new UndoableEditListener() {</span>
-			public void undoableEditHappened(UndoableEditEvent evt) {
-<span class="nc" id="L868">				undoManager.addEdit(evt.getEdit());</span>
-<span class="nc" id="L869">			}</span>
+<span class="nc" id="L895">		final UndoManager undoManager = new UndoManager();</span>
+<span class="nc" id="L896">		textConponent.getDocument().addUndoableEditListener(new UndoableEditListener() {</span>
+			@Override
+            public void undoableEditHappened(UndoableEditEvent evt) {
+<span class="nc" id="L899">				undoManager.addEdit(evt.getEdit());</span>
+<span class="nc" id="L900">			}</span>
 		});
-<span class="nc" id="L871">		ActionMap actionMap = textConponent.getActionMap();</span>
-<span class="nc" id="L872">		InputMap inputMap = textConponent.getInputMap();</span>
-<span class="nc" id="L873">		actionMap.put(&quot;Undo&quot;, new AbstractAction(&quot;Undo&quot;) {</span>
-			public void actionPerformed(ActionEvent evt) {
+<span class="nc" id="L902">		ActionMap actionMap = textConponent.getActionMap();</span>
+<span class="nc" id="L903">		InputMap inputMap = textConponent.getInputMap();</span>
+<span class="nc" id="L904">		actionMap.put(&quot;Undo&quot;, new AbstractAction(&quot;Undo&quot;) {</span>
+			@Override
+            public void actionPerformed(ActionEvent evt) {
 				try {
-<span class="nc bnc" id="L876" title="All 2 branches missed.">					if (undoManager.canUndo()) {</span>
-<span class="nc" id="L877">						undoManager.undo();</span>
+<span class="nc bnc" id="L908" title="All 2 branches missed.">					if (undoManager.canUndo()) {</span>
+<span class="nc" id="L909">						undoManager.undo();</span>
 					}
-<span class="nc" id="L879">				} catch (CannotUndoException e) {</span>
-<span class="nc" id="L880">				}</span>
-<span class="nc" id="L881">			}</span>
+<span class="nc" id="L911">				} catch (CannotUndoException e) {</span>
+<span class="nc" id="L912">				}</span>
+<span class="nc" id="L913">			}</span>
 		});
-<span class="nc" id="L883">		inputMap.put(KeyStroke.getKeyStroke(&quot;control Z&quot;), &quot;Undo&quot;);</span>
+<span class="nc" id="L915">		inputMap.put(KeyStroke.getKeyStroke(&quot;control Z&quot;), &quot;Undo&quot;);</span>
 
-<span class="nc" id="L885">		actionMap.put(&quot;Redo&quot;, new AbstractAction(&quot;Redo&quot;) {</span>
-			public void actionPerformed(ActionEvent evt) {
+<span class="nc" id="L917">		actionMap.put(&quot;Redo&quot;, new AbstractAction(&quot;Redo&quot;) {</span>
+			@Override
+            public void actionPerformed(ActionEvent evt) {
 				try {
-<span class="nc bnc" id="L888" title="All 2 branches missed.">					if (undoManager.canRedo()) {</span>
-<span class="nc" id="L889">						undoManager.redo();</span>
+<span class="nc bnc" id="L921" title="All 2 branches missed.">					if (undoManager.canRedo()) {</span>
+<span class="nc" id="L922">						undoManager.redo();</span>
 					}
-<span class="nc" id="L891">				} catch (CannotRedoException e) {</span>
-<span class="nc" id="L892">				}</span>
-<span class="nc" id="L893">			}</span>
+<span class="nc" id="L924">				} catch (CannotRedoException e) {</span>
+<span class="nc" id="L925">				}</span>
+<span class="nc" id="L926">			}</span>
 		});
-<span class="nc" id="L895">		inputMap.put(KeyStroke.getKeyStroke(&quot;control Y&quot;), &quot;Redo&quot;);</span>
-<span class="nc" id="L896">	}</span>
+<span class="nc" id="L928">		inputMap.put(KeyStroke.getKeyStroke(&quot;control Y&quot;), &quot;Redo&quot;);</span>
+<span class="nc" id="L929">	}</span>
 
 	public static void main(String[] args) {
-<span class="nc" id="L899">		new Designer(args);</span>
-<span class="nc" id="L900">	}</span>
+<span class="nc" id="L932">		new Designer(args);</span>
+<span class="nc" id="L933">	}</span>
 
     final void setCodeEditPaneText(String text) {
-<span class="nc" id="L903">        codeEditorPane.setText(text);</span>
-<span class="nc" id="L904">    }</span>
+<span class="nc" id="L936">        codeEditorPane.setText(text);</span>
+<span class="nc" id="L937">    }</span>
 
     private final String getXmlTreeCode() {
-<span class="nc bnc" id="L907" title="All 4 branches missed.">        if (codeEditorPane.getText() != null &amp;&amp; codeEditorPane.getText().trim().length() &gt; 0) {</span>
-<span class="nc" id="L908">            Node cu = getCompilationUnit();</span>
-<span class="nc" id="L909">            return getXmlTreeCode(cu);</span>
+<span class="nc bnc" id="L940" title="All 4 branches missed.">        if (codeEditorPane.getText() != null &amp;&amp; codeEditorPane.getText().trim().length() &gt; 0) {</span>
+<span class="nc" id="L941">            Node cu = getCompilationUnit();</span>
+<span class="nc" id="L942">            return getXmlTreeCode(cu);</span>
         }
-<span class="nc" id="L911">        return null;</span>
+<span class="nc" id="L944">        return null;</span>
     }
     static final String getXmlTreeCode(Node cu) {
-<span class="fc" id="L914">        String xml = null;</span>
-<span class="pc bpc" id="L915" title="1 of 2 branches missed.">        if (cu != null) {</span>
+<span class="fc" id="L947">        String xml = null;</span>
+<span class="pc bpc" id="L948" title="1 of 2 branches missed.">        if (cu != null) {</span>
             try {
-<span class="fc" id="L917">                xml = getXmlString(cu);</span>
-<span class="nc" id="L918">            } catch (TransformerException e) {</span>
-<span class="nc" id="L919">                e.printStackTrace();</span>
-<span class="nc" id="L920">                xml = &quot;Error trying to construct XML representation&quot;;</span>
-<span class="fc" id="L921">            }</span>
+<span class="fc" id="L950">                xml = getXmlString(cu);</span>
+<span class="nc" id="L951">            } catch (TransformerException e) {</span>
+<span class="nc" id="L952">                e.printStackTrace();</span>
+<span class="nc" id="L953">                xml = &quot;Error trying to construct XML representation&quot;;</span>
+<span class="fc" id="L954">            }</span>
         }
-<span class="fc" id="L923">        return xml;</span>
+<span class="fc" id="L956">        return xml;</span>
     }
 
     private final void copyXmlToClipboard() {
-<span class="nc" id="L927">        String xml = getXmlTreeCode();</span>
-<span class="nc bnc" id="L928" title="All 2 branches missed.">        if (xml != null) {</span>
-<span class="nc" id="L929">            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(xml), this);</span>
+<span class="nc" id="L960">        String xml = getXmlTreeCode();</span>
+<span class="nc bnc" id="L961" title="All 2 branches missed.">        if (xml != null) {</span>
+<span class="nc" id="L962">            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(xml), this);</span>
         }
-<span class="nc" id="L931">    }</span>
+<span class="nc" id="L964">    }</span>
 
 	/**
 	 * Returns an unformatted xml string (without the declaration)
@@ -936,111 +969,109 @@ public class Designer implements ClipboardOwner {
 	 * @throws TransformerException if the XML cannot be converted to a string
 	 */
 	private static String getXmlString(Node node) throws TransformerException {
-<span class="fc" id="L939">		StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L972">		StringWriter writer = new StringWriter();</span>
 
-<span class="fc" id="L941">		Source source = new DOMSource(node.getAsDocument());</span>
-<span class="fc" id="L942">		Result result = new StreamResult(writer);</span>
-<span class="fc" id="L943">		TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
-<span class="fc" id="L944">		Transformer xformer = transformerFactory.newTransformer();</span>
-<span class="fc" id="L945">		xformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
-<span class="fc" id="L946">		xformer.transform(source, result);</span>
+<span class="fc" id="L974">		Source source = new DOMSource(node.getAsDocument());</span>
+<span class="fc" id="L975">		Result result = new StreamResult(writer);</span>
+<span class="fc" id="L976">		TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="fc" id="L977">		Transformer xformer = transformerFactory.newTransformer();</span>
+<span class="fc" id="L978">		xformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="fc" id="L979">		xformer.transform(source, result);</span>
 
-<span class="fc" id="L948">		return writer.toString();</span>
+<span class="fc" id="L981">		return writer.toString();</span>
 	}
 
-	public void lostOwnership(Clipboard clipboard, Transferable contents) {
-<span class="nc" id="L952">	}</span>
-
-<span class="fc" id="L954">	private static final String SETTINGS_FILE_NAME = System.getProperty(&quot;user.home&quot;)</span>
-	+ System.getProperty(&quot;file.separator&quot;) + &quot;.pmd_designer.xml&quot;;
+	@Override
+    public void lostOwnership(Clipboard clipboard, Transferable contents) {
+<span class="nc" id="L986">	}</span>
 
 	private void loadSettings() {
-<span class="nc" id="L958">	    InputStream stream = null;</span>
+<span class="nc" id="L989">	    InputStream stream = null;</span>
 		try {
-<span class="nc" id="L960">			File file = new File(SETTINGS_FILE_NAME);</span>
-<span class="nc bnc" id="L961" title="All 2 branches missed.">			if (file.exists()) {</span>
-<span class="nc" id="L962">				DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
-<span class="nc" id="L963">				stream = new FileInputStream(file);</span>
-<span class="nc" id="L964">				Document document = builder.parse(stream);</span>
-<span class="nc" id="L965">				Element settingsElement = document.getDocumentElement();</span>
-<span class="nc" id="L966">				Element codeElement = (Element) settingsElement.getElementsByTagName(&quot;code&quot;).item(0);</span>
-<span class="nc" id="L967">				Element xpathElement = (Element) settingsElement.getElementsByTagName(&quot;xpath&quot;).item(0);</span>
+<span class="nc" id="L991">			File file = new File(SETTINGS_FILE_NAME);</span>
+<span class="nc bnc" id="L992" title="All 2 branches missed.">			if (file.exists()) {</span>
+<span class="nc" id="L993">				DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+<span class="nc" id="L994">				stream = new FileInputStream(file);</span>
+<span class="nc" id="L995">				Document document = builder.parse(stream);</span>
+<span class="nc" id="L996">				Element settingsElement = document.getDocumentElement();</span>
+<span class="nc" id="L997">				Element codeElement = (Element) settingsElement.getElementsByTagName(&quot;code&quot;).item(0);</span>
+<span class="nc" id="L998">				Element xpathElement = (Element) settingsElement.getElementsByTagName(&quot;xpath&quot;).item(0);</span>
 
-<span class="nc" id="L969">				String code = getTextContext(codeElement);</span>
-<span class="nc" id="L970">				String languageVersion = codeElement.getAttribute(&quot;language-version&quot;);</span>
-<span class="nc" id="L971">				String xpath = getTextContext(xpathElement);</span>
-<span class="nc" id="L972">				String xpathVersion = xpathElement.getAttribute(&quot;version&quot;);</span>
+<span class="nc" id="L1000">				String code = getTextContext(codeElement);</span>
+<span class="nc" id="L1001">				String languageVersion = codeElement.getAttribute(&quot;language-version&quot;);</span>
+<span class="nc" id="L1002">				String xpath = getTextContext(xpathElement);</span>
+<span class="nc" id="L1003">				String xpathVersion = xpathElement.getAttribute(&quot;version&quot;);</span>
 
-<span class="nc" id="L974">				codeEditorPane.setText(code);</span>
-<span class="nc" id="L975">				setLanguageVersion(LanguageRegistry.findLanguageVersionByTerseName(languageVersion));</span>
-<span class="nc" id="L976">				xpathQueryArea.setText(xpath);</span>
-<span class="nc bnc" id="L977" title="All 2 branches missed.">				for (Enumeration&lt;AbstractButton&gt; e = xpathVersionButtonGroup.getElements(); e.hasMoreElements();) {</span>
-<span class="nc" id="L978">					AbstractButton button = e.nextElement();</span>
-<span class="nc bnc" id="L979" title="All 2 branches missed.">					if (xpathVersion.equals(button.getActionCommand())) {</span>
-<span class="nc" id="L980">						button.setSelected(true);</span>
-<span class="nc" id="L981">						break;</span>
+<span class="nc" id="L1005">				codeEditorPane.setText(code);</span>
+<span class="nc" id="L1006">				setLanguageVersion(LanguageRegistry.findLanguageVersionByTerseName(languageVersion));</span>
+<span class="nc" id="L1007">				xpathQueryArea.setText(xpath);</span>
+<span class="nc bnc" id="L1008" title="All 2 branches missed.">				for (Enumeration&lt;AbstractButton&gt; e = xpathVersionButtonGroup.getElements(); e.hasMoreElements();) {</span>
+<span class="nc" id="L1009">					AbstractButton button = e.nextElement();</span>
+<span class="nc bnc" id="L1010" title="All 2 branches missed.">					if (xpathVersion.equals(button.getActionCommand())) {</span>
+<span class="nc" id="L1011">						button.setSelected(true);</span>
+<span class="nc" id="L1012">						break;</span>
 					}
-<span class="nc" id="L983">				}</span>
+<span class="nc" id="L1014">				}</span>
 			}
-<span class="nc" id="L985">		} catch (ParserConfigurationException e) {</span>
-<span class="nc" id="L986">			e.printStackTrace();</span>
-<span class="nc" id="L987">		} catch (IOException e) {</span>
-<span class="nc" id="L988">			e.printStackTrace();</span>
-<span class="nc" id="L989">		} catch (SAXException e) {</span>
-<span class="nc" id="L990">			e.printStackTrace();</span>
+<span class="nc" id="L1016">		} catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L1017">			e.printStackTrace();</span>
+<span class="nc" id="L1018">		} catch (IOException e) {</span>
+<span class="nc" id="L1019">			e.printStackTrace();</span>
+<span class="nc" id="L1020">		} catch (SAXException e) {</span>
+<span class="nc" id="L1021">			e.printStackTrace();</span>
 		} finally {
-<span class="nc" id="L992">		    IOUtils.closeQuietly(stream);</span>
-<span class="nc" id="L993">		}</span>
-<span class="nc" id="L994">	}</span>
+<span class="nc" id="L1023">		    IOUtils.closeQuietly(stream);</span>
+<span class="nc" id="L1024">		}</span>
+<span class="nc" id="L1025">	}</span>
 
 	private void saveSettings() {
 		try {
-<span class="nc" id="L998">			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();</span>
-<span class="nc" id="L999">			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();</span>
-<span class="nc" id="L1000">			Document document = documentBuilder.newDocument();</span>
+<span class="nc" id="L1029">			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L1030">			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();</span>
+<span class="nc" id="L1031">			Document document = documentBuilder.newDocument();</span>
 
-<span class="nc" id="L1002">			Element settingsElement = document.createElement(&quot;settings&quot;);</span>
-<span class="nc" id="L1003">			document.appendChild(settingsElement);</span>
+<span class="nc" id="L1033">			Element settingsElement = document.createElement(&quot;settings&quot;);</span>
+<span class="nc" id="L1034">			document.appendChild(settingsElement);</span>
 
-<span class="nc" id="L1005">			Element codeElement = document.createElement(&quot;code&quot;);</span>
-<span class="nc" id="L1006">			settingsElement.appendChild(codeElement);</span>
-<span class="nc" id="L1007">			codeElement.setAttribute(&quot;language-version&quot;, getLanguageVersion().getTerseName());</span>
-<span class="nc" id="L1008">			codeElement.appendChild(document.createCDATASection(codeEditorPane.getText()));</span>
+<span class="nc" id="L1036">			Element codeElement = document.createElement(&quot;code&quot;);</span>
+<span class="nc" id="L1037">			settingsElement.appendChild(codeElement);</span>
+<span class="nc" id="L1038">			codeElement.setAttribute(&quot;language-version&quot;, getLanguageVersion().getTerseName());</span>
+<span class="nc" id="L1039">			codeElement.appendChild(document.createCDATASection(codeEditorPane.getText()));</span>
 
-<span class="nc" id="L1010">			Element xpathElement = document.createElement(&quot;xpath&quot;);</span>
-<span class="nc" id="L1011">			settingsElement.appendChild(xpathElement);</span>
-<span class="nc" id="L1012">			xpathElement.setAttribute(&quot;version&quot;, xpathVersionButtonGroup.getSelection().getActionCommand());</span>
-<span class="nc" id="L1013">			xpathElement.appendChild(document.createCDATASection(xpathQueryArea.getText()));</span>
+<span class="nc" id="L1041">			Element xpathElement = document.createElement(&quot;xpath&quot;);</span>
+<span class="nc" id="L1042">			settingsElement.appendChild(xpathElement);</span>
+<span class="nc" id="L1043">			xpathElement.setAttribute(&quot;version&quot;, xpathVersionButtonGroup.getSelection().getActionCommand());</span>
+<span class="nc" id="L1044">			xpathElement.appendChild(document.createCDATASection(xpathQueryArea.getText()));</span>
 
-<span class="nc" id="L1015">			TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
-<span class="nc" id="L1016">			Transformer transformer = transformerFactory.newTransformer();</span>
-<span class="nc" id="L1017">			transformer.setOutputProperty(OutputKeys.METHOD, &quot;xml&quot;);</span>
+<span class="nc" id="L1046">			TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="nc" id="L1047">			Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="nc" id="L1048">			transformer.setOutputProperty(OutputKeys.METHOD, &quot;xml&quot;);</span>
 			// This is as close to pretty printing as we'll get using standard Java APIs.
-<span class="nc" id="L1019">			transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
-<span class="nc" id="L1020">			transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;3&quot;);</span>
-<span class="nc" id="L1021">			transformer.setOutputProperty(OutputKeys.ENCODING, &quot;UTF-8&quot;);</span>
+<span class="nc" id="L1050">			transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="nc" id="L1051">			transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;3&quot;);</span>
+<span class="nc" id="L1052">			transformer.setOutputProperty(OutputKeys.ENCODING, &quot;UTF-8&quot;);</span>
 
-<span class="nc" id="L1023">			Source source = new DOMSource(document);</span>
-<span class="nc" id="L1024">			Result result = new StreamResult(new FileWriter(new File(SETTINGS_FILE_NAME)));</span>
-<span class="nc" id="L1025">			transformer.transform(source, result);</span>
-<span class="nc" id="L1026">		} catch (ParserConfigurationException e) {</span>
-<span class="nc" id="L1027">			e.printStackTrace();</span>
-<span class="nc" id="L1028">		} catch (IOException e) {</span>
-<span class="nc" id="L1029">			e.printStackTrace();</span>
-<span class="nc" id="L1030">		} catch (TransformerException e) {</span>
-<span class="nc" id="L1031">			e.printStackTrace();</span>
-<span class="nc" id="L1032">		}</span>
-<span class="nc" id="L1033">	}</span>
+<span class="nc" id="L1054">			Source source = new DOMSource(document);</span>
+<span class="nc" id="L1055">			Result result = new StreamResult(new FileWriter(new File(SETTINGS_FILE_NAME)));</span>
+<span class="nc" id="L1056">			transformer.transform(source, result);</span>
+<span class="nc" id="L1057">		} catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L1058">			e.printStackTrace();</span>
+<span class="nc" id="L1059">		} catch (IOException e) {</span>
+<span class="nc" id="L1060">			e.printStackTrace();</span>
+<span class="nc" id="L1061">		} catch (TransformerException e) {</span>
+<span class="nc" id="L1062">			e.printStackTrace();</span>
+<span class="nc" id="L1063">		}</span>
+<span class="nc" id="L1064">	}</span>
 
 	private String getTextContext(Element element) {
-<span class="nc" id="L1036">		StringBuilder buf = new StringBuilder();</span>
-<span class="nc bnc" id="L1037" title="All 2 branches missed.">		for (int i = 0; i &lt; element.getChildNodes().getLength(); i++) {</span>
-<span class="nc" id="L1038">			org.w3c.dom.Node child = element.getChildNodes().item(i);</span>
-<span class="nc bnc" id="L1039" title="All 2 branches missed.">			if (child instanceof Text) {</span>
-<span class="nc" id="L1040">				buf.append(((Text)child).getData());</span>
+<span class="nc" id="L1067">		StringBuilder buf = new StringBuilder();</span>
+<span class="nc bnc" id="L1068" title="All 2 branches missed.">		for (int i = 0; i &lt; element.getChildNodes().getLength(); i++) {</span>
+<span class="nc" id="L1069">			org.w3c.dom.Node child = element.getChildNodes().item(i);</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">			if (child instanceof Text) {</span>
+<span class="nc" id="L1071">				buf.append(((Text)child).getData());</span>
 			}
 		}
-<span class="nc" id="L1043">		return buf.toString();</span>
+<span class="nc" id="L1074">		return buf.toString();</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -20,8 +20,8 @@ import net.sourceforge.pmd.util.NumericConstants;
  * @author Stuart Turton
  */
 public class NcssObjectCountRule extends AbstractNcssCountRule {
-<span class="fc" id="L23">    private final static String CLASS_NAME =NcssObjectCountRule.class.getName(); </span>
-<span class="fc" id="L24">    private final static Logger LOGGER = Logger.getLogger(NcssObjectCountRule.class.getName()); </span>
+<span class="fc" id="L23">    private static final String CLASS_NAME = NcssObjectCountRule.class.getName();</span>
+<span class="fc" id="L24">    private static final Logger LOGGER = Logger.getLogger(NcssObjectCountRule.class.getName());</span>
 
     /**
      * Count type declarations. This includes Oracle Objects. 
@@ -49,49 +49,50 @@ public class NcssObjectCountRule extends AbstractNcssCountRule {
     /** Override super.visit(PLSQLNode, Object) for ASTProgramUnit nodes,
      *only adding DataPoints for Schema-level Functions and Procedures 
      */
+    @Override
     public Object visit(ASTProgramUnit node, Object data) {
-<span class="fc" id="L53">	int numNodes = 0;</span>
+<span class="fc" id="L54">	int numNodes = 0;</span>
 
-<span class="fc bfc" id="L55" title="All 2 branches covered.">	for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L56">		PLSQLNode n = (PLSQLNode) node.jjtGetChild(i);</span>
-<span class="fc" id="L57">	    Integer treeSize = (Integer) n.jjtAccept(this, data);</span>
-<span class="fc" id="L58">	    numNodes += treeSize.intValue();</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">	for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L57">		PLSQLNode n = (PLSQLNode) node.jjtGetChild(i);</span>
+<span class="fc" id="L58">	    Integer treeSize = (Integer) n.jjtAccept(this, data);</span>
+<span class="fc" id="L59">	    numNodes += treeSize.intValue();</span>
 	}
 
         //This override is necessary because only Schema-level OracleObject 
         //instances should result in DataPoints 
-<span class="pc bpc" id="L63" title="2 of 4 branches missed.">	if (node instanceof OracleObject </span>
+<span class="pc bpc" id="L64" title="2 of 4 branches missed.">	if (node instanceof OracleObject </span>
             &amp;&amp; node.jjtGetParent() instanceof ASTGlobal
            ) {
           
 	    // Add 1 to account for base node
-<span class="nc" id="L68">	    numNodes++;</span>
-<span class="nc" id="L69">	    DataPoint point = new DataPoint();</span>
-<span class="nc" id="L70">	    point.setNode(node);</span>
-<span class="nc" id="L71">	    point.setScore(1.0 * numNodes);</span>
-<span class="nc" id="L72">	    point.setMessage(getMessage());</span>
-<span class="nc" id="L73">	    addDataPoint(point);</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L75">            LOGGER.fine(&quot;Running score is &quot; +  point.getScore());</span>
+<span class="nc" id="L69">	    numNodes++;</span>
+<span class="nc" id="L70">	    DataPoint point = new DataPoint();</span>
+<span class="nc" id="L71">	    point.setNode(node);</span>
+<span class="nc" id="L72">	    point.setScore(1.0 * numNodes);</span>
+<span class="nc" id="L73">	    point.setMessage(getMessage());</span>
+<span class="nc" id="L74">	    addDataPoint(point);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L76">            LOGGER.fine(&quot;Running score is &quot; +  point.getScore());</span>
 	    }
 	}
 
-<span class="fc" id="L79">	return Integer.valueOf(numNodes);</span>
+<span class="fc" id="L80">	return Integer.valueOf(numNodes);</span>
     }
 
     @Override
     public Object visit(ASTFieldDeclaration node, Object data) {
-<span class="nc" id="L84">        LOGGER.entering(CLASS_NAME,&quot;visit(ASTFieldDeclaration)&quot;);</span>
-<span class="nc" id="L85">	return NumericConstants.ONE;</span>
+<span class="nc" id="L85">        LOGGER.entering(CLASS_NAME,&quot;visit(ASTFieldDeclaration)&quot;);</span>
+<span class="nc" id="L86">	return NumericConstants.ONE;</span>
     }
 
     @Override
     public Object[] getViolationParameters(DataPoint point) {
-<span class="fc" id="L90">        LOGGER.entering(CLASS_NAME,&quot;visit(getViolationParameters)&quot;);</span>
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L92">        LOGGER.fine(&quot;Node Count ==&quot; + point.getScore() );</span>
+<span class="fc" id="L91">        LOGGER.entering(CLASS_NAME,&quot;visit(getViolationParameters)&quot;);</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L93">        LOGGER.fine(&quot;Node Count ==&quot; + point.getScore() );</span>
         }
-<span class="fc" id="L94">	return new String[] { String.valueOf((int) point.getScore()) };</span>
+<span class="fc" id="L95">	return new String[] { String.valueOf((int) point.getScore()) };</span>
     }
 
 }

@@ -76,9 +76,9 @@ public class DFAPanel extends JComponent implements ListSelectionListener {
 
 	private String[] deriveAccessLabels(List&lt;DataFlowNode&gt; flow) {
 
-<span class="nc bnc" id="L79" title="All 4 branches missed.">	    if (flow == null || flow.isEmpty()) {</span>
-<span class="nc" id="L80">		return StringUtil.EMPTY_STRINGS;</span>
-	    }
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if (flow == null || flow.isEmpty()) {</span>
+<span class="nc" id="L80">            return StringUtil.getEmptyStrings();</span>
+        }
 
 <span class="nc" id="L83">	    String[] labels = new String[flow.size()];</span>
 
@@ -200,121 +200,116 @@ public class DFAPanel extends JComponent implements ListSelectionListener {
 	    }
 <span class="nc" id="L201">	}</span>
 
-	private void drawMyLine(int index1, int index2, Graphics g) {
-<span class="nc" id="L204">	    int y1 = this.computeDrawPos(index1);</span>
-<span class="nc" id="L205">	    int y2 = this.computeDrawPos(index2);</span>
+        private void drawMyLine(int index1, int index2, Graphics g) {
+<span class="nc" id="L204">            int y1 = this.computeDrawPos(index1);</span>
+<span class="nc" id="L205">            int y2 = this.computeDrawPos(index2);</span>
 
-	    //int arrow = 6;
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (index1 &lt; index2) {</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">                if (index2 - index1 == 1) {</span>
+<span class="nc" id="L209">                    x += NODE_RADIUS;</span>
+<span class="nc" id="L210">                    g.drawLine(x, y1 + NODE_DIAMETER, x, y2);</span>
+<span class="nc" id="L211">                    drawArrow(g, x, y2, SwingConstants.SOUTH);</span>
+<span class="nc" id="L212">                    x -= NODE_RADIUS;</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">                } else if (index2 - index1 &gt; 1) {</span>
+<span class="nc" id="L214">                    y1 = y1 + NODE_RADIUS;</span>
+<span class="nc" id="L215">                    y2 = y2 + NODE_RADIUS;</span>
+<span class="nc" id="L216">                    int n = (index2 - index1 - 2) * 10 + 10;</span>
+<span class="nc" id="L217">                    g.drawLine(x, y1, x - n, y1);</span>
+<span class="nc" id="L218">                    g.drawLine(x - n, y1, x - n, y2);</span>
+<span class="nc" id="L219">                    g.drawLine(x - n, y2, x, y2);</span>
+<span class="nc" id="L220">                    drawArrow(g, x, y2, SwingConstants.EAST);</span>
+<span class="nc" id="L221">                }</span>
 
-<span class="nc bnc" id="L209" title="All 2 branches missed.">	    if (index1 &lt; index2) {</span>
-<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (index2 - index1 == 1) {</span>
-<span class="nc" id="L211">		    x += NODE_RADIUS;</span>
-<span class="nc" id="L212">		    g.drawLine(x, y1 + NODE_DIAMETER, x, y2);</span>
-		    //  g.fillRect(x - arrow, y2 - arrow, arrow * 2, arrow * 2);
-<span class="nc" id="L214">		    drawArrow(g, x, y2, SwingConstants.SOUTH);</span>
-<span class="nc" id="L215">		    x -= NODE_RADIUS;</span>
-<span class="nc bnc" id="L216" title="All 2 branches missed.">		} else if (index2 - index1 &gt; 1) {</span>
-<span class="nc" id="L217">		    y1 = y1 + NODE_RADIUS;</span>
-<span class="nc" id="L218">		    y2 = y2 + NODE_RADIUS;</span>
-<span class="nc" id="L219">		    int n = (index2 - index1 - 2) * 10 + 10;</span>
-<span class="nc" id="L220">		    g.drawLine(x, y1, x - n, y1);</span>
-<span class="nc" id="L221">		    g.drawLine(x - n, y1, x - n, y2);</span>
-<span class="nc" id="L222">		    g.drawLine(x - n, y2, x, y2);</span>
-		    //   g.fillRect(x - arrow, y2 - arrow, arrow * 2, arrow * 2);
-<span class="nc" id="L224">		    drawArrow(g, x, y2, SwingConstants.EAST);</span>
-<span class="nc" id="L225">		}</span>
-
-	    } else {
-<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (index1 - index2 &gt; 1) {</span>
-<span class="nc" id="L229">		    y1 = y1 + NODE_RADIUS;</span>
-<span class="nc" id="L230">		    y2 = y2 + NODE_RADIUS;</span>
-<span class="nc" id="L231">		    x = x + NODE_DIAMETER;</span>
-<span class="nc" id="L232">		    int n = (index1 - index2 - 2) * 10 + 10;</span>
-<span class="nc" id="L233">		    g.drawLine(x, y1, x + n, y1);</span>
-<span class="nc" id="L234">		    g.drawLine(x + n, y1, x + n, y2);</span>
-<span class="nc" id="L235">		    g.drawLine(x + n, y2, x, y2);</span>
-		    //      g.fillRect(x - arrow, y2 - arrow, arrow * 2, arrow * 2);
-<span class="nc" id="L237">		    drawArrow(g, x, y2, SwingConstants.WEST);</span>
-<span class="nc" id="L238">		    x = x - NODE_DIAMETER;</span>
-<span class="nc bnc" id="L239" title="All 2 branches missed.">		} else if (index1 - index2 == 1) {</span>
-<span class="nc" id="L240">		    y2 = y2 + NODE_DIAMETER;</span>
-<span class="nc" id="L241">		    g.drawLine(x + NODE_RADIUS, y2, x + NODE_RADIUS, y1);</span>
-		    //   g.fillRect(x + NODE_RADIUS - arrow, y2 - arrow, arrow * 2, arrow * 2);
-<span class="nc" id="L243">		    drawArrow(g, x + NODE_RADIUS, y2, SwingConstants.NORTH);</span>
-		}
-	    }
-<span class="nc" id="L246">	}</span>
+            } else {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                if (index1 - index2 &gt; 1) {</span>
+<span class="nc" id="L225">                    y1 = y1 + NODE_RADIUS;</span>
+<span class="nc" id="L226">                    y2 = y2 + NODE_RADIUS;</span>
+<span class="nc" id="L227">                    x = x + NODE_DIAMETER;</span>
+<span class="nc" id="L228">                    int n = (index1 - index2 - 2) * 10 + 10;</span>
+<span class="nc" id="L229">                    g.drawLine(x, y1, x + n, y1);</span>
+<span class="nc" id="L230">                    g.drawLine(x + n, y1, x + n, y2);</span>
+<span class="nc" id="L231">                    g.drawLine(x + n, y2, x, y2);</span>
+<span class="nc" id="L232">                    drawArrow(g, x, y2, SwingConstants.WEST);</span>
+<span class="nc" id="L233">                    x = x - NODE_DIAMETER;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                } else if (index1 - index2 == 1) {</span>
+<span class="nc" id="L235">                    y2 = y2 + NODE_DIAMETER;</span>
+<span class="nc" id="L236">                    g.drawLine(x + NODE_RADIUS, y2, x + NODE_RADIUS, y1);</span>
+<span class="nc" id="L237">                    drawArrow(g, x + NODE_RADIUS, y2, SwingConstants.NORTH);</span>
+                }
+            }
+<span class="nc" id="L240">        }</span>
     }
 
     private static class ElementWrapper {
 	private DFAGraphMethod node;
 
-<span class="nc" id="L252">	public ElementWrapper(DFAGraphMethod node) {</span>
-<span class="nc" id="L253">	    this.node = node;</span>
-<span class="nc" id="L254">	}</span>
+<span class="nc" id="L246">	public ElementWrapper(DFAGraphMethod node) {</span>
+<span class="nc" id="L247">	    this.node = node;</span>
+<span class="nc" id="L248">	}</span>
 
 	public DFAGraphMethod getNode() {
-<span class="nc" id="L257">	    return node;</span>
+<span class="nc" id="L251">	    return node;</span>
 	}
 
 	@Override
 	public String toString() {
-<span class="nc" id="L262">	    return node.getName();</span>
+<span class="nc" id="L256">	    return node.getName();</span>
 	}
     }
 
     private DFACanvas dfaCanvas;
     private JList nodeList;
-<span class="nc" id="L268">    private DefaultListModel nodes = new DefaultListModel();</span>
+<span class="nc" id="L262">    private DefaultListModel nodes = new DefaultListModel();</span>
 
     public DFAPanel() {
-<span class="nc" id="L271">	super();</span>
+<span class="nc" id="L265">	super();</span>
 
-<span class="nc" id="L273">	setLayout(new BorderLayout());</span>
-<span class="nc" id="L274">	JPanel leftPanel = new JPanel();</span>
+<span class="nc" id="L267">	setLayout(new BorderLayout());</span>
+<span class="nc" id="L268">	JPanel leftPanel = new JPanel();</span>
 
-<span class="nc" id="L276">	nodeList = new JList(nodes);</span>
-<span class="nc" id="L277">	nodeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
-<span class="nc" id="L278">	nodeList.setFixedCellWidth(150);</span>
-<span class="nc" id="L279">	nodeList.setBorder(BorderFactory.createLineBorder(Color.black));</span>
-<span class="nc" id="L280">	nodeList.addListSelectionListener(this);</span>
+<span class="nc" id="L270">	nodeList = new JList(nodes);</span>
+<span class="nc" id="L271">	nodeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L272">	nodeList.setFixedCellWidth(150);</span>
+<span class="nc" id="L273">	nodeList.setBorder(BorderFactory.createLineBorder(Color.black));</span>
+<span class="nc" id="L274">	nodeList.addListSelectionListener(this);</span>
 
-<span class="nc" id="L282">	leftPanel.add(nodeList);</span>
-<span class="nc" id="L283">	add(leftPanel, BorderLayout.WEST);</span>
+<span class="nc" id="L276">	leftPanel.add(nodeList);</span>
+<span class="nc" id="L277">	add(leftPanel, BorderLayout.WEST);</span>
 
-<span class="nc" id="L285">	dfaCanvas = new DFACanvas();</span>
-<span class="nc" id="L286">	dfaCanvas.setBackground(Color.WHITE);</span>
-<span class="nc" id="L287">	dfaCanvas.setPreferredSize(new Dimension(900, 1400));</span>
+<span class="nc" id="L279">	dfaCanvas = new DFACanvas();</span>
+<span class="nc" id="L280">	dfaCanvas.setBackground(Color.WHITE);</span>
+<span class="nc" id="L281">	dfaCanvas.setPreferredSize(new Dimension(900, 1400));</span>
 
-<span class="nc" id="L289">	JScrollPane scrollPane = new JScrollPane(dfaCanvas);</span>
+<span class="nc" id="L283">	JScrollPane scrollPane = new JScrollPane(dfaCanvas);</span>
 
-<span class="nc" id="L291">	add(scrollPane, BorderLayout.CENTER);</span>
-<span class="nc" id="L292">    }</span>
+<span class="nc" id="L285">	add(scrollPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L286">    }</span>
 
+    @Override
     public void valueChanged(ListSelectionEvent event) {
-<span class="nc" id="L295">	ElementWrapper wrapper = null;</span>
-<span class="nc bnc" id="L296" title="All 2 branches missed.">	if (nodes.size() == 1) {</span>
-<span class="nc" id="L297">	    wrapper = (ElementWrapper) nodes.get(0);</span>
-<span class="nc bnc" id="L298" title="All 2 branches missed.">	} else if (nodes.isEmpty()) {</span>
-<span class="nc" id="L299">	    return;</span>
-<span class="nc bnc" id="L300" title="All 2 branches missed.">	} else if (nodeList.getSelectedValue() == null) {</span>
-<span class="nc" id="L301">	    wrapper = (ElementWrapper) nodes.get(0);</span>
-	} else {
-<span class="nc" id="L303">	    wrapper = (ElementWrapper) nodeList.getSelectedValue();</span>
-	}
-<span class="nc" id="L305">	dfaCanvas.setMethod(wrapper.getNode());</span>
-<span class="nc" id="L306">	dfaCanvas.repaint();</span>
-<span class="nc" id="L307">    }</span>
+<span class="nc" id="L290">        ElementWrapper wrapper = null;</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (nodes.size() == 1) {</span>
+<span class="nc" id="L292">            wrapper = (ElementWrapper) nodes.get(0);</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        } else if (nodes.isEmpty()) {</span>
+<span class="nc" id="L294">            return;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        } else if (nodeList.getSelectedValue() == null) {</span>
+<span class="nc" id="L296">            wrapper = (ElementWrapper) nodes.get(0);</span>
+        } else {
+<span class="nc" id="L298">            wrapper = (ElementWrapper) nodeList.getSelectedValue();</span>
+        }
+<span class="nc" id="L300">        dfaCanvas.setMethod(wrapper.getNode());</span>
+<span class="nc" id="L301">        dfaCanvas.repaint();</span>
+<span class="nc" id="L302">    }</span>
 
     public void resetTo(List&lt;DFAGraphMethod&gt; newNodes, LineGetter lines) {
-<span class="nc" id="L310">	dfaCanvas.setCode(lines);</span>
-<span class="nc" id="L311">	nodes.clear();</span>
-<span class="nc bnc" id="L312" title="All 2 branches missed.">	for (DFAGraphMethod md : newNodes) {</span>
-<span class="nc" id="L313">	    nodes.addElement(new ElementWrapper(md));</span>
-<span class="nc" id="L314">	}</span>
-<span class="nc" id="L315">	nodeList.setSelectedIndex(0);</span>
-<span class="nc" id="L316">	dfaCanvas.setMethod(newNodes.get(0));</span>
-<span class="nc" id="L317">	repaint();</span>
-<span class="nc" id="L318">    }</span>
+<span class="nc" id="L305">	dfaCanvas.setCode(lines);</span>
+<span class="nc" id="L306">	nodes.clear();</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">	for (DFAGraphMethod md : newNodes) {</span>
+<span class="nc" id="L308">	    nodes.addElement(new ElementWrapper(md));</span>
+<span class="nc" id="L309">	}</span>
+<span class="nc" id="L310">	nodeList.setSelectedIndex(0);</span>
+<span class="nc" id="L311">	dfaCanvas.setMethod(newNodes.get(0));</span>
+<span class="nc" id="L312">	repaint();</span>
+<span class="nc" id="L313">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

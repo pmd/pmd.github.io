@@ -26,11 +26,11 @@ public class JavaNameOccurrence implements NameOccurrence {
     private boolean isMethodOrConstructorInvocation;
     private int argumentCount;
 
-    private final static String THIS = &quot;this&quot;;
-    private final static String SUPER = &quot;super&quot;;
+    private static final String THIS = &quot;this&quot;;
+    private static final String SUPER = &quot;super&quot;;
 
-    private final static String THIS_DOT = &quot;this.&quot;;
-    private final static String SUPER_DOT = &quot;super.&quot;;
+    private static final String THIS_DOT = &quot;this.&quot;;
+    private static final String SUPER_DOT = &quot;super.&quot;;
 
 <span class="fc" id="L35">    public JavaNameOccurrence(JavaNode location, String image) {</span>
 <span class="fc" id="L36">        this.location = location;</span>
@@ -68,70 +68,71 @@ public class JavaNameOccurrence implements NameOccurrence {
 <span class="fc bfc" id="L68" title="All 2 branches covered.">        return qualifiedName != null;</span>
     }
 
+    @Override
     public JavaNode getLocation() {
-<span class="fc" id="L72">        return location;</span>
+<span class="fc" id="L73">        return location;</span>
     }
 
     public boolean isOnRightHandSide() {
-<span class="fc" id="L76">	Node node = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L77" title="1 of 4 branches missed.">        return node instanceof ASTExpression &amp;&amp; node.jjtGetNumChildren() == 3;</span>
+<span class="fc" id="L77">	Node node = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L78" title="1 of 4 branches missed.">        return node instanceof ASTExpression &amp;&amp; node.jjtGetNumChildren() == 3;</span>
     }
 
 
     public boolean isOnLeftHandSide() {
         // I detest this method with every atom of my being
 	Node primaryExpression;
-<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (location.jjtGetParent() instanceof ASTPrimaryExpression) {</span>
-<span class="fc" id="L85">            primaryExpression = location.jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        } else if (location.jjtGetParent().jjtGetParent() instanceof ASTPrimaryExpression) {</span>
-<span class="fc" id="L87">            primaryExpression = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (location.jjtGetParent() instanceof ASTPrimaryExpression) {</span>
+<span class="fc" id="L86">            primaryExpression = location.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        } else if (location.jjtGetParent().jjtGetParent() instanceof ASTPrimaryExpression) {</span>
+<span class="fc" id="L88">            primaryExpression = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
         } else {
-<span class="nc" id="L89">            throw new RuntimeException(&quot;Found a NameOccurrence that didn't have an ASTPrimary Expression as parent or grandparent.  Parent = &quot; + location.jjtGetParent() + &quot; and grandparent = &quot; + location.jjtGetParent().jjtGetParent());</span>
+<span class="nc" id="L90">            throw new RuntimeException(&quot;Found a NameOccurrence that didn't have an ASTPrimary Expression as parent or grandparent.  Parent = &quot; + location.jjtGetParent() + &quot; and grandparent = &quot; + location.jjtGetParent().jjtGetParent());</span>
         }
 
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (isStandAlonePostfix(primaryExpression)) {</span>
-<span class="fc" id="L93">            return true;</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (isStandAlonePostfix(primaryExpression)) {</span>
+<span class="fc" id="L94">            return true;</span>
         }
 
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (primaryExpression.jjtGetNumChildren() &lt;= 1) {</span>
-<span class="fc" id="L97">            return false;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (primaryExpression.jjtGetNumChildren() &lt;= 1) {</span>
+<span class="fc" id="L98">            return false;</span>
         }
 
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (!(primaryExpression.jjtGetChild(1) instanceof ASTAssignmentOperator)) {</span>
-<span class="fc" id="L101">            return false;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!(primaryExpression.jjtGetChild(1) instanceof ASTAssignmentOperator)) {</span>
+<span class="fc" id="L102">            return false;</span>
         }
 
-<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (isPartOfQualifiedName() /* or is an array type */) {</span>
-<span class="fc" id="L105">            return false;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (isPartOfQualifiedName() /* or is an array type */) {</span>
+<span class="fc" id="L106">            return false;</span>
         }
 
-<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (isCompoundAssignment(primaryExpression)) {</span>
-<span class="fc" id="L109">            return false;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (isCompoundAssignment(primaryExpression)) {</span>
+<span class="fc" id="L110">            return false;</span>
         }
 
-<span class="fc" id="L112">        return true;</span>
+<span class="fc" id="L113">        return true;</span>
     }
 
     private boolean isCompoundAssignment(Node primaryExpression) {
-<span class="fc" id="L116">        return ((ASTAssignmentOperator) primaryExpression.jjtGetChild(1)).isCompound();</span>
+<span class="fc" id="L117">        return ((ASTAssignmentOperator) primaryExpression.jjtGetChild(1)).isCompound();</span>
     }
 
     private boolean isStandAlonePostfix(Node primaryExpression) {
-<span class="fc bfc" id="L120" title="All 4 branches covered.">        if (!(primaryExpression instanceof ASTPostfixExpression) || !(primaryExpression.jjtGetParent() instanceof ASTStatementExpression)) {</span>
-<span class="fc" id="L121">            return false;</span>
+<span class="fc bfc" id="L121" title="All 4 branches covered.">        if (!(primaryExpression instanceof ASTPostfixExpression) || !(primaryExpression.jjtGetParent() instanceof ASTStatementExpression)) {</span>
+<span class="fc" id="L122">            return false;</span>
         }
 
-<span class="fc" id="L124">        ASTPrimaryPrefix pf = (ASTPrimaryPrefix) ((ASTPrimaryExpression) primaryExpression.jjtGetChild(0)).jjtGetChild(0);</span>
-<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (pf.usesThisModifier()) {</span>
-<span class="fc" id="L126">            return true;</span>
+<span class="fc" id="L125">        ASTPrimaryPrefix pf = (ASTPrimaryPrefix) ((ASTPrimaryExpression) primaryExpression.jjtGetChild(0)).jjtGetChild(0);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (pf.usesThisModifier()) {</span>
+<span class="fc" id="L127">            return true;</span>
         }
 
-<span class="fc" id="L129">        return thirdChildHasDottedName(primaryExpression);</span>
+<span class="fc" id="L130">        return thirdChildHasDottedName(primaryExpression);</span>
     }
 
     private boolean thirdChildHasDottedName(Node primaryExpression) {
-<span class="fc" id="L133">        Node thirdChild = primaryExpression.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
-<span class="pc bpc" id="L134" title="1 of 4 branches missed.">        return thirdChild instanceof ASTName &amp;&amp; ((ASTName) thirdChild).getImage().indexOf('.') == -1;</span>
+<span class="fc" id="L134">        Node thirdChild = primaryExpression.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">        return thirdChild instanceof ASTName &amp;&amp; ((ASTName) thirdChild).getImage().indexOf('.') == -1;</span>
     }
 
     /**
@@ -144,44 +145,44 @@ public class JavaNameOccurrence implements NameOccurrence {
      */
     @SuppressWarnings(&quot;PMD.AvoidBranchingStatementAsLastInLoop&quot;)
     public boolean isSelfAssignment() {
-<span class="fc" id="L147">        Node l = location;</span>
+<span class="fc" id="L148">        Node l = location;</span>
         while (true) {
-<span class="fc" id="L149">            Node p = l.jjtGetParent();</span>
-<span class="fc" id="L150">            Node gp = p.jjtGetParent();</span>
-<span class="fc" id="L151">            Node node = gp.jjtGetParent();</span>
-<span class="fc bfc" id="L152" title="All 6 branches covered.">            if (node instanceof ASTPreDecrementExpression || node instanceof ASTPreIncrementExpression || node instanceof ASTPostfixExpression) {</span>
-<span class="fc" id="L153">                return true;</span>
+<span class="fc" id="L150">            Node p = l.jjtGetParent();</span>
+<span class="fc" id="L151">            Node gp = p.jjtGetParent();</span>
+<span class="fc" id="L152">            Node node = gp.jjtGetParent();</span>
+<span class="fc bfc" id="L153" title="All 6 branches covered.">            if (node instanceof ASTPreDecrementExpression || node instanceof ASTPreIncrementExpression || node instanceof ASTPostfixExpression) {</span>
+<span class="fc" id="L154">                return true;</span>
             }
 
-<span class="fc bfc" id="L156" title="All 2 branches covered.">            if (hasAssignmentOperator(gp)) {</span>
-<span class="fc" id="L157">                return isCompoundAssignment(gp);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if (hasAssignmentOperator(gp)) {</span>
+<span class="fc" id="L158">                return isCompoundAssignment(gp);</span>
             }
 
-<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (hasAssignmentOperator(node)) {</span>
-<span class="fc" id="L161">                return isCompoundAssignment(node);</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (hasAssignmentOperator(node)) {</span>
+<span class="fc" id="L162">                return isCompoundAssignment(node);</span>
             }
 
             // deal with extra parenthesis: &quot;(i)++&quot;
-<span class="pc bpc" id="L165" title="4 of 16 branches missed.">            if (p instanceof ASTPrimaryPrefix &amp;&amp; p.jjtGetNumChildren() == 1 &amp;&amp;</span>
+<span class="pc bpc" id="L166" title="4 of 16 branches missed.">            if (p instanceof ASTPrimaryPrefix &amp;&amp; p.jjtGetNumChildren() == 1 &amp;&amp;</span>
                     gp instanceof ASTPrimaryExpression &amp;&amp; gp.jjtGetNumChildren() == 1&amp;&amp;
                     node instanceof ASTExpression &amp;&amp; node.jjtGetNumChildren() == 1 &amp;&amp;
                     node.jjtGetParent() instanceof ASTPrimaryPrefix &amp;&amp; node.jjtGetParent().jjtGetNumChildren() == 1) {
-<span class="fc" id="L169">                l = node;</span>
-<span class="fc" id="L170">                continue;</span>
+<span class="fc" id="L170">                l = node;</span>
+<span class="fc" id="L171">                continue;</span>
             }
 
             // catch this.i++ or ++this.i
-<span class="pc bpc" id="L174" title="2 of 6 branches missed.">            return gp instanceof ASTPreDecrementExpression || gp instanceof ASTPreIncrementExpression || gp instanceof ASTPostfixExpression;</span>
+<span class="pc bpc" id="L175" title="2 of 6 branches missed.">            return gp instanceof ASTPreDecrementExpression || gp instanceof ASTPreIncrementExpression || gp instanceof ASTPostfixExpression;</span>
         }
     }
 
     private boolean hasAssignmentOperator(Node node) {
-<span class="fc bfc" id="L179" title="All 4 branches covered.">        if (node instanceof ASTStatementExpression || node instanceof ASTExpression) {</span>
-<span class="pc bpc" id="L180" title="1 of 4 branches missed.">            if (node.jjtGetNumChildren() &gt;= 2 &amp;&amp; node.jjtGetChild(1) instanceof ASTAssignmentOperator) {</span>
-<span class="fc" id="L181">                return true;</span>
+<span class="fc bfc" id="L180" title="All 4 branches covered.">        if (node instanceof ASTStatementExpression || node instanceof ASTExpression) {</span>
+<span class="pc bpc" id="L181" title="1 of 4 branches missed.">            if (node.jjtGetNumChildren() &gt;= 2 &amp;&amp; node.jjtGetChild(1) instanceof ASTAssignmentOperator) {</span>
+<span class="fc" id="L182">                return true;</span>
             }
         }
-<span class="fc" id="L184">        return false;</span>
+<span class="fc" id="L185">        return false;</span>
     }
 
     /**
@@ -190,7 +191,7 @@ public class JavaNameOccurrence implements NameOccurrence {
      * @return return true if image equal to 'this' or 'super'.
      */
     public boolean isThisOrSuper() {
-<span class="fc bfc" id="L193" title="All 4 branches covered.">        return THIS.equals(image) || SUPER.equals(image);</span>
+<span class="fc bfc" id="L194" title="All 4 branches covered.">        return THIS.equals(image) || SUPER.equals(image);</span>
     }
 
     /**
@@ -199,38 +200,39 @@ public class JavaNameOccurrence implements NameOccurrence {
      * @return true, if keyword is used, false otherwise.
      */
     public boolean useThisOrSuper() {
-<span class="fc" id="L202">		Node node = location.jjtGetParent();</span>
-<span class="fc bfc" id="L203" title="All 2 branches covered.">		if ( node instanceof ASTPrimaryExpression ) {</span>
-<span class="fc" id="L204">			ASTPrimaryExpression primaryExpression = (ASTPrimaryExpression)node;</span>
-<span class="fc" id="L205">			ASTPrimaryPrefix prefix = (ASTPrimaryPrefix) primaryExpression.jjtGetChild(0);</span>
-<span class="pc bpc" id="L206" title="1 of 2 branches missed.">			if ( prefix != null ) {</span>
-<span class="pc bpc" id="L207" title="1 of 4 branches missed.">			    return prefix.usesSuperModifier() || prefix.usesThisModifier();</span>
+<span class="fc" id="L203">		Node node = location.jjtGetParent();</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">		if ( node instanceof ASTPrimaryExpression ) {</span>
+<span class="nc" id="L205">			ASTPrimaryExpression primaryExpression = (ASTPrimaryExpression)node;</span>
+<span class="nc" id="L206">			ASTPrimaryPrefix prefix = (ASTPrimaryPrefix) primaryExpression.jjtGetChild(0);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if ( prefix != null ) {</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">			    return prefix.usesSuperModifier() || prefix.usesThisModifier();</span>
 			}
 		}
-<span class="pc bpc" id="L210" title="2 of 4 branches missed.">    	return image.startsWith(THIS_DOT) || image.startsWith(SUPER_DOT);</span>
+<span class="pc bpc" id="L211" title="2 of 4 branches missed.">    	return image.startsWith(THIS_DOT) || image.startsWith(SUPER_DOT);</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L215" title="1 of 2 branches missed.">    	if (o instanceof JavaNameOccurrence) {</span>
-<span class="fc" id="L216">    		JavaNameOccurrence n = (JavaNameOccurrence) o;</span>
-<span class="fc" id="L217">    		return n.getImage().equals(getImage());</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">    	if (o instanceof JavaNameOccurrence) {</span>
+<span class="fc" id="L217">    		JavaNameOccurrence n = (JavaNameOccurrence) o;</span>
+<span class="fc" id="L218">    		return n.getImage().equals(getImage());</span>
     		}
-<span class="nc" id="L219">    	return false;</span>
+<span class="nc" id="L220">    	return false;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L224">        return getImage().hashCode();</span>
+<span class="fc" id="L225">        return getImage().hashCode();</span>
     }
 
+    @Override
     public String getImage() {
-<span class="fc" id="L228">        return image;</span>
+<span class="fc" id="L230">        return image;</span>
     }
 
     @Override
     public String toString() {
-<span class="nc bnc" id="L233" title="All 2 branches missed.">        return getImage() + &quot;:&quot; + location.getBeginLine() + &quot;:&quot; + location.getClass() + (this.isMethodOrConstructorInvocation() ? &quot;(method call)&quot; : &quot;&quot;);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        return getImage() + &quot;:&quot; + location.getBeginLine() + &quot;:&quot; + location.getClass() + (this.isMethodOrConstructorInvocation() ? &quot;(method call)&quot; : &quot;&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
