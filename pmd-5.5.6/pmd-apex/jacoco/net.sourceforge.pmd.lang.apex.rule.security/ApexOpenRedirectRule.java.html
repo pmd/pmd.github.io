@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexOpenRedirectRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexOpenRedirectRule.java</span></div><h1>ApexOpenRedirectRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTAssignmentExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTBinaryExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTField;
+import net.sourceforge.pmd.lang.apex.ast.ASTLiteralExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
+import net.sourceforge.pmd.lang.apex.ast.ASTNewObjectExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
+import net.sourceforge.pmd.lang.apex.ast.AbstractApexNode;
+import net.sourceforge.pmd.lang.apex.ast.ApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+import apex.jorje.data.ast.Identifier;
+import apex.jorje.data.ast.TypeRef.ClassTypeRef;
+import apex.jorje.semantic.symbol.member.variable.StandardFieldInfo;
+
+/**
+ * Looking for potential Open redirect via PageReference variable input
+ * 
+ * @author sergey.gorbaty
+ */
+public class ApexOpenRedirectRule extends AbstractApexRule {
+    private static final String PAGEREFERENCE = &quot;PageReference&quot;;
+<span class="fc" id="L35">    private final Set&lt;String&gt; listOfStringLiteralVariables = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L37">    public ApexOpenRedirectRule() {</span>
+<span class="fc" id="L38">        super.addRuleChainVisit(ASTUserClass.class);</span>
+<span class="fc" id="L39">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L40">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L41">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L42">    }</span>
+
+    @Override
+    public Object visit(ASTUserClass node, Object data) {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (Helper.isTestMethodOrClass(node)) {</span>
+<span class="fc" id="L47">            return data;</span>
+        }
+
+<span class="fc" id="L50">        List&lt;ASTAssignmentExpression&gt; assignmentExprs = node.findDescendantsOfType(ASTAssignmentExpression.class);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (ASTAssignmentExpression assignment : assignmentExprs) {</span>
+<span class="fc" id="L52">            findSafeLiterals(assignment);</span>
+<span class="fc" id="L53">        }</span>
+
+<span class="fc" id="L55">        List&lt;ASTVariableDeclaration&gt; variableDecls = node.findDescendantsOfType(ASTVariableDeclaration.class);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        for (ASTVariableDeclaration varDecl : variableDecls) {</span>
+<span class="fc" id="L57">            findSafeLiterals(varDecl);</span>
+<span class="fc" id="L58">        }</span>
+
+<span class="fc" id="L60">        List&lt;ASTField&gt; fieldDecl = node.findDescendantsOfType(ASTField.class);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for (ASTField fDecl : fieldDecl) {</span>
+<span class="fc" id="L62">            findSafeLiterals(fDecl);</span>
+<span class="fc" id="L63">        }</span>
+
+<span class="fc" id="L65">        List&lt;ASTNewObjectExpression&gt; newObjects = node.findDescendantsOfType(ASTNewObjectExpression.class);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (ASTNewObjectExpression newObj : newObjects) {</span>
+<span class="fc" id="L67">            checkNewObjects(newObj, data);</span>
+<span class="fc" id="L68">        }</span>
+
+<span class="fc" id="L70">        listOfStringLiteralVariables.clear();</span>
+
+<span class="fc" id="L72">        return data;</span>
+    }
+
+    private void findSafeLiterals(AbstractApexNode&lt;?&gt; node) {
+<span class="fc" id="L76">        ASTBinaryExpression binaryExp = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (binaryExp != null) {</span>
+<span class="fc" id="L78">            findSafeLiterals(binaryExp);</span>
+        }
+
+<span class="fc" id="L81">        ASTLiteralExpression literal = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (literal != null) {</span>
+<span class="fc" id="L83">            int index = literal.jjtGetChildIndex();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            if (index == 0) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">                if (node instanceof ASTVariableDeclaration) {</span>
+<span class="fc" id="L86">                    addVariable((ASTVariableDeclaration) node);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                } else if (node instanceof ASTBinaryExpression) {</span>
+<span class="fc" id="L88">                    ASTVariableDeclaration parent = node.getFirstParentOfType(ASTVariableDeclaration.class);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">                    if (parent != null) {</span>
+<span class="fc" id="L90">                        addVariable(parent);</span>
+                    }
+<span class="fc" id="L92">                    ASTAssignmentExpression assignment = node.getFirstParentOfType(ASTAssignmentExpression.class);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">                    if (assignment != null) {</span>
+<span class="fc" id="L94">                        ASTVariableExpression var = assignment.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">                        if (var != null) {</span>
+<span class="fc" id="L96">                            addVariable(var);</span>
+                        }
+                    }
+
+                }
+            }
+<span class="fc" id="L102">        } else {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (node instanceof ASTField) {</span>
+                /*
+                 * sergey.gorbaty: Apex Jorje parser is returning a null from
+                 * Field.getFieldInfo(), but the info is available from an inner
+                 * field. DO NOT attempt to optimize this block without checking
+                 * that Jorje parser actually fixed its bug.
+                 * 
+                 */
+                try {
+<span class="fc" id="L112">                    final Field f = node.getNode().getClass().getDeclaredField(&quot;fieldInfo&quot;);</span>
+<span class="fc" id="L113">                    f.setAccessible(true);</span>
+<span class="fc" id="L114">                    final StandardFieldInfo fieldInfo = (StandardFieldInfo) f.get(node.getNode());</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    if (fieldInfo.getType().getApexName().equalsIgnoreCase(&quot;String&quot;)) {</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                        if (fieldInfo.getValue() != null) {</span>
+<span class="fc" id="L117">                            addVariable(fieldInfo);</span>
+                        }
+                    }
+
+<span class="nc" id="L121">                } catch (NoSuchFieldException | SecurityException | IllegalArgumentException</span>
+                        | IllegalAccessException e) {
+                    // preventing exceptions from this code
+<span class="fc" id="L124">                }</span>
+            }
+        }
+
+<span class="fc" id="L128">    }</span>
+
+    private void addVariable(StandardFieldInfo fieldInfo) {
+<span class="fc" id="L131">        StringBuilder sb = new StringBuilder().append(fieldInfo.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
+<span class="fc" id="L132">                .append(fieldInfo.getName());</span>
+<span class="fc" id="L133">        listOfStringLiteralVariables.add(sb.toString());</span>
+
+<span class="fc" id="L135">    }</span>
+
+    private void addVariable(ASTVariableDeclaration node) {
+<span class="fc" id="L138">        ASTVariableExpression variable = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc" id="L139">        addVariable(variable);</span>
+<span class="fc" id="L140">    }</span>
+
+    private void addVariable(ASTVariableExpression node) {
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (node != null) {</span>
+<span class="fc" id="L144">            listOfStringLiteralVariables.add(Helper.getFQVariableName(node));</span>
+        }
+<span class="fc" id="L146">    }</span>
+
+    /**
+     * Traverses all new declarations to find PageReferences
+     * 
+     * @param node
+     * @param data
+     */
+    private void checkNewObjects(ASTNewObjectExpression node, Object data) {
+
+<span class="fc" id="L156">        ASTMethod method = node.getFirstParentOfType(ASTMethod.class);</span>
+<span class="fc bfc" id="L157" title="All 4 branches covered.">        if (method != null &amp;&amp; Helper.isTestMethodOrClass(method)) {</span>
+<span class="fc" id="L158">            return;</span>
+        }
+
+<span class="fc" id="L161">        ClassTypeRef classRef = (ClassTypeRef) node.getNode().getTypeRef();</span>
+<span class="fc" id="L162">        Identifier identifier = classRef.className.get(0);</span>
+
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (identifier.value.equalsIgnoreCase(PAGEREFERENCE)) {</span>
+<span class="fc" id="L165">            getObjectValue(node, data);</span>
+        }
+<span class="fc" id="L167">    }</span>
+
+    /**
+     * Finds any variables being present in PageReference constructor
+     * 
+     * @param node
+     *            - PageReference
+     * @param data
+     * 
+     */
+    private void getObjectValue(ApexNode&lt;?&gt; node, Object data) {
+        // PageReference(foo);
+<span class="fc" id="L179">        final List&lt;ASTVariableExpression&gt; variableExpressions = node.findChildrenOfType(ASTVariableExpression.class);</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        for (ASTVariableExpression variable : variableExpressions) {</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (variable.jjtGetChildIndex() == 0</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                    &amp;&amp; !listOfStringLiteralVariables.contains(Helper.getFQVariableName(variable))) {</span>
+<span class="fc" id="L183">                addViolation(data, variable);</span>
+            }
+<span class="fc" id="L185">        }</span>
+
+        // PageReference(foo + bar)
+<span class="fc" id="L188">        final List&lt;ASTBinaryExpression&gt; binaryExpressions = node.findChildrenOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (ASTBinaryExpression z : binaryExpressions) {</span>
+<span class="fc" id="L190">            getObjectValue(z, data);</span>
+<span class="fc" id="L191">        }</span>
+<span class="fc" id="L192">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

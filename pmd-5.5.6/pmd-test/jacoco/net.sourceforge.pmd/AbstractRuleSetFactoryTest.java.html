@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractRuleSetFactoryTest.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">AbstractRuleSetFactoryTest.java</span></div><h1>AbstractRuleSetFactoryTest.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.rule.RuleReference;
+import net.sourceforge.pmd.lang.rule.XPathRule;
+import net.sourceforge.pmd.util.ResourceLoader;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
+
+/**
+ * Base test class to verify the language's rulesets.
+ * This class should be subclassed for each language.
+ */
+<span class="nc" id="L43">public abstract class AbstractRuleSetFactoryTest {</span>
+    private static SAXParserFactory saxParserFactory;
+    private static ValidateDefaultHandler validateDefaultHandlerXsd;
+    private static ValidateDefaultHandler validateDefaultHandlerDtd;
+    private static SAXParser saxParser;
+
+    /**
+     * Setups the XML parser with validation.
+     * @throws Exception any error
+     */
+    @BeforeClass
+    public static void init() throws Exception {
+<span class="nc" id="L55">        saxParserFactory = SAXParserFactory.newInstance();</span>
+<span class="nc" id="L56">        saxParserFactory.setValidating(true);</span>
+<span class="nc" id="L57">        saxParserFactory.setNamespaceAware(true);</span>
+        
+        // Hope we're using Xerces, or this may not work!
+        // Note: Features are listed here
+        // http://xerces.apache.org/xerces2-j/features.html
+<span class="nc" id="L62">        saxParserFactory.setFeature(&quot;http://xml.org/sax/features/validation&quot;,</span>
+                true);
+<span class="nc" id="L64">        saxParserFactory.setFeature(</span>
+                &quot;http://apache.org/xml/features/validation/schema&quot;, true);
+<span class="nc" id="L66">        saxParserFactory</span>
+                .setFeature(
+                        &quot;http://apache.org/xml/features/validation/schema-full-checking&quot;,
+                        true);
+        
+<span class="nc" id="L71">        validateDefaultHandlerXsd = new ValidateDefaultHandler(&quot;ruleset_2_0_0.xsd&quot;);</span>
+<span class="nc" id="L72">        validateDefaultHandlerDtd = new ValidateDefaultHandler(&quot;ruleset_2_0_0.dtd&quot;);</span>
+        
+<span class="nc" id="L74">        saxParser = saxParserFactory.newSAXParser();</span>
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * Checks all rulesets of all languages on the classpath and verifies that all required attributes
+     * for all rules are specified.
+     * @throws Exception any error
+     */
+    @Test
+    public void testAllPMDBuiltInRulesMeetConventions() throws Exception {
+<span class="nc" id="L84">        int invalidSinceAttributes = 0;</span>
+<span class="nc" id="L85">        int invalidExternalInfoURL = 0;</span>
+<span class="nc" id="L86">        int invalidClassName = 0;</span>
+<span class="nc" id="L87">        int invalidRegexSuppress = 0;</span>
+<span class="nc" id="L88">        int invalidXPathSuppress = 0;</span>
+<span class="nc" id="L89">        String messages = &quot;&quot;;</span>
+<span class="nc" id="L90">        List&lt;String&gt; ruleSetFileNames = getRuleSetFileNames();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        for (String fileName : ruleSetFileNames) {</span>
+<span class="nc" id="L92">            RuleSet ruleSet = loadRuleSetByFileName(fileName);</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            for (Rule rule : ruleSet.getRules()) {</span>
+
+                // Skip references
+<span class="nc bnc" id="L96" title="All 2 branches missed.">                if (rule instanceof RuleReference) {</span>
+<span class="nc" id="L97">                    continue;</span>
+                }
+
+<span class="nc" id="L100">                Language language = rule.getLanguage();</span>
+<span class="nc" id="L101">                String group = fileName.substring(fileName.lastIndexOf('/') + 1);</span>
+<span class="nc" id="L102">                group = group.substring(0, group.indexOf(&quot;.xml&quot;));</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (group.indexOf('-') &gt;= 0) {</span>
+<span class="nc" id="L104">                    group = group.substring(0, group.indexOf('-'));</span>
+                }
+
+                // Is since missing ?
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                if (rule.getSince() == null) {</span>
+<span class="nc" id="L109">                    invalidSinceAttributes++;</span>
+<span class="nc" id="L110">                    messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName() + &quot; is missing 'since' attribute&quot; + PMD.EOL;</span>
+                }
+                // Is URL valid ?
+<span class="nc bnc" id="L113" title="All 4 branches missed.">                if (rule.getExternalInfoUrl() == null || &quot;&quot;.equalsIgnoreCase(rule.getExternalInfoUrl())) {</span>
+<span class="nc" id="L114">                    invalidExternalInfoURL++;</span>
+<span class="nc" id="L115">                    messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName() + &quot; is missing 'externalInfoURL' attribute&quot;</span>
+                            + PMD.EOL;
+                } else {
+<span class="nc" id="L118">                    String expectedExternalInfoURL = &quot;https?://pmd.(sourceforge.net|github.io)/.+/rules/&quot;</span>
+                            + fileName.replaceAll(&quot;rulesets/&quot;, &quot;&quot;).replaceAll(&quot;.xml&quot;, &quot;&quot;) + &quot;.html#&quot; + rule.getName();
+<span class="nc bnc" id="L120" title="All 4 branches missed.">                    if (rule.getExternalInfoUrl() == null</span>
+                            || !rule.getExternalInfoUrl().matches(expectedExternalInfoURL)) {
+<span class="nc" id="L122">                        invalidExternalInfoURL++;</span>
+<span class="nc" id="L123">                        messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName()</span>
+                                + &quot; seems to have an invalid 'externalInfoURL' value (&quot; + rule.getExternalInfoUrl()
+                                + &quot;), it should be:&quot; + expectedExternalInfoURL + PMD.EOL;
+                    }
+                }
+                // Proper class name/packaging?
+<span class="nc" id="L129">                String expectedClassName = &quot;net.sourceforge.pmd.lang.&quot; + language.getTerseName() + &quot;.rule.&quot; + group</span>
+                        + &quot;.&quot; + rule.getName() + &quot;Rule&quot;;
+<span class="nc bnc" id="L131" title="All 4 branches missed.">                if (!rule.getRuleClass().equals(expectedClassName)</span>
+                        &amp;&amp; !rule.getRuleClass().equals(XPathRule.class.getName())) {
+<span class="nc" id="L133">                    invalidClassName++;</span>
+<span class="nc" id="L134">                    messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName() + &quot; seems to have an invalid 'class' value (&quot;</span>
+                            + rule.getRuleClass() + &quot;), it should be:&quot; + expectedClassName + PMD.EOL;
+                }
+                // Should not have violation suppress regex property
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                if (rule.getProperty(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR) != null) {</span>
+<span class="nc" id="L139">                    invalidRegexSuppress++;</span>
+<span class="nc" id="L140">                    messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName() + &quot; should not have '&quot;</span>
+                            + Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR.name()
+                            + &quot;', this is intended for end user customization only.&quot; + PMD.EOL;
+                }
+                // Should not have violation suppress xpath property
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                if (rule.getProperty(Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR) != null) {</span>
+<span class="nc" id="L146">                    invalidXPathSuppress++;</span>
+<span class="nc" id="L147">                    messages += &quot;Rule &quot; + fileName + &quot;/&quot; + rule.getName() + &quot; should not have '&quot;</span>
+                            + Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR.name()
+                            + &quot;', this is intended for end user customization only.&quot; + PMD.EOL;
+                }
+<span class="nc" id="L151">            }</span>
+<span class="nc" id="L152">        }</span>
+        // We do this at the end to ensure we test ALL the rules before failing
+        // the test
+<span class="nc bnc" id="L155" title="All 10 branches missed.">        if (invalidSinceAttributes &gt; 0 || invalidExternalInfoURL &gt; 0 || invalidClassName &gt; 0</span>
+                || invalidRegexSuppress &gt; 0 || invalidXPathSuppress &gt; 0) {
+<span class="nc" id="L157">            fail(&quot;All built-in PMD rules need 'since' attribute (&quot; + invalidSinceAttributes</span>
+                    + &quot; are missing), a proper ExternalURLInfo (&quot; + invalidExternalInfoURL
+                    + &quot; are invalid), a class name meeting conventions (&quot; + invalidClassName + &quot; are invalid), no '&quot;
+                    + Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR.name() + &quot;' property (&quot; + invalidRegexSuppress
+                    + &quot; are invalid), and no '&quot; + Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR.name() + &quot;' property (&quot;
+                    + invalidXPathSuppress + &quot; are invalid)&quot; + PMD.EOL + messages);
+        }
+<span class="nc" id="L164">    }</span>
+
+    /**
+     * Verifies that all rulesets are valid XML according to the xsd schema.
+     * @throws Exception any error
+     */
+    @Test
+    public void testXmlSchema() throws Exception {
+<span class="nc" id="L172">        boolean allValid = true;</span>
+<span class="nc" id="L173">        List&lt;String&gt; ruleSetFileNames = getRuleSetFileNames();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        for (String fileName : ruleSetFileNames) {</span>
+<span class="nc" id="L175">            boolean valid = validateAgainstSchema(fileName);</span>
+<span class="nc bnc" id="L176" title="All 4 branches missed.">            allValid = allValid &amp;&amp; valid;</span>
+<span class="nc" id="L177">        }</span>
+<span class="nc" id="L178">        assertTrue(&quot;All XML must parse without producing validation messages.&quot;, allValid);</span>
+<span class="nc" id="L179">    }</span>
+
+    /**
+     * Verifies that all rulesets are valid XML according to the DTD.
+     * @throws Exception any error
+     */
+    @Test
+    public void testDtd() throws Exception {
+<span class="nc" id="L187">        boolean allValid = true;</span>
+<span class="nc" id="L188">        List&lt;String&gt; ruleSetFileNames = getRuleSetFileNames();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        for (String fileName : ruleSetFileNames) {</span>
+<span class="nc" id="L190">            boolean valid = validateAgainstDtd(fileName);</span>
+<span class="nc bnc" id="L191" title="All 4 branches missed.">            allValid = allValid &amp;&amp; valid;</span>
+<span class="nc" id="L192">        }</span>
+<span class="nc" id="L193">        assertTrue(&quot;All XML must parse without producing validation messages.&quot;, allValid);</span>
+<span class="nc" id="L194">    }</span>
+
+    /**
+     * Reads and writes the rulesets to make sure, that no data is lost if the rulests are
+     * processed.
+     * @throws Exception any error
+     */
+    @Test
+    public void testReadWriteRoundTrip() throws Exception {
+
+<span class="nc" id="L204">        List&lt;String&gt; ruleSetFileNames = getRuleSetFileNames();</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        for (String fileName : ruleSetFileNames) {</span>
+<span class="nc" id="L206">            testRuleSet(fileName);</span>
+<span class="nc" id="L207">        }</span>
+<span class="nc" id="L208">    }</span>
+
+    // Gets all test PMD Ruleset XML files
+    private List&lt;String&gt; getRuleSetFileNames() throws IOException, RuleSetNotFoundException {
+<span class="nc" id="L212">        List&lt;String&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        for (Language language : LanguageRegistry.getLanguages()) {</span>
+<span class="nc" id="L215">            result.addAll(getRuleSetFileNames(language.getTerseName()));</span>
+<span class="nc" id="L216">        }</span>
+
+<span class="nc" id="L218">        return result;</span>
+    }
+
+    private List&lt;String&gt; getRuleSetFileNames(String language) throws IOException, RuleSetNotFoundException {
+<span class="nc" id="L222">        List&lt;String&gt; ruleSetFileNames = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="nc" id="L224">            Properties properties = new Properties();</span>
+<span class="nc" id="L225">            try (InputStream is = ResourceLoader.loadResourceAsStream(&quot;rulesets/&quot; + language + &quot;/rulesets.properties&quot;)) {</span>
+<span class="nc" id="L226">                properties.load(is);</span>
+<span class="nc bnc" id="L227" title="All 8 branches missed.">            }</span>
+<span class="nc" id="L228">            String fileNames = properties.getProperty(&quot;rulesets.filenames&quot;);</span>
+<span class="nc" id="L229">            StringTokenizer st = new StringTokenizer(fileNames, &quot;,&quot;);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L231">                ruleSetFileNames.add(st.nextToken());</span>
+            }
+<span class="nc" id="L233">        } catch (RuleSetNotFoundException e) {</span>
+            // this might happen if a language is only support by CPD, but not
+            // by PMD
+<span class="nc" id="L236">            System.err.println(&quot;No ruleset found for language &quot; + language);</span>
+<span class="nc" id="L237">        }</span>
+<span class="nc" id="L238">        return ruleSetFileNames;</span>
+    }
+
+    private RuleSet loadRuleSetByFileName(String ruleSetFileName) throws RuleSetNotFoundException {
+<span class="nc" id="L242">        RuleSetFactory rsf = new RuleSetFactory();</span>
+<span class="nc" id="L243">        return rsf.createRuleSet(ruleSetFileName);</span>
+    }
+
+    private boolean validateAgainstSchema(String fileName) throws IOException, RuleSetNotFoundException,
+            ParserConfigurationException, SAXException {
+<span class="nc" id="L248">        InputStream inputStream = loadResourceAsStream(fileName);</span>
+<span class="nc" id="L249">        boolean valid = validateAgainstSchema(inputStream);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (!valid) {</span>
+<span class="nc" id="L251">            System.err.println(&quot;Validation against XML Schema failed for: &quot; + fileName);</span>
+        }
+<span class="nc" id="L253">        return valid;</span>
+    }
+
+    private boolean validateAgainstSchema(InputStream inputStream) throws IOException, RuleSetNotFoundException,
+            ParserConfigurationException, SAXException {
+
+<span class="nc" id="L259">        saxParser.parse(inputStream, validateDefaultHandlerXsd.resetValid());</span>
+<span class="nc" id="L260">        inputStream.close();</span>
+<span class="nc" id="L261">        return validateDefaultHandlerXsd.isValid();</span>
+    }
+
+    private boolean validateAgainstDtd(String fileName) throws IOException, RuleSetNotFoundException,
+            ParserConfigurationException, SAXException {
+<span class="nc" id="L266">        InputStream inputStream = loadResourceAsStream(fileName);</span>
+<span class="nc" id="L267">        boolean valid = validateAgainstDtd(inputStream);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (!valid) {</span>
+<span class="nc" id="L269">            System.err.println(&quot;Validation against DTD failed for: &quot; + fileName);</span>
+        }
+<span class="nc" id="L271">        return valid;</span>
+    }
+
+    private boolean validateAgainstDtd(InputStream inputStream) throws IOException, RuleSetNotFoundException,
+            ParserConfigurationException, SAXException {
+
+        // Read file into memory
+<span class="nc" id="L278">        String file = readFullyToString(inputStream);</span>
+<span class="nc" id="L279">        inputStream.close();</span>
+
+        // Remove XML Schema stuff, replace with DTD
+<span class="nc" id="L282">        file = file.replaceAll(&quot;&lt;\\?xml [ a-zA-Z0-9=\&quot;.-]*\\?&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L283">        file = file.replaceAll(&quot;xmlns=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI + &quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L284">        file = file.replaceAll(&quot;xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L285">        file = file.replaceAll(&quot;xsi:schemaLocation=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI</span>
+                + &quot; http://pmd.sourceforge.net/ruleset_2_0_0.xsd\&quot;&quot;, &quot;&quot;);
+
+<span class="nc" id="L288">        file = &quot;&lt;?xml version=\&quot;1.0\&quot;?&gt;&quot; + PMD.EOL + &quot;&lt;!DOCTYPE ruleset SYSTEM \&quot;file://&quot;</span>
+                + &quot;/path/does/not/matter/will/be/replaced/ruleset_2_0_0.dtd\&quot;&gt;&quot; + PMD.EOL + file;
+
+<span class="nc" id="L291">        InputStream modifiedStream = new ByteArrayInputStream(file.getBytes());</span>
+
+<span class="nc" id="L293">        saxParser.parse(modifiedStream, validateDefaultHandlerDtd.resetValid());</span>
+<span class="nc" id="L294">        modifiedStream.close();</span>
+<span class="nc" id="L295">        return validateDefaultHandlerDtd.isValid();</span>
+    }
+
+    private String readFullyToString(InputStream inputStream) throws IOException {
+<span class="nc" id="L299">        StringBuilder buf = new StringBuilder(64 * 1024);</span>
+<span class="nc" id="L300">        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));</span>
+        String line;
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        while ((line = reader.readLine()) != null) {</span>
+<span class="nc" id="L303">            buf.append(line);</span>
+<span class="nc" id="L304">            buf.append(PMD.EOL);</span>
+        }
+<span class="nc" id="L306">        reader.close();</span>
+<span class="nc" id="L307">        return buf.toString();</span>
+    }
+
+    private static InputStream loadResourceAsStream(String resource) throws RuleSetNotFoundException {
+<span class="nc" id="L311">        InputStream inputStream = ResourceLoader.loadResourceAsStream(resource,</span>
+                AbstractRuleSetFactoryTest.class.getClassLoader());
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (inputStream == null) {</span>
+<span class="nc" id="L314">            throw new RuleSetNotFoundException(</span>
+                    &quot;Can't find resource &quot;
+                            + resource
+                            + &quot;  Make sure the resource is a valid file or URL or is on the CLASSPATH.  Here's the current classpath: &quot;
+                            + System.getProperty(&quot;java.class.path&quot;));
+        }
+<span class="nc" id="L320">        return inputStream;</span>
+    }
+
+    private void testRuleSet(String fileName) throws IOException, RuleSetNotFoundException,
+            ParserConfigurationException, SAXException {
+
+        // Load original XML
+        // String xml1 =
+        // readFullyToString(ResourceLoader.loadResourceAsStream(fileName));
+        // System.out.println(&quot;xml1: &quot; + xml1);
+
+        // Load the original RuleSet
+<span class="nc" id="L332">        RuleSet ruleSet1 = loadRuleSetByFileName(fileName);</span>
+
+        // Write to XML, first time
+<span class="nc" id="L335">        ByteArrayOutputStream outputStream1 = new ByteArrayOutputStream();</span>
+<span class="nc" id="L336">        RuleSetWriter writer1 = new RuleSetWriter(outputStream1);</span>
+<span class="nc" id="L337">        writer1.write(ruleSet1);</span>
+<span class="nc" id="L338">        writer1.close();</span>
+<span class="nc" id="L339">        String xml2 = new String(outputStream1.toByteArray());</span>
+        // System.out.println(&quot;xml2: &quot; + xml2);
+
+        // Read RuleSet from XML, first time
+<span class="nc" id="L343">        RuleSetFactory ruleSetFactory = new RuleSetFactory();</span>
+<span class="nc" id="L344">        RuleSet ruleSet2 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml2));</span>
+
+        // Do write/read a 2nd time, just to be sure
+
+        // Write to XML, second time
+<span class="nc" id="L349">        ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();</span>
+<span class="nc" id="L350">        RuleSetWriter writer2 = new RuleSetWriter(outputStream2);</span>
+<span class="nc" id="L351">        writer2.write(ruleSet2);</span>
+<span class="nc" id="L352">        writer2.close();</span>
+<span class="nc" id="L353">        String xml3 = new String(outputStream2.toByteArray());</span>
+        // System.out.println(&quot;xml3: &quot; + xml3);
+
+        // Read RuleSet from XML, second time
+<span class="nc" id="L357">        RuleSet ruleSet3 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml3));</span>
+
+        // The 2 written XMLs should all be valid w.r.t Schema/DTD
+<span class="nc" id="L360">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
+                validateAgainstSchema(new ByteArrayInputStream(xml2.getBytes())));
+<span class="nc" id="L362">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
+                validateAgainstSchema(new ByteArrayInputStream(xml3.getBytes())));
+<span class="nc" id="L364">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
+                validateAgainstDtd(new ByteArrayInputStream(xml2.getBytes())));
+<span class="nc" id="L366">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
+                validateAgainstDtd(new ByteArrayInputStream(xml3.getBytes())));
+
+        // All 3 versions of the RuleSet should be the same
+<span class="nc" id="L370">        assertEqualsRuleSet(&quot;Original RuleSet and 1st roundtrip Ruleset not the same (filename: &quot; + fileName + &quot;)&quot;,</span>
+                ruleSet1, ruleSet2);
+<span class="nc" id="L372">        assertEqualsRuleSet(</span>
+                &quot;1st roundtrip Ruleset and 2nd roundtrip RuleSet not the same (filename: &quot; + fileName + &quot;)&quot;, ruleSet2,
+                ruleSet3);
+
+        // It's hard to compare the XML DOMs. At least the roundtrip ones should
+        // textually be the same.
+<span class="nc" id="L378">        assertEquals(&quot;1st roundtrip RuleSet XML and 2nd roundtrip RuleSet XML (filename: &quot; + fileName + &quot;)&quot;, xml2, xml3);</span>
+<span class="nc" id="L379">    }</span>
+
+    private void assertEqualsRuleSet(String message, RuleSet ruleSet1,
+            RuleSet ruleSet2) {
+<span class="nc" id="L383">        assertEquals(message + &quot;, RuleSet name&quot;, ruleSet1.getName(), ruleSet2</span>
+                .getName());
+<span class="nc" id="L385">        assertEquals(message + &quot;, RuleSet description&quot;, ruleSet1</span>
+                .getDescription(), ruleSet2.getDescription());
+<span class="nc" id="L387">        assertEquals(message + &quot;, RuleSet exclude patterns&quot;, ruleSet1</span>
+                .getExcludePatterns(), ruleSet2.getExcludePatterns());
+<span class="nc" id="L389">        assertEquals(message + &quot;, RuleSet include patterns&quot;, ruleSet1</span>
+                .getIncludePatterns(), ruleSet2.getIncludePatterns());
+<span class="nc" id="L391">        assertEquals(message + &quot;, RuleSet rule count&quot;, ruleSet1.getRules()</span>
+                .size(), ruleSet2.getRules().size());
+
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (int i = 0; i &lt; ruleSet1.getRules().size(); i++) {</span>
+<span class="nc" id="L395">            Rule rule1 = ((List&lt;Rule&gt;) ruleSet1.getRules()).get(i);</span>
+<span class="nc" id="L396">            Rule rule2 = ((List&lt;Rule&gt;) ruleSet2.getRules()).get(i);</span>
+
+<span class="nc bnc" id="L398" title="All 8 branches missed.">            assertFalse(message + &quot;, Different RuleReference&quot;,</span>
+                    rule1 instanceof RuleReference
+                            &amp;&amp; !(rule2 instanceof RuleReference)
+                            || !(rule1 instanceof RuleReference)
+                            &amp;&amp; rule2 instanceof RuleReference);
+
+<span class="nc bnc" id="L404" title="All 2 branches missed.">            if (rule1 instanceof RuleReference) {</span>
+<span class="nc" id="L405">                RuleReference ruleReference1 = (RuleReference) rule1;</span>
+<span class="nc" id="L406">                RuleReference ruleReference2 = (RuleReference) rule2;</span>
+<span class="nc" id="L407">                assertEquals(message + &quot;, RuleReference overridden language&quot;,</span>
+                        ruleReference1.getOverriddenLanguage(), ruleReference2
+                                .getOverriddenLanguage());
+<span class="nc" id="L410">                assertEquals(</span>
+                        message
+                                + &quot;, RuleReference overridden minimum language version&quot;,
+                        ruleReference1.getOverriddenMinimumLanguageVersion(),
+                        ruleReference2.getOverriddenMinimumLanguageVersion());
+<span class="nc" id="L415">                assertEquals(</span>
+                        message
+                                + &quot;, RuleReference overridden maximum language version&quot;,
+                        ruleReference1.getOverriddenMaximumLanguageVersion(),
+                        ruleReference2.getOverriddenMaximumLanguageVersion());
+<span class="nc" id="L420">                assertEquals(message + &quot;, RuleReference overridden deprecated&quot;,</span>
+                        ruleReference1.isOverriddenDeprecated(), ruleReference2
+                                .isOverriddenDeprecated());
+<span class="nc" id="L423">                assertEquals(message + &quot;, RuleReference overridden name&quot;,</span>
+                        ruleReference1.getOverriddenName(), ruleReference2
+                                .getOverriddenName());
+<span class="nc" id="L426">                assertEquals(</span>
+                        message + &quot;, RuleReference overridden description&quot;,
+                        ruleReference1.getOverriddenDescription(),
+                        ruleReference2.getOverriddenDescription());
+<span class="nc" id="L430">                assertEquals(message + &quot;, RuleReference overridden message&quot;,</span>
+                        ruleReference1.getOverriddenMessage(), ruleReference2
+                                .getOverriddenMessage());
+<span class="nc" id="L433">                assertEquals(message</span>
+                        + &quot;, RuleReference overridden external info url&quot;,
+                        ruleReference1.getOverriddenExternalInfoUrl(),
+                        ruleReference2.getOverriddenExternalInfoUrl());
+<span class="nc" id="L437">                assertEquals(message + &quot;, RuleReference overridden priority&quot;,</span>
+                        ruleReference1.getOverriddenPriority(), ruleReference2
+                                .getOverriddenPriority());
+<span class="nc" id="L440">                assertEquals(message + &quot;, RuleReference overridden examples&quot;,</span>
+                        ruleReference1.getOverriddenExamples(), ruleReference2
+                                .getOverriddenExamples());
+            }
+
+<span class="nc" id="L445">            assertEquals(message + &quot;, Rule name&quot;, rule1.getName(), rule2</span>
+                    .getName());
+<span class="nc" id="L447">            assertEquals(message + &quot;, Rule class&quot;, rule1.getRuleClass(), rule2</span>
+                    .getRuleClass());
+<span class="nc" id="L449">            assertEquals(message + &quot;, Rule description &quot; + rule1.getName(),</span>
+                    rule1.getDescription(), rule2.getDescription());
+<span class="nc" id="L451">            assertEquals(message + &quot;, Rule message&quot;, rule1.getMessage(), rule2</span>
+                    .getMessage());
+<span class="nc" id="L453">            assertEquals(message + &quot;, Rule external info url&quot;, rule1</span>
+                    .getExternalInfoUrl(), rule2.getExternalInfoUrl());
+<span class="nc" id="L455">            assertEquals(message + &quot;, Rule priority&quot;, rule1.getPriority(),</span>
+                    rule2.getPriority());
+<span class="nc" id="L457">            assertEquals(message + &quot;, Rule examples&quot;, rule1.getExamples(),</span>
+                    rule2.getExamples());
+
+<span class="nc" id="L460">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors1 = rule1</span>
+                    .getPropertyDescriptors();
+<span class="nc" id="L462">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors2 = rule2</span>
+                    .getPropertyDescriptors();
+<span class="nc" id="L464">            assertEquals(message + &quot;, Rule property descriptor &quot;,</span>
+                    propertyDescriptors1, propertyDescriptors2);
+<span class="nc bnc" id="L466" title="All 2 branches missed.">            for (int j = 0; j &lt; propertyDescriptors1.size(); j++) {</span>
+<span class="nc" id="L467">                assertEquals(message + &quot;, Rule property value &quot; + j, rule1</span>
+                        .getProperty(propertyDescriptors1.get(j)), rule2
+                        .getProperty(propertyDescriptors2.get(j)));
+            }
+<span class="nc" id="L471">            assertEquals(message + &quot;, Rule property descriptor count&quot;,</span>
+                    propertyDescriptors1.size(), propertyDescriptors2.size());
+        }
+<span class="nc" id="L474">    }</span>
+
+    /**
+     * Create a {@link RuleSetReferenceId} by the given XML string.
+     * @param ruleSetXml the ruleset file content as string
+     * @return the {@link RuleSetReferenceId}
+     */
+    protected static RuleSetReferenceId createRuleSetReferenceId(final String ruleSetXml) {
+<span class="nc" id="L482">        return new RuleSetReferenceId(null) {</span>
+            @Override
+            public InputStream getInputStream(ClassLoader classLoader) throws RuleSetNotFoundException {
+                try {
+<span class="nc" id="L486">                    return new ByteArrayInputStream(ruleSetXml.getBytes(&quot;UTF-8&quot;));</span>
+<span class="nc" id="L487">                } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L488">                    return null;</span>
+                }
+            }
+        };
+    }
+
+    /**
+     * Validator for the SAX parser
+     */
+<span class="nc" id="L497">    private static class ValidateDefaultHandler extends DefaultHandler {</span>
+        private final String validateDocument;
+<span class="nc" id="L499">        private boolean valid = true;</span>
+
+<span class="nc" id="L501">        public ValidateDefaultHandler(String validateDocument) {</span>
+<span class="nc" id="L502">            this.validateDocument = validateDocument;</span>
+<span class="nc" id="L503">        }</span>
+        
+        public ValidateDefaultHandler resetValid() {
+<span class="nc" id="L506">            valid = true;</span>
+<span class="nc" id="L507">            return this;</span>
+        }
+
+        public boolean isValid() {
+<span class="nc" id="L511">            return valid;</span>
+        }
+
+        @Override
+        public void error(SAXParseException e) throws SAXException {
+<span class="nc" id="L516">            log(&quot;Error&quot;, e);</span>
+<span class="nc" id="L517">        }</span>
+
+        @Override
+        public void fatalError(SAXParseException e) throws SAXException {
+<span class="nc" id="L521">            log(&quot;FatalError&quot;, e);</span>
+<span class="nc" id="L522">        }</span>
+
+        @Override
+        public void warning(SAXParseException e) throws SAXException {
+<span class="nc" id="L526">            log(&quot;Warning&quot;, e);</span>
+<span class="nc" id="L527">        }</span>
+
+        private void log(String prefix, SAXParseException e) {
+<span class="nc" id="L530">            String message = prefix + &quot; at (&quot; + e.getLineNumber() + &quot;, &quot; + e.getColumnNumber() + &quot;): &quot; + e.getMessage();</span>
+<span class="nc" id="L531">            System.err.println(message);</span>
+<span class="nc" id="L532">            valid = false;</span>
+<span class="nc" id="L533">        }</span>
+
+        @Override
+        public InputSource resolveEntity(String publicId, String systemId)
+                throws IOException, SAXException {
+<span class="nc bnc" id="L538" title="All 4 branches missed.">            if (&quot;http://pmd.sourceforge.net/ruleset_2_0_0.xsd&quot;.equals(systemId)</span>
+                    || systemId.endsWith(&quot;ruleset_2_0_0.dtd&quot;)) {
+                try {
+<span class="nc" id="L541">                    InputStream inputStream = loadResourceAsStream(validateDocument);</span>
+<span class="nc" id="L542">                    return new InputSource(inputStream);</span>
+<span class="nc" id="L543">                } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L544">                    System.err.println(e.getMessage());</span>
+<span class="nc" id="L545">                    throw new IOException(e.getMessage());</span>
+                }
+            }
+<span class="nc" id="L548">            throw new IllegalArgumentException(</span>
+                    &quot;No clue how to handle: publicId=&quot; + publicId
+                            + &quot;, systemId=&quot; + systemId);
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
