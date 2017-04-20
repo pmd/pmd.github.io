@@ -222,100 +222,102 @@ import org.xml.sax.helpers.DefaultHandler;
 <span class="nc" id="L222">        List&lt;String&gt; ruleSetFileNames = new ArrayList&lt;&gt;();</span>
         try {
 <span class="nc" id="L224">            Properties properties = new Properties();</span>
-<span class="nc" id="L225">            properties.load(ResourceLoader.loadResourceAsStream(&quot;rulesets/&quot; + language + &quot;/rulesets.properties&quot;));</span>
-<span class="nc" id="L226">            String fileNames = properties.getProperty(&quot;rulesets.filenames&quot;);</span>
-<span class="nc" id="L227">            StringTokenizer st = new StringTokenizer(fileNames, &quot;,&quot;);</span>
-<span class="nc bnc" id="L228" title="All 2 branches missed.">            while (st.hasMoreTokens()) {</span>
-<span class="nc" id="L229">                ruleSetFileNames.add(st.nextToken());</span>
+<span class="nc" id="L225">            try (InputStream is = ResourceLoader.loadResourceAsStream(&quot;rulesets/&quot; + language + &quot;/rulesets.properties&quot;)) {</span>
+<span class="nc" id="L226">                properties.load(is);</span>
+<span class="nc bnc" id="L227" title="All 8 branches missed.">            }</span>
+<span class="nc" id="L228">            String fileNames = properties.getProperty(&quot;rulesets.filenames&quot;);</span>
+<span class="nc" id="L229">            StringTokenizer st = new StringTokenizer(fileNames, &quot;,&quot;);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">            while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L231">                ruleSetFileNames.add(st.nextToken());</span>
             }
-<span class="nc" id="L231">        } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L233">        } catch (RuleSetNotFoundException e) {</span>
             // this might happen if a language is only support by CPD, but not
             // by PMD
-<span class="nc" id="L234">            System.err.println(&quot;No ruleset found for language &quot; + language);</span>
-<span class="nc" id="L235">        }</span>
-<span class="nc" id="L236">        return ruleSetFileNames;</span>
+<span class="nc" id="L236">            System.err.println(&quot;No ruleset found for language &quot; + language);</span>
+<span class="nc" id="L237">        }</span>
+<span class="nc" id="L238">        return ruleSetFileNames;</span>
     }
 
     private RuleSet loadRuleSetByFileName(String ruleSetFileName) throws RuleSetNotFoundException {
-<span class="nc" id="L240">        RuleSetFactory rsf = new RuleSetFactory();</span>
-<span class="nc" id="L241">        return rsf.createRuleSet(ruleSetFileName);</span>
+<span class="nc" id="L242">        RuleSetFactory rsf = new RuleSetFactory();</span>
+<span class="nc" id="L243">        return rsf.createRuleSet(ruleSetFileName);</span>
     }
 
     private boolean validateAgainstSchema(String fileName) throws IOException, RuleSetNotFoundException,
             ParserConfigurationException, SAXException {
-<span class="nc" id="L246">        InputStream inputStream = loadResourceAsStream(fileName);</span>
-<span class="nc" id="L247">        boolean valid = validateAgainstSchema(inputStream);</span>
-<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (!valid) {</span>
-<span class="nc" id="L249">            System.err.println(&quot;Validation against XML Schema failed for: &quot; + fileName);</span>
+<span class="nc" id="L248">        InputStream inputStream = loadResourceAsStream(fileName);</span>
+<span class="nc" id="L249">        boolean valid = validateAgainstSchema(inputStream);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (!valid) {</span>
+<span class="nc" id="L251">            System.err.println(&quot;Validation against XML Schema failed for: &quot; + fileName);</span>
         }
-<span class="nc" id="L251">        return valid;</span>
+<span class="nc" id="L253">        return valid;</span>
     }
 
     private boolean validateAgainstSchema(InputStream inputStream) throws IOException, RuleSetNotFoundException,
             ParserConfigurationException, SAXException {
 
-<span class="nc" id="L257">        saxParser.parse(inputStream, validateDefaultHandlerXsd.resetValid());</span>
-<span class="nc" id="L258">        inputStream.close();</span>
-<span class="nc" id="L259">        return validateDefaultHandlerXsd.isValid();</span>
+<span class="nc" id="L259">        saxParser.parse(inputStream, validateDefaultHandlerXsd.resetValid());</span>
+<span class="nc" id="L260">        inputStream.close();</span>
+<span class="nc" id="L261">        return validateDefaultHandlerXsd.isValid();</span>
     }
 
     private boolean validateAgainstDtd(String fileName) throws IOException, RuleSetNotFoundException,
             ParserConfigurationException, SAXException {
-<span class="nc" id="L264">        InputStream inputStream = loadResourceAsStream(fileName);</span>
-<span class="nc" id="L265">        boolean valid = validateAgainstDtd(inputStream);</span>
-<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (!valid) {</span>
-<span class="nc" id="L267">            System.err.println(&quot;Validation against DTD failed for: &quot; + fileName);</span>
+<span class="nc" id="L266">        InputStream inputStream = loadResourceAsStream(fileName);</span>
+<span class="nc" id="L267">        boolean valid = validateAgainstDtd(inputStream);</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (!valid) {</span>
+<span class="nc" id="L269">            System.err.println(&quot;Validation against DTD failed for: &quot; + fileName);</span>
         }
-<span class="nc" id="L269">        return valid;</span>
+<span class="nc" id="L271">        return valid;</span>
     }
 
     private boolean validateAgainstDtd(InputStream inputStream) throws IOException, RuleSetNotFoundException,
             ParserConfigurationException, SAXException {
 
         // Read file into memory
-<span class="nc" id="L276">        String file = readFullyToString(inputStream);</span>
-<span class="nc" id="L277">        inputStream.close();</span>
+<span class="nc" id="L278">        String file = readFullyToString(inputStream);</span>
+<span class="nc" id="L279">        inputStream.close();</span>
 
         // Remove XML Schema stuff, replace with DTD
-<span class="nc" id="L280">        file = file.replaceAll(&quot;&lt;\\?xml [ a-zA-Z0-9=\&quot;.-]*\\?&gt;&quot;, &quot;&quot;);</span>
-<span class="nc" id="L281">        file = file.replaceAll(&quot;xmlns=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI + &quot;\&quot;&quot;, &quot;&quot;);</span>
-<span class="nc" id="L282">        file = file.replaceAll(&quot;xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;&quot;, &quot;&quot;);</span>
-<span class="nc" id="L283">        file = file.replaceAll(&quot;xsi:schemaLocation=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI</span>
+<span class="nc" id="L282">        file = file.replaceAll(&quot;&lt;\\?xml [ a-zA-Z0-9=\&quot;.-]*\\?&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L283">        file = file.replaceAll(&quot;xmlns=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI + &quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L284">        file = file.replaceAll(&quot;xmlns:xsi=\&quot;http://www.w3.org/2001/XMLSchema-instance\&quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L285">        file = file.replaceAll(&quot;xsi:schemaLocation=\&quot;&quot; + RuleSetWriter.RULESET_NS_URI</span>
                 + &quot; http://pmd.sourceforge.net/ruleset_2_0_0.xsd\&quot;&quot;, &quot;&quot;);
 
-<span class="nc" id="L286">        file = &quot;&lt;?xml version=\&quot;1.0\&quot;?&gt;&quot; + PMD.EOL + &quot;&lt;!DOCTYPE ruleset SYSTEM \&quot;file://&quot;</span>
+<span class="nc" id="L288">        file = &quot;&lt;?xml version=\&quot;1.0\&quot;?&gt;&quot; + PMD.EOL + &quot;&lt;!DOCTYPE ruleset SYSTEM \&quot;file://&quot;</span>
                 + &quot;/path/does/not/matter/will/be/replaced/ruleset_2_0_0.dtd\&quot;&gt;&quot; + PMD.EOL + file;
 
-<span class="nc" id="L289">        InputStream modifiedStream = new ByteArrayInputStream(file.getBytes());</span>
+<span class="nc" id="L291">        InputStream modifiedStream = new ByteArrayInputStream(file.getBytes());</span>
 
-<span class="nc" id="L291">        saxParser.parse(modifiedStream, validateDefaultHandlerDtd.resetValid());</span>
-<span class="nc" id="L292">        modifiedStream.close();</span>
-<span class="nc" id="L293">        return validateDefaultHandlerDtd.isValid();</span>
+<span class="nc" id="L293">        saxParser.parse(modifiedStream, validateDefaultHandlerDtd.resetValid());</span>
+<span class="nc" id="L294">        modifiedStream.close();</span>
+<span class="nc" id="L295">        return validateDefaultHandlerDtd.isValid();</span>
     }
 
     private String readFullyToString(InputStream inputStream) throws IOException {
-<span class="nc" id="L297">        StringBuilder buf = new StringBuilder(64 * 1024);</span>
-<span class="nc" id="L298">        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));</span>
+<span class="nc" id="L299">        StringBuilder buf = new StringBuilder(64 * 1024);</span>
+<span class="nc" id="L300">        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));</span>
         String line;
-<span class="nc bnc" id="L300" title="All 2 branches missed.">        while ((line = reader.readLine()) != null) {</span>
-<span class="nc" id="L301">            buf.append(line);</span>
-<span class="nc" id="L302">            buf.append(PMD.EOL);</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        while ((line = reader.readLine()) != null) {</span>
+<span class="nc" id="L303">            buf.append(line);</span>
+<span class="nc" id="L304">            buf.append(PMD.EOL);</span>
         }
-<span class="nc" id="L304">        reader.close();</span>
-<span class="nc" id="L305">        return buf.toString();</span>
+<span class="nc" id="L306">        reader.close();</span>
+<span class="nc" id="L307">        return buf.toString();</span>
     }
 
     private static InputStream loadResourceAsStream(String resource) throws RuleSetNotFoundException {
-<span class="nc" id="L309">        InputStream inputStream = ResourceLoader.loadResourceAsStream(resource,</span>
+<span class="nc" id="L311">        InputStream inputStream = ResourceLoader.loadResourceAsStream(resource,</span>
                 AbstractRuleSetFactoryTest.class.getClassLoader());
-<span class="nc bnc" id="L311" title="All 2 branches missed.">        if (inputStream == null) {</span>
-<span class="nc" id="L312">            throw new RuleSetNotFoundException(</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (inputStream == null) {</span>
+<span class="nc" id="L314">            throw new RuleSetNotFoundException(</span>
                     &quot;Can't find resource &quot;
                             + resource
                             + &quot;  Make sure the resource is a valid file or URL or is on the CLASSPATH.  Here's the current classpath: &quot;
                             + System.getProperty(&quot;java.class.path&quot;));
         }
-<span class="nc" id="L318">        return inputStream;</span>
+<span class="nc" id="L320">        return inputStream;</span>
     }
 
     private void testRuleSet(String fileName) throws IOException, RuleSetNotFoundException,
@@ -327,149 +329,149 @@ import org.xml.sax.helpers.DefaultHandler;
         // System.out.println(&quot;xml1: &quot; + xml1);
 
         // Load the original RuleSet
-<span class="nc" id="L330">        RuleSet ruleSet1 = loadRuleSetByFileName(fileName);</span>
+<span class="nc" id="L332">        RuleSet ruleSet1 = loadRuleSetByFileName(fileName);</span>
 
         // Write to XML, first time
-<span class="nc" id="L333">        ByteArrayOutputStream outputStream1 = new ByteArrayOutputStream();</span>
-<span class="nc" id="L334">        RuleSetWriter writer1 = new RuleSetWriter(outputStream1);</span>
-<span class="nc" id="L335">        writer1.write(ruleSet1);</span>
-<span class="nc" id="L336">        writer1.close();</span>
-<span class="nc" id="L337">        String xml2 = new String(outputStream1.toByteArray());</span>
+<span class="nc" id="L335">        ByteArrayOutputStream outputStream1 = new ByteArrayOutputStream();</span>
+<span class="nc" id="L336">        RuleSetWriter writer1 = new RuleSetWriter(outputStream1);</span>
+<span class="nc" id="L337">        writer1.write(ruleSet1);</span>
+<span class="nc" id="L338">        writer1.close();</span>
+<span class="nc" id="L339">        String xml2 = new String(outputStream1.toByteArray());</span>
         // System.out.println(&quot;xml2: &quot; + xml2);
 
         // Read RuleSet from XML, first time
-<span class="nc" id="L341">        RuleSetFactory ruleSetFactory = new RuleSetFactory();</span>
-<span class="nc" id="L342">        RuleSet ruleSet2 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml2));</span>
+<span class="nc" id="L343">        RuleSetFactory ruleSetFactory = new RuleSetFactory();</span>
+<span class="nc" id="L344">        RuleSet ruleSet2 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml2));</span>
 
         // Do write/read a 2nd time, just to be sure
 
         // Write to XML, second time
-<span class="nc" id="L347">        ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();</span>
-<span class="nc" id="L348">        RuleSetWriter writer2 = new RuleSetWriter(outputStream2);</span>
-<span class="nc" id="L349">        writer2.write(ruleSet2);</span>
-<span class="nc" id="L350">        writer2.close();</span>
-<span class="nc" id="L351">        String xml3 = new String(outputStream2.toByteArray());</span>
+<span class="nc" id="L349">        ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();</span>
+<span class="nc" id="L350">        RuleSetWriter writer2 = new RuleSetWriter(outputStream2);</span>
+<span class="nc" id="L351">        writer2.write(ruleSet2);</span>
+<span class="nc" id="L352">        writer2.close();</span>
+<span class="nc" id="L353">        String xml3 = new String(outputStream2.toByteArray());</span>
         // System.out.println(&quot;xml3: &quot; + xml3);
 
         // Read RuleSet from XML, second time
-<span class="nc" id="L355">        RuleSet ruleSet3 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml3));</span>
+<span class="nc" id="L357">        RuleSet ruleSet3 = ruleSetFactory.createRuleSet(createRuleSetReferenceId(xml3));</span>
 
         // The 2 written XMLs should all be valid w.r.t Schema/DTD
-<span class="nc" id="L358">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
+<span class="nc" id="L360">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
                 validateAgainstSchema(new ByteArrayInputStream(xml2.getBytes())));
-<span class="nc" id="L360">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
+<span class="nc" id="L362">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against Schema (filename: &quot; + fileName + &quot;)&quot;,</span>
                 validateAgainstSchema(new ByteArrayInputStream(xml3.getBytes())));
-<span class="nc" id="L362">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
+<span class="nc" id="L364">        assertTrue(&quot;1st roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
                 validateAgainstDtd(new ByteArrayInputStream(xml2.getBytes())));
-<span class="nc" id="L364">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
+<span class="nc" id="L366">        assertTrue(&quot;2nd roundtrip RuleSet XML is not valid against DTD (filename: &quot; + fileName + &quot;)&quot;,</span>
                 validateAgainstDtd(new ByteArrayInputStream(xml3.getBytes())));
 
         // All 3 versions of the RuleSet should be the same
-<span class="nc" id="L368">        assertEqualsRuleSet(&quot;Original RuleSet and 1st roundtrip Ruleset not the same (filename: &quot; + fileName + &quot;)&quot;,</span>
+<span class="nc" id="L370">        assertEqualsRuleSet(&quot;Original RuleSet and 1st roundtrip Ruleset not the same (filename: &quot; + fileName + &quot;)&quot;,</span>
                 ruleSet1, ruleSet2);
-<span class="nc" id="L370">        assertEqualsRuleSet(</span>
+<span class="nc" id="L372">        assertEqualsRuleSet(</span>
                 &quot;1st roundtrip Ruleset and 2nd roundtrip RuleSet not the same (filename: &quot; + fileName + &quot;)&quot;, ruleSet2,
                 ruleSet3);
 
         // It's hard to compare the XML DOMs. At least the roundtrip ones should
         // textually be the same.
-<span class="nc" id="L376">        assertEquals(&quot;1st roundtrip RuleSet XML and 2nd roundtrip RuleSet XML (filename: &quot; + fileName + &quot;)&quot;, xml2, xml3);</span>
-<span class="nc" id="L377">    }</span>
+<span class="nc" id="L378">        assertEquals(&quot;1st roundtrip RuleSet XML and 2nd roundtrip RuleSet XML (filename: &quot; + fileName + &quot;)&quot;, xml2, xml3);</span>
+<span class="nc" id="L379">    }</span>
 
     private void assertEqualsRuleSet(String message, RuleSet ruleSet1,
             RuleSet ruleSet2) {
-<span class="nc" id="L381">        assertEquals(message + &quot;, RuleSet name&quot;, ruleSet1.getName(), ruleSet2</span>
+<span class="nc" id="L383">        assertEquals(message + &quot;, RuleSet name&quot;, ruleSet1.getName(), ruleSet2</span>
                 .getName());
-<span class="nc" id="L383">        assertEquals(message + &quot;, RuleSet description&quot;, ruleSet1</span>
+<span class="nc" id="L385">        assertEquals(message + &quot;, RuleSet description&quot;, ruleSet1</span>
                 .getDescription(), ruleSet2.getDescription());
-<span class="nc" id="L385">        assertEquals(message + &quot;, RuleSet exclude patterns&quot;, ruleSet1</span>
+<span class="nc" id="L387">        assertEquals(message + &quot;, RuleSet exclude patterns&quot;, ruleSet1</span>
                 .getExcludePatterns(), ruleSet2.getExcludePatterns());
-<span class="nc" id="L387">        assertEquals(message + &quot;, RuleSet include patterns&quot;, ruleSet1</span>
+<span class="nc" id="L389">        assertEquals(message + &quot;, RuleSet include patterns&quot;, ruleSet1</span>
                 .getIncludePatterns(), ruleSet2.getIncludePatterns());
-<span class="nc" id="L389">        assertEquals(message + &quot;, RuleSet rule count&quot;, ruleSet1.getRules()</span>
+<span class="nc" id="L391">        assertEquals(message + &quot;, RuleSet rule count&quot;, ruleSet1.getRules()</span>
                 .size(), ruleSet2.getRules().size());
 
-<span class="nc bnc" id="L392" title="All 2 branches missed.">        for (int i = 0; i &lt; ruleSet1.getRules().size(); i++) {</span>
-<span class="nc" id="L393">            Rule rule1 = ((List&lt;Rule&gt;) ruleSet1.getRules()).get(i);</span>
-<span class="nc" id="L394">            Rule rule2 = ((List&lt;Rule&gt;) ruleSet2.getRules()).get(i);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">        for (int i = 0; i &lt; ruleSet1.getRules().size(); i++) {</span>
+<span class="nc" id="L395">            Rule rule1 = ((List&lt;Rule&gt;) ruleSet1.getRules()).get(i);</span>
+<span class="nc" id="L396">            Rule rule2 = ((List&lt;Rule&gt;) ruleSet2.getRules()).get(i);</span>
 
-<span class="nc bnc" id="L396" title="All 8 branches missed.">            assertFalse(message + &quot;, Different RuleReference&quot;,</span>
+<span class="nc bnc" id="L398" title="All 8 branches missed.">            assertFalse(message + &quot;, Different RuleReference&quot;,</span>
                     rule1 instanceof RuleReference
                             &amp;&amp; !(rule2 instanceof RuleReference)
                             || !(rule1 instanceof RuleReference)
                             &amp;&amp; rule2 instanceof RuleReference);
 
-<span class="nc bnc" id="L402" title="All 2 branches missed.">            if (rule1 instanceof RuleReference) {</span>
-<span class="nc" id="L403">                RuleReference ruleReference1 = (RuleReference) rule1;</span>
-<span class="nc" id="L404">                RuleReference ruleReference2 = (RuleReference) rule2;</span>
-<span class="nc" id="L405">                assertEquals(message + &quot;, RuleReference overridden language&quot;,</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">            if (rule1 instanceof RuleReference) {</span>
+<span class="nc" id="L405">                RuleReference ruleReference1 = (RuleReference) rule1;</span>
+<span class="nc" id="L406">                RuleReference ruleReference2 = (RuleReference) rule2;</span>
+<span class="nc" id="L407">                assertEquals(message + &quot;, RuleReference overridden language&quot;,</span>
                         ruleReference1.getOverriddenLanguage(), ruleReference2
                                 .getOverriddenLanguage());
-<span class="nc" id="L408">                assertEquals(</span>
+<span class="nc" id="L410">                assertEquals(</span>
                         message
                                 + &quot;, RuleReference overridden minimum language version&quot;,
                         ruleReference1.getOverriddenMinimumLanguageVersion(),
                         ruleReference2.getOverriddenMinimumLanguageVersion());
-<span class="nc" id="L413">                assertEquals(</span>
+<span class="nc" id="L415">                assertEquals(</span>
                         message
                                 + &quot;, RuleReference overridden maximum language version&quot;,
                         ruleReference1.getOverriddenMaximumLanguageVersion(),
                         ruleReference2.getOverriddenMaximumLanguageVersion());
-<span class="nc" id="L418">                assertEquals(message + &quot;, RuleReference overridden deprecated&quot;,</span>
+<span class="nc" id="L420">                assertEquals(message + &quot;, RuleReference overridden deprecated&quot;,</span>
                         ruleReference1.isOverriddenDeprecated(), ruleReference2
                                 .isOverriddenDeprecated());
-<span class="nc" id="L421">                assertEquals(message + &quot;, RuleReference overridden name&quot;,</span>
+<span class="nc" id="L423">                assertEquals(message + &quot;, RuleReference overridden name&quot;,</span>
                         ruleReference1.getOverriddenName(), ruleReference2
                                 .getOverriddenName());
-<span class="nc" id="L424">                assertEquals(</span>
+<span class="nc" id="L426">                assertEquals(</span>
                         message + &quot;, RuleReference overridden description&quot;,
                         ruleReference1.getOverriddenDescription(),
                         ruleReference2.getOverriddenDescription());
-<span class="nc" id="L428">                assertEquals(message + &quot;, RuleReference overridden message&quot;,</span>
+<span class="nc" id="L430">                assertEquals(message + &quot;, RuleReference overridden message&quot;,</span>
                         ruleReference1.getOverriddenMessage(), ruleReference2
                                 .getOverriddenMessage());
-<span class="nc" id="L431">                assertEquals(message</span>
+<span class="nc" id="L433">                assertEquals(message</span>
                         + &quot;, RuleReference overridden external info url&quot;,
                         ruleReference1.getOverriddenExternalInfoUrl(),
                         ruleReference2.getOverriddenExternalInfoUrl());
-<span class="nc" id="L435">                assertEquals(message + &quot;, RuleReference overridden priority&quot;,</span>
+<span class="nc" id="L437">                assertEquals(message + &quot;, RuleReference overridden priority&quot;,</span>
                         ruleReference1.getOverriddenPriority(), ruleReference2
                                 .getOverriddenPriority());
-<span class="nc" id="L438">                assertEquals(message + &quot;, RuleReference overridden examples&quot;,</span>
+<span class="nc" id="L440">                assertEquals(message + &quot;, RuleReference overridden examples&quot;,</span>
                         ruleReference1.getOverriddenExamples(), ruleReference2
                                 .getOverriddenExamples());
             }
 
-<span class="nc" id="L443">            assertEquals(message + &quot;, Rule name&quot;, rule1.getName(), rule2</span>
+<span class="nc" id="L445">            assertEquals(message + &quot;, Rule name&quot;, rule1.getName(), rule2</span>
                     .getName());
-<span class="nc" id="L445">            assertEquals(message + &quot;, Rule class&quot;, rule1.getRuleClass(), rule2</span>
+<span class="nc" id="L447">            assertEquals(message + &quot;, Rule class&quot;, rule1.getRuleClass(), rule2</span>
                     .getRuleClass());
-<span class="nc" id="L447">            assertEquals(message + &quot;, Rule description &quot; + rule1.getName(),</span>
+<span class="nc" id="L449">            assertEquals(message + &quot;, Rule description &quot; + rule1.getName(),</span>
                     rule1.getDescription(), rule2.getDescription());
-<span class="nc" id="L449">            assertEquals(message + &quot;, Rule message&quot;, rule1.getMessage(), rule2</span>
+<span class="nc" id="L451">            assertEquals(message + &quot;, Rule message&quot;, rule1.getMessage(), rule2</span>
                     .getMessage());
-<span class="nc" id="L451">            assertEquals(message + &quot;, Rule external info url&quot;, rule1</span>
+<span class="nc" id="L453">            assertEquals(message + &quot;, Rule external info url&quot;, rule1</span>
                     .getExternalInfoUrl(), rule2.getExternalInfoUrl());
-<span class="nc" id="L453">            assertEquals(message + &quot;, Rule priority&quot;, rule1.getPriority(),</span>
+<span class="nc" id="L455">            assertEquals(message + &quot;, Rule priority&quot;, rule1.getPriority(),</span>
                     rule2.getPriority());
-<span class="nc" id="L455">            assertEquals(message + &quot;, Rule examples&quot;, rule1.getExamples(),</span>
+<span class="nc" id="L457">            assertEquals(message + &quot;, Rule examples&quot;, rule1.getExamples(),</span>
                     rule2.getExamples());
 
-<span class="nc" id="L458">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors1 = rule1</span>
+<span class="nc" id="L460">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors1 = rule1</span>
                     .getPropertyDescriptors();
-<span class="nc" id="L460">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors2 = rule2</span>
+<span class="nc" id="L462">            List&lt;PropertyDescriptor&lt;?&gt;&gt; propertyDescriptors2 = rule2</span>
                     .getPropertyDescriptors();
-<span class="nc" id="L462">            assertEquals(message + &quot;, Rule property descriptor &quot;,</span>
+<span class="nc" id="L464">            assertEquals(message + &quot;, Rule property descriptor &quot;,</span>
                     propertyDescriptors1, propertyDescriptors2);
-<span class="nc bnc" id="L464" title="All 2 branches missed.">            for (int j = 0; j &lt; propertyDescriptors1.size(); j++) {</span>
-<span class="nc" id="L465">                assertEquals(message + &quot;, Rule property value &quot; + j, rule1</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">            for (int j = 0; j &lt; propertyDescriptors1.size(); j++) {</span>
+<span class="nc" id="L467">                assertEquals(message + &quot;, Rule property value &quot; + j, rule1</span>
                         .getProperty(propertyDescriptors1.get(j)), rule2
                         .getProperty(propertyDescriptors2.get(j)));
             }
-<span class="nc" id="L469">            assertEquals(message + &quot;, Rule property descriptor count&quot;,</span>
+<span class="nc" id="L471">            assertEquals(message + &quot;, Rule property descriptor count&quot;,</span>
                     propertyDescriptors1.size(), propertyDescriptors2.size());
         }
-<span class="nc" id="L472">    }</span>
+<span class="nc" id="L474">    }</span>
 
     /**
      * Create a {@link RuleSetReferenceId} by the given XML string.
@@ -477,13 +479,13 @@ import org.xml.sax.helpers.DefaultHandler;
      * @return the {@link RuleSetReferenceId}
      */
     protected static RuleSetReferenceId createRuleSetReferenceId(final String ruleSetXml) {
-<span class="nc" id="L480">        return new RuleSetReferenceId(null) {</span>
+<span class="nc" id="L482">        return new RuleSetReferenceId(null) {</span>
             @Override
             public InputStream getInputStream(ClassLoader classLoader) throws RuleSetNotFoundException {
                 try {
-<span class="nc" id="L484">                    return new ByteArrayInputStream(ruleSetXml.getBytes(&quot;UTF-8&quot;));</span>
-<span class="nc" id="L485">                } catch (UnsupportedEncodingException e) {</span>
-<span class="nc" id="L486">                    return null;</span>
+<span class="nc" id="L486">                    return new ByteArrayInputStream(ruleSetXml.getBytes(&quot;UTF-8&quot;));</span>
+<span class="nc" id="L487">                } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L488">                    return null;</span>
                 }
             }
         };
@@ -492,58 +494,58 @@ import org.xml.sax.helpers.DefaultHandler;
     /**
      * Validator for the SAX parser
      */
-<span class="nc" id="L495">    private static class ValidateDefaultHandler extends DefaultHandler {</span>
+<span class="nc" id="L497">    private static class ValidateDefaultHandler extends DefaultHandler {</span>
         private final String validateDocument;
-<span class="nc" id="L497">        private boolean valid = true;</span>
+<span class="nc" id="L499">        private boolean valid = true;</span>
 
-<span class="nc" id="L499">        public ValidateDefaultHandler(String validateDocument) {</span>
-<span class="nc" id="L500">            this.validateDocument = validateDocument;</span>
-<span class="nc" id="L501">        }</span>
+<span class="nc" id="L501">        public ValidateDefaultHandler(String validateDocument) {</span>
+<span class="nc" id="L502">            this.validateDocument = validateDocument;</span>
+<span class="nc" id="L503">        }</span>
         
         public ValidateDefaultHandler resetValid() {
-<span class="nc" id="L504">            valid = true;</span>
-<span class="nc" id="L505">            return this;</span>
+<span class="nc" id="L506">            valid = true;</span>
+<span class="nc" id="L507">            return this;</span>
         }
 
         public boolean isValid() {
-<span class="nc" id="L509">            return valid;</span>
+<span class="nc" id="L511">            return valid;</span>
         }
 
         @Override
         public void error(SAXParseException e) throws SAXException {
-<span class="nc" id="L514">            log(&quot;Error&quot;, e);</span>
-<span class="nc" id="L515">        }</span>
+<span class="nc" id="L516">            log(&quot;Error&quot;, e);</span>
+<span class="nc" id="L517">        }</span>
 
         @Override
         public void fatalError(SAXParseException e) throws SAXException {
-<span class="nc" id="L519">            log(&quot;FatalError&quot;, e);</span>
-<span class="nc" id="L520">        }</span>
+<span class="nc" id="L521">            log(&quot;FatalError&quot;, e);</span>
+<span class="nc" id="L522">        }</span>
 
         @Override
         public void warning(SAXParseException e) throws SAXException {
-<span class="nc" id="L524">            log(&quot;Warning&quot;, e);</span>
-<span class="nc" id="L525">        }</span>
+<span class="nc" id="L526">            log(&quot;Warning&quot;, e);</span>
+<span class="nc" id="L527">        }</span>
 
         private void log(String prefix, SAXParseException e) {
-<span class="nc" id="L528">            String message = prefix + &quot; at (&quot; + e.getLineNumber() + &quot;, &quot; + e.getColumnNumber() + &quot;): &quot; + e.getMessage();</span>
-<span class="nc" id="L529">            System.err.println(message);</span>
-<span class="nc" id="L530">            valid = false;</span>
-<span class="nc" id="L531">        }</span>
+<span class="nc" id="L530">            String message = prefix + &quot; at (&quot; + e.getLineNumber() + &quot;, &quot; + e.getColumnNumber() + &quot;): &quot; + e.getMessage();</span>
+<span class="nc" id="L531">            System.err.println(message);</span>
+<span class="nc" id="L532">            valid = false;</span>
+<span class="nc" id="L533">        }</span>
 
         @Override
         public InputSource resolveEntity(String publicId, String systemId)
                 throws IOException, SAXException {
-<span class="nc bnc" id="L536" title="All 4 branches missed.">            if (&quot;http://pmd.sourceforge.net/ruleset_2_0_0.xsd&quot;.equals(systemId)</span>
+<span class="nc bnc" id="L538" title="All 4 branches missed.">            if (&quot;http://pmd.sourceforge.net/ruleset_2_0_0.xsd&quot;.equals(systemId)</span>
                     || systemId.endsWith(&quot;ruleset_2_0_0.dtd&quot;)) {
                 try {
-<span class="nc" id="L539">                    InputStream inputStream = loadResourceAsStream(validateDocument);</span>
-<span class="nc" id="L540">                    return new InputSource(inputStream);</span>
-<span class="nc" id="L541">                } catch (RuleSetNotFoundException e) {</span>
-<span class="nc" id="L542">                    System.err.println(e.getMessage());</span>
-<span class="nc" id="L543">                    throw new IOException(e.getMessage());</span>
+<span class="nc" id="L541">                    InputStream inputStream = loadResourceAsStream(validateDocument);</span>
+<span class="nc" id="L542">                    return new InputSource(inputStream);</span>
+<span class="nc" id="L543">                } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L544">                    System.err.println(e.getMessage());</span>
+<span class="nc" id="L545">                    throw new IOException(e.getMessage());</span>
                 }
             }
-<span class="nc" id="L546">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L548">            throw new IllegalArgumentException(</span>
                     &quot;No clue how to handle: publicId=&quot; + publicId
                             + &quot;, systemId=&quot; + systemId);
         }
