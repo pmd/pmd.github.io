@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexTreeBuilder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.ast</a> &gt; <span class="el_source">ApexTreeBuilder.java</span></div><h1>ApexTreeBuilder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.apex.ast;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.ast.SourceCodePositioner;
+
+import apex.jorje.semantic.ast.AstNode;
+import apex.jorje.semantic.ast.compilation.UserClass;
+import apex.jorje.semantic.ast.compilation.UserClassMethods;
+import apex.jorje.semantic.ast.compilation.UserEnum;
+import apex.jorje.semantic.ast.compilation.UserExceptionMethods;
+import apex.jorje.semantic.ast.compilation.UserInterface;
+import apex.jorje.semantic.ast.compilation.UserTrigger;
+import apex.jorje.semantic.ast.condition.StandardCondition;
+import apex.jorje.semantic.ast.expression.ArrayLoadExpression;
+import apex.jorje.semantic.ast.expression.ArrayStoreExpression;
+import apex.jorje.semantic.ast.expression.AssignmentExpression;
+import apex.jorje.semantic.ast.expression.BinaryExpression;
+import apex.jorje.semantic.ast.expression.BindExpressions;
+import apex.jorje.semantic.ast.expression.BooleanExpression;
+import apex.jorje.semantic.ast.expression.ClassRefExpression;
+import apex.jorje.semantic.ast.expression.DottedExpression;
+import apex.jorje.semantic.ast.expression.Expression;
+import apex.jorje.semantic.ast.expression.InstanceOfExpression;
+import apex.jorje.semantic.ast.expression.JavaMethodCallExpression;
+import apex.jorje.semantic.ast.expression.JavaVariableExpression;
+import apex.jorje.semantic.ast.expression.LiteralExpression;
+import apex.jorje.semantic.ast.expression.MapEntryNode;
+import apex.jorje.semantic.ast.expression.MethodCallExpression;
+import apex.jorje.semantic.ast.expression.NewListInitExpression;
+import apex.jorje.semantic.ast.expression.NewListLiteralExpression;
+import apex.jorje.semantic.ast.expression.NewMapInitExpression;
+import apex.jorje.semantic.ast.expression.NewMapLiteralExpression;
+import apex.jorje.semantic.ast.expression.NewNameValueObjectExpression;
+import apex.jorje.semantic.ast.expression.NewObjectExpression;
+import apex.jorje.semantic.ast.expression.NewSetInitExpression;
+import apex.jorje.semantic.ast.expression.NewSetLiteralExpression;
+import apex.jorje.semantic.ast.expression.PackageVersionExpression;
+import apex.jorje.semantic.ast.expression.PostfixExpression;
+import apex.jorje.semantic.ast.expression.PrefixExpression;
+import apex.jorje.semantic.ast.expression.ReferenceExpression;
+import apex.jorje.semantic.ast.expression.SoqlExpression;
+import apex.jorje.semantic.ast.expression.SoslExpression;
+import apex.jorje.semantic.ast.expression.SuperMethodCallExpression;
+import apex.jorje.semantic.ast.expression.SuperVariableExpression;
+import apex.jorje.semantic.ast.expression.TernaryExpression;
+import apex.jorje.semantic.ast.expression.ThisMethodCallExpression;
+import apex.jorje.semantic.ast.expression.ThisVariableExpression;
+import apex.jorje.semantic.ast.expression.TriggerVariableExpression;
+import apex.jorje.semantic.ast.expression.VariableExpression;
+import apex.jorje.semantic.ast.member.Field;
+import apex.jorje.semantic.ast.member.Method;
+import apex.jorje.semantic.ast.member.Parameter;
+import apex.jorje.semantic.ast.member.Property;
+import apex.jorje.semantic.ast.member.bridge.BridgeMethodCreator;
+import apex.jorje.semantic.ast.modifier.Annotation;
+import apex.jorje.semantic.ast.modifier.AnnotationParameter;
+import apex.jorje.semantic.ast.modifier.ModifierNode;
+import apex.jorje.semantic.ast.modifier.ModifierOrAnnotation;
+import apex.jorje.semantic.ast.statement.BlockStatement;
+import apex.jorje.semantic.ast.statement.BreakStatement;
+import apex.jorje.semantic.ast.statement.CatchBlockStatement;
+import apex.jorje.semantic.ast.statement.ContinueStatement;
+import apex.jorje.semantic.ast.statement.DmlDeleteStatement;
+import apex.jorje.semantic.ast.statement.DmlInsertStatement;
+import apex.jorje.semantic.ast.statement.DmlMergeStatement;
+import apex.jorje.semantic.ast.statement.DmlUndeleteStatement;
+import apex.jorje.semantic.ast.statement.DmlUpdateStatement;
+import apex.jorje.semantic.ast.statement.DmlUpsertStatement;
+import apex.jorje.semantic.ast.statement.DoLoopStatement;
+import apex.jorje.semantic.ast.statement.ExpressionStatement;
+import apex.jorje.semantic.ast.statement.FieldDeclaration;
+import apex.jorje.semantic.ast.statement.FieldDeclarationStatements;
+import apex.jorje.semantic.ast.statement.ForEachStatement;
+import apex.jorje.semantic.ast.statement.ForLoopStatement;
+import apex.jorje.semantic.ast.statement.IfBlockStatement;
+import apex.jorje.semantic.ast.statement.IfElseBlockStatement;
+import apex.jorje.semantic.ast.statement.ReturnStatement;
+import apex.jorje.semantic.ast.statement.RunAsBlockStatement;
+import apex.jorje.semantic.ast.statement.Statement;
+import apex.jorje.semantic.ast.statement.ThrowStatement;
+import apex.jorje.semantic.ast.statement.TryCatchFinallyBlockStatement;
+import apex.jorje.semantic.ast.statement.VariableDeclaration;
+import apex.jorje.semantic.ast.statement.VariableDeclarationStatements;
+import apex.jorje.semantic.ast.statement.WhileLoopStatement;
+import apex.jorje.semantic.ast.visitor.AdditionalPassScope;
+import apex.jorje.semantic.ast.visitor.AstVisitor;
+import apex.jorje.semantic.exception.Errors;
+import apex.jorje.semantic.tester.TestNode;
+
+public final class ApexTreeBuilder extends AstVisitor&lt;AdditionalPassScope&gt; {
+
+<span class="fc" id="L102">    private static final Map&lt;Class&lt;? extends AstNode&gt;, Constructor&lt;? extends ApexNode&lt;?&gt;&gt;&gt; NODE_TYPE_TO_NODE_ADAPTER_TYPE = new HashMap&lt;&gt;();</span>
+
+    static {
+<span class="fc" id="L105">        register(Annotation.class, ASTAnnotation.class);</span>
+<span class="fc" id="L106">        register(AnnotationParameter.class, ASTAnnotationParameter.class);</span>
+<span class="fc" id="L107">        register(ArrayLoadExpression.class, ASTArrayLoadExpression.class);</span>
+<span class="fc" id="L108">        register(ArrayStoreExpression.class, ASTArrayStoreExpression.class);</span>
+<span class="fc" id="L109">        register(AssignmentExpression.class, ASTAssignmentExpression.class);</span>
+<span class="fc" id="L110">        register(BinaryExpression.class, ASTBinaryExpression.class);</span>
+<span class="fc" id="L111">        register(BindExpressions.class, ASTBindExpressions.class);</span>
+<span class="fc" id="L112">        register(BlockStatement.class, ASTBlockStatement.class);</span>
+<span class="fc" id="L113">        register(BooleanExpression.class, ASTBooleanExpression.class);</span>
+<span class="fc" id="L114">        register(BreakStatement.class, ASTBreakStatement.class);</span>
+<span class="fc" id="L115">        register(BridgeMethodCreator.class, ASTBridgeMethodCreator.class);</span>
+<span class="fc" id="L116">        register(CatchBlockStatement.class, ASTCatchBlockStatement.class);</span>
+<span class="fc" id="L117">        register(ClassRefExpression.class, ASTClassRefExpression.class);</span>
+<span class="fc" id="L118">        register(ContinueStatement.class, ASTContinueStatement.class);</span>
+<span class="fc" id="L119">        register(DmlDeleteStatement.class, ASTDmlDeleteStatement.class);</span>
+<span class="fc" id="L120">        register(DmlInsertStatement.class, ASTDmlInsertStatement.class);</span>
+<span class="fc" id="L121">        register(DmlMergeStatement.class, ASTDmlMergeStatement.class);</span>
+<span class="fc" id="L122">        register(DmlUndeleteStatement.class, ASTDmlUndeleteStatement.class);</span>
+<span class="fc" id="L123">        register(DmlUpdateStatement.class, ASTDmlUpdateStatement.class);</span>
+<span class="fc" id="L124">        register(DmlUpsertStatement.class, ASTDmlUpsertStatement.class);</span>
+<span class="fc" id="L125">        register(DoLoopStatement.class, ASTDoLoopStatement.class);</span>
+<span class="fc" id="L126">        register(DottedExpression.class, ASTDottedExpression.class);</span>
+<span class="fc" id="L127">        register(Expression.class, ASTExpression.class);</span>
+<span class="fc" id="L128">        register(ExpressionStatement.class, ASTExpressionStatement.class);</span>
+<span class="fc" id="L129">        register(Field.class, ASTField.class);</span>
+<span class="fc" id="L130">        register(FieldDeclaration.class, ASTFieldDeclaration.class);</span>
+<span class="fc" id="L131">        register(FieldDeclarationStatements.class, ASTFieldDeclarationStatements.class);</span>
+<span class="fc" id="L132">        register(ForEachStatement.class, ASTForEachStatement.class);</span>
+<span class="fc" id="L133">        register(ForLoopStatement.class, ASTForLoopStatement.class);</span>
+<span class="fc" id="L134">        register(IfBlockStatement.class, ASTIfBlockStatement.class);</span>
+<span class="fc" id="L135">        register(IfElseBlockStatement.class, ASTIfElseBlockStatement.class);</span>
+<span class="fc" id="L136">        register(InstanceOfExpression.class, ASTInstanceOfExpression.class);</span>
+<span class="fc" id="L137">        register(JavaMethodCallExpression.class, ASTJavaMethodCallExpression.class);</span>
+<span class="fc" id="L138">        register(JavaVariableExpression.class, ASTJavaVariableExpression.class);</span>
+<span class="fc" id="L139">        register(LiteralExpression.class, ASTLiteralExpression.class);</span>
+<span class="fc" id="L140">        register(MapEntryNode.class, ASTMapEntryNode.class);</span>
+<span class="fc" id="L141">        register(Method.class, ASTMethod.class);</span>
+<span class="fc" id="L142">        register(MethodCallExpression.class, ASTMethodCallExpression.class);</span>
+<span class="fc" id="L143">        register(ModifierNode.class, ASTModifierNode.class);</span>
+<span class="fc" id="L144">        register(ModifierOrAnnotation.class, ASTModifierOrAnnotation.class);</span>
+<span class="fc" id="L145">        register(NewListInitExpression.class, ASTNewListInitExpression.class);</span>
+<span class="fc" id="L146">        register(NewListLiteralExpression.class, ASTNewListLiteralExpression.class);</span>
+<span class="fc" id="L147">        register(NewMapInitExpression.class, ASTNewMapInitExpression.class);</span>
+<span class="fc" id="L148">        register(NewMapLiteralExpression.class, ASTNewMapLiteralExpression.class);</span>
+<span class="fc" id="L149">        register(NewNameValueObjectExpression.class, ASTNewNameValueObjectExpression.class);</span>
+<span class="fc" id="L150">        register(NewObjectExpression.class, ASTNewObjectExpression.class);</span>
+<span class="fc" id="L151">        register(NewSetInitExpression.class, ASTNewSetInitExpression.class);</span>
+<span class="fc" id="L152">        register(NewSetLiteralExpression.class, ASTNewSetLiteralExpression.class);</span>
+<span class="fc" id="L153">        register(PackageVersionExpression.class, ASTPackageVersionExpression.class);</span>
+<span class="fc" id="L154">        register(Parameter.class, ASTParameter.class);</span>
+<span class="fc" id="L155">        register(PostfixExpression.class, ASTPostfixExpression.class);</span>
+<span class="fc" id="L156">        register(PrefixExpression.class, ASTPrefixExpression.class);</span>
+<span class="fc" id="L157">        register(Property.class, ASTProperty.class);</span>
+<span class="fc" id="L158">        register(ReferenceExpression.class, ASTReferenceExpression.class);</span>
+<span class="fc" id="L159">        register(ReturnStatement.class, ASTReturnStatement.class);</span>
+<span class="fc" id="L160">        register(RunAsBlockStatement.class, ASTRunAsBlockStatement.class);</span>
+<span class="fc" id="L161">        register(SoqlExpression.class, ASTSoqlExpression.class);</span>
+<span class="fc" id="L162">        register(SoslExpression.class, ASTSoslExpression.class);</span>
+<span class="fc" id="L163">        register(StandardCondition.class, ASTStandardCondition.class);</span>
+<span class="fc" id="L164">        register(Statement.class, ASTStatement.class);</span>
+<span class="fc" id="L165">        register(SuperMethodCallExpression.class, ASTSuperMethodCallExpression.class);</span>
+<span class="fc" id="L166">        register(SuperVariableExpression.class, ASTSuperVariableExpression.class);</span>
+<span class="fc" id="L167">        register(TernaryExpression.class, ASTTernaryExpression.class);</span>
+<span class="fc" id="L168">        register(TestNode.class, ASTTestNode.class);</span>
+<span class="fc" id="L169">        register(ThisMethodCallExpression.class, ASTThisMethodCallExpression.class);</span>
+<span class="fc" id="L170">        register(ThisVariableExpression.class, ASTThisVariableExpression.class);</span>
+<span class="fc" id="L171">        register(ThrowStatement.class, ASTThrowStatement.class);</span>
+<span class="fc" id="L172">        register(TriggerVariableExpression.class, ASTTriggerVariableExpression.class);</span>
+<span class="fc" id="L173">        register(TryCatchFinallyBlockStatement.class, ASTTryCatchFinallyBlockStatement.class);</span>
+<span class="fc" id="L174">        register(UserClass.class, ASTUserClass.class);</span>
+<span class="fc" id="L175">        register(UserTrigger.class, ASTUserTrigger.class);</span>
+<span class="fc" id="L176">        register(UserClassMethods.class, ASTUserClassMethods.class);</span>
+<span class="fc" id="L177">        register(UserEnum.class, ASTUserEnum.class);</span>
+<span class="fc" id="L178">        register(UserExceptionMethods.class, ASTUserExceptionMethods.class);</span>
+<span class="fc" id="L179">        register(UserInterface.class, ASTUserInterface.class);</span>
+<span class="fc" id="L180">        register(VariableDeclaration.class, ASTVariableDeclaration.class);</span>
+<span class="fc" id="L181">        register(VariableDeclarationStatements.class, ASTVariableDeclarationStatements.class);</span>
+<span class="fc" id="L182">        register(VariableExpression.class, ASTVariableExpression.class);</span>
+<span class="fc" id="L183">        register(WhileLoopStatement.class, ASTWhileLoopStatement.class);</span>
+<span class="fc" id="L184">    }</span>
+
+    private static &lt;T extends AstNode&gt; void register(Class&lt;T&gt; nodeType, Class&lt;? extends ApexNode&lt;T&gt;&gt; nodeAdapterType) {
+        try {
+<span class="fc" id="L188">            NODE_TYPE_TO_NODE_ADAPTER_TYPE.put(nodeType, nodeAdapterType.getConstructor(nodeType));</span>
+<span class="nc" id="L189">        } catch (SecurityException e) {</span>
+<span class="nc" id="L190">            throw new RuntimeException(e);</span>
+<span class="nc" id="L191">        } catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L192">            throw new RuntimeException(e);</span>
+<span class="fc" id="L193">        }</span>
+<span class="fc" id="L194">    }</span>
+
+    // The nodes having children built.
+<span class="fc" id="L197">    private Stack&lt;Node&gt; nodes = new Stack&lt;&gt;();</span>
+
+    // The Apex nodes with children to build.
+<span class="fc" id="L200">    private Stack&lt;AstNode&gt; parents = new Stack&lt;&gt;();</span>
+
+    private SourceCodePositioner sourceCodePositioner;
+
+<span class="fc" id="L204">    public ApexTreeBuilder(String sourceCode) {</span>
+<span class="fc" id="L205">        sourceCodePositioner = new SourceCodePositioner(sourceCode);</span>
+<span class="fc" id="L206">    }</span>
+
+<span class="fc" id="L208">    AdditionalPassScope scope = new AdditionalPassScope(new Errors());</span>
+
+    static &lt;T extends AstNode&gt; ApexNode&lt;T&gt; createNodeAdapter(T node) {
+        try {
+            @SuppressWarnings(&quot;unchecked&quot;)
+            // the register function makes sure only ApexNode&lt;T&gt; can be added,
+            // where T is &quot;T extends AstNode&quot;.
+<span class="fc" id="L215">            Constructor&lt;? extends ApexNode&lt;T&gt;&gt; constructor = (Constructor&lt;? extends ApexNode&lt;T&gt;&gt;) NODE_TYPE_TO_NODE_ADAPTER_TYPE</span>
+<span class="fc" id="L216">                    .get(node.getClass());</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">            if (constructor == null) {</span>
+<span class="nc" id="L218">                throw new IllegalArgumentException(</span>
+<span class="nc" id="L219">                        &quot;There is no Node adapter class registered for the Node class: &quot; + node.getClass());</span>
+            }
+<span class="fc" id="L221">            return constructor.newInstance(node);</span>
+<span class="nc" id="L222">        } catch (InstantiationException e) {</span>
+<span class="nc" id="L223">            throw new RuntimeException(e);</span>
+<span class="nc" id="L224">        } catch (IllegalAccessException e) {</span>
+<span class="nc" id="L225">            throw new RuntimeException(e);</span>
+<span class="nc" id="L226">        } catch (InvocationTargetException e) {</span>
+<span class="nc" id="L227">            throw new RuntimeException(e.getTargetException());</span>
+        }
+    }
+
+    public &lt;T extends AstNode&gt; ApexNode&lt;T&gt; build(T astNode) {
+        // Create a Node
+<span class="fc" id="L233">        ApexNode&lt;T&gt; node = createNodeAdapter(astNode);</span>
+<span class="fc" id="L234">        calculateLineNumbers(node);</span>
+
+        // Append to parent
+<span class="fc bfc" id="L237" title="All 2 branches covered.">        Node parent = nodes.isEmpty() ? null : nodes.peek();</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        if (parent != null) {</span>
+<span class="fc" id="L239">            parent.jjtAddChild(node, parent.jjtGetNumChildren());</span>
+<span class="fc" id="L240">            node.jjtSetParent(parent);</span>
+        }
+
+        // Build the children...
+<span class="fc" id="L244">        nodes.push(node);</span>
+<span class="fc" id="L245">        parents.push(astNode);</span>
+<span class="fc" id="L246">        astNode.traverse(this, scope);</span>
+<span class="fc" id="L247">        nodes.pop();</span>
+<span class="fc" id="L248">        parents.pop();</span>
+
+<span class="fc" id="L250">        return node;</span>
+    }
+
+    private void calculateLineNumbers(ApexNode&lt;?&gt; node) {
+<span class="fc" id="L254">        AbstractApexNode&lt;?&gt; apexNode = (AbstractApexNode&lt;?&gt;) node;</span>
+<span class="fc" id="L255">        apexNode.calculateLineNumbers(sourceCodePositioner);</span>
+<span class="fc" id="L256">    }</span>
+
+    private boolean visit(AstNode node) {
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        if (parents.peek() == node) {</span>
+<span class="fc" id="L260">            return true;</span>
+        } else {
+<span class="fc" id="L262">            build(node);</span>
+<span class="fc" id="L263">            return false;</span>
+        }
+    }
+
+    @Override
+    public boolean visit(UserEnum node, AdditionalPassScope scope) {
+<span class="fc" id="L269">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(UserInterface node, AdditionalPassScope scope) {
+<span class="fc" id="L274">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(UserTrigger node, AdditionalPassScope scope) {
+<span class="fc" id="L279">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ArrayLoadExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L284">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ArrayStoreExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L289">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(AssignmentExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L294">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BinaryExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L299">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BooleanExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L304">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ClassRefExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L309">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(InstanceOfExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L314">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(JavaMethodCallExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L319">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(JavaVariableExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L324">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(LiteralExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L329">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ReferenceExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L334">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(MethodCallExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L339">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewListInitExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L344">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewMapInitExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L349">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewSetInitExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L354">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewListLiteralExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L359">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewObjectExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L364">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewSetLiteralExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L369">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewNameValueObjectExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L374">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(PackageVersionExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L379">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(PostfixExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L384">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(PrefixExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L389">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(TernaryExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L394">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(StandardCondition node, AdditionalPassScope scope) {
+<span class="fc" id="L399">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(TriggerVariableExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L404">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DottedExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L409">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(VariableExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L414">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L419">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BreakStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L424">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ContinueStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L429">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlDeleteStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L434">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlInsertStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L439">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlMergeStatement node, AdditionalPassScope scope) {
+<span class="nc" id="L444">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlUndeleteStatement node, AdditionalPassScope scope) {
+<span class="nc" id="L449">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlUpdateStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L454">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DmlUpsertStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L459">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(DoLoopStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L464">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ExpressionStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L469">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ForEachStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L474">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ForLoopStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L479">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(FieldDeclaration node, AdditionalPassScope scope) {
+<span class="fc" id="L484">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(FieldDeclarationStatements node, AdditionalPassScope scope) {
+<span class="fc" id="L489">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(IfBlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L494">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(IfElseBlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L499">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ReturnStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L504">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(RunAsBlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L509">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ThrowStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L514">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(VariableDeclaration node, AdditionalPassScope scope) {
+<span class="fc" id="L519">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(VariableDeclarationStatements node, AdditionalPassScope scope) {
+<span class="fc" id="L524">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(WhileLoopStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L529">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BindExpressions node, AdditionalPassScope scope) {
+<span class="fc" id="L534">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(SoqlExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L539">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(SoslExpression node, AdditionalPassScope scope) {
+<span class="nc" id="L544">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(NewMapLiteralExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L549">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(MapEntryNode node, AdditionalPassScope scope) {
+<span class="fc" id="L554">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(CatchBlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L559">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(TryCatchFinallyBlockStatement node, AdditionalPassScope scope) {
+<span class="fc" id="L564">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(Property node, AdditionalPassScope scope) {
+<span class="fc" id="L569">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(Field node, AdditionalPassScope scope) {
+<span class="fc" id="L574">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(Parameter node, AdditionalPassScope scope) {
+<span class="fc" id="L579">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(BridgeMethodCreator node, AdditionalPassScope scope) {
+<span class="fc" id="L584">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(UserClassMethods node, AdditionalPassScope scope) {
+<span class="fc" id="L589">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(UserExceptionMethods node, AdditionalPassScope scope) {
+<span class="fc" id="L594">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(Annotation node, AdditionalPassScope scope) {
+<span class="fc" id="L599">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(AnnotationParameter node, AdditionalPassScope scope) {
+<span class="fc" id="L604">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ModifierNode node, AdditionalPassScope scope) {
+<span class="fc" id="L609">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(SuperMethodCallExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L614">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ThisMethodCallExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L619">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(SuperVariableExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L624">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(ThisVariableExpression node, AdditionalPassScope scope) {
+<span class="fc" id="L629">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(UserClass node, AdditionalPassScope scope) {
+<span class="fc" id="L634">        return visit(node);</span>
+    }
+
+    @Override
+    public boolean visit(Method node, AdditionalPassScope scope) {
+<span class="fc" id="L639">        return visit(node);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

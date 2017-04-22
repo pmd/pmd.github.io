@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RuleSetReferenceId.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">RuleSetReferenceId.java</span></div><h1>RuleSetReferenceId.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import net.sourceforge.pmd.util.ResourceLoader;
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * This class is used to parse a RuleSet reference value. Most commonly used for
+ * specifying a RuleSet to process, or in a Rule 'ref' attribute value in the
+ * RuleSet XML. The RuleSet reference can refer to either an external RuleSet or
+ * the current RuleSet when used as a Rule 'ref' attribute value. An individual
+ * Rule in the RuleSet can be indicated.
+ *
+ * For an external RuleSet, referring to the entire RuleSet, the format is
+ * &lt;i&gt;ruleSetName&lt;/i&gt;, where the RuleSet name is either a resource file path to
+ * a RuleSet that ends with &lt;code&gt;'.xml'&lt;/code&gt;, or a simple RuleSet name.
+ *
+ * A simple RuleSet name, is one which contains no path separators, and either
+ * contains a '-' or is entirely numeric release number. A simple name of the
+ * form &lt;code&gt;[language]-[name]&lt;/code&gt; is short for the full RuleSet name
+ * &lt;code&gt;rulesets/[language]/[name].xml&lt;/code&gt;. A numeric release simple name of
+ * the form &lt;code&gt;[release]&lt;/code&gt; is short for the full PMD Release RuleSet
+ * name &lt;code&gt;rulesets/releases/[release].xml&lt;/code&gt;.
+ *
+ * For an external RuleSet, referring to a single Rule, the format is
+ * &lt;i&gt;ruleSetName/ruleName&lt;/i&gt;, where the RuleSet name is as described above. A
+ * Rule with the &lt;i&gt;ruleName&lt;/i&gt; should exist in this external RuleSet.
+ *
+ * For the current RuleSet, the format is &lt;i&gt;ruleName&lt;/i&gt;, where the Rule name
+ * is not RuleSet name (i.e. contains no path separators, '-' or '.xml' in it,
+ * and is not all numeric). A Rule with the &lt;i&gt;ruleName&lt;/i&gt; should exist in the
+ * current RuleSet.
+ *
+ * &lt;table&gt;
+ * &lt;caption&gt;Examples&lt;/caption&gt; &lt;thead&gt;
+ * &lt;tr&gt;
+ * &lt;th&gt;String&lt;/th&gt;
+ * &lt;th&gt;RuleSet file name&lt;/th&gt;
+ * &lt;th&gt;Rule&lt;/th&gt;
+ * &lt;/tr&gt;
+ * &lt;/thead&gt; &lt;tbody&gt;
+ * &lt;tr&gt;
+ * &lt;td&gt;rulesets/java/basic.xml&lt;/td&gt;
+ * &lt;td&gt;rulesets/java/basic.xml&lt;/td&gt;
+ * &lt;td&gt;all&lt;/td&gt;
+ * &lt;/tr&gt;
+ * &lt;tr&gt;
+ * &lt;td&gt;java-basic&lt;/td&gt;
+ * &lt;td&gt;rulesets/java/basic.xml&lt;/td&gt;
+ * &lt;td&gt;all&lt;/td&gt;
+ * &lt;/tr&gt;
+ * &lt;tr&gt;
+ * &lt;td&gt;50&lt;/td&gt;
+ * &lt;td&gt;rulesets/releases/50.xml&lt;/td&gt;
+ * &lt;td&gt;all&lt;/td&gt;
+ * &lt;/tr&gt;
+ * &lt;tr&gt;
+ * &lt;td&gt;rulesets/java/basic.xml/EmptyCatchBlock&lt;/td&gt;
+ * &lt;td&gt;rulesets/java/basic.xml&lt;/td&gt;
+ * &lt;td&gt;EmptyCatchBlock&lt;/td&gt;
+ * &lt;/tr&gt;
+ * &lt;tr&gt;
+ * &lt;td&gt;EmptyCatchBlock&lt;/td&gt;
+ * &lt;td&gt;null&lt;/td&gt;
+ * &lt;td&gt;EmptyCatchBlock&lt;/td&gt;
+ * &lt;/tr&gt;
+ * &lt;/tbody&gt;
+ * &lt;/table&gt;
+ */
+public class RuleSetReferenceId {
+    private final boolean external;
+    private final String ruleSetFileName;
+    private final boolean allRules;
+    private final String ruleName;
+    private final RuleSetReferenceId externalRuleSetReferenceId;
+
+    /**
+     * Construct a RuleSetReferenceId for the given single ID string.
+     *
+     * @param id
+     *            The id string.
+     * @throws IllegalArgumentException
+     *             If the ID contains a comma character.
+     */
+    public RuleSetReferenceId(final String id) {
+
+<span class="fc" id="L101">        this(id, null);</span>
+<span class="fc" id="L102">    }</span>
+
+    /**
+     * Construct a RuleSetReferenceId for the given single ID string. If an
+     * external RuleSetReferenceId is given, the ID must refer to a non-external
+     * Rule. The external RuleSetReferenceId will be responsible for producing
+     * the InputStream containing the Rule.
+     *
+     * @param id
+     *            The id string.
+     * @param externalRuleSetReferenceId
+     *            A RuleSetReferenceId to associate with this new instance.
+     * @throws IllegalArgumentException
+     *             If the ID contains a comma character.
+     * @throws IllegalArgumentException
+     *             If external RuleSetReferenceId is not external.
+     * @throws IllegalArgumentException
+     *             If the ID is not Rule reference when there is an external
+     *             RuleSetReferenceId.
+     */
+<span class="fc" id="L122">    public RuleSetReferenceId(final String id, final RuleSetReferenceId externalRuleSetReferenceId) {</span>
+
+<span class="fc bfc" id="L124" title="All 4 branches covered.">        if (externalRuleSetReferenceId != null &amp;&amp; !externalRuleSetReferenceId.isExternal()) {</span>
+<span class="fc" id="L125">            throw new IllegalArgumentException(&quot;Cannot pair with non-external &lt;&quot; + externalRuleSetReferenceId + &quot;&gt;.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L128" title="All 4 branches covered.">        if (id != null &amp;&amp; id.indexOf(',') &gt;= 0) {</span>
+<span class="fc" id="L129">            throw new IllegalArgumentException(</span>
+                    &quot;A single RuleSetReferenceId cannot contain ',' (comma) characters: &quot; + id);
+        }
+
+        // Damn this parsing sucks, but my brain is just not working to let me
+        // write a simpler scheme.
+
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (isValidUrl(id)) {</span>
+            // A full RuleSet name
+<span class="fc" id="L138">            external = true;</span>
+<span class="fc" id="L139">            ruleSetFileName = StringUtils.strip(id);</span>
+<span class="fc" id="L140">            allRules = true;</span>
+<span class="fc" id="L141">            ruleName = null;</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        } else if (isFullRuleSetName(id)) {</span>
+            // A full RuleSet name
+<span class="fc" id="L144">            external = true;</span>
+<span class="fc" id="L145">            ruleSetFileName = id;</span>
+<span class="fc" id="L146">            allRules = true;</span>
+<span class="fc" id="L147">            ruleName = null;</span>
+        } else {
+<span class="fc" id="L149">            String tempRuleName = getRuleName(id);</span>
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">            String tempRuleSetFileName = tempRuleName != null &amp;&amp; id != null</span>
+                    ? id.substring(0, id.length() - tempRuleName.length() - 1) : id;
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (isValidUrl(tempRuleSetFileName)) {</span>
+                // remaining part is a xml ruleset file, so the tempRuleName is
+                // probably a real rule name
+<span class="fc" id="L156">                external = true;</span>
+<span class="fc" id="L157">                ruleSetFileName = StringUtils.strip(tempRuleSetFileName);</span>
+<span class="fc" id="L158">                ruleName = StringUtils.strip(tempRuleName);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">                allRules = tempRuleName == null;</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            } else if (isHttpUrl(id)) {</span>
+                // it's a url, we can't determine whether it's a full ruleset or
+                // a single rule - so falling back to
+                // a full RuleSet name
+<span class="fc" id="L164">                external = true;</span>
+<span class="fc" id="L165">                ruleSetFileName = StringUtils.strip(id);</span>
+<span class="fc" id="L166">                allRules = true;</span>
+<span class="fc" id="L167">                ruleName = null;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            } else if (isFullRuleSetName(tempRuleSetFileName)) {</span>
+                // remaining part is a xml ruleset file, so the tempRuleName is
+                // probably a real rule name
+<span class="fc" id="L171">                external = true;</span>
+<span class="fc" id="L172">                ruleSetFileName = tempRuleSetFileName;</span>
+<span class="fc" id="L173">                ruleName = tempRuleName;</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                allRules = tempRuleName == null;</span>
+            } else {
+                // resolve the ruleset name - it's maybe a built in ruleset
+<span class="fc" id="L177">                String builtinRuleSet = resolveBuiltInRuleset(tempRuleSetFileName);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                if (checkRulesetExists(builtinRuleSet)) {</span>
+<span class="fc" id="L179">                    external = true;</span>
+<span class="fc" id="L180">                    ruleSetFileName = builtinRuleSet;</span>
+<span class="fc" id="L181">                    ruleName = tempRuleName;</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                    allRules = tempRuleName == null;</span>
+                } else {
+                    // well, we didn't find the ruleset, so it's probably not a
+                    // internal ruleset.
+                    // at this time, we don't know, whether the tempRuleName is
+                    // a name of the rule
+                    // or the file name of the ruleset file.
+                    // It is assumed, that tempRuleName is actually the filename
+                    // of the ruleset,
+                    // if there are more separator characters in the remaining
+                    // ruleset filename (tempRuleSetFileName).
+                    // This means, the only reliable way to specify single rules
+                    // within a custom rulesest file is
+                    // only possible, if the ruleset file has a .xml file
+                    // extension.
+<span class="fc bfc" id="L197" title="All 4 branches covered.">                    if (tempRuleSetFileName == null || tempRuleSetFileName.contains(File.separator)) {</span>
+<span class="fc" id="L198">                        external = true;</span>
+<span class="fc" id="L199">                        ruleSetFileName = id;</span>
+<span class="fc" id="L200">                        ruleName = null;</span>
+<span class="fc" id="L201">                        allRules = true;</span>
+                    } else {
+<span class="fc bfc" id="L203" title="All 2 branches covered.">                        external = externalRuleSetReferenceId != null ? externalRuleSetReferenceId.isExternal() : false;</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                        ruleSetFileName = externalRuleSetReferenceId != null</span>
+                                ? externalRuleSetReferenceId.getRuleSetFileName() : null;
+<span class="fc" id="L206">                        ruleName = id;</span>
+<span class="fc" id="L207">                        allRules = false;</span>
+                    }
+                }
+            }
+        }
+
+<span class="fc bfc" id="L213" title="All 8 branches covered.">        if (this.external &amp;&amp; this.ruleName != null &amp;&amp; !this.ruleName.equals(id) &amp;&amp; externalRuleSetReferenceId != null) {</span>
+<span class="fc" id="L214">            throw new IllegalArgumentException(</span>
+                    &quot;Cannot pair external &lt;&quot; + this + &quot;&gt; with external &lt;&quot; + externalRuleSetReferenceId + &quot;&gt;.&quot;);
+        }
+<span class="fc" id="L217">        this.externalRuleSetReferenceId = externalRuleSetReferenceId;</span>
+<span class="fc" id="L218">    }</span>
+
+    /**
+     * Tries to load the given ruleset.
+     *
+     * @param name
+     *            the ruleset name
+     * @return &lt;code&gt;true&lt;/code&gt; if the ruleset could be loaded,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    private boolean checkRulesetExists(String name) {
+<span class="fc" id="L229">        boolean resourceFound = false;</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (name != null) {</span>
+            try {
+<span class="fc" id="L232">                InputStream resource = ResourceLoader.loadResourceAsStream(name,</span>
+                        RuleSetReferenceId.class.getClassLoader());
+<span class="fc bfc" id="L234" title="All 2 branches covered.">                if (resource != null) {</span>
+<span class="fc" id="L235">                    resourceFound = true;</span>
+<span class="fc" id="L236">                    IOUtils.closeQuietly(resource);</span>
+                }
+<span class="nc" id="L238">            } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L239">                resourceFound = false;</span>
+<span class="fc" id="L240">            }</span>
+        }
+<span class="fc" id="L242">        return resourceFound;</span>
+    }
+
+    /**
+     * Assumes that the ruleset name given is e.g. &quot;java-basic&quot;. Then it will
+     * return the full classpath name for the ruleset, in this example it would
+     * return &quot;rulesets/java/basic.xml&quot;.
+     *
+     * @param name
+     *            the ruleset name
+     * @return the full classpath to the ruleset
+     */
+    private String resolveBuiltInRuleset(final String name) {
+<span class="fc" id="L255">        String result = null;</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (name != null) {</span>
+            // Likely a simple RuleSet name
+<span class="fc" id="L258">            int index = name.indexOf('-');</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">            if (index &gt;= 0) {</span>
+                // Standard short name
+<span class="fc" id="L261">                result = &quot;rulesets/&quot; + name.substring(0, index) + &quot;/&quot; + name.substring(index + 1) + &quot;.xml&quot;;</span>
+            } else {
+                // A release RuleSet?
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                if (name.matches(&quot;[0-9]+.*&quot;)) {</span>
+<span class="fc" id="L265">                    result = &quot;rulesets/releases/&quot; + name + &quot;.xml&quot;;</span>
+                } else {
+                    // Appears to be a non-standard RuleSet name
+<span class="fc" id="L268">                    result = name;</span>
+                }
+            }
+        }
+<span class="fc" id="L272">        return result;</span>
+    }
+
+    /**
+     * Extracts the rule name out of a ruleset path. E.g. for
+     * &quot;/my/ruleset.xml/MyRule&quot; it would return &quot;MyRule&quot;. If no single rule is
+     * specified, &lt;code&gt;null&lt;/code&gt; is returned.
+     *
+     * @param rulesetName
+     *            the full rule set path
+     * @return the rule name or &lt;code&gt;null&lt;/code&gt;.
+     */
+    private String getRuleName(final String rulesetName) {
+<span class="fc" id="L285">        String result = null;</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (rulesetName != null) {</span>
+            // Find last path separator if it exists... this might be a rule
+            // name
+<span class="fc" id="L289">            final int separatorIndex = Math.max(rulesetName.lastIndexOf('/'), rulesetName.lastIndexOf('\\'));</span>
+<span class="pc bpc" id="L290" title="1 of 4 branches missed.">            if (separatorIndex &gt;= 0 &amp;&amp; separatorIndex != rulesetName.length() - 1) {</span>
+<span class="fc" id="L291">                result = rulesetName.substring(separatorIndex + 1);</span>
+            }
+        }
+<span class="fc" id="L294">        return result;</span>
+    }
+
+    private static boolean isHttpUrl(String name) {
+<span class="fc" id="L298">        String stripped = StringUtils.strip(name);</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (stripped == null) {</span>
+<span class="fc" id="L300">            return false;</span>
+        }
+
+<span class="pc bpc" id="L303" title="1 of 4 branches missed.">        if (stripped.startsWith(&quot;http://&quot;) || stripped.startsWith(&quot;https://&quot;)) {</span>
+<span class="fc" id="L304">            return true;</span>
+        }
+
+<span class="fc" id="L307">        return false;</span>
+    }
+
+    private static boolean isValidUrl(String name) {
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        if (isHttpUrl(name)) {</span>
+<span class="fc" id="L312">            String url = StringUtils.strip(name);</span>
+            try {
+<span class="fc" id="L314">                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();</span>
+<span class="fc" id="L315">                connection.setRequestMethod(&quot;HEAD&quot;);</span>
+<span class="fc" id="L316">                connection.setConnectTimeout(ResourceLoader.TIMEOUT);</span>
+<span class="fc" id="L317">                connection.setReadTimeout(ResourceLoader.TIMEOUT);</span>
+<span class="fc" id="L318">                int responseCode = connection.getResponseCode();</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">                if (responseCode == 200) {</span>
+<span class="fc" id="L320">                    return true;</span>
+                }
+<span class="fc" id="L322">            } catch (IOException e) {</span>
+<span class="fc" id="L323">                return false;</span>
+<span class="fc" id="L324">            }</span>
+        }
+<span class="fc" id="L326">        return false;</span>
+    }
+
+    private static boolean isFullRuleSetName(String name) {
+
+<span class="fc bfc" id="L331" title="All 4 branches covered.">        return name != null &amp;&amp; name.endsWith(&quot;.xml&quot;);</span>
+    }
+
+    /**
+     * Parse a String comma separated list of RuleSet reference IDs into a List
+     * of RuleReferenceId instances.
+     *
+     * @param referenceString
+     *            A comma separated list of RuleSet reference IDs.
+     * @return The corresponding List of RuleSetReferenceId instances.
+     */
+    public static List&lt;RuleSetReferenceId&gt; parse(String referenceString) {
+<span class="fc" id="L343">        List&lt;RuleSetReferenceId&gt; references = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L344" title="1 of 4 branches missed.">        if (referenceString != null &amp;&amp; referenceString.trim().length() &gt; 0) {</span>
+
+<span class="fc bfc" id="L346" title="All 2 branches covered.">            if (referenceString.indexOf(',') == -1) {</span>
+<span class="fc" id="L347">                references.add(new RuleSetReferenceId(referenceString));</span>
+            } else {
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                for (String name : referenceString.split(&quot;,&quot;)) {</span>
+<span class="fc" id="L350">                    references.add(new RuleSetReferenceId(name.trim()));</span>
+                }
+            }
+        }
+<span class="fc" id="L354">        return references;</span>
+    }
+
+    /**
+     * Is this an external RuleSet reference?
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if this is an external reference,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean isExternal() {
+<span class="fc" id="L364">        return external;</span>
+    }
+
+    /**
+     * Is this a reference to all Rules in a RuleSet, or a single Rule?
+     *
+     * @return &lt;code&gt;true&lt;/code&gt; if this is a reference to all Rules,
+     *         &lt;code&gt;false&lt;/code&gt; otherwise.
+     */
+    public boolean isAllRules() {
+<span class="fc" id="L374">        return allRules;</span>
+    }
+
+    /**
+     * Get the RuleSet file name.
+     *
+     * @return The RuleSet file name if this is an external reference,
+     *         &lt;code&gt;null&lt;/code&gt; otherwise.
+     */
+    public String getRuleSetFileName() {
+<span class="fc" id="L384">        return ruleSetFileName;</span>
+    }
+
+    /**
+     * Get the Rule name.
+     *
+     * @return The Rule name. The Rule name.
+     */
+    public String getRuleName() {
+<span class="fc" id="L393">        return ruleName;</span>
+    }
+
+    /**
+     * Try to load the RuleSet resource with the specified ClassLoader. Multiple
+     * attempts to get independent InputStream instances may be made, so
+     * subclasses must ensure they support this behavior. Delegates to an
+     * external RuleSetReferenceId if there is one associated with this
+     * instance.
+     *
+     * @param classLoader
+     *            The ClassLoader to use.
+     * @return An InputStream to that resource.
+     * @throws RuleSetNotFoundException
+     *             if unable to find a resource.
+     */
+    public InputStream getInputStream(ClassLoader classLoader) throws RuleSetNotFoundException {
+<span class="fc bfc" id="L410" title="All 2 branches covered.">        if (externalRuleSetReferenceId == null) {</span>
+<span class="fc bfc" id="L411" title="All 2 branches covered.">            InputStream in = StringUtil.isEmpty(ruleSetFileName) ? null</span>
+                    : ResourceLoader.loadResourceAsStream(ruleSetFileName, classLoader);
+<span class="fc bfc" id="L413" title="All 2 branches covered.">            if (in == null) {</span>
+<span class="fc" id="L414">                throw new RuleSetNotFoundException(&quot;Can't find resource '&quot; + ruleSetFileName + &quot;' for rule '&quot; + ruleName</span>
+                        + &quot;'&quot; + &quot;.  Make sure the resource is a valid file or URL and is on the CLASSPATH. &quot;
+                        + &quot;Here's the current classpath: &quot; + System.getProperty(&quot;java.class.path&quot;));
+            }
+<span class="fc" id="L418">            return in;</span>
+        } else {
+<span class="fc" id="L420">            return externalRuleSetReferenceId.getInputStream(classLoader);</span>
+        }
+    }
+
+    /**
+     * Return the String form of this Rule reference.
+     *
+     * @return Return the String form of this Rule reference, which is
+     *         &lt;i&gt;ruleSetFileName&lt;/i&gt; for all Rule external references,
+     *         &lt;i&gt;ruleSetFileName/ruleName&lt;/i&gt;, for a single Rule external
+     *         references, or &lt;i&gt;ruleName&lt;/i&gt; otherwise.
+     */
+    @Override
+    public String toString() {
+<span class="fc bfc" id="L434" title="All 2 branches covered.">        if (ruleSetFileName != null) {</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">            if (allRules) {</span>
+<span class="fc" id="L436">                return ruleSetFileName;</span>
+            } else {
+<span class="fc" id="L438">                return ruleSetFileName + &quot;/&quot; + ruleName;</span>
+            }
+
+        } else {
+<span class="fc bfc" id="L442" title="All 2 branches covered.">            if (allRules) {</span>
+<span class="fc" id="L443">                return &quot;anonymous all Rule&quot;;</span>
+            } else {
+<span class="fc" id="L445">                return ruleName;</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

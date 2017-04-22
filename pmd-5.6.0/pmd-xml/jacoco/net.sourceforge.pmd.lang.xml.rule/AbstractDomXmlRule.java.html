@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractDomXmlRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD XML and XSL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.xml.rule</a> &gt; <span class="el_source">AbstractDomXmlRule.java</span></div><h1>AbstractDomXmlRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.xml.rule;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Comment;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.Element;
+import org.w3c.dom.Entity;
+import org.w3c.dom.EntityReference;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.Notation;
+import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.Text;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.xml.ast.XmlNode;
+
+/**
+ * This is a base class for XML Java bases rules that which to visit the nodes
+ * using the DOM. Subclasses should override the DOM appropriate method and can
+ * call &lt;code&gt;super&lt;/code&gt; to visit children.
+ */
+<span class="fc" id="L29">public class AbstractDomXmlRule extends AbstractXmlRule {</span>
+
+    @Override
+    protected void visit(XmlNode node, RuleContext ctx) {
+<span class="fc" id="L33">        final Node domNode = node.getNode();</span>
+
+        // Visit the node
+<span class="fc" id="L36">        visitDomNode(node, domNode, ctx);</span>
+
+        // Visit attributes
+<span class="fc" id="L39">        visitAttributeNodes(node, domNode, ctx);</span>
+<span class="fc" id="L40">    }</span>
+
+    protected void visitDomNode(XmlNode node, Node domNode, RuleContext ctx) {
+<span class="pc bpc" id="L43" title="3 of 11 branches missed.">        switch (domNode.getNodeType()) {</span>
+        case Node.CDATA_SECTION_NODE:
+<span class="fc" id="L45">            visit(node, (CharacterData) domNode, ctx);</span>
+<span class="fc" id="L46">            break;</span>
+        case Node.COMMENT_NODE:
+<span class="fc" id="L48">            visit(node, (Comment) domNode, ctx);</span>
+<span class="fc" id="L49">            break;</span>
+        case Node.DOCUMENT_NODE:
+<span class="fc" id="L51">            visit(node, (Document) domNode, ctx);</span>
+<span class="fc" id="L52">            break;</span>
+        case Node.DOCUMENT_TYPE_NODE:
+<span class="fc" id="L54">            visit(node, (DocumentType) domNode, ctx);</span>
+<span class="fc" id="L55">            break;</span>
+        case Node.ELEMENT_NODE:
+<span class="fc" id="L57">            visit(node, (Element) domNode, ctx);</span>
+<span class="fc" id="L58">            break;</span>
+        case Node.ENTITY_NODE:
+<span class="nc" id="L60">            visit(node, (Entity) domNode, ctx);</span>
+<span class="nc" id="L61">            break;</span>
+        case Node.ENTITY_REFERENCE_NODE:
+<span class="fc" id="L63">            visit(node, (EntityReference) domNode, ctx);</span>
+<span class="fc" id="L64">            break;</span>
+        case Node.NOTATION_NODE:
+<span class="nc" id="L66">            visit(node, (Notation) domNode, ctx);</span>
+<span class="nc" id="L67">            break;</span>
+        case Node.PROCESSING_INSTRUCTION_NODE:
+<span class="fc" id="L69">            visit(node, (ProcessingInstruction) domNode, ctx);</span>
+<span class="fc" id="L70">            break;</span>
+        case Node.TEXT_NODE:
+<span class="fc" id="L72">            visit(node, (Text) domNode, ctx);</span>
+<span class="fc" id="L73">            break;</span>
+        default:
+<span class="nc" id="L75">            throw new RuntimeException(&quot;Unexpected node type: &quot; + domNode.getNodeType() + &quot; on node: &quot; + domNode);</span>
+        }
+<span class="fc" id="L77">    }</span>
+
+    protected void visitAttributeNodes(XmlNode node, Node domNode, RuleContext ctx) {
+<span class="fc" id="L80">        NamedNodeMap attributes = domNode.getAttributes();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (attributes != null) {</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            for (int i = 0; i &lt; attributes.getLength(); i++) {</span>
+<span class="fc" id="L83">                visit(node, (Attr) attributes.item(i), ctx);</span>
+            }
+        }
+<span class="fc" id="L86">    }</span>
+
+    protected void visit(XmlNode node, Attr attr, RuleContext ctx) {
+<span class="fc" id="L89">    }</span>
+
+    protected void visit(XmlNode node, CharacterData characterData, RuleContext ctx) {
+<span class="fc" id="L92">        super.visit(node, ctx);</span>
+<span class="fc" id="L93">    }</span>
+
+    protected void visit(XmlNode node, Comment comment, RuleContext ctx) {
+<span class="fc" id="L96">        super.visit(node, ctx);</span>
+<span class="fc" id="L97">    }</span>
+
+    protected void visit(XmlNode node, Document document, RuleContext ctx) {
+<span class="fc" id="L100">        super.visit(node, ctx);</span>
+<span class="fc" id="L101">    }</span>
+
+    protected void visit(XmlNode node, DocumentType documentType, RuleContext ctx) {
+<span class="fc" id="L104">        super.visit(node, ctx);</span>
+<span class="fc" id="L105">    }</span>
+
+    protected void visit(XmlNode node, Element element, RuleContext ctx) {
+<span class="fc" id="L108">        super.visit(node, ctx);</span>
+<span class="fc" id="L109">    }</span>
+
+    protected void visit(XmlNode node, Entity entity, RuleContext ctx) {
+<span class="nc" id="L112">        super.visit(node, ctx);</span>
+<span class="nc" id="L113">    }</span>
+
+    protected void visit(XmlNode node, EntityReference entityReference, RuleContext ctx) {
+<span class="fc" id="L116">        super.visit(node, ctx);</span>
+<span class="fc" id="L117">    }</span>
+
+    protected void visit(XmlNode node, Notation notation, RuleContext ctx) {
+<span class="nc" id="L120">        super.visit(node, ctx);</span>
+<span class="nc" id="L121">    }</span>
+
+    protected void visit(XmlNode node, ProcessingInstruction processingInstruction, RuleContext ctx) {
+<span class="fc" id="L124">        super.visit(node, ctx);</span>
+<span class="fc" id="L125">    }</span>
+
+    protected void visit(XmlNode node, Text text, RuleContext ctx) {
+<span class="fc" id="L128">        super.visit(node, ctx);</span>
+<span class="fc" id="L129">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

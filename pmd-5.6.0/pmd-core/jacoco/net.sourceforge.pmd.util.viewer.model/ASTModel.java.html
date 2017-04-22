@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ASTModel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.viewer.model</a> &gt; <span class="el_source">ASTModel.java</span></div><h1>ASTModel.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.util.viewer.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
+
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * Model for the AST Panel Tree component
+ *
+ * @author Boris Gruschko ( boris at gruschko.org )
+ * @version $Id$
+ */
+
+public class ASTModel implements TreeModel {
+
+    private Node root;
+<span class="nc" id="L27">    private List&lt;TreeModelListener&gt; listeners = new ArrayList&lt;&gt;(1);</span>
+
+    /**
+     * creates the tree model
+     *
+     * @param root
+     *            tree's root
+     */
+<span class="nc" id="L35">    public ASTModel(Node root) {</span>
+<span class="nc" id="L36">        this.root = root;</span>
+<span class="nc" id="L37">    }</span>
+
+    /**
+     * @see javax.swing.tree.TreeModel
+     */
+    @Override
+    public Object getChild(Object parent, int index) {
+<span class="nc" id="L44">        return ((Node) parent).jjtGetChild(index);</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#getChildCount(java.lang.Object)
+     */
+    @Override
+    public int getChildCount(Object parent) {
+<span class="nc" id="L52">        return ((Node) parent).jjtGetNumChildren();</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#getIndexOfChild(java.lang.Object,java.lang.Object)
+     */
+    @Override
+    public int getIndexOfChild(Object parent, Object child) {
+<span class="nc" id="L60">        Node node = (Node) parent;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (node.jjtGetChild(i).equals(child)) {</span>
+<span class="nc" id="L63">                return i;</span>
+            }
+        }
+<span class="nc" id="L66">        return -1;</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#isLeaf(java.lang.Object)
+     */
+    @Override
+    public boolean isLeaf(Object node) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        return ((Node) node).jjtGetNumChildren() == 0;</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#getRoot()
+     */
+    @Override
+    public Object getRoot() {
+<span class="nc" id="L82">        return root;</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#valueForPathChanged(javax.swing.tree.TreePath,java.lang.Object)
+     */
+    @Override
+    public void valueForPathChanged(TreePath path, Object newValue) {
+<span class="nc" id="L90">        throw new UnsupportedOperationException();</span>
+    }
+
+    /**
+     * @see javax.swing.tree.TreeModel#addTreeModelListener(javax.swing.event.TreeModelListener)
+     */
+    @Override
+    public void addTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L98">        listeners.add(l);</span>
+<span class="nc" id="L99">    }</span>
+
+    /**
+     * @see javax.swing.tree.TreeModel#removeTreeModelListener(javax.swing.event.TreeModelListener)
+     */
+    @Override
+    public void removeTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L106">        listeners.remove(l);</span>
+<span class="nc" id="L107">    }</span>
+
+    protected void fireTreeModelEvent(TreeModelEvent e) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        for (TreeModelListener listener : listeners) {</span>
+<span class="nc" id="L111">            listener.treeNodesChanged(e);</span>
+<span class="nc" id="L112">        }</span>
+<span class="nc" id="L113">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

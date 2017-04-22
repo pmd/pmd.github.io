@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Comment.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Scala</a> &gt; <a href="index.source.html" class="el_package">org.sonar.plugins.scala.language</a> &gt; <span class="el_source">Comment.java</span></div><h1>Comment.java</h1><pre class="source lang-java linenums">/*
+ * Sonar Scala Plugin
+ * Copyright (C) 2011 - 2014 All contributors
+ * dev@sonar.codehaus.org
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
+ */
+
+package org.sonar.plugins.scala.language;
+
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.sonar.plugins.scala.util.StringUtils;
+
+/**
+ * This class implements a Scala comment and the computation of several base
+ * metrics for a comment.
+ *
+ * @author Felix Müller
+ * @since 0.1
+ */
+public class Comment {
+
+    private final CommentType type;
+    private final List&lt;String&gt; lines;
+
+<span class="nc" id="L43">    public Comment(String content, CommentType type) throws IOException {</span>
+<span class="nc" id="L44">        lines = StringUtils.convertStringToListOfLines(content);</span>
+<span class="nc" id="L45">        this.type = type;</span>
+<span class="nc" id="L46">    }</span>
+
+    public int getNumberOfLines() {
+<span class="nc" id="L49">        return lines.size() - getNumberOfBlankLines() - getNumberOfCommentedOutLinesOfCode();</span>
+    }
+
+    public int getNumberOfBlankLines() {
+<span class="nc" id="L53">        int numberOfBlankLines = 0;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for (String comment : lines) {</span>
+<span class="nc" id="L55">            boolean isBlank = true;</span>
+
+<span class="nc bnc" id="L57" title="All 4 branches missed.">            for (int i = 0; isBlank &amp;&amp; i &lt; comment.length(); i++) {</span>
+<span class="nc" id="L58">                char character = comment.charAt(i);</span>
+<span class="nc bnc" id="L59" title="All 6 branches missed.">                if (!Character.isWhitespace(character) &amp;&amp; character != '*' &amp;&amp; character != '/') {</span>
+<span class="nc" id="L60">                    isBlank = false;</span>
+                }
+            }
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">            if (isBlank) {</span>
+<span class="nc" id="L65">                numberOfBlankLines++;</span>
+            }
+<span class="nc" id="L67">        }</span>
+<span class="nc" id="L68">        return numberOfBlankLines;</span>
+    }
+
+    public int getNumberOfCommentedOutLinesOfCode() {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (isDocComment()) {</span>
+<span class="nc" id="L73">            return 0;</span>
+        }
+
+<span class="nc" id="L76">        int numberOfCommentedOutLinesOfCode = 0;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        for (String line : lines) {</span>
+<span class="nc" id="L78">            String strippedLine = org.apache.commons.lang3.StringUtils.strip(line, &quot; /*&quot;);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (CodeDetector.hasDetectedCode(strippedLine)) {</span>
+<span class="nc" id="L80">                numberOfCommentedOutLinesOfCode++;</span>
+            }
+<span class="nc" id="L82">        }</span>
+<span class="nc" id="L83">        return numberOfCommentedOutLinesOfCode;</span>
+    }
+
+    public boolean isDocComment() {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        return type == CommentType.DOC;</span>
+    }
+
+    public boolean isHeaderComment() {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        return type == CommentType.HEADER;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L96">        return new HashCodeBuilder().append(type).append(lines).toHashCode();</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (!(obj instanceof Comment)) {</span>
+<span class="nc" id="L102">            return false;</span>
+        }
+
+<span class="nc" id="L105">        Comment other = (Comment) obj;</span>
+<span class="nc" id="L106">        return new EqualsBuilder().append(type, other.type).append(lines, other.lines).isEquals();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        final String firstLine = lines.isEmpty() ? &quot;&quot; : lines.get(0);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        final String lastLine = lines.isEmpty() ? &quot;&quot; : lines.get(lines.size() - 1);</span>
+<span class="nc" id="L113">        return new ToStringBuilder(this).append(&quot;type&quot;, type).append(&quot;firstLine&quot;, firstLine)</span>
+                .append(&quot;lastLine&quot;, lastLine).append(&quot;numberOfLines&quot;, getNumberOfLines())
+                .append(&quot;numberOfCommentedOutLinesOfCode&quot;, getNumberOfCommentedOutLinesOfCode()).toString();
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

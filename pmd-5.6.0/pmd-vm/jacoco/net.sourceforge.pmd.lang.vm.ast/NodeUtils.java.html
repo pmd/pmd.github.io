@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NodeUtils.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Velocity</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.vm.ast</a> &gt; <span class="el_source">NodeUtils.java</span></div><h1>NodeUtils.java</h1><pre class="source lang-java linenums">
+package net.sourceforge.pmd.lang.vm.ast;
+
+import org.apache.commons.lang3.text.StrBuilder;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.    
+ */
+
+/**
+ * Utilities for dealing with the AST node structure.
+ * 
+ * @author &lt;a href=&quot;mailto:jvanzyl@apache.org&quot;&gt;Jason van Zyl&lt;/a&gt;
+ * @author &lt;a href=&quot;mailto:geirm@optonline.net&quot;&gt;Geir Magnusson Jr.&lt;/a&gt;
+ * @version $Id: NodeUtils.java 687386 2008-08-20 16:57:07Z nbubna $
+ */
+public class NodeUtils {
+<span class="nc" id="L33">    private NodeUtils() { }</span>
+
+    /**
+     * Collect all the &lt;SPECIAL_TOKEN&gt;s that are carried along with a token.
+     * Special tokens do not participate in parsing but can still trigger
+     * certain lexical actions. In some cases you may want to retrieve these
+     * special tokens, this is simply a way to extract them.
+     * 
+     * @param t
+     *            the Token
+     * @return StrBuilder with the special tokens.
+     */
+    private static StrBuilder getSpecialText(final Token t) {
+<span class="nc" id="L46">        final StrBuilder sb = new StrBuilder();</span>
+
+<span class="nc" id="L48">        Token tmpToken = t.specialToken;</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        while (tmpToken.specialToken != null) {</span>
+<span class="nc" id="L51">            tmpToken = tmpToken.specialToken;</span>
+        }
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        while (tmpToken != null) {</span>
+<span class="nc" id="L55">            final String st = tmpToken.image;</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            for (int i = 0; i &lt; st.length(); i++) {</span>
+<span class="nc" id="L58">                final char c = st.charAt(i);</span>
+
+<span class="nc bnc" id="L60" title="All 4 branches missed.">                if (c == '#' || c == '$') {</span>
+<span class="nc" id="L61">                    sb.append(c);</span>
+                }
+
+                /*
+                 * more dreaded MORE hack :)
+                 * 
+                 * looking for (&quot;\\&quot;)*&quot;$&quot; sequences
+                 */
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                if (c == '\\') {</span>
+<span class="nc" id="L71">                    boolean ok = true;</span>
+<span class="nc" id="L72">                    boolean term = false;</span>
+
+<span class="nc" id="L74">                    int j = i;</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">                    for (ok = true; ok &amp;&amp; j &lt; st.length(); j++) {</span>
+<span class="nc" id="L76">                        final char cc = st.charAt(j);</span>
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                        if (cc == '\\') {</span>
+                            /*
+                             * if we see a \, keep going
+                             */
+<span class="nc" id="L82">                            continue;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                        } else if (cc == '$') {</span>
+                            /*
+                             * a $ ends it correctly
+                             */
+<span class="nc" id="L87">                            term = true;</span>
+<span class="nc" id="L88">                            ok = false;</span>
+                        } else {
+                            /*
+                             * nah...
+                             */
+<span class="nc" id="L93">                            ok = false;</span>
+                        }
+                    }
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                    if (term) {</span>
+<span class="nc" id="L98">                        final String foo = st.substring(i, j);</span>
+<span class="nc" id="L99">                        sb.append(foo);</span>
+<span class="nc" id="L100">                        i = j;</span>
+                    }
+                }
+            }
+
+<span class="nc" id="L105">            tmpToken = tmpToken.next;</span>
+<span class="nc" id="L106">        }</span>
+<span class="nc" id="L107">        return sb;</span>
+    }
+
+    /**
+     * complete node literal
+     * 
+     * @param t
+     * @return A node literal.
+     */
+    public static String tokenLiteral(final Token t) {
+        // Look at kind of token and return &quot;&quot; when it's a multiline comment
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (t.kind == VmParserConstants.MULTI_LINE_COMMENT) {</span>
+<span class="nc" id="L119">            return &quot;&quot;;</span>
+<span class="pc bpc" id="L120" title="3 of 4 branches missed.">        } else if (t.specialToken == null || t.specialToken.image.startsWith(&quot;##&quot;)) {</span>
+<span class="fc" id="L121">            return t.image;</span>
+        } else {
+<span class="nc" id="L123">            final StrBuilder special = getSpecialText(t);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (special.length() &gt; 0) {</span>
+<span class="nc" id="L125">                return special.append(t.image).toString();</span>
+            }
+<span class="nc" id="L127">            return t.image;</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

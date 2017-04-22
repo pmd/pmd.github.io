@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RuleTst.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.testframework</a> &gt; <span class="el_source">RuleTst.java</span></div><h1>RuleTst.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.testframework;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.PMDException;
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.Report;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RuleSet;
+import net.sourceforge.pmd.RuleSetFactory;
+import net.sourceforge.pmd.RuleSetNotFoundException;
+import net.sourceforge.pmd.RuleSets;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.renderers.TextRenderer;
+
+/**
+ * Advanced methods for test cases
+ */
+<span class="fc" id="L49">public abstract class RuleTst {</span>
+    /**
+     * Find a rule in a certain ruleset by name
+     */
+    public Rule findRule(String ruleSet, String ruleName) {
+        try {
+<span class="nc" id="L55">            Rule rule = new RuleSetFactory().createRuleSets(ruleSet).getRuleByName(ruleName);</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">            if (rule == null) {</span>
+<span class="nc" id="L57">                fail(&quot;Rule &quot; + ruleName + &quot; not found in ruleset &quot; + ruleSet);</span>
+            } else {
+<span class="nc" id="L59">                rule.setRuleSetName(ruleSet);</span>
+            }
+<span class="nc" id="L61">            return rule;</span>
+<span class="nc" id="L62">        } catch (RuleSetNotFoundException e) {</span>
+<span class="nc" id="L63">            e.printStackTrace();</span>
+<span class="nc" id="L64">            fail(&quot;Couldn't find ruleset &quot; + ruleSet);</span>
+<span class="nc" id="L65">            return null;</span>
+        }
+    }
+
+    /**
+     * Run the rule on the given code, and check the expected number of
+     * violations.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public void runTest(TestDescriptor test) {
+<span class="nc" id="L75">        Rule rule = test.getRule();</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (test.getReinitializeRule()) {</span>
+<span class="nc" id="L78">            rule = findRule(rule.getRuleSetName(), rule.getName());</span>
+        }
+
+<span class="nc" id="L81">        Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; oldProperties = rule.getPropertiesByPropertyDescriptor();</span>
+        try {
+            int res;
+            Report report;
+            try {
+                // Set test specific properties onto the Rule
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (test.getProperties() != null) {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">                    for (Map.Entry&lt;Object, Object&gt; entry : test.getProperties().entrySet()) {</span>
+<span class="nc" id="L89">                        String propertyName = (String) entry.getKey();</span>
+<span class="nc" id="L90">                        PropertyDescriptor propertyDescriptor = rule.getPropertyDescriptor(propertyName);</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">                        if (propertyDescriptor == null) {</span>
+<span class="nc" id="L92">                            throw new IllegalArgumentException(</span>
+                                    &quot;No such property '&quot; + propertyName + &quot;' on Rule &quot; + rule.getName());
+                        }
+
+<span class="nc" id="L96">                        Object value = propertyDescriptor.valueFrom((String) entry.getValue());</span>
+<span class="nc" id="L97">                        rule.setProperty(propertyDescriptor, value);</span>
+<span class="nc" id="L98">                    }</span>
+                }
+
+<span class="nc" id="L101">                report = processUsingStringReader(test, rule);</span>
+<span class="nc" id="L102">                res = report.size();</span>
+<span class="nc" id="L103">            } catch (Throwable t) {</span>
+<span class="nc" id="L104">                t.printStackTrace();</span>
+<span class="nc" id="L105">                throw new RuntimeException('&quot;' + test.getDescription() + &quot;\&quot; failed&quot;, t);</span>
+<span class="nc" id="L106">            }</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (test.getNumberOfProblemsExpected() != res) {</span>
+<span class="nc" id="L108">                printReport(test, report);</span>
+            }
+<span class="nc" id="L110">            assertEquals('&quot;' + test.getDescription() + &quot;\&quot; resulted in wrong number of failures,&quot;,</span>
+                    test.getNumberOfProblemsExpected(), res);
+<span class="nc" id="L112">            assertMessages(report, test);</span>
+<span class="nc" id="L113">            assertLineNumbers(report, test);</span>
+        } finally {
+            // Restore old properties
+<span class="nc bnc" id="L116" title="All 4 branches missed.">            for (Map.Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; entry : oldProperties.entrySet()) {</span>
+<span class="nc" id="L117">                rule.setProperty((PropertyDescriptor) entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L118">            }</span>
+<span class="nc" id="L119">        }</span>
+<span class="nc" id="L120">    }</span>
+
+    private void assertMessages(Report report, TestDescriptor test) {
+<span class="nc bnc" id="L123" title="All 4 branches missed.">        if (report == null || test.getExpectedMessages().isEmpty()) {</span>
+<span class="nc" id="L124">            return;</span>
+        }
+
+<span class="nc" id="L127">        List&lt;String&gt; expectedMessages = test.getExpectedMessages();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (report.size() != expectedMessages.size()) {</span>
+<span class="nc" id="L129">            throw new RuntimeException(&quot;Test setup error: number of expected messages doesn't match &quot;</span>
+                    + &quot;number of violations for test case '&quot; + test.getDescription() + &quot;'&quot;);
+        }
+
+<span class="nc" id="L133">        Iterator&lt;RuleViolation&gt; it = report.iterator();</span>
+<span class="nc" id="L134">        int index = 0;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        while (it.hasNext()) {</span>
+<span class="nc" id="L136">            RuleViolation violation = it.next();</span>
+<span class="nc" id="L137">            String actual = violation.getDescription();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (!expectedMessages.get(index).equals(actual)) {</span>
+<span class="nc" id="L139">                printReport(test, report);</span>
+            }
+<span class="nc" id="L141">            assertEquals(</span>
+                    '&quot;' + test.getDescription() + &quot;\&quot; produced wrong message on violation number &quot; + (index + 1) + &quot;.&quot;,
+                    expectedMessages.get(index), actual);
+<span class="nc" id="L144">            index++;</span>
+<span class="nc" id="L145">        }</span>
+<span class="nc" id="L146">    }</span>
+
+    private void assertLineNumbers(Report report, TestDescriptor test) {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">        if (report == null || test.getExpectedLineNumbers().isEmpty()) {</span>
+<span class="nc" id="L150">            return;</span>
+        }
+
+<span class="nc" id="L153">        List&lt;Integer&gt; expected = test.getExpectedLineNumbers();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (report.getViolationTree().size() != expected.size()) {</span>
+<span class="nc" id="L155">            throw new RuntimeException(&quot;Test setup error: number of execpted line numbers doesn't match &quot;</span>
+                    + &quot;number of violations for test case '&quot; + test.getDescription() + &quot;'&quot;);
+        }
+
+<span class="nc" id="L159">        Iterator&lt;RuleViolation&gt; it = report.getViolationTree().iterator();</span>
+<span class="nc" id="L160">        int index = 0;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        while (it.hasNext()) {</span>
+<span class="nc" id="L162">            RuleViolation violation = it.next();</span>
+<span class="nc" id="L163">            Integer actual = violation.getBeginLine();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            if (expected.get(index) != actual.intValue()) {</span>
+<span class="nc" id="L165">                printReport(test, report);</span>
+            }
+<span class="nc" id="L167">            assertEquals('&quot;' + test.getDescription() + &quot;\&quot; violation on wrong line number: violation number &quot;</span>
+                    + (index + 1) + &quot;.&quot;, expected.get(index), actual);
+<span class="nc" id="L169">            index++;</span>
+<span class="nc" id="L170">        }</span>
+<span class="nc" id="L171">    }</span>
+
+    private void printReport(TestDescriptor test, Report report) {
+<span class="nc" id="L174">        System.out.println(&quot;--------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L175">        System.out.println(&quot;Test Failure: &quot; + test.getDescription());</span>
+<span class="nc" id="L176">        System.out.println(&quot; -&gt; Expected &quot; + test.getNumberOfProblemsExpected() + &quot; problem(s), &quot; + report.size()</span>
+                + &quot; problem(s) found.&quot;);
+<span class="nc" id="L178">        System.out.println(&quot; -&gt; Expected messages: &quot; + test.getExpectedMessages());</span>
+<span class="nc" id="L179">        System.out.println(&quot; -&gt; Expected line numbers: &quot; + test.getExpectedLineNumbers());</span>
+<span class="nc" id="L180">        System.out.println();</span>
+<span class="nc" id="L181">        TextRenderer renderer = new TextRenderer();</span>
+<span class="nc" id="L182">        renderer.setWriter(new StringWriter());</span>
+        try {
+<span class="nc" id="L184">            renderer.start();</span>
+<span class="nc" id="L185">            renderer.renderFileReport(report);</span>
+<span class="nc" id="L186">            renderer.end();</span>
+<span class="nc" id="L187">        } catch (IOException e) {</span>
+<span class="nc" id="L188">            throw new RuntimeException(e);</span>
+<span class="nc" id="L189">        }</span>
+<span class="nc" id="L190">        System.out.println(renderer.getWriter().toString());</span>
+<span class="nc" id="L191">        System.out.println(&quot;--------------------------------------------------------------&quot;);</span>
+<span class="nc" id="L192">    }</span>
+
+    private Report processUsingStringReader(TestDescriptor test, Rule rule) throws PMDException {
+<span class="nc" id="L195">        Report report = new Report();</span>
+<span class="nc" id="L196">        runTestFromString(test, rule, report);</span>
+<span class="nc" id="L197">        return report;</span>
+    }
+
+    /**
+     * Run the rule on the given code and put the violations in the report.
+     */
+    public void runTestFromString(String code, Rule rule, Report report, LanguageVersion languageVersion) {
+<span class="nc" id="L204">        runTestFromString(code, rule, report, languageVersion, true);</span>
+<span class="nc" id="L205">    }</span>
+
+    public void runTestFromString(String code, Rule rule, Report report, LanguageVersion languageVersion,
+            boolean isUseAuxClasspath) {
+        try {
+<span class="fc" id="L210">            PMD p = new PMD();</span>
+<span class="fc" id="L211">            p.getConfiguration().setDefaultLanguageVersion(languageVersion);</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if (isUseAuxClasspath) {</span>
+                // configure the &quot;auxclasspath&quot; option for unit testing
+<span class="nc" id="L214">                p.getConfiguration().prependClasspath(&quot;.&quot;);</span>
+            }
+<span class="fc" id="L216">            RuleContext ctx = new RuleContext();</span>
+<span class="fc" id="L217">            ctx.setReport(report);</span>
+<span class="fc" id="L218">            ctx.setSourceCodeFilename(&quot;n/a&quot;);</span>
+<span class="fc" id="L219">            ctx.setLanguageVersion(languageVersion);</span>
+<span class="fc" id="L220">            ctx.setIgnoreExceptions(false);</span>
+<span class="fc" id="L221">            RuleSet rules = new RuleSetFactory().createSingleRuleRuleSet(rule);</span>
+<span class="fc" id="L222">            p.getSourceCodeProcessor().processSourceCode(new StringReader(code), new RuleSets(rules), ctx);</span>
+<span class="nc" id="L223">        } catch (Exception e) {</span>
+<span class="nc" id="L224">            throw new RuntimeException(e);</span>
+<span class="fc" id="L225">        }</span>
+<span class="fc" id="L226">    }</span>
+
+    public void runTestFromString(TestDescriptor test, Rule rule, Report report) {
+<span class="nc" id="L229">        runTestFromString(test.getCode(), rule, report, test.getLanguageVersion(), test.isUseAuxClasspath());</span>
+<span class="nc" id="L230">    }</span>
+
+    /**
+     * getResourceAsStream tries to find the XML file in weird locations if the
+     * ruleName includes the package, so we strip it here.
+     */
+    protected String getCleanRuleName(Rule rule) {
+<span class="nc" id="L237">        String fullClassName = rule.getClass().getName();</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (fullClassName.equals(rule.getName())) {</span>
+            // We got the full class name, so we'll use the stripped name
+            // instead
+<span class="nc" id="L241">            String packageName = rule.getClass().getPackage().getName();</span>
+<span class="nc" id="L242">            return fullClassName.substring(packageName.length() + 1);</span>
+        } else {
+<span class="nc" id="L244">            return rule.getName(); // Test is using findRule, smart!</span>
+        }
+    }
+
+    /**
+     * Extract a set of tests from an XML file. The file should be
+     * ./xml/RuleName.xml relative to the test class. The format is defined in
+     * test-data.xsd.
+     */
+    public TestDescriptor[] extractTestsFromXml(Rule rule) {
+<span class="nc" id="L254">        String testsFileName = getCleanRuleName(rule);</span>
+
+<span class="nc" id="L256">        return extractTestsFromXml(rule, testsFileName);</span>
+    }
+
+    public TestDescriptor[] extractTestsFromXml(Rule rule, String testsFileName) {
+<span class="nc" id="L260">        return extractTestsFromXml(rule, testsFileName, &quot;xml/&quot;);</span>
+    }
+
+    /**
+     * Extract a set of tests from an XML file with the given name. The file
+     * should be ./xml/[testsFileName].xml relative to the test class. The
+     * format is defined in test-data.xsd.
+     */
+    public TestDescriptor[] extractTestsFromXml(Rule rule, String testsFileName, String baseDirectory) {
+<span class="nc" id="L269">        String testXmlFileName = baseDirectory + testsFileName + &quot;.xml&quot;;</span>
+<span class="nc" id="L270">        InputStream inputStream = getClass().getResourceAsStream(testXmlFileName);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        if (inputStream == null) {</span>
+<span class="nc" id="L272">            throw new RuntimeException(&quot;Couldn't find &quot; + testXmlFileName);</span>
+        }
+
+        Document doc;
+        try {
+<span class="nc" id="L277">            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();</span>
+<span class="nc" id="L278">            doc = builder.parse(inputStream);</span>
+<span class="nc" id="L279">        } catch (ParserConfigurationException pce) {</span>
+<span class="nc" id="L280">            pce.printStackTrace();</span>
+<span class="nc" id="L281">            throw new RuntimeException(&quot;Couldn't parse &quot; + testXmlFileName + &quot;, due to: &quot; + pce.getMessage());</span>
+<span class="nc" id="L282">        } catch (FactoryConfigurationError fce) {</span>
+<span class="nc" id="L283">            fce.printStackTrace();</span>
+<span class="nc" id="L284">            throw new RuntimeException(&quot;Couldn't parse &quot; + testXmlFileName + &quot;, due to: &quot; + fce.getMessage());</span>
+<span class="nc" id="L285">        } catch (IOException ioe) {</span>
+<span class="nc" id="L286">            ioe.printStackTrace();</span>
+<span class="nc" id="L287">            throw new RuntimeException(&quot;Couldn't parse &quot; + testXmlFileName + &quot;, due to: &quot; + ioe.getMessage());</span>
+<span class="nc" id="L288">        } catch (SAXException se) {</span>
+<span class="nc" id="L289">            se.printStackTrace();</span>
+<span class="nc" id="L290">            throw new RuntimeException(&quot;Couldn't parse &quot; + testXmlFileName + &quot;, due to: &quot; + se.getMessage());</span>
+<span class="nc" id="L291">        }</span>
+
+<span class="nc" id="L293">        return parseTests(rule, doc);</span>
+    }
+
+    private TestDescriptor[] parseTests(Rule rule, Document doc) {
+<span class="nc" id="L297">        Element root = doc.getDocumentElement();</span>
+<span class="nc" id="L298">        NodeList testCodes = root.getElementsByTagName(&quot;test-code&quot;);</span>
+
+<span class="nc" id="L300">        TestDescriptor[] tests = new TestDescriptor[testCodes.getLength()];</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        for (int i = 0; i &lt; testCodes.getLength(); i++) {</span>
+<span class="nc" id="L302">            Element testCode = (Element) testCodes.item(i);</span>
+
+<span class="nc" id="L304">            boolean reinitializeRule = true;</span>
+<span class="nc" id="L305">            Node reinitializeRuleAttribute = testCode.getAttributes().getNamedItem(&quot;reinitializeRule&quot;);</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">            if (reinitializeRuleAttribute != null) {</span>
+<span class="nc" id="L307">                String reinitializeRuleValue = reinitializeRuleAttribute.getNodeValue();</span>
+<span class="nc bnc" id="L308" title="All 4 branches missed.">                if (&quot;false&quot;.equalsIgnoreCase(reinitializeRuleValue) || &quot;0&quot;.equalsIgnoreCase(reinitializeRuleValue)) {</span>
+<span class="nc" id="L309">                    reinitializeRule = false;</span>
+                }
+            }
+
+<span class="nc" id="L313">            boolean isRegressionTest = true;</span>
+<span class="nc" id="L314">            Node regressionTestAttribute = testCode.getAttributes().getNamedItem(&quot;regressionTest&quot;);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">            if (regressionTestAttribute != null) {</span>
+<span class="nc" id="L316">                String reinitializeRuleValue = regressionTestAttribute.getNodeValue();</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">                if (&quot;false&quot;.equalsIgnoreCase(reinitializeRuleValue)) {</span>
+<span class="nc" id="L318">                    isRegressionTest = false;</span>
+                }
+            }
+
+<span class="nc" id="L322">            boolean isUseAuxClasspath = true;</span>
+<span class="nc" id="L323">            Node useAuxClasspathAttribute = testCode.getAttributes().getNamedItem(&quot;useAuxClasspath&quot;);</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">            if (useAuxClasspathAttribute != null) {</span>
+<span class="nc" id="L325">                String useAuxClasspathValue = useAuxClasspathAttribute.getNodeValue();</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">                if (&quot;false&quot;.equalsIgnoreCase(useAuxClasspathValue)) {</span>
+<span class="nc" id="L327">                    isUseAuxClasspath = false;</span>
+                }
+            }
+
+<span class="nc" id="L331">            NodeList ruleProperties = testCode.getElementsByTagName(&quot;rule-property&quot;);</span>
+<span class="nc" id="L332">            Properties properties = new Properties();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            for (int j = 0; j &lt; ruleProperties.getLength(); j++) {</span>
+<span class="nc" id="L334">                Node ruleProperty = ruleProperties.item(j);</span>
+<span class="nc" id="L335">                String propertyName = ruleProperty.getAttributes().getNamedItem(&quot;name&quot;).getNodeValue();</span>
+<span class="nc" id="L336">                properties.setProperty(propertyName, parseTextNode(ruleProperty));</span>
+            }
+
+<span class="nc" id="L339">            NodeList expectedMessagesNodes = testCode.getElementsByTagName(&quot;expected-messages&quot;);</span>
+<span class="nc" id="L340">            List&lt;String&gt; messages = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L341" title="All 4 branches missed.">            if (expectedMessagesNodes != null &amp;&amp; expectedMessagesNodes.getLength() &gt; 0) {</span>
+<span class="nc" id="L342">                Element item = (Element) expectedMessagesNodes.item(0);</span>
+<span class="nc" id="L343">                NodeList messagesNodes = item.getElementsByTagName(&quot;message&quot;);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">                for (int j = 0; j &lt; messagesNodes.getLength(); j++) {</span>
+<span class="nc" id="L345">                    messages.add(parseTextNode(messagesNodes.item(j)));</span>
+                }
+            }
+
+<span class="nc" id="L349">            NodeList expectedLineNumbersNodes = testCode.getElementsByTagName(&quot;expected-linenumbers&quot;);</span>
+<span class="nc" id="L350">            List&lt;Integer&gt; expectedLineNumbers = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L351" title="All 4 branches missed.">            if (expectedLineNumbersNodes != null &amp;&amp; expectedLineNumbersNodes.getLength() &gt; 0) {</span>
+<span class="nc" id="L352">                Element item = (Element) expectedLineNumbersNodes.item(0);</span>
+<span class="nc" id="L353">                String numbers = item.getTextContent();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">                for (String n : numbers.split(&quot; *, *&quot;)) {</span>
+<span class="nc" id="L355">                    expectedLineNumbers.add(Integer.valueOf(n));</span>
+                }
+            }
+
+<span class="nc" id="L359">            String code = getNodeValue(testCode, &quot;code&quot;, false);</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">            if (code == null) {</span>
+                // Should have a coderef
+<span class="nc" id="L362">                NodeList coderefs = testCode.getElementsByTagName(&quot;code-ref&quot;);</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">                if (coderefs.getLength() == 0) {</span>
+<span class="nc" id="L364">                    throw new RuntimeException(</span>
+                            &quot;Required tag is missing from the test-xml. Supply either a code or a code-ref tag&quot;);
+                }
+<span class="nc" id="L367">                Node coderef = coderefs.item(0);</span>
+<span class="nc" id="L368">                String referenceId = coderef.getAttributes().getNamedItem(&quot;id&quot;).getNodeValue();</span>
+<span class="nc" id="L369">                NodeList codeFragments = root.getElementsByTagName(&quot;code-fragment&quot;);</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">                for (int j = 0; j &lt; codeFragments.getLength(); j++) {</span>
+<span class="nc" id="L371">                    String fragmentId = codeFragments.item(j).getAttributes().getNamedItem(&quot;id&quot;).getNodeValue();</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">                    if (referenceId.equals(fragmentId)) {</span>
+<span class="nc" id="L373">                        code = parseTextNode(codeFragments.item(j));</span>
+                    }
+                }
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">                if (code == null) {</span>
+<span class="nc" id="L378">                    throw new RuntimeException(&quot;No matching code fragment found for coderef&quot;);</span>
+                }
+            }
+
+<span class="nc" id="L382">            String description = getNodeValue(testCode, &quot;description&quot;, true);</span>
+<span class="nc" id="L383">            int expectedProblems = Integer.parseInt(getNodeValue(testCode, &quot;expected-problems&quot;, true));</span>
+
+<span class="nc" id="L385">            String languageVersionString = getNodeValue(testCode, &quot;source-type&quot;, false);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">            if (languageVersionString == null) {</span>
+<span class="nc" id="L387">                tests[i] = new TestDescriptor(code, description, expectedProblems, rule);</span>
+            } else {
+<span class="nc" id="L389">                LanguageVersion languageVersion = LanguageRegistry</span>
+                        .findLanguageVersionByTerseName(languageVersionString);
+<span class="nc bnc" id="L391" title="All 2 branches missed.">                if (languageVersion != null) {</span>
+<span class="nc" id="L392">                    tests[i] = new TestDescriptor(code, description, expectedProblems, rule, languageVersion);</span>
+                } else {
+<span class="nc" id="L394">                    throw new RuntimeException(&quot;Unknown LanguageVersion for test: &quot; + languageVersionString);</span>
+                }
+            }
+<span class="nc" id="L397">            tests[i].setReinitializeRule(reinitializeRule);</span>
+<span class="nc" id="L398">            tests[i].setRegressionTest(isRegressionTest);</span>
+<span class="nc" id="L399">            tests[i].setUseAuxClasspath(isUseAuxClasspath);</span>
+<span class="nc" id="L400">            tests[i].setExpectedMessages(messages);</span>
+<span class="nc" id="L401">            tests[i].setExpectedLineNumbers(expectedLineNumbers);</span>
+<span class="nc" id="L402">            tests[i].setProperties(properties);</span>
+<span class="nc" id="L403">            tests[i].setNumberInDocument(i);</span>
+        }
+<span class="nc" id="L405">        return tests;</span>
+    }
+
+    private String getNodeValue(Element parentElm, String nodeName, boolean required) {
+<span class="nc" id="L409">        NodeList nodes = parentElm.getElementsByTagName(nodeName);</span>
+<span class="nc bnc" id="L410" title="All 4 branches missed.">        if (nodes == null || nodes.getLength() == 0) {</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">            if (required) {</span>
+<span class="nc" id="L412">                throw new RuntimeException(&quot;Required tag is missing from the test-xml: &quot; + nodeName);</span>
+            } else {
+<span class="nc" id="L414">                return null;</span>
+            }
+        }
+<span class="nc" id="L417">        Node node = nodes.item(0);</span>
+<span class="nc" id="L418">        return parseTextNode(node);</span>
+    }
+
+    private static String parseTextNode(Node exampleNode) {
+<span class="nc" id="L422">        StringBuffer buffer = new StringBuffer();</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">        for (int i = 0; i &lt; exampleNode.getChildNodes().getLength(); i++) {</span>
+<span class="nc" id="L424">            Node node = exampleNode.getChildNodes().item(i);</span>
+<span class="nc bnc" id="L425" title="All 4 branches missed.">            if (node.getNodeType() == Node.CDATA_SECTION_NODE || node.getNodeType() == Node.TEXT_NODE) {</span>
+<span class="nc" id="L426">                buffer.append(node.getNodeValue());</span>
+            }
+        }
+<span class="nc" id="L429">        return buffer.toString().trim();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

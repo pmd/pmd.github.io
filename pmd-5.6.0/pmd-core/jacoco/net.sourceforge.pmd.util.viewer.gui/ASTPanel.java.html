@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ASTPanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.viewer.gui</a> &gt; <span class="el_source">ASTPanel.java</span></div><h1>ASTPanel.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.util.viewer.gui;
+
+import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.util.viewer.gui.menu.ASTNodePopupMenu;
+import net.sourceforge.pmd.util.viewer.model.ASTModel;
+import net.sourceforge.pmd.util.viewer.model.ViewerModel;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelEvent;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelListener;
+import net.sourceforge.pmd.util.viewer.util.NLS;
+
+/**
+ * tree panel GUI
+ *
+ * @author Boris Gruschko ( boris at gruschko.org )
+ * @version $Id$
+ */
+
+public class ASTPanel extends JPanel implements ViewerModelListener, TreeSelectionListener {
+    private ViewerModel model;
+    private JTree tree;
+
+    /**
+     * constructs the panel
+     *
+     * @param model
+     *            model to attach the panel to
+     */
+<span class="nc" id="L49">    public ASTPanel(ViewerModel model) {</span>
+<span class="nc" id="L50">        this.model = model;</span>
+<span class="nc" id="L51">        init();</span>
+<span class="nc" id="L52">    }</span>
+
+    private void init() {
+<span class="nc" id="L55">        model.addViewerModelListener(this);</span>
+<span class="nc" id="L56">        setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), NLS.nls(&quot;AST.PANEL.TITLE&quot;)));</span>
+<span class="nc" id="L57">        setLayout(new BorderLayout());</span>
+<span class="nc" id="L58">        tree = new JTree((TreeNode) null);</span>
+<span class="nc" id="L59">        tree.addTreeSelectionListener(this);</span>
+<span class="nc" id="L60">        tree.addMouseListener(new MouseAdapter() {</span>
+            @Override
+            public void mouseReleased(MouseEvent e) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">                if (e.isPopupTrigger()) {</span>
+<span class="nc" id="L64">                    TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());</span>
+<span class="nc" id="L65">                    tree.setSelectionPath(path);</span>
+<span class="nc" id="L66">                    JPopupMenu menu = new ASTNodePopupMenu(model, (Node) path.getLastPathComponent());</span>
+<span class="nc" id="L67">                    menu.show(tree, e.getX(), e.getY());</span>
+                }
+<span class="nc" id="L69">            }</span>
+        });
+
+<span class="nc" id="L72">        add(new JScrollPane(tree), BorderLayout.CENTER);</span>
+<span class="nc" id="L73">    }</span>
+
+    /**
+     * @see ViewerModelListener#viewerModelChanged(ViewerModelEvent)
+     */
+    @Override
+    public void viewerModelChanged(ViewerModelEvent e) {
+<span class="nc bnc" id="L80" title="All 3 branches missed.">        switch (e.getReason()) {</span>
+        case ViewerModelEvent.CODE_RECOMPILED:
+<span class="nc" id="L82">            tree.setModel(new ASTModel(model.getRootNode()));</span>
+<span class="nc" id="L83">            break;</span>
+        case ViewerModelEvent.NODE_SELECTED:
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if (e.getSource() != this) {</span>
+<span class="nc" id="L86">                List&lt;Node&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">                for (Node n = (Node) e.getParameter(); n != null; n = n.jjtGetParent()) {</span>
+<span class="nc" id="L88">                    list.add(n);</span>
+                }
+<span class="nc" id="L90">                Collections.reverse(list);</span>
+<span class="nc" id="L91">                TreePath path = new TreePath(list.toArray());</span>
+<span class="nc" id="L92">                tree.setSelectionPath(path);</span>
+<span class="nc" id="L93">                tree.scrollPathToVisible(path);</span>
+<span class="nc" id="L94">            }</span>
+            break;
+        default:
+            // Do nothing
+            break;
+        }
+<span class="nc" id="L100">    }</span>
+
+    /**
+     * @see javax.swing.event.TreeSelectionListener#valueChanged(javax.swing.event.TreeSelectionEvent)
+     */
+    @Override
+    public void valueChanged(TreeSelectionEvent e) {
+<span class="nc" id="L107">        model.selectNode((Node) e.getNewLeadSelectionPath().getLastPathComponent(), this);</span>
+<span class="nc" id="L108">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

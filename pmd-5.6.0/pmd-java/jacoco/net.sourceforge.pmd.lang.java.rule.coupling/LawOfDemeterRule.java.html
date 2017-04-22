@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LawOfDemeterRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.coupling</a> &gt; <span class="el_source">LawOfDemeterRule.java</span></div><h1>LawOfDemeterRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.coupling;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTAssignmentOperator;
+import net.sourceforge.pmd.lang.java.ast.ASTBlock;
+import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.ClassScope;
+import net.sourceforge.pmd.lang.java.symboltable.LocalScope;
+import net.sourceforge.pmd.lang.java.symboltable.MethodScope;
+import net.sourceforge.pmd.lang.java.symboltable.TypedNameDeclaration;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+
+/**
+ * This rule can detect possible violations of the Law of Demeter. The Law of
+ * Demeter is a simple rule, that says &quot;only talk to friends&quot;. It helps to
+ * reduce coupling between classes or objects.
+ * &lt;p&gt;
+ * See:
+ * &lt;ul&gt;
+ * &lt;li&gt;Andrew Hunt, David Thomas, and Ward Cunningham. The Pragmatic Programmer.
+ * From Journeyman to Master. Addison-Wesley Longman, Amsterdam, October
+ * 1999.&lt;/li&gt;
+ * &lt;li&gt;K.J. Lieberherr and I.M. Holland. Assuring good style for object-oriented
+ * programs. Software, IEEE, 6(5):38–48, 1989.&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * @since 5.0
+ *
+ */
+<span class="fc" id="L52">public class LawOfDemeterRule extends AbstractJavaRule {</span>
+    private static final String REASON_METHOD_CHAIN_CALLS = &quot;method chain calls&quot;;
+    private static final String REASON_OBJECT_NOT_CREATED_LOCALLY = &quot;object not created locally&quot;;
+    private static final String REASON_STATIC_ACCESS = &quot;static property access&quot;;
+
+    /**
+     * That's a new method. We are going to check each method call inside the
+     * method.
+     *
+     * @return &lt;code&gt;null&lt;/code&gt;.
+     */
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L65">        List&lt;ASTPrimaryExpression&gt; primaryExpressions = node.findDescendantsOfType(ASTPrimaryExpression.class);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        for (ASTPrimaryExpression expression : primaryExpressions) {</span>
+<span class="fc" id="L67">            List&lt;MethodCall&gt; calls = MethodCall.createMethodCalls(expression);</span>
+<span class="fc" id="L68">            addViolations(calls, (RuleContext) data);</span>
+<span class="fc" id="L69">        }</span>
+<span class="fc" id="L70">        return null;</span>
+    }
+
+    private void addViolations(List&lt;MethodCall&gt; calls, RuleContext ctx) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (MethodCall method : calls) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (method.isViolation()) {</span>
+<span class="fc" id="L76">                addViolationWithMessage(ctx, method.getExpression(),</span>
+                        getMessage() + &quot; (&quot; + method.getViolationReason() + &quot;)&quot;);
+            }
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Collects the information of one identified method call. The method call
+     * might be a violation of the Law of Demeter or not.
+     */
+    private static class MethodCall {
+        private static final String METHOD_CALL_CHAIN = &quot;result from previous method call&quot;;
+        private static final String SIMPLE_ASSIGNMENT_OPERATOR = &quot;=&quot;;
+        private static final String SCOPE_METHOD_CHAINING = &quot;method-chaining&quot;;
+        private static final String SCOPE_CLASS = &quot;class&quot;;
+        private static final String SCOPE_METHOD = &quot;method&quot;;
+        private static final String SCOPE_LOCAL = &quot;local&quot;;
+        private static final String SCOPE_STATIC_CHAIN = &quot;static-chain&quot;;
+        private static final String SUPER = &quot;super&quot;;
+        private static final String THIS = &quot;this&quot;;
+
+        private ASTPrimaryExpression expression;
+        private String baseName;
+        private String methodName;
+        private String baseScope;
+        private String baseTypeName;
+        private Class&lt;?&gt; baseType;
+        private boolean violation;
+        private String violationReason;
+
+        /**
+         * Create a new method call for the prefix expression part of the
+         * primary expression.
+         */
+<span class="fc" id="L110">        private MethodCall(ASTPrimaryExpression expression, ASTPrimaryPrefix prefix) {</span>
+<span class="fc" id="L111">            this.expression = expression;</span>
+<span class="fc" id="L112">            analyze(prefix);</span>
+<span class="fc" id="L113">            determineType();</span>
+<span class="fc" id="L114">            checkViolation();</span>
+<span class="fc" id="L115">        }</span>
+
+        /**
+         * Create a new method call for the given suffix expression part of the
+         * primary expression. This is used for method chains.
+         */
+<span class="fc" id="L121">        private MethodCall(ASTPrimaryExpression expression, ASTPrimarySuffix suffix) {</span>
+<span class="fc" id="L122">            this.expression = expression;</span>
+<span class="fc" id="L123">            analyze(suffix);</span>
+<span class="fc" id="L124">            determineType();</span>
+<span class="fc" id="L125">            checkViolation();</span>
+<span class="fc" id="L126">        }</span>
+
+        /**
+         * Factory method to convert a given primary expression into
+         * MethodCalls. In case the primary expression represents a method chain
+         * call, then multiple MethodCalls are returned.
+         *
+         * @return a list of MethodCalls, might be empty.
+         */
+        public static List&lt;MethodCall&gt; createMethodCalls(ASTPrimaryExpression expression) {
+<span class="fc" id="L136">            List&lt;MethodCall&gt; result = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L138" title="All 6 branches covered.">            if (isNotAConstructorCall(expression) &amp;&amp; isNotLiteral(expression) &amp;&amp; hasSuffixesWithArguments(expression)) {</span>
+<span class="fc" id="L139">                ASTPrimaryPrefix prefixNode = expression.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc" id="L140">                MethodCall firstMethodCallInChain = new MethodCall(expression, prefixNode);</span>
+<span class="fc" id="L141">                result.add(firstMethodCallInChain);</span>
+
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                if (firstMethodCallInChain.isNotBuilder()) {</span>
+<span class="fc" id="L144">                    List&lt;ASTPrimarySuffix&gt; suffixes = findSuffixesWithoutArguments(expression);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                    for (ASTPrimarySuffix suffix : suffixes) {</span>
+<span class="fc" id="L146">                        result.add(new MethodCall(expression, suffix));</span>
+<span class="fc" id="L147">                    }</span>
+                }
+            }
+
+<span class="fc" id="L151">            return result;</span>
+        }
+
+        private static boolean isNotAConstructorCall(ASTPrimaryExpression expression) {
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            return !expression.hasDescendantOfType(ASTAllocationExpression.class);</span>
+        }
+
+        private static boolean isNotLiteral(ASTPrimaryExpression expression) {
+<span class="fc" id="L159">            ASTPrimaryPrefix prefix = expression.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">            if (prefix != null) {</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                return !prefix.hasDescendantOfType(ASTLiteral.class);</span>
+            }
+<span class="nc" id="L163">            return true;</span>
+        }
+
+        private boolean isNotBuilder() {
+<span class="pc bpc" id="L167" title="3 of 8 branches missed.">            return baseType != StringBuffer.class &amp;&amp; baseType != StringBuilder.class</span>
+                    &amp;&amp; !&quot;StringBuilder&quot;.equals(baseTypeName) &amp;&amp; !&quot;StringBuffer&quot;.equals(baseTypeName);
+        }
+
+        private static List&lt;ASTPrimarySuffix&gt; findSuffixesWithoutArguments(ASTPrimaryExpression expr) {
+<span class="fc" id="L172">            List&lt;ASTPrimarySuffix&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">            if (hasRealPrefix(expr)) {</span>
+<span class="fc" id="L174">                List&lt;ASTPrimarySuffix&gt; suffixes = expr.findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">                for (ASTPrimarySuffix suffix : suffixes) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                    if (!suffix.isArguments()) {</span>
+<span class="fc" id="L177">                        result.add(suffix);</span>
+                    }
+<span class="fc" id="L179">                }</span>
+            }
+<span class="fc" id="L181">            return result;</span>
+        }
+
+        private static boolean hasRealPrefix(ASTPrimaryExpression expr) {
+<span class="fc" id="L185">            ASTPrimaryPrefix prefix = expr.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc bfc" id="L186" title="All 4 branches covered.">            return !prefix.usesThisModifier() &amp;&amp; !prefix.usesSuperModifier();</span>
+        }
+
+        private static boolean hasSuffixesWithArguments(ASTPrimaryExpression expr) {
+<span class="fc" id="L190">            boolean result = false;</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (hasRealPrefix(expr)) {</span>
+<span class="fc" id="L192">                List&lt;ASTPrimarySuffix&gt; suffixes = expr.findDescendantsOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">                for (ASTPrimarySuffix suffix : suffixes) {</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                    if (suffix.isArguments()) {</span>
+<span class="fc" id="L195">                        result = true;</span>
+<span class="fc" id="L196">                        break;</span>
+                    }
+<span class="fc" id="L198">                }</span>
+            }
+<span class="fc" id="L200">            return result;</span>
+        }
+
+        private void analyze(ASTPrimaryPrefix prefixNode) {
+<span class="fc" id="L204">            List&lt;ASTName&gt; names = prefixNode.findDescendantsOfType(ASTName.class);</span>
+
+<span class="fc" id="L206">            baseName = &quot;unknown&quot;;</span>
+<span class="fc" id="L207">            methodName = &quot;unknown&quot;;</span>
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">            if (!names.isEmpty()) {</span>
+<span class="fc" id="L210">                baseName = names.get(0).getImage();</span>
+
+<span class="fc" id="L212">                int dot = baseName.lastIndexOf('.');</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">                if (dot == -1) {</span>
+<span class="fc" id="L214">                    methodName = baseName;</span>
+<span class="fc" id="L215">                    baseName = THIS;</span>
+                } else {
+<span class="fc" id="L217">                    methodName = baseName.substring(dot + 1);</span>
+<span class="fc" id="L218">                    baseName = baseName.substring(0, dot);</span>
+                }
+
+<span class="fc" id="L221">            } else {</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">                if (prefixNode.usesThisModifier()) {</span>
+<span class="nc" id="L223">                    baseName = THIS;</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">                } else if (prefixNode.usesSuperModifier()) {</span>
+<span class="nc" id="L225">                    baseName = SUPER;</span>
+                }
+            }
+<span class="fc" id="L228">        }</span>
+
+        private void analyze(ASTPrimarySuffix suffix) {
+<span class="fc" id="L231">            baseName = METHOD_CALL_CHAIN;</span>
+<span class="fc" id="L232">            methodName = suffix.getImage();</span>
+<span class="fc" id="L233">        }</span>
+
+        private void checkViolation() {
+<span class="fc" id="L236">            violation = false;</span>
+<span class="fc" id="L237">            violationReason = null;</span>
+
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (SCOPE_LOCAL.equals(baseScope)) {</span>
+<span class="fc" id="L240">                Assignment lastAssignment = determineLastAssignment();</span>
+<span class="fc bfc" id="L241" title="All 8 branches covered.">                if (lastAssignment != null &amp;&amp; !lastAssignment.allocation &amp;&amp; !lastAssignment.iterator</span>
+                        &amp;&amp; !lastAssignment.forLoop) {
+<span class="fc" id="L243">                    violation = true;</span>
+<span class="fc" id="L244">                    violationReason = REASON_OBJECT_NOT_CREATED_LOCALLY;</span>
+                }
+<span class="fc bfc" id="L246" title="All 2 branches covered.">            } else if (SCOPE_METHOD_CHAINING.equals(baseScope)) {</span>
+<span class="fc" id="L247">                violation = true;</span>
+<span class="fc" id="L248">                violationReason = REASON_METHOD_CHAIN_CALLS;</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">            } else if (SCOPE_STATIC_CHAIN.equals(baseScope)) {</span>
+<span class="fc" id="L250">                violation = true;</span>
+<span class="fc" id="L251">                violationReason = REASON_STATIC_ACCESS;</span>
+            }
+<span class="fc" id="L253">        }</span>
+
+        private void determineType() {
+<span class="fc" id="L256">            NameDeclaration var = null;</span>
+<span class="fc" id="L257">            Scope scope = expression.getScope();</span>
+
+<span class="fc" id="L259">            baseScope = SCOPE_LOCAL;</span>
+<span class="fc" id="L260">            var = findInLocalScope(baseName, scope);</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            if (var == null) {</span>
+<span class="fc" id="L262">                baseScope = SCOPE_METHOD;</span>
+<span class="fc" id="L263">                var = determineTypeOfVariable(baseName,</span>
+                        scope.getEnclosingScope(MethodScope.class).getVariableDeclarations().keySet());
+            }
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            if (var == null) {</span>
+<span class="fc" id="L267">                baseScope = SCOPE_CLASS;</span>
+<span class="fc" id="L268">                var = determineTypeOfVariable(baseName,</span>
+                        scope.getEnclosingScope(ClassScope.class).getVariableDeclarations().keySet());
+            }
+<span class="fc bfc" id="L271" title="All 2 branches covered.">            if (var == null) {</span>
+<span class="fc" id="L272">                baseScope = SCOPE_METHOD_CHAINING;</span>
+            }
+<span class="pc bpc" id="L274" title="1 of 6 branches missed.">            if (var == null &amp;&amp; (THIS.equals(baseName) || SUPER.equals(baseName))) {</span>
+<span class="fc" id="L275">                baseScope = SCOPE_CLASS;</span>
+            }
+
+<span class="fc bfc" id="L278" title="All 2 branches covered.">            if (var instanceof TypedNameDeclaration) {</span>
+<span class="fc" id="L279">                baseTypeName = ((TypedNameDeclaration) var).getTypeImage();</span>
+<span class="fc" id="L280">                baseType = ((TypedNameDeclaration) var).getType();</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">            } else if (METHOD_CALL_CHAIN.equals(baseName)) {</span>
+<span class="fc" id="L282">                baseScope = SCOPE_METHOD_CHAINING;</span>
+<span class="fc bfc" id="L283" title="All 4 branches covered.">            } else if (baseName.contains(&quot;.&quot;) &amp;&amp; !baseName.startsWith(&quot;System.&quot;)) {</span>
+<span class="fc" id="L284">                baseScope = SCOPE_STATIC_CHAIN;</span>
+            } else {
+                // everything else is no violation - probably a static method
+                // call.
+<span class="fc" id="L288">                baseScope = null;</span>
+            }
+<span class="fc" id="L290">        }</span>
+
+        private VariableNameDeclaration findInLocalScope(String name, Scope scope) {
+<span class="fc" id="L293">            VariableNameDeclaration result = null;</span>
+
+<span class="fc" id="L295">            result = determineTypeOfVariable(name, scope.getDeclarations(VariableNameDeclaration.class).keySet());</span>
+<span class="fc bfc" id="L296" title="All 4 branches covered.">            if (result == null &amp;&amp; scope.getParent() instanceof LocalScope) {</span>
+<span class="fc" id="L297">                result = findInLocalScope(name, scope.getParent());</span>
+            }
+
+<span class="fc" id="L300">            return result;</span>
+        }
+
+        private VariableNameDeclaration determineTypeOfVariable(String variableName,
+                Set&lt;VariableNameDeclaration&gt; declarations) {
+<span class="fc" id="L305">            VariableNameDeclaration result = null;</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">            for (VariableNameDeclaration var : declarations) {</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">                if (variableName.equals(var.getImage())) {</span>
+<span class="fc" id="L308">                    result = var;</span>
+<span class="fc" id="L309">                    break;</span>
+                }
+<span class="fc" id="L311">            }</span>
+<span class="fc" id="L312">            return result;</span>
+        }
+
+        private Assignment determineLastAssignment() {
+<span class="fc" id="L316">            List&lt;Assignment&gt; assignments = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L318">            ASTBlock block = expression.getFirstParentOfType(ASTMethodDeclaration.class)</span>
+                    .getFirstChildOfType(ASTBlock.class);
+            //get all variableDeclarators within this block
+<span class="fc" id="L321">            List&lt;ASTVariableDeclarator&gt; variableDeclarators = block.findDescendantsOfType(ASTVariableDeclarator.class);</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">            for (ASTVariableDeclarator declarator : variableDeclarators) {</span>
+<span class="fc" id="L323">                ASTVariableDeclaratorId variableDeclaratorId = declarator</span>
+                        .getFirstChildOfType(ASTVariableDeclaratorId.class);
+                //we only care about it if the image name matches the current baseName
+<span class="fc bfc" id="L326" title="All 2 branches covered.">                if (variableDeclaratorId.hasImageEqualTo(baseName)) {</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                    boolean allocationFound = declarator</span>
+                            .getFirstDescendantOfType(ASTAllocationExpression.class) != null;
+<span class="fc bfc" id="L329" title="All 4 branches covered.">                    boolean iterator = isIterator() || isFactory(declarator);</span>
+<span class="fc" id="L330">                    boolean forLoop = isForLoop(declarator);</span>
+<span class="fc" id="L331">                    assignments.add(new Assignment(declarator.getBeginLine(), allocationFound, iterator, forLoop));</span>
+                }
+<span class="fc" id="L333">            }</span>
+
+            //get all AssignmentOperators within this block
+<span class="fc" id="L336">            List&lt;ASTAssignmentOperator&gt; assignmentStmts = block.findDescendantsOfType(ASTAssignmentOperator.class);</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">            for (ASTAssignmentOperator stmt : assignmentStmts) {</span>
+                //we only care about it if it occurs prior to (or on) the beginLine of the current expression
+                //and if it is a simple_assignement_operator
+<span class="fc bfc" id="L340" title="All 4 branches covered.">                if (stmt.getBeginLine() &lt;= expression.getBeginLine()</span>
+                        &amp;&amp; stmt.hasImageEqualTo(SIMPLE_ASSIGNMENT_OPERATOR)) {
+                    //now we need to make sure it has the right image name
+<span class="fc" id="L343">                    ASTPrimaryPrefix primaryPrefix = stmt.jjtGetParent()</span>
+                            .getFirstDescendantOfType(ASTPrimaryPrefix.class);
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">                    if (primaryPrefix != null) {</span>
+<span class="fc" id="L346">                        ASTName prefixName = primaryPrefix.getFirstChildOfType(ASTName.class);</span>
+<span class="fc bfc" id="L347" title="All 4 branches covered.">                        if (prefixName != null &amp;&amp; prefixName.hasImageEqualTo(baseName)) {</span>
+                            //this is an assignment related to the baseName we are working with
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                            boolean allocationFound = stmt.jjtGetParent()</span>
+                                    .getFirstDescendantOfType(ASTAllocationExpression.class) != null;
+<span class="fc" id="L351">                            boolean iterator = isIterator();</span>
+<span class="fc" id="L352">                            assignments</span>
+                                    .add(new Assignment(stmt.getBeginLine(), allocationFound, iterator, false));
+                        }
+                    }
+                }
+<span class="fc" id="L357">            }</span>
+
+<span class="fc" id="L359">            Assignment result = null;</span>
+<span class="fc bfc" id="L360" title="All 2 branches covered.">            if (!assignments.isEmpty()) {</span>
+                //sort them in reverse order and return the first one
+<span class="fc" id="L362">                Collections.sort(assignments);</span>
+<span class="fc" id="L363">                result = assignments.get(0);</span>
+            }
+<span class="fc" id="L365">            return result;</span>
+        }
+
+        private boolean isIterator() {
+<span class="fc" id="L369">            boolean iterator = false;</span>
+<span class="pc bpc" id="L370" title="1 of 8 branches missed.">            if (baseType != null &amp;&amp; baseType == Iterator.class</span>
+                    || baseTypeName != null &amp;&amp; baseTypeName.endsWith(&quot;Iterator&quot;)) {
+<span class="fc" id="L372">                iterator = true;</span>
+            }
+<span class="fc" id="L374">            return iterator;</span>
+        }
+
+        private boolean isFactory(ASTVariableDeclarator declarator) {
+<span class="fc" id="L378">            boolean factory = false;</span>
+<span class="fc" id="L379">            List&lt;ASTName&gt; names = declarator.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L380" title="All 2 branches covered.">            for (ASTName name : names) {</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">                if (name.getImage().toLowerCase().contains(&quot;factory&quot;)) {</span>
+<span class="fc" id="L382">                    factory = true;</span>
+<span class="fc" id="L383">                    break;</span>
+                }
+<span class="fc" id="L385">            }</span>
+<span class="fc" id="L386">            return factory;</span>
+        }
+
+        private boolean isForLoop(ASTVariableDeclarator declarator) {
+<span class="fc" id="L390">            return declarator.jjtGetParent().jjtGetParent() instanceof ASTForStatement;</span>
+        }
+
+        public ASTPrimaryExpression getExpression() {
+<span class="fc" id="L394">            return expression;</span>
+        }
+
+        public boolean isViolation() {
+<span class="fc" id="L398">            return violation;</span>
+        }
+
+        public String getViolationReason() {
+<span class="fc" id="L402">            return violationReason;</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="nc" id="L407">            return &quot;MethodCall on line &quot; + expression.getBeginLine() + &quot;:\n&quot; + &quot;  &quot; + baseName + &quot; name: &quot; + methodName</span>
+                    + &quot;\n&quot; + &quot;  type: &quot; + baseTypeName + &quot; (&quot; + baseType + &quot;), \n&quot; + &quot;  scope: &quot; + baseScope + &quot;\n&quot;
+                    + &quot;  violation: &quot; + violation + &quot; (&quot; + violationReason + &quot;)\n&quot;;
+        }
+
+    }
+
+    /**
+     * Stores the assignment of a variable and whether the variable's value is
+     * allocated locally (new constructor call). The class is comparable, so
+     * that the last assignment can be determined.
+     */
+<span class="fc" id="L419">    private static class Assignment implements Comparable&lt;Assignment&gt; {</span>
+        private int line;
+        private boolean allocation;
+        private boolean iterator;
+        private boolean forLoop;
+
+<span class="fc" id="L425">        Assignment(int line, boolean allocation, boolean iterator, boolean forLoop) {</span>
+<span class="fc" id="L426">            this.line = line;</span>
+<span class="fc" id="L427">            this.allocation = allocation;</span>
+<span class="fc" id="L428">            this.iterator = iterator;</span>
+<span class="fc" id="L429">            this.forLoop = forLoop;</span>
+<span class="fc" id="L430">        }</span>
+
+        @Override
+        public String toString() {
+<span class="nc" id="L434">            return &quot;assignment: line=&quot; + line + &quot; allocation:&quot; + allocation + &quot; iterator:&quot; + iterator + &quot; forLoop: &quot;</span>
+                    + forLoop;
+        }
+
+        public int compareTo(Assignment o) {
+<span class="fc" id="L439">            return o.line - line;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

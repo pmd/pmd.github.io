@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractAnalysisCache.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cache</a> &gt; <span class="el_source">AbstractAnalysisCache.java</span></div><h1>AbstractAnalysisCache.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cache;
+
+import java.io.File;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleSets;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.stat.Metric;
+
+/**
+ * Abstract implementation of the analysis cache. Handles all operations, except for persistence.
+ */
+public abstract class AbstractAnalysisCache implements AnalysisCache {
+
+<span class="fc" id="L27">    protected static final Logger LOG = Logger.getLogger(AbstractAnalysisCache.class.getName());</span>
+    protected final String pmdVersion;
+    protected final ConcurrentMap&lt;String, AnalysisResult&gt; fileResultsCache;
+    protected final ConcurrentMap&lt;String, AnalysisResult&gt; updatedResultsCache;
+    protected long rulesetChecksum;
+    protected long classpathChecksum;
+<span class="fc" id="L33">    protected final CachedRuleMapper ruleMapper = new CachedRuleMapper();</span>
+    
+    /**
+     * Creates a new empty cache
+     */
+<span class="fc" id="L38">    public AbstractAnalysisCache() {</span>
+<span class="fc" id="L39">        pmdVersion = PMD.VERSION;</span>
+<span class="fc" id="L40">        fileResultsCache = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L41">        updatedResultsCache = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L42">    }</span>
+
+    @Override
+    public boolean isUpToDate(final File sourceFile) {
+        // There is a new file being analyzed, prepare entry in updated cache
+<span class="fc" id="L47">        final AnalysisResult updatedResult = new AnalysisResult(sourceFile);</span>
+<span class="fc" id="L48">        updatedResultsCache.put(sourceFile.getPath(), updatedResult);</span>
+        
+        // Now check the old cache
+<span class="fc" id="L51">        final AnalysisResult analysisResult = fileResultsCache.get(sourceFile.getPath());</span>
+        
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (analysisResult == null) {</span>
+            // new file, need to analyze it
+<span class="fc" id="L55">            return false;</span>
+        }
+        
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        return analysisResult.getFileChecksum() == updatedResult.getFileChecksum();</span>
+    }
+
+    @Override
+    public List&lt;RuleViolation&gt; getCachedViolations(final File sourceFile) {
+<span class="fc" id="L63">        final AnalysisResult analysisResult = fileResultsCache.get(sourceFile.getPath());</span>
+
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (analysisResult == null) {</span>
+            // new file, avoid nulls
+<span class="nc" id="L67">            return Collections.emptyList();</span>
+        }
+
+<span class="fc" id="L70">        return analysisResult.getViolations();</span>
+    }
+
+    @Override
+    public void analysisFailed(final File sourceFile) {
+<span class="nc" id="L75">        updatedResultsCache.remove(sourceFile.getPath());</span>
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    public void checkValidity(final RuleSets ruleSets, final ClassLoader classLoader) {
+<span class="fc" id="L80">        boolean cacheIsValid = true;</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (ruleSets.getChecksum() != rulesetChecksum) {</span>
+<span class="fc" id="L83">            LOG.info(&quot;Analysis cache invalidated, rulesets changed.&quot;);</span>
+<span class="fc" id="L84">            cacheIsValid = false;</span>
+        }
+
+        final long classLoaderChecksum;
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (classLoader instanceof URLClassLoader) {</span>
+<span class="fc" id="L89">            final URLClassLoader urlClassLoader = (URLClassLoader) classLoader;</span>
+<span class="fc" id="L90">            classLoaderChecksum = Arrays.hashCode(urlClassLoader.getURLs());</span>
+            
+<span class="fc bfc" id="L92" title="All 4 branches covered.">            if (cacheIsValid &amp;&amp; classLoaderChecksum != classpathChecksum) {</span>
+                // Do we even care?
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                for (final Rule r : ruleSets.getAllRules()) {</span>
+<span class="pc bpc" id="L95" title="3 of 4 branches missed.">                    if (r.usesDFA() || r.usesTypeResolution()) {</span>
+<span class="fc" id="L96">                        LOG.info(&quot;Analysis cache invalidated, classpath changed.&quot;);</span>
+<span class="fc" id="L97">                        cacheIsValid = false;</span>
+<span class="fc" id="L98">                        break;</span>
+                    }
+<span class="nc" id="L100">                }</span>
+            }
+<span class="fc" id="L102">        } else {</span>
+<span class="fc" id="L103">            classLoaderChecksum = 0;</span>
+        }
+
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (!cacheIsValid) {</span>
+            // Clear the cache
+<span class="fc" id="L108">            fileResultsCache.clear();</span>
+        }
+
+        // Update the local checksums
+<span class="fc" id="L112">        rulesetChecksum = ruleSets.getChecksum();</span>
+<span class="fc" id="L113">        classpathChecksum = classLoaderChecksum;</span>
+<span class="fc" id="L114">        ruleMapper.initialize(ruleSets);</span>
+<span class="fc" id="L115">    }</span>
+
+    @Override
+    public void ruleViolationAdded(final RuleViolation ruleViolation) {
+<span class="fc" id="L119">        final AnalysisResult analysisResult = updatedResultsCache.get(ruleViolation.getFilename());</span>
+        
+<span class="fc" id="L121">        analysisResult.addViolation(ruleViolation);</span>
+<span class="fc" id="L122">    }</span>
+
+    @Override
+    public void metricAdded(final Metric metric) {
+        // Not interested in metrics
+<span class="nc" id="L127">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

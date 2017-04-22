@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>EcmascriptParserOptions.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JavaScript</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.ecmascript</a> &gt; <span class="el_source">EcmascriptParserOptions.java</span></div><h1>EcmascriptParserOptions.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.ecmascript;
+
+import org.mozilla.javascript.Context;
+
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.lang.ParserOptions;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.EnumeratedProperty;
+import net.sourceforge.pmd.util.StringUtil;
+
+public class EcmascriptParserOptions extends ParserOptions {
+
+<span class="pc" id="L17">    public enum Version {</span>
+<span class="fc" id="L18">        VERSION_DEFAULT(&quot;default&quot;, Context.VERSION_DEFAULT),</span>
+<span class="fc" id="L19">        VERSION_1_0(&quot;1.0&quot;, Context.VERSION_1_0),</span>
+<span class="fc" id="L20">        VERSION_1_1(&quot;1.1&quot;, Context.VERSION_1_1),</span>
+<span class="fc" id="L21">        VERSION_1_2(&quot;1.2&quot;, Context.VERSION_1_2),</span>
+<span class="fc" id="L22">        VERSION_1_3(&quot;1.3&quot;, Context.VERSION_1_3),</span>
+<span class="fc" id="L23">        VERSION_1_4(&quot;1.4&quot;, Context.VERSION_1_4),</span>
+<span class="fc" id="L24">        VERSION_1_5(&quot;1.5&quot;, Context.VERSION_1_5),</span>
+<span class="fc" id="L25">        VERSION_1_6(&quot;1.6&quot;, Context.VERSION_1_6),</span>
+<span class="fc" id="L26">        VERSION_1_7(&quot;1.7&quot;, Context.VERSION_1_7),</span>
+<span class="fc" id="L27">        VERSION_1_8(&quot;1.8&quot;, Context.VERSION_1_8);</span>
+
+        private final String name;
+        private final int version;
+
+<span class="fc" id="L32">        Version(String name, int version) {</span>
+<span class="fc" id="L33">            this.name = name;</span>
+<span class="fc" id="L34">            this.version = version;</span>
+<span class="fc" id="L35">        }</span>
+
+        public String getLabel() {
+<span class="fc" id="L38">            return name;</span>
+        }
+
+        public int getVersion() {
+<span class="fc" id="L42">            return version;</span>
+        }
+    }
+
+<span class="fc" id="L46">    private static final String[] VERSION_LABELS = new String[] { Version.VERSION_DEFAULT.getLabel(),</span>
+        Version.VERSION_1_0.getLabel(), Version.VERSION_1_1.getLabel(), Version.VERSION_1_2.getLabel(),
+        Version.VERSION_1_3.getLabel(), Version.VERSION_1_4.getLabel(), Version.VERSION_1_5.getLabel(),
+        Version.VERSION_1_6.getLabel(), Version.VERSION_1_7.getLabel(), Version.VERSION_1_8.getLabel(), };
+
+    // Note: The UI order values are chosen to be larger than those built into
+    // XPathRule.
+<span class="fc" id="L53">    public static final BooleanProperty RECORDING_COMMENTS_DESCRIPTOR = new BooleanProperty(&quot;recordingComments&quot;,</span>
+            &quot;Specifies that comments are produced in the AST.&quot;, Boolean.TRUE, 3.0f);
+<span class="fc" id="L55">    public static final BooleanProperty RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;recordingLocalJsDocComments&quot;, &quot;Specifies that JsDoc comments are produced in the AST.&quot;, Boolean.TRUE,
+            4.0f);
+<span class="fc" id="L58">    public static final EnumeratedProperty&lt;Version&gt; RHINO_LANGUAGE_VERSION = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;rhinoLanguageVersion&quot;,
+            &quot;Specifies the Rhino Language Version to use for parsing.  Defaults to Rhino default.&quot;, VERSION_LABELS,
+            Version.values(), 0, 5.0f);
+
+    private boolean recordingComments;
+    private boolean recordingLocalJsDocComments;
+    private Version rhinoLanguageVersion;
+
+<span class="fc" id="L67">    public EcmascriptParserOptions() {</span>
+<span class="fc" id="L68">        this.recordingComments = RECORDING_COMMENTS_DESCRIPTOR.defaultValue().booleanValue();</span>
+<span class="fc" id="L69">        this.recordingLocalJsDocComments = RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR.defaultValue().booleanValue();</span>
+<span class="fc" id="L70">        this.rhinoLanguageVersion = (Version) RHINO_LANGUAGE_VERSION</span>
+                .valueFrom((String) RHINO_LANGUAGE_VERSION.defaultValue());
+<span class="fc" id="L72">    }</span>
+
+<span class="fc" id="L74">    public EcmascriptParserOptions(Rule rule) {</span>
+<span class="fc" id="L75">        this.recordingComments = rule.getProperty(RECORDING_COMMENTS_DESCRIPTOR);</span>
+<span class="fc" id="L76">        this.recordingLocalJsDocComments = rule.getProperty(RECORDING_LOCAL_JSDOC_COMMENTS_DESCRIPTOR);</span>
+<span class="fc" id="L77">        this.rhinoLanguageVersion = (Version) RHINO_LANGUAGE_VERSION</span>
+                .valueFrom((String) rule.getProperty(RHINO_LANGUAGE_VERSION));
+<span class="fc" id="L79">    }</span>
+
+    public boolean isRecordingComments() {
+<span class="fc" id="L82">        return this.recordingComments;</span>
+    }
+
+    public void setRecordingComments(boolean recordingComments) {
+<span class="nc" id="L86">        this.recordingComments = recordingComments;</span>
+<span class="nc" id="L87">    }</span>
+
+    public boolean isRecordingLocalJsDocComments() {
+<span class="fc" id="L90">        return this.recordingLocalJsDocComments;</span>
+    }
+
+    public void setRecordingLocalJsDocComments(boolean recordingLocalJsDocComments) {
+<span class="nc" id="L94">        this.recordingLocalJsDocComments = recordingLocalJsDocComments;</span>
+<span class="nc" id="L95">    }</span>
+
+    public Version getRhinoLanguageVersion() {
+<span class="fc" id="L98">        return this.rhinoLanguageVersion;</span>
+    }
+
+    public void setRhinoLanguageVersion(Version rhinoLanguageVersion) {
+<span class="fc" id="L102">        this.rhinoLanguageVersion = rhinoLanguageVersion;</span>
+<span class="fc" id="L103">    }</span>
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L107">        final int prime = 31;</span>
+<span class="fc" id="L108">        int result = super.hashCode();</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        result = prime * result + (recordingComments ? 1231 : 1237);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        result = prime * result + (recordingLocalJsDocComments ? 1231 : 1237);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        result = prime * result + ((rhinoLanguageVersion == null) ? 0 : rhinoLanguageVersion.hashCode());</span>
+<span class="fc" id="L112">        return result;</span>
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (this == obj) {</span>
+<span class="fc" id="L118">            return true;</span>
+        }
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">        if (obj == null || getClass() != obj.getClass()) {</span>
+<span class="nc" id="L121">            return false;</span>
+        }
+<span class="fc" id="L123">        final EcmascriptParserOptions that = (EcmascriptParserOptions) obj;</span>
+<span class="fc bfc" id="L124" title="All 8 branches covered.">        return StringUtil.isSame(this.suppressMarker, that.suppressMarker, false, false, false)</span>
+                &amp;&amp; this.recordingComments == that.recordingComments
+                &amp;&amp; this.recordingLocalJsDocComments == that.recordingLocalJsDocComments
+                &amp;&amp; this.rhinoLanguageVersion == that.rhinoLanguageVersion;
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
