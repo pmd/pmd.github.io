@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TextPadRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">TextPadRenderer.java</span></div><h1>TextPadRenderer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.renderers;
 
 import java.io.IOException;
@@ -11,50 +12,63 @@ import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.RuleViolation;
 
 /**
- * &lt;p&gt;A Renderer for running PMD via a TextPad 'tool'.  &lt;a href=&quot;http://www.textpad.com&quot;&gt;TextPad&lt;/a&gt; is a text editor by Helios Software Solutions.&lt;/p&gt;
- * &lt;p/&gt;
- * &lt;p&gt;Output lines are in the form:&lt;/p&gt;
- * &lt;p/&gt;
- * &lt;p&gt;&lt;CODE&gt;pathtojavafile(line#, NameOfRule):&amp;nbsp; Specific rule violation message&lt;/CODE&gt;&lt;/p&gt;
- * &lt;p/&gt;
- * &lt;p&gt;For example:&lt;/p&gt;
- * &lt;p/&gt;
- * &lt;p&gt;&lt;CODE&gt;D:\java\pmd\src\src\net\sourceforge\pmd\renderers\TextPadRenderer.java(24, AtLeastOneConstructor):&amp;nbsp; Each class should declare at least one constructor
+ * &lt;p&gt;
+ * A Renderer for running PMD via a TextPad 'tool'.
+ * &lt;a href=&quot;http://www.textpad.com&quot;&gt;TextPad&lt;/a&gt; is a text editor by Helios
+ * Software Solutions.
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * Output lines are in the form:
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * &lt;CODE&gt;pathtojavafile(line#, NameOfRule):&amp;nbsp; Specific rule violation message&lt;/CODE&gt;
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * For example:
+ * &lt;/p&gt;
+ * &lt;p&gt;
+ * &lt;CODE&gt;D:\java\pmd\src\src\net\sourceforge\pmd\renderers\TextPadRenderer.java(24, AtLeastOneConstructor):&amp;nbsp; Each class should declare at least one constructor
  * &lt;br&gt;D:\java\pmd\src\src\net\sourceforge\pmd\renderers\TextPadRenderer.java(26, VariableNamingConventionsRule):&amp;nbsp; Variables should start with a lowercase character
- * &lt;br&gt;D:\java\pmd\src\src\net\sourceforge\pmd\renderers\TextPadRenderer.java(31, ShortVariable):&amp;nbsp; Avoid variables with short names&lt;/CODE&gt;&lt;/p&gt;
+ * &lt;br&gt;D:\java\pmd\src\src\net\sourceforge\pmd\renderers\TextPadRenderer.java(31, ShortVariable):&amp;nbsp; Avoid variables with short names&lt;/CODE&gt;
+ * &lt;/p&gt;
  *
- * @author Jeff Epstein, based upon &lt;a href=&quot;EmacsRenderer.html&quot;&gt;EmacsRenderer&lt;/a&gt;, Tuesday, September 23, 2003
+ * @author Jeff Epstein, based upon
+ *         &lt;a href=&quot;EmacsRenderer.html&quot;&gt;EmacsRenderer&lt;/a&gt;, Tuesday, September
+ *         23, 2003
  */
 public class TextPadRenderer extends AbstractIncrementingRenderer {
 
     public static final String NAME = &quot;textpad&quot;;
 
     public TextPadRenderer() {
-<span class="fc" id="L33">	super(NAME, &quot;TextPad integration.&quot;);</span>
-<span class="fc" id="L34">    }</span>
+<span class="fc" id="L44">        super(NAME, &quot;TextPad integration.&quot;);</span>
+<span class="fc" id="L45">    }</span>
 
-<span class="nc" id="L36">    public String defaultFileExtension() { return &quot;txt&quot;; }</span>
-    
+    @Override
+    public String defaultFileExtension() {
+<span class="nc" id="L49">        return &quot;txt&quot;;</span>
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void renderFileViolations(Iterator&lt;RuleViolation&gt; violations) throws IOException {
-<span class="fc" id="L43">	Writer writer = getWriter();</span>
-<span class="fc" id="L44">	StringBuffer buf = new StringBuffer();</span>
-<span class="fc bfc" id="L45" title="All 2 branches covered.">	while (violations.hasNext()) {</span>
-<span class="fc" id="L46">	    RuleViolation rv = violations.next();</span>
-<span class="fc" id="L47">	    buf.setLength(0);</span>
-	    //Filename
-<span class="fc" id="L49">	    buf.append(rv.getFilename() + &quot;(&quot;);</span>
-	    //Line number
-<span class="fc" id="L51">	    buf.append(Integer.toString(rv.getBeginLine())).append(&quot;,  &quot;);</span>
-	    //Name of violated rule
-<span class="fc" id="L53">	    buf.append(rv.getRule().getName()).append(&quot;):  &quot;);</span>
-	    //Specific violation message
-<span class="fc" id="L55">	    buf.append(rv.getDescription()).append(PMD.EOL);</span>
-<span class="fc" id="L56">	    writer.write(buf.toString());</span>
-<span class="fc" id="L57">	}</span>
-<span class="fc" id="L58">    }</span>
+<span class="fc" id="L57">        Writer writer = getWriter();</span>
+<span class="fc" id="L58">        StringBuffer buf = new StringBuffer();</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        while (violations.hasNext()) {</span>
+<span class="fc" id="L60">            RuleViolation rv = violations.next();</span>
+<span class="fc" id="L61">            buf.setLength(0);</span>
+            // Filename
+<span class="fc" id="L63">            buf.append(rv.getFilename() + &quot;(&quot;);</span>
+            // Line number
+<span class="fc" id="L65">            buf.append(Integer.toString(rv.getBeginLine())).append(&quot;,  &quot;);</span>
+            // Name of violated rule
+<span class="fc" id="L67">            buf.append(rv.getRule().getName()).append(&quot;):  &quot;);</span>
+            // Specific violation message
+<span class="fc" id="L69">            buf.append(rv.getDescription()).append(PMD.EOL);</span>
+<span class="fc" id="L70">            writer.write(buf.toString());</span>
+<span class="fc" id="L71">        }</span>
+<span class="fc" id="L72">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceCode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">SourceCode.java</span></div><h1>SourceCode.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.cpd;
 
 import java.io.BufferedReader;
@@ -20,30 +21,30 @@ import net.sourceforge.pmd.PMD;
 
 public class SourceCode {
 
-<span class="fc" id="L23">    public abstract static class CodeLoader {</span>
+<span class="fc" id="L24">    public abstract static class CodeLoader {</span>
         private SoftReference&lt;List&lt;String&gt;&gt; code;
 
         public List&lt;String&gt; getCode() {
-<span class="fc" id="L27">            List&lt;String&gt; c = null;</span>
-<span class="pc bpc" id="L28" title="1 of 2 branches missed.">            if (code != null) {</span>
-<span class="nc" id="L29">                c = code.get();</span>
+<span class="fc" id="L28">            List&lt;String&gt; c = null;</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">            if (code != null) {</span>
+<span class="nc" id="L30">                c = code.get();</span>
             }
-<span class="pc bpc" id="L31" title="1 of 2 branches missed.">            if (c != null) {</span>
-<span class="nc" id="L32">                return c;</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">            if (c != null) {</span>
+<span class="nc" id="L33">                return c;</span>
             }
-<span class="fc" id="L34">            this.code = new SoftReference&lt;&gt;(load());</span>
-<span class="fc" id="L35">            return code.get();</span>
+<span class="fc" id="L35">            this.code = new SoftReference&lt;&gt;(load());</span>
+<span class="fc" id="L36">            return code.get();</span>
         }
 
         public List&lt;String&gt; getCodeSlice(int startLine, int endLine) {
-<span class="fc" id="L39">            List&lt;String&gt; c = null;</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (code != null) {</span>
-<span class="fc" id="L41">                c = code.get();</span>
+<span class="fc" id="L40">            List&lt;String&gt; c = null;</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            if (code != null) {</span>
+<span class="fc" id="L42">                c = code.get();</span>
             }
-<span class="fc bfc" id="L43" title="All 2 branches covered.">            if (c != null) {</span>
-<span class="fc" id="L44">                return c.subList(startLine, endLine);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">            if (c != null) {</span>
+<span class="fc" id="L45">                return c.subList(startLine, endLine);</span>
             }
-<span class="fc" id="L46">            return load(startLine, endLine);</span>
+<span class="fc" id="L47">            return load(startLine, endLine);</span>
         }
 
         public abstract String getFileName();
@@ -51,41 +52,41 @@ public class SourceCode {
         protected abstract Reader getReader() throws Exception;
 
         protected List&lt;String&gt; load() {
-<span class="pc" id="L54">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
-<span class="fc" id="L55">                List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
+<span class="pc" id="L55">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
+<span class="fc" id="L56">                List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
                 String currentLine;
-<span class="fc bfc" id="L57" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
-<span class="fc" id="L58">                    lines.add(currentLine);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
+<span class="fc" id="L59">                    lines.add(currentLine);</span>
                 }
-<span class="fc" id="L60">                return lines;</span>
-<span class="pc bpc" id="L61" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
-<span class="nc" id="L62">                e.printStackTrace();</span>
-<span class="nc" id="L63">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
+<span class="fc" id="L61">                return lines;</span>
+<span class="pc bpc" id="L62" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
+<span class="nc" id="L63">                e.printStackTrace();</span>
+<span class="nc" id="L64">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
             }
         }
 
         protected List&lt;String&gt; load(int startLine, int endLine) {
-<span class="pc" id="L68">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
-<span class="fc" id="L69">                int linesToRead = endLine - startLine;</span>
-<span class="fc" id="L70">                List&lt;String&gt; lines = new ArrayList&lt;&gt;(linesToRead);</span>
+<span class="pc" id="L69">            try (BufferedReader reader = new BufferedReader(getReader())) {</span>
+<span class="fc" id="L70">                int linesToRead = endLine - startLine;</span>
+<span class="fc" id="L71">                List&lt;String&gt; lines = new ArrayList&lt;&gt;(linesToRead);</span>
 
                 // Skip lines until we reach the start point
-<span class="fc bfc" id="L73" title="All 2 branches covered.">                for (int i = 0; i &lt; startLine; i++) {</span>
-<span class="fc" id="L74">                    reader.readLine();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                for (int i = 0; i &lt; startLine; i++) {</span>
+<span class="fc" id="L75">                    reader.readLine();</span>
                 }
 
                 String currentLine;
-<span class="fc bfc" id="L78" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
-<span class="fc" id="L79">                    lines.add(currentLine);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                while ((currentLine = reader.readLine()) != null) {</span>
+<span class="fc" id="L80">                    lines.add(currentLine);</span>
 
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                    if (lines.size() == linesToRead) {</span>
-<span class="nc" id="L82">                        break;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                    if (lines.size() == linesToRead) {</span>
+<span class="nc" id="L83">                        break;</span>
                     }
                 }
-<span class="fc" id="L85">                return lines;</span>
-<span class="pc bpc" id="L86" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
-<span class="nc" id="L87">                e.printStackTrace();</span>
-<span class="nc" id="L88">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
+<span class="fc" id="L86">                return lines;</span>
+<span class="pc bpc" id="L87" title="6 of 8 branches missed.">            } catch (Exception e) {</span>
+<span class="nc" id="L88">                e.printStackTrace();</span>
+<span class="nc" id="L89">                throw new RuntimeException(&quot;Problem while reading &quot; + getFileName() + &quot;:&quot; + e.getMessage());</span>
             }
         }
     }
@@ -94,19 +95,18 @@ public class SourceCode {
         private File file;
         private String encoding;
 
-<span class="fc" id="L97">        public FileCodeLoader(File file, String encoding) {</span>
-<span class="fc" id="L98">            this.file = file;</span>
-<span class="fc" id="L99">            this.encoding = encoding;</span>
-<span class="fc" id="L100">        }</span>
+<span class="fc" id="L98">        public FileCodeLoader(File file, String encoding) {</span>
+<span class="fc" id="L99">            this.file = file;</span>
+<span class="fc" id="L100">            this.encoding = encoding;</span>
+<span class="fc" id="L101">        }</span>
 
         @Override
         public Reader getReader() throws Exception {
-<span class="fc" id="L104">            BOMInputStream inputStream = </span>
-                new BOMInputStream(new FileInputStream(file),
-                        ByteOrderMark.UTF_8, ByteOrderMark.UTF_16BE, ByteOrderMark.UTF_16LE);
+<span class="fc" id="L105">            BOMInputStream inputStream = new BOMInputStream(new FileInputStream(file), ByteOrderMark.UTF_8,</span>
+                    ByteOrderMark.UTF_16BE, ByteOrderMark.UTF_16LE);
 
 <span class="fc bfc" id="L108" title="All 2 branches covered.">            if (inputStream.hasBOM()) {</span>
-<span class="fc" id="L109">               encoding = inputStream.getBOMCharsetName();</span>
+<span class="fc" id="L109">                encoding = inputStream.getBOMCharsetName();</span>
             }
 <span class="fc" id="L111">            return new InputStreamReader(inputStream, encoding);</span>
         }

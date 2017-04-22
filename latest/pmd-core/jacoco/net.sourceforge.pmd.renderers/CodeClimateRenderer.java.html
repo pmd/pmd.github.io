@@ -4,9 +4,9 @@
 
 package net.sourceforge.pmd.renderers;
 
+import static net.sourceforge.pmd.renderers.CodeClimateRule.CODECLIMATE_BLOCK_HIGHLIGHTING;
 import static net.sourceforge.pmd.renderers.CodeClimateRule.CODECLIMATE_CATEGORIES;
 import static net.sourceforge.pmd.renderers.CodeClimateRule.CODECLIMATE_REMEDIATION_MULTIPLIER;
-import static net.sourceforge.pmd.renderers.CodeClimateRule.CODECLIMATE_BLOCK_HIGHLIGHTING;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -15,13 +15,13 @@ import java.util.Iterator;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.PropertyDescriptor;
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleViolation;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * Renderer for Code Climate JSON format
@@ -64,137 +64,140 @@ public class CodeClimateRenderer extends AbstractIncrementingRenderer {
     /**
      * Generate a CodeClimateIssue suitable for processing into JSON from the
      * given RuleViolation.
-     * 
-     * @param rv RuleViolation to convert.
+     *
+     * @param rv
+     *            RuleViolation to convert.
      * @return The generated issue.
      */
     private CodeClimateIssue asIssue(RuleViolation rv) {
-<span class="fc" id="L72">        CodeClimateIssue issue = new CodeClimateIssue();</span>
-<span class="fc" id="L73">        issue.check_name = rule.getName();</span>
-<span class="fc" id="L74">        issue.description = cleaned(rv.getDescription());</span>
-<span class="fc" id="L75">        issue.content = new CodeClimateIssue.Content(BODY_PLACEHOLDER);</span>
-<span class="fc" id="L76">        issue.location = getLocation(rv);</span>
-<span class="fc" id="L77">        issue.remediation_points = getRemediationPoints();</span>
-<span class="fc" id="L78">        issue.categories = getCategories();</span>
+<span class="fc" id="L73">        CodeClimateIssue issue = new CodeClimateIssue();</span>
+<span class="fc" id="L74">        issue.check_name = rule.getName();</span>
+<span class="fc" id="L75">        issue.description = cleaned(rv.getDescription());</span>
+<span class="fc" id="L76">        issue.content = new CodeClimateIssue.Content(BODY_PLACEHOLDER);</span>
+<span class="fc" id="L77">        issue.location = getLocation(rv);</span>
+<span class="fc" id="L78">        issue.remediation_points = getRemediationPoints();</span>
+<span class="fc" id="L79">        issue.categories = getCategories();</span>
 
-<span class="pc bpc" id="L80" title="3 of 4 branches missed.">        switch (rule.getPriority()) {</span>
+<span class="pc bpc" id="L81" title="2 of 3 branches missed.">        switch (rule.getPriority()) {</span>
         case HIGH:
-<span class="nc" id="L82">            issue.severity = &quot;critical&quot;;</span>
-<span class="nc" id="L83">            break;</span>
+<span class="nc" id="L83">            issue.severity = &quot;critical&quot;;</span>
+<span class="nc" id="L84">            break;</span>
         case MEDIUM_HIGH:
         case MEDIUM:
         case MEDIUM_LOW:
-<span class="nc" id="L87">            issue.severity = &quot;normal&quot;;</span>
-<span class="nc" id="L88">            break;</span>
+<span class="nc" id="L88">            issue.severity = &quot;normal&quot;;</span>
+<span class="nc" id="L89">            break;</span>
         case LOW:
-<span class="fc" id="L90">            issue.severity = &quot;info&quot;;</span>
+        default:
+<span class="fc" id="L92">            issue.severity = &quot;info&quot;;</span>
             break;
         }
 
-<span class="fc" id="L94">        return issue;</span>
+<span class="fc" id="L96">        return issue;</span>
     }
 
     @Override
     public String defaultFileExtension() {
-<span class="nc" id="L99">        return &quot;json&quot;;</span>
+<span class="nc" id="L101">        return &quot;json&quot;;</span>
     }
 
     private CodeClimateIssue.Location getLocation(RuleViolation rv) {
         CodeClimateIssue.Location result;
 
-<span class="fc" id="L105">        String pathWithoutCcRoot = StringUtils.removeStartIgnoreCase(rv.getFilename(), &quot;/code/&quot;);</span>
+<span class="fc" id="L107">        String pathWithoutCcRoot = StringUtils.removeStartIgnoreCase(rv.getFilename(), &quot;/code/&quot;);</span>
 
-<span class="pc bpc" id="L107" title="3 of 4 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_REMEDIATION_MULTIPLIER)</span>
+<span class="pc bpc" id="L109" title="3 of 4 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_REMEDIATION_MULTIPLIER)</span>
                 &amp;&amp; !rule.getProperty(CODECLIMATE_BLOCK_HIGHLIGHTING)) {
-<span class="nc" id="L109">            result = new CodeClimateIssue.Location(pathWithoutCcRoot, rv.getBeginLine(), rv.getBeginLine());</span>
+<span class="nc" id="L111">            result = new CodeClimateIssue.Location(pathWithoutCcRoot, rv.getBeginLine(), rv.getBeginLine());</span>
         } else {
-<span class="fc" id="L111">            result = new CodeClimateIssue.Location(pathWithoutCcRoot, rv.getBeginLine(), rv.getEndLine());</span>
+<span class="fc" id="L113">            result = new CodeClimateIssue.Location(pathWithoutCcRoot, rv.getBeginLine(), rv.getEndLine());</span>
         }
 
-<span class="fc" id="L114">        return result;</span>
+<span class="fc" id="L116">        return result;</span>
     }
 
     private int getRemediationPoints() {
-<span class="fc" id="L118">        int remediation_points = REMEDIATION_POINTS_DEFAULT;</span>
+<span class="fc" id="L120">        int remediationPoints = REMEDIATION_POINTS_DEFAULT;</span>
 
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_REMEDIATION_MULTIPLIER)) {</span>
-<span class="nc" id="L121">            remediation_points *= rule.getProperty(CODECLIMATE_REMEDIATION_MULTIPLIER);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_REMEDIATION_MULTIPLIER)) {</span>
+<span class="nc" id="L123">            remediationPoints *= rule.getProperty(CODECLIMATE_REMEDIATION_MULTIPLIER);</span>
         }
 
-<span class="fc" id="L124">        return remediation_points;</span>
+<span class="fc" id="L126">        return remediationPoints;</span>
     }
 
     private String[] getCategories() {
         String[] result;
 
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_CATEGORIES)) {</span>
-<span class="nc" id="L131">            Object[] categories = rule.getProperty(CODECLIMATE_CATEGORIES);</span>
-<span class="nc" id="L132">            result = new String[categories.length];</span>
-<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (int i = 0; i &lt; categories.length; i++) {</span>
-<span class="nc" id="L134">                result[i] = String.valueOf(categories[i]);</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (rule.hasDescriptor(CODECLIMATE_CATEGORIES)) {</span>
+<span class="nc" id="L133">            Object[] categories = rule.getProperty(CODECLIMATE_CATEGORIES);</span>
+<span class="nc" id="L134">            result = new String[categories.length];</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            for (int i = 0; i &lt; categories.length; i++) {</span>
+<span class="nc" id="L136">                result[i] = String.valueOf(categories[i]);</span>
             }
-<span class="nc" id="L136">        } else {</span>
-<span class="fc" id="L137">            result = CODECLIMATE_DEFAULT_CATEGORIES;</span>
+<span class="nc" id="L138">        } else {</span>
+<span class="fc" id="L139">            result = CODECLIMATE_DEFAULT_CATEGORIES;</span>
         }
 
-<span class="fc" id="L140">        return result;</span>
+<span class="fc" id="L142">        return result;</span>
     }
 
     private static String getPmdDeveloperURL() {
-<span class="fc" id="L144">        String url = &quot;http://pmd.github.io/pmd-&quot; + PMD.VERSION + &quot;/customizing/pmd-developer.html&quot;;</span>
-<span class="pc bpc" id="L145" title="2 of 4 branches missed.">        if (PMD.VERSION.contains(&quot;SNAPSHOT&quot;) || &quot;unknown&quot;.equals(PMD.VERSION)) {</span>
-<span class="fc" id="L146">            url = &quot;http://pmd.sourceforge.net/snapshot/customizing/pmd-developer.html&quot;;</span>
+<span class="fc" id="L146">        String url = &quot;http://pmd.github.io/pmd-&quot; + PMD.VERSION + &quot;/customizing/pmd-developer.html&quot;;</span>
+<span class="pc bpc" id="L147" title="2 of 4 branches missed.">        if (PMD.VERSION.contains(&quot;SNAPSHOT&quot;) || &quot;unknown&quot;.equals(PMD.VERSION)) {</span>
+<span class="fc" id="L148">            url = &quot;http://pmd.sourceforge.net/snapshot/customizing/pmd-developer.html&quot;;</span>
         }
-<span class="fc" id="L148">        return url;</span>
+<span class="fc" id="L150">        return url;</span>
     }
 
     private &lt;T&gt; String getBody() {
-<span class="fc" id="L152">        String result = &quot;## &quot; + rule.getName() + &quot;\\n\\n&quot; + &quot;Since: PMD &quot; + rule.getSince() + &quot;\\n\\n&quot; + &quot;Priority: &quot;</span>
+<span class="fc" id="L154">        String result = &quot;## &quot; + rule.getName() + &quot;\\n\\n&quot; + &quot;Since: PMD &quot; + rule.getSince() + &quot;\\n\\n&quot; + &quot;Priority: &quot;</span>
                 + rule.getPriority() + &quot;\\n\\n&quot;
                 + &quot;[Categories](https://github.com/codeclimate/spec/blob/master/SPEC.md#categories): &quot;
                 + Arrays.toString(getCategories()).replaceAll(&quot;[\\[\\]]&quot;, &quot;&quot;) + &quot;\\n\\n&quot;
                 + &quot;[Remediation Points](https://github.com/codeclimate/spec/blob/master/SPEC.md#remediation-points): &quot;
                 + getRemediationPoints() + &quot;\\n\\n&quot; + cleaned(rule.getDescription());
 
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (!rule.getExamples().isEmpty()) {</span>
-<span class="nc" id="L160">            result += &quot;\\n\\n### Example:\\n\\n&quot;;</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (!rule.getExamples().isEmpty()) {</span>
+<span class="nc" id="L162">            result += &quot;\\n\\n### Example:\\n\\n&quot;;</span>
 
-<span class="nc bnc" id="L162" title="All 2 branches missed.">            for (String snippet : rule.getExamples()) {</span>
-<span class="nc" id="L163">                snippet = snippet.replaceAll(&quot;\\n&quot;, &quot;\\\\n&quot;);</span>
-<span class="nc" id="L164">                snippet = snippet.replaceAll(&quot;\\t&quot;, &quot;\\\\t&quot;);</span>
-<span class="nc" id="L165">                result += &quot;```java\\n&quot; + snippet + &quot;\\n```  &quot;;</span>
-<span class="nc" id="L166">            }</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            for (String snippet : rule.getExamples()) {</span>
+<span class="nc" id="L165">                String exampleSnippet = snippet.replaceAll(&quot;\\n&quot;, &quot;\\\\n&quot;);</span>
+<span class="nc" id="L166">                exampleSnippet = exampleSnippet.replaceAll(&quot;\\t&quot;, &quot;\\\\t&quot;);</span>
+<span class="nc" id="L167">                result += &quot;```java\\n&quot; + exampleSnippet + &quot;\\n```  &quot;;</span>
+<span class="nc" id="L168">            }</span>
         }
 
-<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (!rule.getPropertyDescriptors().isEmpty()) {</span>
-<span class="fc" id="L170">            result += &quot;\\n\\n### [PMD properties](&quot; + pmdDeveloperUrl + &quot;)\\n\\n&quot;;</span>
-<span class="fc" id="L171">            result += &quot;Name | Value | Description\\n&quot;;</span>
-<span class="fc" id="L172">            result += &quot;--- | --- | ---\\n&quot;;</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">        if (!rule.getPropertyDescriptors().isEmpty()) {</span>
+<span class="fc" id="L172">            result += &quot;\\n\\n### [PMD properties](&quot; + pmdDeveloperUrl + &quot;)\\n\\n&quot;;</span>
+<span class="fc" id="L173">            result += &quot;Name | Value | Description\\n&quot;;</span>
+<span class="fc" id="L174">            result += &quot;--- | --- | ---\\n&quot;;</span>
 
-<span class="fc bfc" id="L174" title="All 2 branches covered.">            for (PropertyDescriptor&lt;?&gt; property : rule.getPropertyDescriptors()) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            for (PropertyDescriptor&lt;?&gt; property : rule.getPropertyDescriptors()) {</span>
                 @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L176">                PropertyDescriptor&lt;T&gt; typed = (PropertyDescriptor&lt;T&gt;) property;</span>
-<span class="fc" id="L177">                T value = rule.getProperty(typed);</span>
-<span class="fc" id="L178">                String propertyValue = typed.asDelimitedString(value);</span>
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                if (propertyValue == null)</span>
-<span class="nc" id="L180">                    propertyValue = &quot;&quot;;</span>
-<span class="fc" id="L181">                propertyValue = propertyValue.replaceAll(&quot;(\n|\r\n|\r)&quot;, &quot;\\\\n&quot;);</span>
+<span class="fc" id="L178">                PropertyDescriptor&lt;T&gt; typed = (PropertyDescriptor&lt;T&gt;) property;</span>
+<span class="fc" id="L179">                T value = rule.getProperty(typed);</span>
+<span class="fc" id="L180">                String propertyValue = typed.asDelimitedString(value);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">                if (propertyValue == null) {</span>
+<span class="nc" id="L182">                    propertyValue = &quot;&quot;;</span>
+                }
+<span class="fc" id="L184">                propertyValue = propertyValue.replaceAll(&quot;(\n|\r\n|\r)&quot;, &quot;\\\\n&quot;);</span>
 
-<span class="fc" id="L183">                String porpertyName = property.name();</span>
-<span class="fc" id="L184">                porpertyName = porpertyName.replaceAll(&quot;\\_&quot;, &quot;\\\\_&quot;);</span>
+<span class="fc" id="L186">                String porpertyName = property.name();</span>
+<span class="fc" id="L187">                porpertyName = porpertyName.replaceAll(&quot;\\_&quot;, &quot;\\\\_&quot;);</span>
 
-<span class="fc" id="L186">                result += porpertyName + &quot; | &quot; + propertyValue + &quot; | &quot; + property.description() + &quot;\\n&quot;;</span>
-<span class="fc" id="L187">            }</span>
+<span class="fc" id="L189">                result += porpertyName + &quot; | &quot; + propertyValue + &quot; | &quot; + property.description() + &quot;\\n&quot;;</span>
+<span class="fc" id="L190">            }</span>
         }
-<span class="fc" id="L189">        return cleaned(result);</span>
+<span class="fc" id="L192">        return cleaned(result);</span>
     }
 
     private String cleaned(String original) {
-<span class="fc" id="L193">        String result = original.trim();</span>
-<span class="fc" id="L194">        result = result.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
-<span class="fc" id="L195">        result = result.replaceAll(&quot;\\s*[\\r\\n]+\\s*&quot;, &quot;&quot;);</span>
-<span class="fc" id="L196">        result = result.replaceAll(&quot;\&quot;&quot;, &quot;'&quot;);</span>
-<span class="fc" id="L197">        return result;</span>
+<span class="fc" id="L196">        String result = original.trim();</span>
+<span class="fc" id="L197">        result = result.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="fc" id="L198">        result = result.replaceAll(&quot;\\s*[\\r\\n]+\\s*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L199">        result = result.replaceAll(&quot;\&quot;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L200">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

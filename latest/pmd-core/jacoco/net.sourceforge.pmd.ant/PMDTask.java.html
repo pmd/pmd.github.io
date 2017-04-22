@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.ant</a> &gt; <span class="el_source">PMDTask.java</span></div><h1>PMDTask.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.ant;
 
 import java.util.ArrayList;
@@ -8,20 +9,20 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sourceforge.pmd.ant.internal.PMDTaskImpl;
-
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
 
-<span class="fc" id="L19">public class PMDTask extends Task {</span>
+import net.sourceforge.pmd.ant.internal.PMDTaskImpl;
+
+<span class="fc" id="L20">public class PMDTask extends Task {</span>
 
     private Path classpath;
     private Path auxClasspath;
-<span class="fc" id="L23">    private final List&lt;Formatter&gt; formatters = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L24">    private final List&lt;FileSet&gt; filesets = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L24">    private final List&lt;Formatter&gt; formatters = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L25">    private final List&lt;FileSet&gt; filesets = new ArrayList&lt;&gt;();</span>
     private boolean failOnError;
     private boolean failOnRuleViolation;
     private boolean shortFilenames;
@@ -31,218 +32,227 @@ import org.apache.tools.ant.types.Reference;
     private String encoding;
     private int threads;
     private int minimumPriority;
-<span class="fc" id="L34">    private int maxRuleViolations = 0;</span>
+<span class="fc" id="L35">    private int maxRuleViolations = 0;</span>
     private String failuresPropertyName;
     private SourceLanguage sourceLanguage;
-<span class="fc" id="L37">    private final Collection&lt;RuleSetWrapper&gt; nestedRules = new ArrayList&lt;&gt;();</span>
+    private String cacheLocation;
+<span class="fc" id="L39">    private final Collection&lt;RuleSetWrapper&gt; nestedRules = new ArrayList&lt;&gt;();</span>
 
     @Override
     public void execute() throws BuildException {
-<span class="fc" id="L41">        validate();</span>
+<span class="fc" id="L43">        validate();</span>
 
-<span class="fc" id="L43">        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();</span>
-<span class="fc" id="L44">        Thread.currentThread().setContextClassLoader(PMDTask.class.getClassLoader());</span>
+<span class="fc" id="L45">        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();</span>
+<span class="fc" id="L46">        Thread.currentThread().setContextClassLoader(PMDTask.class.getClassLoader());</span>
         try {
-<span class="fc" id="L46">            PMDTaskImpl mirror = new PMDTaskImpl(this);</span>
-<span class="fc" id="L47">            mirror.execute();</span>
+<span class="fc" id="L48">            PMDTaskImpl mirror = new PMDTaskImpl(this);</span>
+<span class="fc" id="L49">            mirror.execute();</span>
         } finally {
-<span class="fc" id="L49">            Thread.currentThread().setContextClassLoader(oldClassloader);</span>
-<span class="fc" id="L50">        }</span>
-<span class="fc" id="L51">    }</span>
+<span class="fc" id="L51">            Thread.currentThread().setContextClassLoader(oldClassloader);</span>
+<span class="fc" id="L52">        }</span>
+<span class="fc" id="L53">    }</span>
 
     private void validate() throws BuildException {
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        if (formatters.isEmpty()) {</span>
-<span class="fc" id="L55">            Formatter defaultFormatter = new Formatter();</span>
-<span class="fc" id="L56">            defaultFormatter.setType(&quot;text&quot;);</span>
-<span class="fc" id="L57">            defaultFormatter.setToConsole(true);</span>
-<span class="fc" id="L58">            formatters.add(defaultFormatter);</span>
-<span class="fc" id="L59">        } else {</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            for (Formatter f : formatters) {</span>
-<span class="pc bpc" id="L61" title="1 of 2 branches missed.">                if (f.isNoOutputSupplied()) {</span>
-<span class="fc" id="L62">                    throw new BuildException(&quot;toFile or toConsole needs to be specified in Formatter&quot;);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (formatters.isEmpty()) {</span>
+<span class="fc" id="L57">            Formatter defaultFormatter = new Formatter();</span>
+<span class="fc" id="L58">            defaultFormatter.setType(&quot;text&quot;);</span>
+<span class="fc" id="L59">            defaultFormatter.setToConsole(true);</span>
+<span class="fc" id="L60">            formatters.add(defaultFormatter);</span>
+<span class="fc" id="L61">        } else {</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            for (Formatter f : formatters) {</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">                if (f.isNoOutputSupplied()) {</span>
+<span class="fc" id="L64">                    throw new BuildException(&quot;toFile or toConsole needs to be specified in Formatter&quot;);</span>
                 }
-<span class="nc" id="L64">            }</span>
+<span class="nc" id="L66">            }</span>
         }
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (rulesetFiles == null) {</span>
-<span class="pc bpc" id="L68" title="1 of 2 branches missed.">            if (nestedRules.isEmpty()) {</span>
-<span class="fc" id="L69">                throw new BuildException(&quot;No rulesets specified&quot;);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (rulesetFiles == null) {</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (nestedRules.isEmpty()) {</span>
+<span class="fc" id="L71">                throw new BuildException(&quot;No rulesets specified&quot;);</span>
             }
-<span class="nc" id="L71">            rulesetFiles = getNestedRuleSetFiles();</span>
+<span class="nc" id="L73">            rulesetFiles = getNestedRuleSetFiles();</span>
         }
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L75">    }</span>
 
     private String getNestedRuleSetFiles() {
-<span class="nc" id="L76">        final StringBuilder sb = new StringBuilder();</span>
-<span class="nc bnc" id="L77" title="All 2 branches missed.">        for (Iterator&lt;RuleSetWrapper&gt; it = nestedRules.iterator(); it.hasNext();) {</span>
-<span class="nc" id="L78">            RuleSetWrapper rs = it.next();</span>
-<span class="nc" id="L79">            sb.append(rs.getFile());</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (it.hasNext()) {</span>
-<span class="nc" id="L81">                sb.append(',');</span>
+<span class="nc" id="L78">        final StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (Iterator&lt;RuleSetWrapper&gt; it = nestedRules.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L80">            RuleSetWrapper rs = it.next();</span>
+<span class="nc" id="L81">            sb.append(rs.getFile());</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (it.hasNext()) {</span>
+<span class="nc" id="L83">                sb.append(',');</span>
             }
-<span class="nc" id="L83">        }</span>
-<span class="nc" id="L84">        return sb.toString();</span>
+<span class="nc" id="L85">        }</span>
+<span class="nc" id="L86">        return sb.toString();</span>
     }
 
     public void setShortFilenames(boolean reportShortNames) {
-<span class="nc" id="L88">        this.shortFilenames = reportShortNames;</span>
-<span class="nc" id="L89">    }</span>
+<span class="nc" id="L90">        this.shortFilenames = reportShortNames;</span>
+<span class="nc" id="L91">    }</span>
 
     public void setSuppressMarker(String suppressMarker) {
-<span class="nc" id="L92">        this.suppressMarker = suppressMarker;</span>
-<span class="nc" id="L93">    }</span>
+<span class="nc" id="L94">        this.suppressMarker = suppressMarker;</span>
+<span class="nc" id="L95">    }</span>
 
     public void setFailOnError(boolean fail) {
-<span class="nc" id="L96">        this.failOnError = fail;</span>
-<span class="nc" id="L97">    }</span>
+<span class="nc" id="L98">        this.failOnError = fail;</span>
+<span class="nc" id="L99">    }</span>
 
     public void setFailOnRuleViolation(boolean fail) {
-<span class="nc" id="L100">        this.failOnRuleViolation = fail;</span>
-<span class="nc" id="L101">    }</span>
+<span class="nc" id="L102">        this.failOnRuleViolation = fail;</span>
+<span class="nc" id="L103">    }</span>
 
     public void setMaxRuleViolations(int max) {
-<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (max &gt;= 0) {</span>
-<span class="nc" id="L105">            this.maxRuleViolations = max;</span>
-<span class="nc" id="L106">            this.failOnRuleViolation = true;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (max &gt;= 0) {</span>
+<span class="nc" id="L107">            this.maxRuleViolations = max;</span>
+<span class="nc" id="L108">            this.failOnRuleViolation = true;</span>
         }
-<span class="nc" id="L108">    }</span>
+<span class="nc" id="L110">    }</span>
 
     public void setRuleSetFiles(String ruleSets) {
-<span class="fc" id="L111">        this.rulesetFiles = ruleSets;</span>
-<span class="fc" id="L112">    }</span>
+<span class="fc" id="L113">        this.rulesetFiles = ruleSets;</span>
+<span class="fc" id="L114">    }</span>
 
     public void setEncoding(String sourceEncoding) {
-<span class="nc" id="L115">        this.encoding = sourceEncoding;</span>
-<span class="nc" id="L116">    }</span>
+<span class="nc" id="L117">        this.encoding = sourceEncoding;</span>
+<span class="nc" id="L118">    }</span>
 
     public void setThreads(int threads) {
-<span class="nc" id="L119">        this.threads = threads;</span>
-<span class="nc" id="L120">    }</span>
+<span class="nc" id="L121">        this.threads = threads;</span>
+<span class="nc" id="L122">    }</span>
 
     public void setFailuresPropertyName(String failuresPropertyName) {
-<span class="nc" id="L123">        this.failuresPropertyName = failuresPropertyName;</span>
-<span class="nc" id="L124">    }</span>
+<span class="nc" id="L125">        this.failuresPropertyName = failuresPropertyName;</span>
+<span class="nc" id="L126">    }</span>
 
     public void setMinimumPriority(int minPriority) {
-<span class="nc" id="L127">        this.minimumPriority = minPriority;</span>
-<span class="nc" id="L128">    }</span>
+<span class="nc" id="L129">        this.minimumPriority = minPriority;</span>
+<span class="nc" id="L130">    }</span>
 
     public void addFileset(FileSet set) {
-<span class="nc" id="L131">        filesets.add(set);</span>
-<span class="nc" id="L132">    }</span>
+<span class="nc" id="L133">        filesets.add(set);</span>
+<span class="nc" id="L134">    }</span>
 
     public void addFormatter(Formatter f) {
-<span class="fc" id="L135">        formatters.add(f);</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L137">        formatters.add(f);</span>
+<span class="fc" id="L138">    }</span>
 
     public void addConfiguredSourceLanguage(SourceLanguage version) {
-<span class="fc" id="L139">        this.sourceLanguage = version;</span>
-<span class="fc" id="L140">    }</span>
+<span class="fc" id="L141">        this.sourceLanguage = version;</span>
+<span class="fc" id="L142">    }</span>
 
     public void setClasspath(Path classpath) {
-<span class="nc" id="L143">        this.classpath = classpath;</span>
-<span class="nc" id="L144">    }</span>
+<span class="nc" id="L145">        this.classpath = classpath;</span>
+<span class="nc" id="L146">    }</span>
 
     public Path getClasspath() {
-<span class="fc" id="L147">        return classpath;</span>
+<span class="fc" id="L149">        return classpath;</span>
     }
 
     public Path createClasspath() {
-<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (classpath == null) {</span>
-<span class="nc" id="L152">            classpath = new Path(getProject());</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if (classpath == null) {</span>
+<span class="nc" id="L154">            classpath = new Path(getProject());</span>
         }
-<span class="nc" id="L154">        return classpath.createPath();</span>
+<span class="nc" id="L156">        return classpath.createPath();</span>
     }
 
     public void setClasspathRef(Reference r) {
-<span class="nc" id="L158">        createClasspath().setRefid(r);</span>
-<span class="nc" id="L159">    }</span>
+<span class="nc" id="L160">        createClasspath().setRefid(r);</span>
+<span class="nc" id="L161">    }</span>
 
     public void setAuxClasspath(Path auxClasspath) {
-<span class="nc" id="L162">        this.auxClasspath = auxClasspath;</span>
-<span class="nc" id="L163">    }</span>
+<span class="nc" id="L164">        this.auxClasspath = auxClasspath;</span>
+<span class="nc" id="L165">    }</span>
 
     public Path getAuxClasspath() {
-<span class="fc" id="L166">        return auxClasspath;</span>
+<span class="fc" id="L168">        return auxClasspath;</span>
     }
 
     public Path createAuxClasspath() {
-<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (auxClasspath == null) {</span>
-<span class="nc" id="L171">            auxClasspath = new Path(getProject());</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (auxClasspath == null) {</span>
+<span class="nc" id="L173">            auxClasspath = new Path(getProject());</span>
         }
-<span class="nc" id="L173">        return auxClasspath.createPath();</span>
+<span class="nc" id="L175">        return auxClasspath.createPath();</span>
     }
 
     public void setAuxClasspathRef(Reference r) {
-<span class="nc" id="L177">        createAuxClasspath().setRefid(r);</span>
-<span class="nc" id="L178">    }</span>
+<span class="nc" id="L179">        createAuxClasspath().setRefid(r);</span>
+<span class="nc" id="L180">    }</span>
 
     public void addRuleset(RuleSetWrapper r) {
-<span class="nc" id="L181">        nestedRules.add(r);</span>
-<span class="nc" id="L182">    }</span>
+<span class="nc" id="L183">        nestedRules.add(r);</span>
+<span class="nc" id="L184">    }</span>
 
     public List&lt;Formatter&gt; getFormatters() {
-<span class="fc" id="L185">        return formatters;</span>
+<span class="fc" id="L187">        return formatters;</span>
     }
 
     public List&lt;FileSet&gt; getFilesets() {
-<span class="fc" id="L189">        return filesets;</span>
+<span class="fc" id="L191">        return filesets;</span>
     }
 
     public boolean isFailOnError() {
-<span class="fc" id="L193">        return failOnError;</span>
+<span class="fc" id="L195">        return failOnError;</span>
     }
 
     public boolean isFailOnRuleViolation() {
-<span class="fc" id="L197">        return failOnRuleViolation;</span>
+<span class="fc" id="L199">        return failOnRuleViolation;</span>
     }
 
     public boolean isShortFilenames() {
-<span class="fc" id="L201">        return shortFilenames;</span>
+<span class="fc" id="L203">        return shortFilenames;</span>
     }
 
     public String getSuppressMarker() {
-<span class="fc" id="L205">        return suppressMarker;</span>
+<span class="fc" id="L207">        return suppressMarker;</span>
     }
 
     public String getRulesetFiles() {
-<span class="fc" id="L209">        return rulesetFiles;</span>
+<span class="fc" id="L211">        return rulesetFiles;</span>
     }
 
     public String getEncoding() {
-<span class="fc" id="L213">        return encoding;</span>
+<span class="fc" id="L215">        return encoding;</span>
     }
 
     public int getThreads() {
-<span class="fc" id="L217">        return threads;</span>
+<span class="fc" id="L219">        return threads;</span>
     }
 
     public int getMinimumPriority() {
-<span class="fc" id="L221">        return minimumPriority;</span>
+<span class="fc" id="L223">        return minimumPriority;</span>
     }
 
     public int getMaxRuleViolations() {
-<span class="fc" id="L225">        return maxRuleViolations;</span>
+<span class="fc" id="L227">        return maxRuleViolations;</span>
     }
 
     public String getFailuresPropertyName() {
-<span class="fc" id="L229">        return failuresPropertyName;</span>
+<span class="fc" id="L231">        return failuresPropertyName;</span>
     }
 
     public SourceLanguage getSourceLanguage() {
-<span class="fc" id="L233">        return sourceLanguage;</span>
+<span class="fc" id="L235">        return sourceLanguage;</span>
     }
 
     public Collection&lt;RuleSetWrapper&gt; getNestedRules() {
-<span class="nc" id="L237">        return nestedRules;</span>
+<span class="nc" id="L239">        return nestedRules;</span>
     }
 
     public boolean isNoRuleSetCompatibility() {
-<span class="fc" id="L241">        return noRuleSetCompatibility;</span>
+<span class="fc" id="L243">        return noRuleSetCompatibility;</span>
     }
 
     public void setNoRuleSetCompatibility(boolean noRuleSetCompatibility) {
-<span class="nc" id="L245">        this.noRuleSetCompatibility = noRuleSetCompatibility;</span>
-<span class="nc" id="L246">    }</span>
+<span class="nc" id="L247">        this.noRuleSetCompatibility = noRuleSetCompatibility;</span>
+<span class="nc" id="L248">    }</span>
+
+    public String getCacheLocation() {
+<span class="fc" id="L251">        return cacheLocation;</span>
+    }
+
+    public void setCacheLocation(String cacheLocation) {
+<span class="nc" id="L255">        this.cacheLocation = cacheLocation;</span>
+<span class="nc" id="L256">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CsTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD C#</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CsTokenizer.java</span></div><h1>CsTokenizer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.cpd;
 
 import java.io.BufferedReader;
@@ -18,66 +19,65 @@ import org.apache.commons.lang3.RandomStringUtils;
  *
  * @author jheintz
  */
-<span class="fc" id="L21">public class CsTokenizer implements Tokenizer {</span>
+<span class="fc" id="L22">public class CsTokenizer implements Tokenizer {</span>
 
-<span class="fc" id="L23">    private boolean ignoreUsings = false;</span>
+<span class="fc" id="L24">    private boolean ignoreUsings = false;</span>
 
     public void setProperties(Properties properties) {
-<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (properties.containsKey(IGNORE_USINGS)) {</span>
-<span class="nc" id="L27">            ignoreUsings = Boolean.parseBoolean(properties.getProperty(IGNORE_USINGS, &quot;false&quot;));</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        if (properties.containsKey(IGNORE_USINGS)) {</span>
+<span class="nc" id="L28">            ignoreUsings = Boolean.parseBoolean(properties.getProperty(IGNORE_USINGS, &quot;false&quot;));</span>
         }
-<span class="nc" id="L29">    }</span>
+<span class="nc" id="L30">    }</span>
 
     @Override
     public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-<span class="fc" id="L33">        Tokenizer tokenizer =</span>
-                new Tokenizer(sourceCode.getCodeBuffer().toString());
+<span class="fc" id="L34">        Tokenizer tokenizer = new Tokenizer(sourceCode.getCodeBuffer().toString());</span>
 <span class="fc" id="L35">        Token token = tokenizer.getNextToken();</span>
 
 <span class="fc bfc" id="L37" title="All 2 branches covered.">        while (!token.equals(Token.EOF)) {</span>
 <span class="fc" id="L38">            Token lookAhead = tokenizer.getNextToken();</span>
 
             // Ignore using directives
-            // Only using directives should be ignored, because these are used to import namespaces
+            // Only using directives should be ignored, because these are used
+            // to import namespaces
             //
             // Using directive: 'using System.Math;'
             // Using statement: 'using (Font font1 = new Font(..)) { .. }'
-<span class="fc bfc" id="L45" title="All 6 branches covered.">            if (ignoreUsings &amp;&amp;</span>
-                    &quot;using&quot;.equals(token.image) &amp;&amp;
-                    !&quot;(&quot;.equals(lookAhead.image)
-            ) {
-                // We replace the 'using' token by a random token, because it should not be part of
-                // any duplication block. When we omit it from the token stream, there is a change that
-                // we get a duplication block that starts before the 'using' directives and ends afterwards.
-<span class="fc" id="L52">                String randomTokenText =</span>
-                    RandomStringUtils.randomAlphanumeric(20);
+<span class="fc bfc" id="L46" title="All 6 branches covered.">            if (ignoreUsings &amp;&amp; &quot;using&quot;.equals(token.image) &amp;&amp; !&quot;(&quot;.equals(lookAhead.image)) {</span>
+                // We replace the 'using' token by a random token, because it
+                // should not be part of
+                // any duplication block. When we omit it from the token stream,
+                // there is a change that
+                // we get a duplication block that starts before the 'using'
+                // directives and ends afterwards.
+<span class="fc" id="L53">                String randomTokenText = RandomStringUtils.randomAlphanumeric(20);</span>
 
 <span class="fc" id="L55">                token = new Token(randomTokenText, token.lineNumber);</span>
-                //Skip all other tokens of the using directive to prevent a partial matching
-<span class="pc bpc" id="L57" title="1 of 4 branches missed.">                while (!&quot;;&quot;.equals(lookAhead.image) &amp;&amp; !lookAhead.equals(Token.EOF)) {</span>
-<span class="fc" id="L58">                    lookAhead = tokenizer.getNextToken();</span>
+                // Skip all other tokens of the using directive to prevent a
+                // partial matching
+<span class="pc bpc" id="L58" title="1 of 4 branches missed.">                while (!&quot;;&quot;.equals(lookAhead.image) &amp;&amp; !lookAhead.equals(Token.EOF)) {</span>
+<span class="fc" id="L59">                    lookAhead = tokenizer.getNextToken();</span>
                 }
             }
-<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (!&quot;;&quot;.equals(token.image)) {</span>
-<span class="fc" id="L62">                tokenEntries.add(new TokenEntry(token.image, sourceCode.getFileName(), token.lineNumber));</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (!&quot;;&quot;.equals(token.image)) {</span>
+<span class="fc" id="L63">                tokenEntries.add(new TokenEntry(token.image, sourceCode.getFileName(), token.lineNumber));</span>
             }
-<span class="fc" id="L64">            token = lookAhead;</span>
-<span class="fc" id="L65">        }</span>
-<span class="fc" id="L66">        tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L67">        IOUtils.closeQuietly(tokenizer);</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L65">            token = lookAhead;</span>
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">        tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L68">        IOUtils.closeQuietly(tokenizer);</span>
+<span class="fc" id="L69">    }</span>
 
     public void setIgnoreUsings(boolean ignoreUsings) {
-<span class="fc" id="L71">        this.ignoreUsings = ignoreUsings;</span>
-<span class="fc" id="L72">    }</span>
-
+<span class="fc" id="L72">        this.ignoreUsings = ignoreUsings;</span>
+<span class="fc" id="L73">    }</span>
 
     private static class Tokenizer implements Closeable {
         private boolean endOfFile;
         private int line;
         private final PushbackReader reader;
 
-<span class="fc" id="L80">        public Tokenizer(String sourceCode) {</span>
+<span class="fc" id="L80">        Tokenizer(String sourceCode) {</span>
 <span class="fc" id="L81">            endOfFile = false;</span>
 <span class="fc" id="L82">            line = 1;</span>
 <span class="fc" id="L83">            reader = new PushbackReader(new BufferedReader(new CharArrayReader(sourceCode.toCharArray())));</span>
@@ -120,7 +120,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 <span class="pc bpc" id="L120" title="1 of 2 branches missed.">                        } else if (ic == c) {</span>
 <span class="fc" id="L121">                            ic = reader.read();</span>
 <span class="pc bpc" id="L122" title="1 of 2 branches missed.">                            if (ic == '=') {</span>
-<span class="nc" id="L123">                                return new Token(c +  c + &quot;=&quot;, line);</span>
+<span class="nc" id="L123">                                return new Token(c + c + &quot;=&quot;, line);</span>
                             } else {
 <span class="fc" id="L125">                                reader.unread(ic);</span>
 <span class="fc" id="L126">                                return new Token(String.valueOf(c) + c, line);</span>
@@ -130,7 +130,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 <span class="nc" id="L130">                            return new Token(String.valueOf(c), line);</span>
                         }
 
-                    // = == &amp; &amp;= &amp;&amp; | |= || + += ++ - -= --
+                        // = == &amp; &amp;= &amp;&amp; | |= || + += ++ - -= --
                     case '=':
                     case '&amp;':
                     case '|':
@@ -144,7 +144,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 <span class="fc" id="L144">                            return new Token(String.valueOf(c), line);</span>
                         }
 
-                    // ! != * *= % %= ^ ^= ~ ~=
+                        // ! != * *= % %= ^ ^= ~ ~=
                     case '!':
                     case '*':
                     case '%':
@@ -158,7 +158,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 <span class="fc" id="L158">                            return new Token(String.valueOf(c), line);</span>
                         }
 
-                    // strings &amp; chars
+                        // strings &amp; chars
                     case '&quot;':
                     case '\'':
 <span class="fc" id="L164">                        int beginLine = line;</span>
@@ -189,31 +189,33 @@ import org.apache.commons.lang3.RandomStringUtils;
 
                     // / /= /*...*/ //...
                     case '/':
-<span class="pc bpc" id="L192" title="1 of 4 branches missed.">                        switch (c = (char) (ic = reader.read())) {</span>
+<span class="fc" id="L192">                        ic = reader.read();</span>
+<span class="fc" id="L193">                        c = (char) ic;</span>
+<span class="pc bpc" id="L194" title="1 of 4 branches missed.">                        switch (c) {</span>
                         case '*':
-                            //int beginLine = line;
-<span class="fc" id="L195">                            int state = 1;</span>
-<span class="fc" id="L196">                            b = new StringBuilder();</span>
-<span class="fc" id="L197">                            b.append(&quot;/*&quot;);</span>
+                            // int beginLine = line;
+<span class="fc" id="L197">                            int state = 1;</span>
+<span class="fc" id="L198">                            b = new StringBuilder();</span>
+<span class="fc" id="L199">                            b.append(&quot;/*&quot;);</span>
 
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">                            while ((ic = reader.read()) != -1) {</span>
-<span class="fc" id="L200">                                c = (char) ic;</span>
-<span class="fc" id="L201">                                b.append(c);</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                            while ((ic = reader.read()) != -1) {</span>
+<span class="fc" id="L202">                                c = (char) ic;</span>
+<span class="fc" id="L203">                                b.append(c);</span>
 
-<span class="fc bfc" id="L203" title="All 2 branches covered.">                                if (c == '\n') {</span>
-<span class="fc" id="L204">                                    line++;</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                                if (c == '\n') {</span>
+<span class="fc" id="L206">                                    line++;</span>
                                 }
 
-<span class="fc bfc" id="L207" title="All 2 branches covered.">                                if (state == 1) {</span>
-<span class="fc bfc" id="L208" title="All 2 branches covered.">                                    if (c == '*') {</span>
-<span class="fc" id="L209">                                        state = 2;</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">                                if (state == 1) {</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">                                    if (c == '*') {</span>
+<span class="fc" id="L211">                                        state = 2;</span>
                                     }
                                 } else {
-<span class="fc bfc" id="L212" title="All 2 branches covered.">                                    if (c == '/') {</span>
-<span class="fc" id="L213">                                        ic = reader.read();</span>
-<span class="fc" id="L214">                                        break;</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">                                    } else if (c != '*') {</span>
-<span class="fc" id="L216">                                        state = 1;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">                                    if (c == '/') {</span>
+<span class="fc" id="L215">                                        ic = reader.read();</span>
+<span class="fc" id="L216">                                        break;</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">                                    } else if (c != '*') {</span>
+<span class="fc" id="L218">                                        state = 1;</span>
                                     }
                                 }
                             }
@@ -223,13 +225,13 @@ import org.apache.commons.lang3.RandomStringUtils;
                             break;
 
                         case '/':
-<span class="fc" id="L226">                            b = new StringBuilder();</span>
-<span class="fc" id="L227">                            b.append(&quot;//&quot;);</span>
-<span class="fc bfc" id="L228" title="All 2 branches covered.">                            while ((ic = reader.read()) != '\n') {</span>
-<span class="pc bpc" id="L229" title="1 of 2 branches missed.">                                if (ic == -1) {</span>
-<span class="nc" id="L230">                                    break;</span>
+<span class="fc" id="L228">                            b = new StringBuilder();</span>
+<span class="fc" id="L229">                            b.append(&quot;//&quot;);</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">                            while ((ic = reader.read()) != '\n') {</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">                                if (ic == -1) {</span>
+<span class="nc" id="L232">                                    break;</span>
                                 }
-<span class="fc" id="L232">                                b.append((char) ic);</span>
+<span class="fc" id="L234">                                b.append((char) ic);</span>
                             }
                             // ignore the // comment
                             // tokenEntries.add(new TokenEntry(b.toString(),
@@ -237,71 +239,72 @@ import org.apache.commons.lang3.RandomStringUtils;
                             break;
 
                         case '=':
-<span class="fc" id="L240">                            return new Token(&quot;/=&quot;, line);</span>
+<span class="fc" id="L242">                            return new Token(&quot;/=&quot;, line);</span>
 
                         default:
-<span class="nc" id="L243">                            reader.unread(ic);</span>
-<span class="nc" id="L244">                            return new Token(&quot;/&quot;, line);</span>
+<span class="nc" id="L245">                            reader.unread(ic);</span>
+<span class="nc" id="L246">                            return new Token(&quot;/&quot;, line);</span>
                         }
-                        break;
+<span class="fc" id="L248">                        break;</span>
 
                     default:
                         // [a-zA-Z_][a-zA-Z_0-9]*
-<span class="fc bfc" id="L250" title="All 2 branches covered.">                        if (Character.isJavaIdentifierStart(c)) {</span>
-<span class="fc" id="L251">                            b = new StringBuilder();</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">                        if (Character.isJavaIdentifierStart(c)) {</span>
+<span class="fc" id="L253">                            b = new StringBuilder();</span>
                             do {
-<span class="fc" id="L253">                                b.append(c);</span>
-<span class="fc" id="L254">                                c = (char) (ic = reader.read());</span>
-<span class="fc bfc" id="L255" title="All 2 branches covered.">                            } while (Character.isJavaIdentifierPart(c));</span>
-<span class="fc" id="L256">                            reader.unread(ic);</span>
-<span class="fc" id="L257">                            return new Token(b.toString(), line);</span>
-                        }
-                        // numbers
-<span class="fc bfc" id="L260" title="All 4 branches covered.">                        else if (Character.isDigit(c) || c == '.') {</span>
-<span class="fc" id="L261">                            b = new StringBuilder();</span>
+<span class="fc" id="L255">                                b.append(c);</span>
+<span class="fc" id="L256">                                ic = reader.read();</span>
+<span class="fc" id="L257">                                c = (char) ic;</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">                            } while (Character.isJavaIdentifierPart(c));</span>
+<span class="fc" id="L259">                            reader.unread(ic);</span>
+<span class="fc" id="L260">                            return new Token(b.toString(), line);</span>
+<span class="fc bfc" id="L261" title="All 4 branches covered.">                        } else if (Character.isDigit(c) || c == '.') {</span>
+                            // numbers
+<span class="fc" id="L263">                            b = new StringBuilder();</span>
                             do {
-<span class="fc" id="L263">                                b.append(c);</span>
-<span class="pc bpc" id="L264" title="1 of 4 branches missed.">                                if (c == 'e' || c == 'E') {</span>
-<span class="fc" id="L265">                                    c = (char) (ic = reader.read());</span>
-<span class="pc bpc" id="L266" title="1 of 2 branches missed.">                                    if (&quot;1234567890-&quot;.indexOf(c) == -1) {</span>
-<span class="nc" id="L267">                                        break;</span>
+<span class="fc" id="L265">                                b.append(c);</span>
+<span class="pc bpc" id="L266" title="1 of 4 branches missed.">                                if (c == 'e' || c == 'E') {</span>
+<span class="fc" id="L267">                                    ic = reader.read();</span>
+<span class="fc" id="L268">                                    c = (char) ic;</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">                                    if (&quot;1234567890-&quot;.indexOf(c) == -1) {</span>
+<span class="nc" id="L270">                                        break;</span>
                                     }
-<span class="fc" id="L269">                                    b.append(c);</span>
+<span class="fc" id="L272">                                    b.append(c);</span>
                                 }
-<span class="fc" id="L271">                                c = (char) (ic = reader.read());</span>
-<span class="fc bfc" id="L272" title="All 2 branches covered.">                            } while (&quot;1234567890.iIlLfFdDsSuUeExX&quot;.indexOf(c) != -1);</span>
-<span class="fc" id="L273">                            reader.unread(ic);</span>
-<span class="fc" id="L274">                            return new Token(b.toString(), line);</span>
-                        }
-                        // anything else
-                        else {
-<span class="fc" id="L278">                            return new Token(String.valueOf(c), line);</span>
+<span class="fc" id="L274">                                ic = reader.read();</span>
+<span class="fc" id="L275">                                c = (char) ic;</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">                            } while (&quot;1234567890.iIlLfFdDsSuUeExX&quot;.indexOf(c) != -1);</span>
+<span class="fc" id="L277">                            reader.unread(ic);</span>
+<span class="fc" id="L278">                            return new Token(b.toString(), line);</span>
+                        } else {
+                            // anything else
+<span class="fc" id="L281">                            return new Token(String.valueOf(c), line);</span>
                         }
                     }
                 }
-<span class="nc" id="L282">            } catch (IOException e) {</span>
-<span class="nc" id="L283">                e.printStackTrace();</span>
-<span class="fc" id="L284">            }</span>
-<span class="fc" id="L285">            endOfFile = true;</span>
-<span class="fc" id="L286">            return Token.EOF;</span>
+<span class="nc" id="L285">            } catch (IOException e) {</span>
+<span class="nc" id="L286">                e.printStackTrace();</span>
+<span class="fc" id="L287">            }</span>
+<span class="fc" id="L288">            endOfFile = true;</span>
+<span class="fc" id="L289">            return Token.EOF;</span>
         }
 
         @Override
         public void close() throws IOException {
-<span class="fc" id="L291">            reader.close();</span>
-<span class="fc" id="L292">        }</span>
+<span class="fc" id="L294">            reader.close();</span>
+<span class="fc" id="L295">        }</span>
     }
 
-<span class="fc" id="L295">    private static class Token {</span>
-<span class="fc" id="L296">        public static final Token EOF = new Token(&quot;EOF&quot;, -1);</span>
+<span class="fc" id="L298">    private static class Token {</span>
+<span class="fc" id="L299">        public static final Token EOF = new Token(&quot;EOF&quot;, -1);</span>
 
         public final String image;
         public final int lineNumber;
 
-<span class="fc" id="L301">        public Token(String image, int lineNumber) {</span>
-<span class="fc" id="L302">            this.image = image;</span>
-<span class="fc" id="L303">            this.lineNumber = lineNumber;</span>
-<span class="fc" id="L304">        }</span>
+<span class="fc" id="L304">        Token(String image, int lineNumber) {</span>
+<span class="fc" id="L305">            this.image = image;</span>
+<span class="fc" id="L306">            this.lineNumber = lineNumber;</span>
+<span class="fc" id="L307">        }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

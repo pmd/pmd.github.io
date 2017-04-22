@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ExcessiveLengthRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.rule.design</a> &gt; <span class="el_source">ExcessiveLengthRule.java</span></div><h1>ExcessiveLengthRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.plsql.rule.design;
 
 import java.util.logging.Level;
@@ -11,55 +12,50 @@ import net.sourceforge.pmd.lang.plsql.rule.AbstractStatisticalPLSQLRule;
 import net.sourceforge.pmd.stat.DataPoint;
 
 /**
- * This is a common super class for things which
- * have excessive length.
- * &lt;p/&gt;
- * i.e. LongMethod and LongClass rules.
- * &lt;p/&gt;
- * To implement an ExcessiveLength rule, you pass
- * in the Class of node you want to check, and this
- * does the rest for you.
+ * This is a common super class for things which have excessive length.
+ *
+ * &lt;p&gt;i.e. LongMethod and LongClass rules.&lt;/p&gt;
+ *
+ * &lt;p&gt;To implement an ExcessiveLength rule, you pass in the Class of node you want
+ * to check, and this does the rest for you.&lt;/p&gt;
  */
 public class ExcessiveLengthRule extends AbstractStatisticalPLSQLRule {
-<span class="fc" id="L24">    private static final Logger LOGGER = Logger.getLogger(ExcessiveLengthRule.class.getName());</span>
+<span class="fc" id="L23">    private static final Logger LOGGER = Logger.getLogger(ExcessiveLengthRule.class.getName());</span>
     private Class&lt;?&gt; nodeClass;
 
-<span class="fc" id="L27">    public ExcessiveLengthRule(Class&lt;?&gt; nodeClass) {</span>
-<span class="fc" id="L28">	this.nodeClass = nodeClass;</span>
-<span class="fc" id="L29">    }</span>
+<span class="fc" id="L26">    public ExcessiveLengthRule(Class&lt;?&gt; nodeClass) {</span>
+<span class="fc" id="L27">        this.nodeClass = nodeClass;</span>
+<span class="fc" id="L28">    }</span>
 
     @Override
     public Object visit(PLSQLNode node, Object data) {
-<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L34">        LOGGER.finest(&quot;SimpleNode: line &quot; + node.getBeginLine() +&quot;, column &quot; + node.getBeginColumn()</span>
-                      + &quot; - is node &quot; + node.getClass().getCanonicalName()
-                      + &quot; instanceof &quot; + this.nodeClass.getClass().getCanonicalName()
-                     );
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L33">            LOGGER.finest(&quot;SimpleNode: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn()</span>
+                    + &quot; - is node &quot; + node.getClass().getCanonicalName() + &quot; instanceof &quot;
+                    + this.nodeClass.getClass().getCanonicalName());
         }
-<span class="fc bfc" id="L39" title="All 2 branches covered.">	if (nodeClass.isInstance(node)) {</span>
-<span class="pc bpc" id="L40" title="1 of 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L41">            LOGGER.finest(&quot;SimpleNode: YES node &quot; + node.getClass().getCanonicalName()</span>
-                          + &quot; IS instanceof &quot; + this.nodeClass.getClass().getCanonicalName()
-                          + &quot; with  length == (&quot; + node.getEndLine() + &quot; - &quot; + node.getBeginLine()
-                          + &quot; == &quot;  + (node.getEndLine() - node.getBeginLine())
-                         );
-	    }
-<span class="fc" id="L47">	    DataPoint point = new DataPoint();</span>
-<span class="fc" id="L48">	    point.setNode(node);</span>
-<span class="fc" id="L49">	    point.setScore(1.0 * (node.getEndLine() - node.getBeginLine()));</span>
-<span class="fc" id="L50">	    point.setMessage(getMessage());</span>
-<span class="fc" id="L51">	    addDataPoint(point);</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L53">            LOGGER.fine(&quot;SimpleNode: Score &quot; + point.getScore() + &quot; for &quot; +  this.nodeClass.getCanonicalName() ) ;</span>
-	    }
-	}
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (nodeClass.isInstance(node)) {</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L39">                LOGGER.finest(&quot;SimpleNode: YES node &quot; + node.getClass().getCanonicalName() + &quot; IS instanceof &quot;</span>
+                        + this.nodeClass.getClass().getCanonicalName() + &quot; with  length == (&quot; + node.getEndLine()
+                        + &quot; - &quot; + node.getBeginLine() + &quot; == &quot; + (node.getEndLine() - node.getBeginLine()));
+            }
+<span class="fc" id="L43">            DataPoint point = new DataPoint();</span>
+<span class="fc" id="L44">            point.setNode(node);</span>
+<span class="fc" id="L45">            point.setScore(1.0 * (node.getEndLine() - node.getBeginLine()));</span>
+<span class="fc" id="L46">            point.setMessage(getMessage());</span>
+<span class="fc" id="L47">            addDataPoint(point);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L49">                LOGGER.fine(&quot;SimpleNode: Score &quot; + point.getScore() + &quot; for &quot; + this.nodeClass.getCanonicalName());</span>
+            }
+        }
 
-<span class="fc" id="L57">	return node.childrenAccept(this, data);</span>
+<span class="fc" id="L53">        return node.childrenAccept(this, data);</span>
     }
 
     @Override
     public Object[] getViolationParameters(DataPoint point) {
-<span class="fc" id="L62">	return new String[] { String.valueOf((int) point.getScore()) };</span>
+<span class="fc" id="L58">        return new String[] { String.valueOf((int) point.getScore()) };</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

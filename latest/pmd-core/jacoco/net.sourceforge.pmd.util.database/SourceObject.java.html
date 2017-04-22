@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceObject.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.database</a> &gt; <span class="el_source">SourceObject.java</span></div><h1>SourceObject.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.util.database;
 
 import java.util.logging.Logger;
+
+import net.sourceforge.pmd.cpd.SourceCode;
+import net.sourceforge.pmd.lang.Language;
 
 /**
  * Instantiate the fields required to retrieve {@link SourceCode}.
@@ -12,147 +16,150 @@ import java.util.logging.Logger;
  */
 public class SourceObject {
 
-<span class="nc" id="L15">  private static final String CLASS_NAME = SourceObject.class.getName();</span>
-<span class="nc" id="L16">  private static final Logger LOG = Logger.getLogger(CLASS_NAME);</span>
-
-  /**
-   * Database Schema/Owner - SYS,SYSTEM,SCOTT 
-   * 
-   */
-
-  String schema;
-
-  /**
-   * Source Code Name - DBMS_METADATA 
-   * 
-   */
-
-  String name;
-
-  /**
-   * Source Code Type - FUNCTION,PROCEDURE,TRIGGER,PACKAGE,PACKAGE_BODY,TYPE,TYPE_BODY,JAVA_SOURCE.
-   * 
-   */
-
-  String type;
-
-  /**
-   * Source Code Revision - Optional revision/version 
-   * 
-   */
-
-  String revision;
-
-<span class="nc" id="L46">  SourceObject(String schema, String type, String name, String revision) {</span>
-<span class="nc" id="L47">  this.schema = schema; </span>
-<span class="nc" id="L48">  this.type = type; </span>
-<span class="nc" id="L49">  this.name = name; </span>
-<span class="nc" id="L50">  this.revision = revision; </span>
-<span class="nc" id="L51">  }</span>
-
-  @Override
-  public String toString()
-  {
-<span class="nc" id="L56">     return String.format(&quot;schema=\&quot;%s\&quot;,type=\&quot;%s\&quot;,name=\&quot;%s\&quot;,revision=\&quot;%s\&quot;&quot;</span>
-                            , this.getSchema(), this.getType(), this.getName(), this.getRevision());
-  }
-
-  /**
-   * @return the schema
-   */
-  public String getSchema() {
-<span class="nc" id="L64">    return schema;</span>
-  }
-
-  /**
-   * @param schema the schema to set
-   */
-  public void setSchema(String schema) {
-<span class="nc" id="L71">    this.schema = schema;</span>
-<span class="nc" id="L72">  }</span>
-
-  /**
-   * @return the name
-   */
-  public String getName() {
-<span class="nc" id="L78">    return name;</span>
-  }
-
-  /**
-   * @param name the name to set
-   */
-  public void setName(String name) {
-<span class="nc" id="L85">    this.name = name;</span>
-<span class="nc" id="L86">  }</span>
-
-  /**
-   * @return the type
-   */
-  public String getType() {
-<span class="nc" id="L92">    return type;</span>
-  }
-
-  /**
-   * @param type the type to set
-   */
-  public void setType(String type) {
-<span class="nc" id="L99">    this.type = type;</span>
-<span class="nc" id="L100">  }</span>
-
-  /**
-   * @return the revision
-   */
-  public String getRevision() {
-<span class="nc" id="L106">    return revision;</span>
-  }
-
-  /**
-   * @param revision the revision to set
-   */
-  public void setRevision(String revision) {
-<span class="nc" id="L113">    this.revision = revision;</span>
-<span class="nc" id="L114">  }</span>
-
-  /**
-   * Map the type to a file suffix associated with a {@link Language}
-   * 
-   * @return inferred suffix
-   */
-  public String getSuffixFromType()
-  {
-<span class="nc" id="L123">    LOG.entering(CLASS_NAME, &quot;getSuffixFromType&quot;, this);//.entering(&quot;type=&quot;+type.toUpperCase());</span>
-<span class="nc bnc" id="L124" title="All 4 branches missed.">    if (null == type || type.isEmpty()) {</span>
-<span class="nc" id="L125">      return &quot;&quot;;</span>
-<span class="nc bnc" id="L126" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;JAVA&quot;) &gt;= 0) {</span>
-<span class="nc" id="L127">      return &quot;.java&quot;;</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;TRIGGER&quot;) &gt;= 0) {</span>
-<span class="nc" id="L129">      return &quot;.trg&quot;;</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;FUNCTION&quot;) &gt;= 0) {</span>
-<span class="nc" id="L131">      return &quot;.fnc&quot;;</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;PROCEDURE&quot;) &gt;= 0) {</span>
-<span class="nc" id="L133">      return &quot;.prc&quot;;</span>
-<span class="nc bnc" id="L134" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;PACKAGE_BODY&quot;) &gt;= 0) {</span>
-<span class="nc" id="L135">      return &quot;.pkb&quot;;</span>
-<span class="nc bnc" id="L136" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;PACKAGE&quot;) &gt;= 0) {</span>
-<span class="nc" id="L137">      return &quot;.pks&quot;;</span>
-<span class="nc bnc" id="L138" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;TYPE_BODY&quot;) &gt;= 0) {</span>
-<span class="nc" id="L139">      return &quot;.tpb&quot;;</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">    } else if (type.toUpperCase().indexOf(&quot;TYPE&quot;) &gt;= 0) {</span>
-<span class="nc" id="L141">      return &quot;.tps&quot;;</span>
-    } else { 
-<span class="nc" id="L143">      return &quot;&quot;;</span>
-    }
-  }
+<span class="nc" id="L19">    private static final String CLASS_NAME = SourceObject.class.getName();</span>
+<span class="nc" id="L20">    private static final Logger LOG = Logger.getLogger(CLASS_NAME);</span>
 
     /**
-     * Gets the data source as a pseudo file name (faux-file).
-     * Adding a suffix matching the source object type ensures that the appropriate
-     * language parser is used.
+     * Database Schema/Owner - SYS,SYSTEM,SCOTT
+     *
+     */
+
+    String schema;
+
+    /**
+     * Source Code Name - DBMS_METADATA
+     *
+     */
+
+    String name;
+
+    /**
+     * Source Code Type -
+     * FUNCTION,PROCEDURE,TRIGGER,PACKAGE,PACKAGE_BODY,TYPE,TYPE_BODY,JAVA_SOURCE.
+     *
+     */
+
+    String type;
+
+    /**
+     * Source Code Revision - Optional revision/version
+     *
+     */
+
+    String revision;
+
+<span class="nc" id="L51">    SourceObject(String schema, String type, String name, String revision) {</span>
+<span class="nc" id="L52">        this.schema = schema;</span>
+<span class="nc" id="L53">        this.type = type;</span>
+<span class="nc" id="L54">        this.name = name;</span>
+<span class="nc" id="L55">        this.revision = revision;</span>
+<span class="nc" id="L56">    }</span>
+
+    @Override
+    public String toString() {
+<span class="nc" id="L60">        return String.format(&quot;schema=\&quot;%s\&quot;,type=\&quot;%s\&quot;,name=\&quot;%s\&quot;,revision=\&quot;%s\&quot;&quot;, this.getSchema(), this.getType(),</span>
+                this.getName(), this.getRevision());
+    }
+
+    /**
+     * @return the schema
+     */
+    public String getSchema() {
+<span class="nc" id="L68">        return schema;</span>
+    }
+
+    /**
+     * @param schema
+     *            the schema to set
+     */
+    public void setSchema(String schema) {
+<span class="nc" id="L76">        this.schema = schema;</span>
+<span class="nc" id="L77">    }</span>
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+<span class="nc" id="L83">        return name;</span>
+    }
+
+    /**
+     * @param name
+     *            the name to set
+     */
+    public void setName(String name) {
+<span class="nc" id="L91">        this.name = name;</span>
+<span class="nc" id="L92">    }</span>
+
+    /**
+     * @return the type
+     */
+    public String getType() {
+<span class="nc" id="L98">        return type;</span>
+    }
+
+    /**
+     * @param type
+     *            the type to set
+     */
+    public void setType(String type) {
+<span class="nc" id="L106">        this.type = type;</span>
+<span class="nc" id="L107">    }</span>
+
+    /**
+     * @return the revision
+     */
+    public String getRevision() {
+<span class="nc" id="L113">        return revision;</span>
+    }
+
+    /**
+     * @param revision
+     *            the revision to set
+     */
+    public void setRevision(String revision) {
+<span class="nc" id="L121">        this.revision = revision;</span>
+<span class="nc" id="L122">    }</span>
+
+    /**
+     * Map the type to a file suffix associated with a {@link Language}
+     *
+     * @return inferred suffix
+     */
+    public String getSuffixFromType() {
+<span class="nc" id="L130">        LOG.entering(CLASS_NAME, &quot;getSuffixFromType&quot;, this);</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">        if (null == type || type.isEmpty()) {</span>
+<span class="nc" id="L132">            return &quot;&quot;;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;JAVA&quot;) &gt;= 0) {</span>
+<span class="nc" id="L134">            return &quot;.java&quot;;</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;TRIGGER&quot;) &gt;= 0) {</span>
+<span class="nc" id="L136">            return &quot;.trg&quot;;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;FUNCTION&quot;) &gt;= 0) {</span>
+<span class="nc" id="L138">            return &quot;.fnc&quot;;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;PROCEDURE&quot;) &gt;= 0) {</span>
+<span class="nc" id="L140">            return &quot;.prc&quot;;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;PACKAGE_BODY&quot;) &gt;= 0) {</span>
+<span class="nc" id="L142">            return &quot;.pkb&quot;;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;PACKAGE&quot;) &gt;= 0) {</span>
+<span class="nc" id="L144">            return &quot;.pks&quot;;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;TYPE_BODY&quot;) &gt;= 0) {</span>
+<span class="nc" id="L146">            return &quot;.tpb&quot;;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        } else if (type.toUpperCase().indexOf(&quot;TYPE&quot;) &gt;= 0) {</span>
+<span class="nc" id="L148">            return &quot;.tps&quot;;</span>
+        } else {
+<span class="nc" id="L150">            return &quot;&quot;;</span>
+        }
+    }
+
+    /**
+     * Gets the data source as a pseudo file name (faux-file). Adding a suffix
+     * matching the source object type ensures that the appropriate language
+     * parser is used.
      */
     public String getPseudoFileName() {
-<span class="nc" id="L153">        String falseFilePath = String.format(&quot;/Database/%s/%s/%s%s&quot;, getSchema(), getType(), getName(),</span>
+<span class="nc" id="L160">        String falseFilePath = String.format(&quot;/Database/%s/%s/%s%s&quot;, getSchema(), getType(), getName(),</span>
                 getSuffixFromType());
-<span class="nc" id="L155">        return falseFilePath;</span>
+<span class="nc" id="L162">        return falseFilePath;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

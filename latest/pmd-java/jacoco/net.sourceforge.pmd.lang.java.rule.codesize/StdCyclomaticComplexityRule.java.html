@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StdCyclomaticComplexityRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.codesize</a> &gt; <span class="el_source">StdCyclomaticComplexityRule.java</span></div><h1>StdCyclomaticComplexityRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.codesize;
 
 import java.util.ArrayDeque;
@@ -27,10 +28,10 @@ import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
 import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
 
 /**
- * Implements the standard cyclomatic complexity rule 
+ * Implements the standard cyclomatic complexity rule
  * &lt;p&gt;
- * Standard rules: +1 for each decision point, including case statements
- * but not including boolean operators unlike CyclomaticComplexityRule.
+ * Standard rules: +1 for each decision point, including case statements but not
+ * including boolean operators unlike CyclomaticComplexityRule.
  * 
  * @author Alan Hohn, based on work by Donald A. Leckie
  * 
@@ -38,218 +39,209 @@ import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
  */
 public class StdCyclomaticComplexityRule extends AbstractJavaRule {
 
-<span class="fc" id="L41">    public static final IntegerProperty REPORT_LEVEL_DESCRIPTOR = new IntegerProperty(&quot;reportLevel&quot;,</span>
-	    &quot;Cyclomatic Complexity reporting threshold&quot;, 1, 30, 10, 1.0f);
+<span class="fc" id="L42">    public static final IntegerProperty REPORT_LEVEL_DESCRIPTOR = new IntegerProperty(&quot;reportLevel&quot;,</span>
+            &quot;Cyclomatic Complexity reporting threshold&quot;, 1, 30, 10, 1.0f);
 
-<span class="fc" id="L44">    public static final BooleanProperty SHOW_CLASSES_COMPLEXITY_DESCRIPTOR = new BooleanProperty(&quot;showClassesComplexity&quot;,</span>
-	&quot;Add class average violations to the report&quot;, true, 2.0f);
+<span class="fc" id="L45">    public static final BooleanProperty SHOW_CLASSES_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;showClassesComplexity&quot;, &quot;Add class average violations to the report&quot;, true, 2.0f);
 
-<span class="fc" id="L47">    public static final BooleanProperty SHOW_METHODS_COMPLEXITY_DESCRIPTOR = new BooleanProperty(&quot;showMethodsComplexity&quot;,</span>
-	&quot;Add method average violations to the report&quot;, true, 3.0f);
+<span class="fc" id="L48">    public static final BooleanProperty SHOW_METHODS_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;showMethodsComplexity&quot;, &quot;Add method average violations to the report&quot;, true, 3.0f);
 
-  private int reportLevel;
-<span class="fc" id="L51">  private boolean showClassesComplexity = true;</span>
-<span class="fc" id="L52">  private boolean showMethodsComplexity = true;</span>
+    private int reportLevel;
+<span class="fc" id="L52">    private boolean showClassesComplexity = true;</span>
+<span class="fc" id="L53">    private boolean showMethodsComplexity = true;</span>
 
-  protected static class Entry {
-    private Node node;
-<span class="fc" id="L56">    private int decisionPoints = 1;</span>
-    public int highestDecisionPoints;
-    public int methodCount;
+    protected static class Entry {
+        private Node node;
+<span class="fc" id="L57">        private int decisionPoints = 1;</span>
+        public int highestDecisionPoints;
+        public int methodCount;
 
-<span class="fc" id="L60">    private Entry(Node node) {</span>
-<span class="fc" id="L61">      this.node = node;</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L61">        private Entry(Node node) {</span>
+<span class="fc" id="L62">            this.node = node;</span>
+<span class="fc" id="L63">        }</span>
 
-    public void bumpDecisionPoints() {
-<span class="fc" id="L65">      decisionPoints++;</span>
-<span class="fc" id="L66">    }</span>
+        public void bumpDecisionPoints() {
+<span class="fc" id="L66">            decisionPoints++;</span>
+<span class="fc" id="L67">        }</span>
 
-    public void bumpDecisionPoints(int size) {
-<span class="fc" id="L69">      decisionPoints += size;</span>
-<span class="fc" id="L70">    }</span>
+        public void bumpDecisionPoints(int size) {
+<span class="fc" id="L70">            decisionPoints += size;</span>
+<span class="fc" id="L71">        }</span>
 
-    public int getComplexityAverage() {
-<span class="fc bfc" id="L73" title="All 2 branches covered.">      return (double) methodCount == 0 ? 1</span>
-          : (int) Math.rint( (double) decisionPoints / (double) methodCount );
-    }
-  }
-
-<span class="fc" id="L78">  protected Deque&lt;Entry&gt; entryStack = new ArrayDeque&lt;&gt;();</span>
-
-<span class="fc" id="L80">  public StdCyclomaticComplexityRule() {</span>
-<span class="fc" id="L81">      definePropertyDescriptor(REPORT_LEVEL_DESCRIPTOR);</span>
-<span class="fc" id="L82">      definePropertyDescriptor(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L83">      definePropertyDescriptor(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L84">  }</span>
-
-  @Override
-public Object visit(ASTCompilationUnit node, Object data) {
-<span class="fc" id="L88">    reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
-<span class="fc" id="L89">    showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L90">    showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L91">    super.visit( node, data );</span>
-<span class="fc" id="L92">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTIfStatement node, Object data) {
-<span class="fc" id="L97">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L98">    super.visit( node, data );</span>
-<span class="fc" id="L99">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTCatchStatement node, Object data) {
-<span class="fc" id="L104">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L105">    super.visit( node, data );</span>
-<span class="fc" id="L106">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTForStatement node, Object data) {
-<span class="fc" id="L111">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L112">    super.visit( node, data );</span>
-<span class="fc" id="L113">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTDoStatement node, Object data) {
-<span class="fc" id="L118">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L119">    super.visit( node, data );</span>
-<span class="fc" id="L120">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTSwitchStatement node, Object data) {
-<span class="fc" id="L125">    Entry entry = entryStack.peek();</span>
-
-<span class="fc" id="L127">    int childCount = node.jjtGetNumChildren();</span>
-<span class="fc" id="L128">    int lastIndex = childCount - 1;</span>
-<span class="fc bfc" id="L129" title="All 2 branches covered.">    for ( int n = 0; n &lt; lastIndex; n++ ) {</span>
-<span class="fc" id="L130">      Node childNode = node.jjtGetChild( n );</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">      if ( childNode instanceof ASTSwitchLabel ) {</span>
-        // default is generally not considered a decision (same as &quot;else&quot;)
-<span class="fc" id="L133">        ASTSwitchLabel sl = (ASTSwitchLabel) childNode;</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">        if ( !sl.isDefault() ) {</span>
-<span class="fc" id="L135">          childNode = node.jjtGetChild( n + 1 );</span>
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">          if ( childNode instanceof ASTBlockStatement ) {</span>
-<span class="fc" id="L137">            entry.bumpDecisionPoints();</span>
-          }
+        public int getComplexityAverage() {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            return (double) methodCount == 0 ? 1 : (int) Math.rint((double) decisionPoints / (double) methodCount);</span>
         }
-      }
-    }
-<span class="fc" id="L142">    super.visit( node, data );</span>
-<span class="fc" id="L143">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTWhileStatement node, Object data) {
-<span class="fc" id="L148">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L149">    super.visit( node, data );</span>
-<span class="fc" id="L150">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTConditionalExpression node, Object data) {
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">    if ( node.isTernary() ) {</span>
-<span class="fc" id="L156">      entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L157">      super.visit( node, data );</span>
-    }
-<span class="fc" id="L159">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc bfc" id="L164" title="All 2 branches covered.">    if ( node.isInterface() ) {</span>
-<span class="fc" id="L165">      return data;</span>
     }
 
-<span class="fc" id="L168">    entryStack.push( new Entry( node ) );</span>
-<span class="fc" id="L169">    super.visit( node, data );</span>
-<span class="fc" id="L170">    Entry classEntry = entryStack.pop();</span>
-<span class="fc bfc" id="L171" title="All 2 branches covered.">    if ( showClassesComplexity ) {</span>
-<span class="fc bfc" id="L172" title="All 4 branches covered.">	    if ( classEntry.getComplexityAverage() &gt;= reportLevel</span>
-	        || classEntry.highestDecisionPoints &gt;= reportLevel ) {
-<span class="fc" id="L174">	      addViolation( data, node, new String[] {</span>
-	          &quot;class&quot;,
-	          node.getImage(),
-	          classEntry.getComplexityAverage() + &quot; (Highest = &quot;
-	              + classEntry.highestDecisionPoints + ')' } );
-	    }
-    }
-<span class="fc" id="L181">    return data;</span>
-  }
+<span class="fc" id="L78">    protected Deque&lt;Entry&gt; entryStack = new ArrayDeque&lt;&gt;();</span>
 
-  @Override
-public Object visit(ASTMethodDeclaration node, Object data) {
-<span class="fc" id="L186">    entryStack.push( new Entry( node ) );</span>
-<span class="fc" id="L187">    super.visit( node, data );</span>
-<span class="fc" id="L188">	    Entry methodEntry = entryStack.pop();</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">    if (!isSuppressed(node)) {</span>
-<span class="fc" id="L190">	    int methodDecisionPoints = methodEntry.decisionPoints;</span>
-<span class="fc" id="L191">	    Entry classEntry = entryStack.peek();</span>
-<span class="fc" id="L192">	    classEntry.methodCount++;</span>
-<span class="fc" id="L193">	    classEntry.bumpDecisionPoints( methodDecisionPoints );</span>
+<span class="fc" id="L80">    public StdCyclomaticComplexityRule() {</span>
+<span class="fc" id="L81">        definePropertyDescriptor(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L82">        definePropertyDescriptor(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L83">        definePropertyDescriptor(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L84">    }</span>
 
-<span class="fc bfc" id="L195" title="All 2 branches covered.">	    if ( methodDecisionPoints &gt; classEntry.highestDecisionPoints ) {</span>
-<span class="fc" id="L196">	      classEntry.highestDecisionPoints = methodDecisionPoints;</span>
-	    }
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L88">        reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L89">        showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L90">        showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L91">        super.visit(node, data);</span>
+<span class="fc" id="L92">        return data;</span>
+    }
 
-<span class="fc" id="L199">	    ASTMethodDeclarator methodDeclarator = null;</span>
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">	    for ( int n = 0; n &lt; node.jjtGetNumChildren(); n++ ) {</span>
-<span class="fc" id="L201">	      Node childNode = node.jjtGetChild( n );</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">	      if ( childNode instanceof ASTMethodDeclarator ) {</span>
-<span class="fc" id="L203">	        methodDeclarator = (ASTMethodDeclarator) childNode;</span>
-<span class="fc" id="L204">	        break;</span>
-	      }
-	    }
+    @Override
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L97">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L98">        super.visit(node, data);</span>
+<span class="fc" id="L99">        return data;</span>
+    }
 
-<span class="fc bfc" id="L208" title="All 4 branches covered.">	    if ( showMethodsComplexity &amp;&amp; methodEntry.decisionPoints &gt;= reportLevel ) {</span>
-<span class="pc bpc" id="L209" title="1 of 2 branches missed.">	        addViolation( data, node, new String[] { &quot;method&quot;,</span>
-	            methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
-	            String.valueOf( methodEntry.decisionPoints ) } );
-	      }
+    @Override
+    public Object visit(ASTCatchStatement node, Object data) {
+<span class="fc" id="L104">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L105">        super.visit(node, data);</span>
+<span class="fc" id="L106">        return data;</span>
     }
-<span class="fc" id="L214">    return data;</span>
-  }
 
-  @Override
-public Object visit(ASTEnumDeclaration node, Object data) {
-<span class="fc" id="L219">    entryStack.push( new Entry( node ) );</span>
-<span class="fc" id="L220">    super.visit( node, data );</span>
-<span class="fc" id="L221">    Entry classEntry = entryStack.pop();</span>
-<span class="pc bpc" id="L222" title="2 of 4 branches missed.">    if ( classEntry.getComplexityAverage() &gt;= reportLevel</span>
-        || classEntry.highestDecisionPoints &gt;= reportLevel ) {
-<span class="nc" id="L224">      addViolation( data, node, new String[] {</span>
-          &quot;class&quot;,
-          node.getImage(),
-          classEntry.getComplexityAverage() + &quot;(Highest = &quot;
-              + classEntry.highestDecisionPoints + ')' } );
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L111">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L112">        super.visit(node, data);</span>
+<span class="fc" id="L113">        return data;</span>
     }
-<span class="fc" id="L230">    return data;</span>
-  }
 
-  @Override
-public Object visit(ASTConstructorDeclaration node, Object data) {
-<span class="fc" id="L235">    entryStack.push( new Entry( node ) );</span>
-<span class="fc" id="L236">    super.visit( node, data );</span>
-<span class="fc" id="L237">    Entry constructorEntry = entryStack.pop();</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">    if (!isSuppressed(node)) {</span>
-<span class="fc" id="L239">    int constructorDecisionPointCount = constructorEntry.decisionPoints;</span>
-<span class="fc" id="L240">    Entry classEntry = entryStack.peek();</span>
-<span class="fc" id="L241">    classEntry.methodCount++;</span>
-<span class="fc" id="L242">    classEntry.decisionPoints += constructorDecisionPointCount;</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">    if ( constructorDecisionPointCount &gt; classEntry.highestDecisionPoints ) {</span>
-<span class="fc" id="L244">      classEntry.highestDecisionPoints = constructorDecisionPointCount;</span>
+    @Override
+    public Object visit(ASTDoStatement node, Object data) {
+<span class="fc" id="L118">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L119">        super.visit(node, data);</span>
+<span class="fc" id="L120">        return data;</span>
     }
-<span class="fc bfc" id="L246" title="All 4 branches covered.">    if ( showMethodsComplexity &amp;&amp; constructorEntry.decisionPoints &gt;= reportLevel ) {</span>
-<span class="fc" id="L247">      addViolation( data, node, new String[] { &quot;constructor&quot;,</span>
-          classEntry.node.getImage(),
-          String.valueOf( constructorDecisionPointCount ) } );
+
+    @Override
+    public Object visit(ASTSwitchStatement node, Object data) {
+<span class="fc" id="L125">        Entry entry = entryStack.peek();</span>
+
+<span class="fc" id="L127">        int childCount = node.jjtGetNumChildren();</span>
+<span class="fc" id="L128">        int lastIndex = childCount - 1;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (int n = 0; n &lt; lastIndex; n++) {</span>
+<span class="fc" id="L130">            Node childNode = node.jjtGetChild(n);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            if (childNode instanceof ASTSwitchLabel) {</span>
+                // default is generally not considered a decision (same as
+                // &quot;else&quot;)
+<span class="fc" id="L134">                ASTSwitchLabel sl = (ASTSwitchLabel) childNode;</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                if (!sl.isDefault()) {</span>
+<span class="fc" id="L136">                    childNode = node.jjtGetChild(n + 1);</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                    if (childNode instanceof ASTBlockStatement) {</span>
+<span class="fc" id="L138">                        entry.bumpDecisionPoints();</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L143">        super.visit(node, data);</span>
+<span class="fc" id="L144">        return data;</span>
     }
+
+    @Override
+    public Object visit(ASTWhileStatement node, Object data) {
+<span class="fc" id="L149">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L150">        super.visit(node, data);</span>
+<span class="fc" id="L151">        return data;</span>
     }
-<span class="fc" id="L252">    return data;</span>
-  }
+
+    @Override
+    public Object visit(ASTConditionalExpression node, Object data) {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (node.isTernary()) {</span>
+<span class="fc" id="L157">            entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L158">            super.visit(node, data);</span>
+        }
+<span class="fc" id="L160">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (node.isInterface()) {</span>
+<span class="fc" id="L166">            return data;</span>
+        }
+
+<span class="fc" id="L169">        entryStack.push(new Entry(node));</span>
+<span class="fc" id="L170">        super.visit(node, data);</span>
+<span class="fc" id="L171">        Entry classEntry = entryStack.pop();</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (showClassesComplexity) {</span>
+<span class="fc bfc" id="L173" title="All 4 branches covered.">            if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="fc" id="L174">                addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+                    classEntry.getComplexityAverage() + &quot; (Highest = &quot; + classEntry.highestDecisionPoints + ')', });
+            }
+        }
+<span class="fc" id="L178">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodDeclaration node, Object data) {
+<span class="fc" id="L183">        entryStack.push(new Entry(node));</span>
+<span class="fc" id="L184">        super.visit(node, data);</span>
+<span class="fc" id="L185">        Entry methodEntry = entryStack.pop();</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (!isSuppressed(node)) {</span>
+<span class="fc" id="L187">            int methodDecisionPoints = methodEntry.decisionPoints;</span>
+<span class="fc" id="L188">            Entry classEntry = entryStack.peek();</span>
+<span class="fc" id="L189">            classEntry.methodCount++;</span>
+<span class="fc" id="L190">            classEntry.bumpDecisionPoints(methodDecisionPoints);</span>
+
+<span class="fc bfc" id="L192" title="All 2 branches covered.">            if (methodDecisionPoints &gt; classEntry.highestDecisionPoints) {</span>
+<span class="fc" id="L193">                classEntry.highestDecisionPoints = methodDecisionPoints;</span>
+            }
+
+<span class="fc" id="L196">            ASTMethodDeclarator methodDeclarator = null;</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">            for (int n = 0; n &lt; node.jjtGetNumChildren(); n++) {</span>
+<span class="fc" id="L198">                Node childNode = node.jjtGetChild(n);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                if (childNode instanceof ASTMethodDeclarator) {</span>
+<span class="fc" id="L200">                    methodDeclarator = (ASTMethodDeclarator) childNode;</span>
+<span class="fc" id="L201">                    break;</span>
+                }
+            }
+
+<span class="fc bfc" id="L205" title="All 4 branches covered.">            if (showMethodsComplexity &amp;&amp; methodEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">                addViolation(data, node,</span>
+                        new String[] { &quot;method&quot;, methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
+                            String.valueOf(methodEntry.decisionPoints), });
+            }
+        }
+<span class="fc" id="L211">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTEnumDeclaration node, Object data) {
+<span class="fc" id="L216">        entryStack.push(new Entry(node));</span>
+<span class="fc" id="L217">        super.visit(node, data);</span>
+<span class="fc" id="L218">        Entry classEntry = entryStack.pop();</span>
+<span class="pc bpc" id="L219" title="2 of 4 branches missed.">        if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="nc" id="L220">            addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+                classEntry.getComplexityAverage() + &quot;(Highest = &quot; + classEntry.highestDecisionPoints + ')', });
+        }
+<span class="fc" id="L223">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTConstructorDeclaration node, Object data) {
+<span class="fc" id="L228">        entryStack.push(new Entry(node));</span>
+<span class="fc" id="L229">        super.visit(node, data);</span>
+<span class="fc" id="L230">        Entry constructorEntry = entryStack.pop();</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (!isSuppressed(node)) {</span>
+<span class="fc" id="L232">            int constructorDecisionPointCount = constructorEntry.decisionPoints;</span>
+<span class="fc" id="L233">            Entry classEntry = entryStack.peek();</span>
+<span class="fc" id="L234">            classEntry.methodCount++;</span>
+<span class="fc" id="L235">            classEntry.decisionPoints += constructorDecisionPointCount;</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">            if (constructorDecisionPointCount &gt; classEntry.highestDecisionPoints) {</span>
+<span class="fc" id="L237">                classEntry.highestDecisionPoints = constructorDecisionPointCount;</span>
+            }
+<span class="fc bfc" id="L239" title="All 4 branches covered.">            if (showMethodsComplexity &amp;&amp; constructorEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="fc" id="L240">                addViolation(data, node, new String[] { &quot;constructor&quot;, classEntry.node.getImage(),</span>
+                    String.valueOf(constructorDecisionPointCount), });
+            }
+        }
+<span class="fc" id="L244">        return data;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

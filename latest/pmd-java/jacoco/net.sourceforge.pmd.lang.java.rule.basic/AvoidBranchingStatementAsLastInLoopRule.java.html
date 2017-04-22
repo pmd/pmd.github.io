@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AvoidBranchingStatementAsLastInLoopRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.basic</a> &gt; <span class="el_source">AvoidBranchingStatementAsLastInLoopRule.java</span></div><h1>AvoidBranchingStatementAsLastInLoopRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.basic;
 
 import net.sourceforge.pmd.PropertySource;
@@ -21,92 +22,89 @@ public class AvoidBranchingStatementAsLastInLoopRule extends AbstractJavaRule {
     public static final String CHECK_DO = &quot;do&quot;;
     public static final String CHECK_WHILE = &quot;while&quot;;
 
-<span class="fc" id="L24">    private static final String[] ALL_LOOP_TYPES_LABELS = new String[] { CHECK_FOR, CHECK_DO, CHECK_WHILE };</span>
-<span class="fc" id="L25">    private static final String[] ALL_LOOP_TYPES_VALUES = ALL_LOOP_TYPES_LABELS;</span>
-<span class="fc" id="L26">    private static final int[] ALL_LOOP_TYPES_DEFAULTS = new int[] { 0, 1, 2 };</span>
+<span class="fc" id="L25">    private static final String[] ALL_LOOP_TYPES_LABELS = new String[] { CHECK_FOR, CHECK_DO, CHECK_WHILE };</span>
+<span class="fc" id="L26">    private static final String[] ALL_LOOP_TYPES_VALUES = ALL_LOOP_TYPES_LABELS;</span>
+<span class="fc" id="L27">    private static final int[] ALL_LOOP_TYPES_DEFAULTS = new int[] { 0, 1, 2 };</span>
 
-<span class="fc" id="L28">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_BREAK_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
-	    &quot;checkBreakLoopTypes&quot;, &quot;Check for break statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
-	    ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 1);
-<span class="fc" id="L31">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_CONTINUE_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
-	    &quot;checkContinueLoopTypes&quot;, &quot;Check for continue statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
-	    ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 2);
-<span class="fc" id="L34">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_RETURN_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
-	    &quot;checkReturnLoopTypes&quot;, &quot;Check for return statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
-	    ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 3);
+<span class="fc" id="L29">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_BREAK_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
+            &quot;checkBreakLoopTypes&quot;, &quot;Check for break statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
+            ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 1);
+<span class="fc" id="L32">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_CONTINUE_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
+            &quot;checkContinueLoopTypes&quot;, &quot;Check for continue statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
+            ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 2);
+<span class="fc" id="L35">    public static final EnumeratedMultiProperty&lt;String&gt; CHECK_RETURN_LOOP_TYPES = new EnumeratedMultiProperty&lt;&gt;(</span>
+            &quot;checkReturnLoopTypes&quot;, &quot;Check for return statements in loop types&quot;, ALL_LOOP_TYPES_LABELS,
+            ALL_LOOP_TYPES_VALUES, ALL_LOOP_TYPES_DEFAULTS, 3);
 
-<span class="fc" id="L38">    public AvoidBranchingStatementAsLastInLoopRule() {</span>
-<span class="fc" id="L39">	definePropertyDescriptor(CHECK_BREAK_LOOP_TYPES);</span>
-<span class="fc" id="L40">	definePropertyDescriptor(CHECK_CONTINUE_LOOP_TYPES);</span>
-<span class="fc" id="L41">	definePropertyDescriptor(CHECK_RETURN_LOOP_TYPES);</span>
+<span class="fc" id="L39">    public AvoidBranchingStatementAsLastInLoopRule() {</span>
+<span class="fc" id="L40">        definePropertyDescriptor(CHECK_BREAK_LOOP_TYPES);</span>
+<span class="fc" id="L41">        definePropertyDescriptor(CHECK_CONTINUE_LOOP_TYPES);</span>
+<span class="fc" id="L42">        definePropertyDescriptor(CHECK_RETURN_LOOP_TYPES);</span>
 
-<span class="fc" id="L43">	addRuleChainVisit(ASTBreakStatement.class);</span>
-<span class="fc" id="L44">	addRuleChainVisit(ASTContinueStatement.class);</span>
-<span class="fc" id="L45">	addRuleChainVisit(ASTReturnStatement.class);</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L44">        addRuleChainVisit(ASTBreakStatement.class);</span>
+<span class="fc" id="L45">        addRuleChainVisit(ASTContinueStatement.class);</span>
+<span class="fc" id="L46">        addRuleChainVisit(ASTReturnStatement.class);</span>
+<span class="fc" id="L47">    }</span>
 
     @Override
     public Object visit(ASTBreakStatement node, Object data) {
         // skip breaks, that are within a switch statement
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (node.getNthParent(3) instanceof ASTSwitchStatement) {</span>
-<span class="fc" id="L52">            return data;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (node.getNthParent(3) instanceof ASTSwitchStatement) {</span>
+<span class="fc" id="L53">            return data;</span>
         }
-<span class="fc" id="L54">	return check(CHECK_BREAK_LOOP_TYPES, node, data);</span>
+<span class="fc" id="L55">        return check(CHECK_BREAK_LOOP_TYPES, node, data);</span>
     }
 
     @Override
     public Object visit(ASTContinueStatement node, Object data) {
-<span class="fc" id="L59">	return check(CHECK_CONTINUE_LOOP_TYPES, node, data);</span>
+<span class="fc" id="L60">        return check(CHECK_CONTINUE_LOOP_TYPES, node, data);</span>
     }
 
     @Override
     public Object visit(ASTReturnStatement node, Object data) {
-<span class="fc" id="L64">	return check(CHECK_RETURN_LOOP_TYPES, node, data);</span>
+<span class="fc" id="L65">        return check(CHECK_RETURN_LOOP_TYPES, node, data);</span>
     }
 
     protected Object check(EnumeratedMultiProperty&lt;String&gt; property, Node node, Object data) {
-<span class="fc" id="L68">	Node parent = node.getNthParent(5);</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">	if (parent instanceof ASTForStatement) {</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">	    if (hasPropertyValue(property, CHECK_FOR)) {</span>
-<span class="fc" id="L71">		super.addViolation(data, node);</span>
-	    }
-<span class="fc bfc" id="L73" title="All 2 branches covered.">	} else if (parent instanceof ASTWhileStatement) {</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">	    if (hasPropertyValue(property, CHECK_WHILE)) {</span>
-<span class="fc" id="L75">		super.addViolation(data, node);</span>
-	    }
-<span class="fc bfc" id="L77" title="All 2 branches covered.">	} else if (parent instanceof ASTDoStatement) {</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">	    if (hasPropertyValue(property, CHECK_DO)) {</span>
-<span class="fc" id="L79">		super.addViolation(data, node);</span>
-	    }
-	}
-<span class="fc" id="L82">	return data;</span>
+<span class="fc" id="L69">        Node parent = node.getNthParent(5);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (parent instanceof ASTForStatement) {</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (hasPropertyValue(property, CHECK_FOR)) {</span>
+<span class="fc" id="L72">                super.addViolation(data, node);</span>
+            }
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        } else if (parent instanceof ASTWhileStatement) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (hasPropertyValue(property, CHECK_WHILE)) {</span>
+<span class="fc" id="L76">                super.addViolation(data, node);</span>
+            }
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        } else if (parent instanceof ASTDoStatement) {</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (hasPropertyValue(property, CHECK_DO)) {</span>
+<span class="fc" id="L80">                super.addViolation(data, node);</span>
+            }
+        }
+<span class="fc" id="L83">        return data;</span>
     }
 
     protected boolean hasPropertyValue(EnumeratedMultiProperty&lt;String&gt; property, String value) {
-<span class="fc" id="L86">	final Object[] values = getProperty(property);</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">	for (int i = 0; i &lt; values.length; i++) {</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">	    if (value.equals(values[i])) {</span>
-<span class="fc" id="L89">		return true;</span>
-	    }
-	}
-<span class="fc" id="L92">	return false;</span>
+<span class="fc" id="L87">        final Object[] values = getProperty(property);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (value.equals(values[i])) {</span>
+<span class="fc" id="L90">                return true;</span>
+            }
+        }
+<span class="fc" id="L93">        return false;</span>
     }
 
-	public boolean checksNothing() {
+    public boolean checksNothing() {
 
-<span class="pc bpc" id="L97" title="5 of 6 branches missed.">		return getProperty(CHECK_BREAK_LOOP_TYPES).length == 0 &amp;&amp;</span>
-			getProperty(CHECK_CONTINUE_LOOP_TYPES).length == 0 &amp;&amp;
-			getProperty(CHECK_RETURN_LOOP_TYPES).length == 0 ;
-	}
+<span class="pc bpc" id="L98" title="5 of 6 branches missed.">        return getProperty(CHECK_BREAK_LOOP_TYPES).length == 0 &amp;&amp; getProperty(CHECK_CONTINUE_LOOP_TYPES).length == 0</span>
+                &amp;&amp; getProperty(CHECK_RETURN_LOOP_TYPES).length == 0;
+    }
 
-	/**
-	 * @see PropertySource#dysfunctionReason()
-	 */
-	@Override
-	public String dysfunctionReason() {
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		return checksNothing() ?</span>
-				&quot;All loop types are ignored&quot; :
-				null;
-	}
+    /**
+     * @see PropertySource#dysfunctionReason()
+     */
+    @Override
+    public String dysfunctionReason() {
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        return checksNothing() ? &quot;All loop types are ignored&quot; : null;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

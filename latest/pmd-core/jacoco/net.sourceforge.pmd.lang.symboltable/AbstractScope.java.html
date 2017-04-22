@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractScope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.symboltable</a> &gt; <span class="el_source">AbstractScope.java</span></div><h1>AbstractScope.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.symboltable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,15 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Base class for any {@link Scope}.
- * Provides useful default implementations.
+ * Base class for any {@link Scope}. Provides useful default implementations.
  */
-<span class="nc" id="L17">public abstract class AbstractScope implements Scope {</span>
+<span class="nc" id="L18">public abstract class AbstractScope implements Scope {</span>
 
     private Scope parent;
     /** Stores the name declaration already sorted by class. */
-<span class="nc" id="L21">    private Map&lt;Class&lt;? extends NameDeclaration&gt;, Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; nameDeclarations =</span>
-            new LinkedHashMap&lt;&gt;();
+<span class="nc" id="L22">    private Map&lt;Class&lt;? extends NameDeclaration&gt;, Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; nameDeclarations = new LinkedHashMap&lt;&gt;();</span>
 
     @Override
     public Scope getParent() {
@@ -43,9 +43,9 @@ import java.util.Set;
     @Override
     public &lt;T extends NameDeclaration&gt; Map&lt;T, List&lt;NameOccurrence&gt;&gt; getDeclarations(Class&lt;T&gt; clazz) {
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L46">        Map&lt;T, List&lt;NameOccurrence&gt;&gt; result = (Map&lt;T, List&lt;NameOccurrence&gt;&gt;)nameDeclarations.get(clazz);</span>
+<span class="nc" id="L46">        Map&lt;T, List&lt;NameOccurrence&gt;&gt; result = (Map&lt;T, List&lt;NameOccurrence&gt;&gt;) nameDeclarations.get(clazz);</span>
 <span class="nc bnc" id="L47" title="All 2 branches missed.">        if (result == null) {</span>
-<span class="nc" id="L48">            result = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L48">            result = Collections.emptyMap();</span>
         }
 <span class="nc" id="L50">        return result;</span>
     }
@@ -85,7 +85,7 @@ import java.util.Set;
 
     @Override
     public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occurrence) {
-<span class="nc" id="L88">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;NameDeclaration&gt;();</span>
+<span class="nc" id="L88">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
 <span class="nc bnc" id="L89" title="All 2 branches missed.">        for (Map.Entry&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; e : getDeclarations().entrySet()) {</span>
 <span class="nc bnc" id="L90" title="All 2 branches missed.">            if (e.getKey().getImage().equals(occurrence.getImage())) {</span>
 <span class="nc" id="L91">                result.add(e.getKey());</span>

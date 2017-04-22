@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CPDTask.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CPDTask.java</span></div><h1>CPDTask.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.cpd;
 
 import java.io.File;
@@ -19,30 +20,34 @@ import org.apache.tools.ant.types.FileSet;
 
 /**
  * CPDTask
- * &lt;p/&gt;
- * Runs the CPD utility via ant. The ant task looks like this:
- * &lt;p/&gt;
- * &lt;project name=&quot;CPDProj&quot; default=&quot;main&quot; basedir=&quot;.&quot;&gt;
- * &lt;taskdef name=&quot;cpd&quot; classname=&quot;net.sourceforge.pmd.cpd.CPDTask&quot; /&gt;
- * &lt;target name=&quot;main&quot;&gt;
- * &lt;cpd encoding=&quot;UTF-16LE&quot; language=&quot;java&quot; ignoreIdentifiers=&quot;true&quot; ignoreLiterals=&quot;true&quot; ignoreAnnotations=&quot;true&quot; minimumTokenCount=&quot;100&quot; outputFile=&quot;c:\cpdrun.txt&quot;&gt;
- * &lt;fileset dir=&quot;/path/to/my/src&quot;&gt;
- * &lt;include name=&quot;*.java&quot;/&gt;
- * &lt;/fileset&gt;
- * &lt;/cpd&gt;
- * &lt;/target&gt;
- * &lt;/project&gt;
- * &lt;p/&gt;
- * Required: minimumTokenCount, outputFile, and at least one file
+ * 
+ * &lt;p&gt;Runs the CPD utility via ant. The ant task looks like this:&lt;/p&gt;
+ * 
+ * &lt;pre&gt;
+ * &amp;lt;project name=&quot;CPDProj&quot; default=&quot;main&quot; basedir=&quot;.&quot;&amp;gt;
+ *   &amp;lt;taskdef name=&quot;cpd&quot; classname=&quot;net.sourceforge.pmd.cpd.CPDTask&quot; /&amp;gt;
+ *   &amp;lt;target name=&quot;main&quot;&amp;gt;
+ *     &amp;lt;cpd encoding=&quot;UTF-16LE&quot; language=&quot;java&quot; ignoreIdentifiers=&quot;true&quot;
+ *          ignoreLiterals=&quot;true&quot; ignoreAnnotations=&quot;true&quot; minimumTokenCount=&quot;100&quot;
+ *          outputFile=&quot;c:\cpdrun.txt&quot;&amp;gt;
+ *       &amp;lt;fileset dir=&quot;/path/to/my/src&quot;&amp;gt;
+ *         &amp;lt;include name=&quot;*.java&quot;/&amp;gt;
+ *       &amp;lt;/fileset&amp;gt;
+ *     &amp;lt;/cpd&amp;gt;
+ *   &amp;lt;/target&amp;gt;
+ * &amp;lt;/project&amp;gt;
+ * &lt;/pre&gt;
+ * 
+ * &lt;p&gt;Required: minimumTokenCount, outputFile, and at least one file&lt;/p&gt;
  */
-<span class="fc" id="L38">public class CPDTask extends Task {</span>
+<span class="fc" id="L43">public class CPDTask extends Task {</span>
 
     private static final String TEXT_FORMAT = &quot;text&quot;;
     private static final String XML_FORMAT = &quot;xml&quot;;
     private static final String CSV_FORMAT = &quot;csv&quot;;
 
-<span class="fc" id="L44">    private String format = TEXT_FORMAT;</span>
-<span class="fc" id="L45">    private String language = &quot;java&quot;;</span>
+<span class="fc" id="L49">    private String format = TEXT_FORMAT;</span>
+<span class="fc" id="L50">    private String language = &quot;java&quot;;</span>
     private int minimumTokenCount;
     private boolean ignoreLiterals;
     private boolean ignoreIdentifiers;
@@ -50,188 +55,192 @@ import org.apache.tools.ant.types.FileSet;
     private boolean ignoreUsings;
     private boolean skipLexicalErrors;
     private boolean skipDuplicateFiles;
-<span class="fc" id="L53">    private boolean skipBlocks = true;</span>
-<span class="fc" id="L54">    private String skipBlocksPattern = Tokenizer.DEFAULT_SKIP_BLOCKS_PATTERN;</span>
+<span class="fc" id="L58">    private boolean skipBlocks = true;</span>
+<span class="fc" id="L59">    private String skipBlocksPattern = Tokenizer.DEFAULT_SKIP_BLOCKS_PATTERN;</span>
     private File outputFile;
-<span class="fc" id="L56">    private String encoding = System.getProperty(&quot;file.encoding&quot;);</span>
-<span class="fc" id="L57">    private List&lt;FileSet&gt; filesets = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L61">    private String encoding = System.getProperty(&quot;file.encoding&quot;);</span>
+<span class="fc" id="L62">    private List&lt;FileSet&gt; filesets = new ArrayList&lt;&gt;();</span>
 
+    @Override
     public void execute() throws BuildException {
-<span class="fc" id="L60">        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();</span>
-<span class="fc" id="L61">        Thread.currentThread().setContextClassLoader(CPDTask.class.getClassLoader());</span>
+<span class="fc" id="L66">        ClassLoader oldClassloader = Thread.currentThread().getContextClassLoader();</span>
+<span class="fc" id="L67">        Thread.currentThread().setContextClassLoader(CPDTask.class.getClassLoader());</span>
 
         try {
-<span class="fc" id="L64">            validateFields();</span>
+<span class="fc" id="L70">            validateFields();</span>
 
-<span class="fc" id="L66">            log(&quot;Starting run, minimumTokenCount is &quot; + minimumTokenCount, Project.MSG_INFO);</span>
+<span class="fc" id="L72">            log(&quot;Starting run, minimumTokenCount is &quot; + minimumTokenCount, Project.MSG_INFO);</span>
 
-<span class="fc" id="L68">            log(&quot;Tokenizing files&quot;, Project.MSG_INFO);</span>
-<span class="fc" id="L69">            CPDConfiguration config = new CPDConfiguration();</span>
-<span class="fc" id="L70">            config.setMinimumTileSize(minimumTokenCount);</span>
-<span class="fc" id="L71">            config.setLanguage(createLanguage());</span>
-<span class="fc" id="L72">            config.setEncoding(encoding);</span>
-<span class="fc" id="L73">            config.setSkipDuplicates(skipDuplicateFiles);</span>
-<span class="fc" id="L74">            config.setSkipLexicalErrors(skipLexicalErrors);</span>
+<span class="fc" id="L74">            log(&quot;Tokenizing files&quot;, Project.MSG_INFO);</span>
+<span class="fc" id="L75">            CPDConfiguration config = new CPDConfiguration();</span>
+<span class="fc" id="L76">            config.setMinimumTileSize(minimumTokenCount);</span>
+<span class="fc" id="L77">            config.setLanguage(createLanguage());</span>
+<span class="fc" id="L78">            config.setEncoding(encoding);</span>
+<span class="fc" id="L79">            config.setSkipDuplicates(skipDuplicateFiles);</span>
+<span class="fc" id="L80">            config.setSkipLexicalErrors(skipLexicalErrors);</span>
 
-<span class="fc" id="L76">            CPD cpd = new CPD(config);</span>
-<span class="fc" id="L77">            tokenizeFiles(cpd);</span>
+<span class="fc" id="L82">            CPD cpd = new CPD(config);</span>
+<span class="fc" id="L83">            tokenizeFiles(cpd);</span>
 
-<span class="fc" id="L79">            log(&quot;Starting to analyze code&quot;, Project.MSG_INFO);</span>
-<span class="fc" id="L80">            long timeTaken = analyzeCode(cpd);</span>
-<span class="fc" id="L81">            log(&quot;Done analyzing code; that took &quot; + timeTaken + &quot; milliseconds&quot;);</span>
+<span class="fc" id="L85">            log(&quot;Starting to analyze code&quot;, Project.MSG_INFO);</span>
+<span class="fc" id="L86">            long timeTaken = analyzeCode(cpd);</span>
+<span class="fc" id="L87">            log(&quot;Done analyzing code; that took &quot; + timeTaken + &quot; milliseconds&quot;);</span>
 
-<span class="fc" id="L83">            log(&quot;Generating report&quot;, Project.MSG_INFO);</span>
-<span class="fc" id="L84">            report(cpd);</span>
-<span class="nc" id="L85">        } catch (IOException ioe) {</span>
-<span class="nc" id="L86">            log(ioe.toString(), Project.MSG_ERR);</span>
-<span class="nc" id="L87">            throw new BuildException(&quot;IOException during task execution&quot;, ioe);</span>
-<span class="nc" id="L88">        } catch (ReportException re) {</span>
-<span class="nc" id="L89">            re.printStackTrace();</span>
-<span class="nc" id="L90">            log(re.toString(), Project.MSG_ERR);</span>
-<span class="nc" id="L91">            throw new BuildException(&quot;ReportException during task execution&quot;, re);</span>
+<span class="fc" id="L89">            log(&quot;Generating report&quot;, Project.MSG_INFO);</span>
+<span class="fc" id="L90">            report(cpd);</span>
+<span class="nc" id="L91">        } catch (IOException ioe) {</span>
+<span class="nc" id="L92">            log(ioe.toString(), Project.MSG_ERR);</span>
+<span class="nc" id="L93">            throw new BuildException(&quot;IOException during task execution&quot;, ioe);</span>
+<span class="nc" id="L94">        } catch (ReportException re) {</span>
+<span class="nc" id="L95">            re.printStackTrace();</span>
+<span class="nc" id="L96">            log(re.toString(), Project.MSG_ERR);</span>
+<span class="nc" id="L97">            throw new BuildException(&quot;ReportException during task execution&quot;, re);</span>
         } finally {
-<span class="pc" id="L93">            Thread.currentThread().setContextClassLoader(oldClassloader);</span>
-<span class="fc" id="L94">        }</span>
-<span class="fc" id="L95">    }</span>
+<span class="pc" id="L99">            Thread.currentThread().setContextClassLoader(oldClassloader);</span>
+<span class="fc" id="L100">        }</span>
+<span class="fc" id="L101">    }</span>
 
     private Language createLanguage() {
-<span class="fc" id="L98">        Properties p = new Properties();</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (ignoreLiterals) {</span>
-<span class="nc" id="L100">            p.setProperty(Tokenizer.IGNORE_LITERALS, &quot;true&quot;);</span>
+<span class="fc" id="L104">        Properties p = new Properties();</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (ignoreLiterals) {</span>
+<span class="nc" id="L106">            p.setProperty(Tokenizer.IGNORE_LITERALS, &quot;true&quot;);</span>
         }
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (ignoreIdentifiers) {</span>
-<span class="nc" id="L103">            p.setProperty(Tokenizer.IGNORE_IDENTIFIERS, &quot;true&quot;);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (ignoreIdentifiers) {</span>
+<span class="nc" id="L109">            p.setProperty(Tokenizer.IGNORE_IDENTIFIERS, &quot;true&quot;);</span>
         }
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (ignoreAnnotations) {</span>
-<span class="nc" id="L106">            p.setProperty(Tokenizer.IGNORE_ANNOTATIONS, &quot;true&quot;);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (ignoreAnnotations) {</span>
+<span class="nc" id="L112">            p.setProperty(Tokenizer.IGNORE_ANNOTATIONS, &quot;true&quot;);</span>
         }
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (ignoreUsings) {</span>
-<span class="nc" id="L109">            p.setProperty(Tokenizer.IGNORE_USINGS, &quot;true&quot;);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (ignoreUsings) {</span>
+<span class="nc" id="L115">            p.setProperty(Tokenizer.IGNORE_USINGS, &quot;true&quot;);</span>
         }
-<span class="fc" id="L111">        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(skipBlocks));</span>
-<span class="fc" id="L112">        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, skipBlocksPattern);</span>
-<span class="fc" id="L113">        return LanguageFactory.createLanguage(language, p);</span>
+<span class="fc" id="L117">        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS, Boolean.toString(skipBlocks));</span>
+<span class="fc" id="L118">        p.setProperty(Tokenizer.OPTION_SKIP_BLOCKS_PATTERN, skipBlocksPattern);</span>
+<span class="fc" id="L119">        return LanguageFactory.createLanguage(language, p);</span>
     }
 
     private void report(CPD cpd) throws ReportException {
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (!cpd.getMatches().hasNext()) {</span>
-<span class="nc" id="L118">            log(&quot;No duplicates over &quot; + minimumTokenCount + &quot; tokens found&quot;, Project.MSG_INFO);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (!cpd.getMatches().hasNext()) {</span>
+<span class="nc" id="L124">            log(&quot;No duplicates over &quot; + minimumTokenCount + &quot; tokens found&quot;, Project.MSG_INFO);</span>
         }
-<span class="fc" id="L120">        Renderer renderer = createRenderer();</span>
+<span class="fc" id="L126">        Renderer renderer = createRenderer();</span>
         FileReporter reporter;
-<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (outputFile == null) {</span>
-<span class="nc" id="L123">        	reporter = new FileReporter(encoding);</span>
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        } else if (outputFile.isAbsolute()) {</span>
-<span class="fc" id="L125">            reporter = new FileReporter(outputFile, encoding);</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (outputFile == null) {</span>
+<span class="nc" id="L129">            reporter = new FileReporter(encoding);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        } else if (outputFile.isAbsolute()) {</span>
+<span class="fc" id="L131">            reporter = new FileReporter(outputFile, encoding);</span>
         } else {
-<span class="nc" id="L127">            reporter = new FileReporter(new File(getProject().getBaseDir(), outputFile.toString()), encoding);</span>
+<span class="nc" id="L133">            reporter = new FileReporter(new File(getProject().getBaseDir(), outputFile.toString()), encoding);</span>
         }
-<span class="fc" id="L129">        reporter.report(renderer.render(cpd.getMatches()));</span>
-<span class="fc" id="L130">    }</span>
+<span class="fc" id="L135">        reporter.report(renderer.render(cpd.getMatches()));</span>
+<span class="fc" id="L136">    }</span>
 
     private void tokenizeFiles(CPD cpd) throws IOException {
-<span class="fc bfc" id="L133" title="All 2 branches covered.">        for (FileSet fileSet: filesets) {</span>
-<span class="fc" id="L134">            DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());</span>
-<span class="fc" id="L135">            String[] includedFiles = directoryScanner.getIncludedFiles();</span>
-<span class="fc bfc" id="L136" title="All 2 branches covered.">            for (int i = 0; i &lt; includedFiles.length; i++) {</span>
-<span class="fc" id="L137">                File file = new File(directoryScanner.getBasedir() + System.getProperty(&quot;file.separator&quot;) + includedFiles[i]);</span>
-<span class="fc" id="L138">                log(&quot;Tokenizing &quot; + file.getAbsolutePath(), Project.MSG_VERBOSE);</span>
-<span class="fc" id="L139">                cpd.add(file);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        for (FileSet fileSet : filesets) {</span>
+<span class="fc" id="L140">            DirectoryScanner directoryScanner = fileSet.getDirectoryScanner(getProject());</span>
+<span class="fc" id="L141">            String[] includedFiles = directoryScanner.getIncludedFiles();</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            for (int i = 0; i &lt; includedFiles.length; i++) {</span>
+<span class="fc" id="L143">                File file = new File(</span>
+                        directoryScanner.getBasedir() + System.getProperty(&quot;file.separator&quot;) + includedFiles[i]);
+<span class="fc" id="L145">                log(&quot;Tokenizing &quot; + file.getAbsolutePath(), Project.MSG_VERBOSE);</span>
+<span class="fc" id="L146">                cpd.add(file);</span>
             }
-<span class="fc" id="L141">        }</span>
-<span class="fc" id="L142">    }</span>
+<span class="fc" id="L148">        }</span>
+<span class="fc" id="L149">    }</span>
 
     private long analyzeCode(CPD cpd) {
-<span class="fc" id="L145">        long start = System.currentTimeMillis();</span>
-<span class="fc" id="L146">        cpd.go();</span>
-<span class="fc" id="L147">        long stop = System.currentTimeMillis();</span>
-<span class="fc" id="L148">        return stop - start;</span>
+<span class="fc" id="L152">        long start = System.currentTimeMillis();</span>
+<span class="fc" id="L153">        cpd.go();</span>
+<span class="fc" id="L154">        long stop = System.currentTimeMillis();</span>
+<span class="fc" id="L155">        return stop - start;</span>
     }
 
     private Renderer createRenderer() {
-<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        if (format.equals(TEXT_FORMAT)) {</span>
-<span class="fc" id="L153">            return new SimpleRenderer();</span>
-<span class="nc bnc" id="L154" title="All 2 branches missed.">        } else if (format.equals(CSV_FORMAT)) {</span>
-<span class="nc" id="L155">            return new CSVRenderer();</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (format.equals(TEXT_FORMAT)) {</span>
+<span class="fc" id="L160">            return new SimpleRenderer();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        } else if (format.equals(CSV_FORMAT)) {</span>
+<span class="nc" id="L162">            return new CSVRenderer();</span>
         }
-<span class="nc" id="L157">        return new XMLRenderer();</span>
+<span class="nc" id="L164">        return new XMLRenderer();</span>
     }
 
     private void validateFields() throws BuildException {
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (minimumTokenCount == 0) {</span>
-<span class="nc" id="L162">            throw new BuildException(&quot;minimumTokenCount is required and must be greater than zero&quot;);</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (minimumTokenCount == 0) {</span>
+<span class="nc" id="L169">            throw new BuildException(&quot;minimumTokenCount is required and must be greater than zero&quot;);</span>
         }
 
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (filesets.isEmpty()) {</span>
-<span class="nc" id="L166">            throw new BuildException(&quot;Must include at least one FileSet&quot;);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        if (filesets.isEmpty()) {</span>
+<span class="nc" id="L173">            throw new BuildException(&quot;Must include at least one FileSet&quot;);</span>
         }
 
-<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (!Arrays.asList(LanguageFactory.supportedLanguages).contains(language)) {</span>
-<span class="nc" id="L170">            throw new BuildException(&quot;Language &quot; + language + &quot; is not supported. Available languages: &quot;</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (!Arrays.asList(LanguageFactory.supportedLanguages).contains(language)) {</span>
+<span class="nc" id="L177">            throw new BuildException(&quot;Language &quot; + language + &quot; is not supported. Available languages: &quot;</span>
                     + Arrays.toString(LanguageFactory.supportedLanguages));
         }
-<span class="fc" id="L173">    }</span>
+<span class="fc" id="L180">    }</span>
 
     public void addFileset(FileSet set) {
-<span class="fc" id="L176">        filesets.add(set);</span>
-<span class="fc" id="L177">    }</span>
+<span class="fc" id="L183">        filesets.add(set);</span>
+<span class="fc" id="L184">    }</span>
 
     public void setMinimumTokenCount(int minimumTokenCount) {
-<span class="fc" id="L180">        this.minimumTokenCount = minimumTokenCount;</span>
-<span class="fc" id="L181">    }</span>
+<span class="fc" id="L187">        this.minimumTokenCount = minimumTokenCount;</span>
+<span class="fc" id="L188">    }</span>
 
     public void setIgnoreLiterals(boolean value) {
-<span class="nc" id="L184">        this.ignoreLiterals = value;</span>
-<span class="nc" id="L185">    }</span>
+<span class="nc" id="L191">        this.ignoreLiterals = value;</span>
+<span class="nc" id="L192">    }</span>
 
     public void setIgnoreIdentifiers(boolean value) {
-<span class="nc" id="L188">        this.ignoreIdentifiers = value;</span>
-<span class="nc" id="L189">    }</span>
+<span class="nc" id="L195">        this.ignoreIdentifiers = value;</span>
+<span class="nc" id="L196">    }</span>
 
     public void setIgnoreAnnotations(boolean value) {
-<span class="nc" id="L192">        this.ignoreAnnotations = value;</span>
-<span class="nc" id="L193">    }</span>
+<span class="nc" id="L199">        this.ignoreAnnotations = value;</span>
+<span class="nc" id="L200">    }</span>
 
     public void setIgnoreUsings(boolean value) {
-<span class="nc" id="L196">        this.ignoreUsings = value;</span>
-<span class="nc" id="L197">    }</span>
+<span class="nc" id="L203">        this.ignoreUsings = value;</span>
+<span class="nc" id="L204">    }</span>
 
     public void setSkipLexicalErrors(boolean skipLexicalErrors) {
-<span class="nc" id="L200">        this.skipLexicalErrors = skipLexicalErrors;</span>
-<span class="nc" id="L201">    }</span>
+<span class="nc" id="L207">        this.skipLexicalErrors = skipLexicalErrors;</span>
+<span class="nc" id="L208">    }</span>
 
     public void setSkipDuplicateFiles(boolean skipDuplicateFiles) {
-<span class="nc" id="L204">        this.skipDuplicateFiles = skipDuplicateFiles;</span>
-<span class="nc" id="L205">    }</span>
+<span class="nc" id="L211">        this.skipDuplicateFiles = skipDuplicateFiles;</span>
+<span class="nc" id="L212">    }</span>
 
     public void setOutputFile(File outputFile) {
-<span class="fc" id="L208">        this.outputFile = outputFile;</span>
-<span class="fc" id="L209">    }</span>
+<span class="fc" id="L215">        this.outputFile = outputFile;</span>
+<span class="fc" id="L216">    }</span>
 
     public void setFormat(FormatAttribute formatAttribute) {
-<span class="nc" id="L212">        this.format = formatAttribute.getValue();</span>
-<span class="nc" id="L213">    }</span>
+<span class="nc" id="L219">        this.format = formatAttribute.getValue();</span>
+<span class="nc" id="L220">    }</span>
 
     public void setLanguage(String language) {
-<span class="fc" id="L216">        this.language = language;</span>
-<span class="fc" id="L217">    }</span>
+<span class="fc" id="L223">        this.language = language;</span>
+<span class="fc" id="L224">    }</span>
 
     public void setEncoding(String encoding) {
-<span class="nc" id="L220">        this.encoding = encoding;</span>
-<span class="nc" id="L221">    }</span>
+<span class="nc" id="L227">        this.encoding = encoding;</span>
+<span class="nc" id="L228">    }</span>
 
     public void setSkipBlocks(boolean skipBlocks) {
-<span class="nc" id="L224">        this.skipBlocks = skipBlocks;</span>
-<span class="nc" id="L225">    }</span>
+<span class="nc" id="L231">        this.skipBlocks = skipBlocks;</span>
+<span class="nc" id="L232">    }</span>
 
     public void setSkipBlocksPattern(String skipBlocksPattern) {
-<span class="nc" id="L228">        this.skipBlocksPattern = skipBlocksPattern;</span>
-<span class="nc" id="L229">    }</span>
+<span class="nc" id="L235">        this.skipBlocksPattern = skipBlocksPattern;</span>
+<span class="nc" id="L236">    }</span>
 
-<span class="pc" id="L231">    public static class FormatAttribute extends EnumeratedAttribute {</span>
-<span class="nc" id="L232">        private static final String[] FORMATS = new String[]{XML_FORMAT, TEXT_FORMAT, CSV_FORMAT};</span>
+<span class="pc" id="L238">    public static class FormatAttribute extends EnumeratedAttribute {</span>
+<span class="nc" id="L239">        private static final String[] FORMATS = new String[] { XML_FORMAT, TEXT_FORMAT, CSV_FORMAT };</span>
+
+        @Override
         public String[] getValues() {
-<span class="nc" id="L234">            return FORMATS;</span>
+<span class="nc" id="L243">            return FORMATS;</span>
         }
     }
 }

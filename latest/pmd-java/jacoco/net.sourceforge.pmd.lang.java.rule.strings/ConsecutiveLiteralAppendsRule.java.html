@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConsecutiveLiteralAppendsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strings</a> &gt; <span class="el_source">ConsecutiveLiteralAppendsRule.java</span></div><h1>ConsecutiveLiteralAppendsRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.strings;
 
 import java.util.HashSet;
@@ -36,78 +37,77 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 /**
  * This rule finds concurrent calls to StringBuffer/Builder.append where String
  * literals are used It would be much better to make these calls using one call
- * to .append
- * &lt;p/&gt;
- * example:
- * &lt;p/&gt;
+ * to &lt;code&gt;.append&lt;/code&gt;
+ * 
+ * &lt;p&gt;Example:&lt;/p&gt;
  * 
  * &lt;pre&gt;
  * StringBuilder buf = new StringBuilder();
  * buf.append(&amp;quot;Hello&amp;quot;);
  * buf.append(&amp;quot; &amp;quot;).append(&amp;quot;World&amp;quot;);
  * &lt;/pre&gt;
- * &lt;p/&gt;
- * This would be more eloquently put as:
- * &lt;p/&gt;
+ * 
+ * &lt;p&gt;This would be more eloquently put as:&lt;/p&gt;
  * 
  * &lt;pre&gt;
  * StringBuilder buf = new StringBuilder();
  * buf.append(&amp;quot;Hello World&amp;quot;);
  * &lt;/pre&gt;
- * &lt;p/&gt;
- * The rule takes one parameter, threshold, which defines the lower limit of
- * consecutive appends before a violation is created. The default is 1.
+ *
+ * &lt;p&gt;The rule takes one parameter, threshold, which defines the lower limit of
+ * consecutive appends before a violation is created. The default is 1.&lt;/p&gt;
  */
 public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
 
     private static final Set&lt;Class&lt;?&gt;&gt; BLOCK_PARENTS;
 
     static {
-<span class="fc" id="L66">        BLOCK_PARENTS = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L67">        BLOCK_PARENTS.add(ASTForStatement.class);</span>
-<span class="fc" id="L68">        BLOCK_PARENTS.add(ASTWhileStatement.class);</span>
-<span class="fc" id="L69">        BLOCK_PARENTS.add(ASTDoStatement.class);</span>
-<span class="fc" id="L70">        BLOCK_PARENTS.add(ASTIfStatement.class);</span>
-<span class="fc" id="L71">        BLOCK_PARENTS.add(ASTSwitchStatement.class);</span>
-<span class="fc" id="L72">        BLOCK_PARENTS.add(ASTMethodDeclaration.class);</span>
+<span class="fc" id="L65">        BLOCK_PARENTS = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L66">        BLOCK_PARENTS.add(ASTForStatement.class);</span>
+<span class="fc" id="L67">        BLOCK_PARENTS.add(ASTWhileStatement.class);</span>
+<span class="fc" id="L68">        BLOCK_PARENTS.add(ASTDoStatement.class);</span>
+<span class="fc" id="L69">        BLOCK_PARENTS.add(ASTIfStatement.class);</span>
+<span class="fc" id="L70">        BLOCK_PARENTS.add(ASTSwitchStatement.class);</span>
+<span class="fc" id="L71">        BLOCK_PARENTS.add(ASTMethodDeclaration.class);</span>
     }
 
-<span class="fc" id="L75">    private static final IntegerProperty THRESHOLD_DESCRIPTOR = new IntegerProperty(&quot;threshold&quot;,</span>
+<span class="fc" id="L74">    private static final IntegerProperty THRESHOLD_DESCRIPTOR = new IntegerProperty(&quot;threshold&quot;,</span>
             &quot;Max consecutive appends&quot;, 1, 10, 1, 1.0f);
 
-<span class="fc" id="L78">    private int threshold = 1;</span>
+<span class="fc" id="L77">    private int threshold = 1;</span>
 
-<span class="fc" id="L80">    public ConsecutiveLiteralAppendsRule() {</span>
-<span class="fc" id="L81">        definePropertyDescriptor(THRESHOLD_DESCRIPTOR);</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L79">    public ConsecutiveLiteralAppendsRule() {</span>
+<span class="fc" id="L80">        definePropertyDescriptor(THRESHOLD_DESCRIPTOR);</span>
+<span class="fc" id="L81">    }</span>
 
     @Override
     public Object visit(ASTVariableDeclaratorId node, Object data) {
 
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (!isStringBuffer(node)) {</span>
-<span class="fc" id="L88">            return data;</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        if (!isStringBuffer(node)) {</span>
+<span class="fc" id="L87">            return data;</span>
         }
-<span class="fc" id="L90">        threshold = getProperty(THRESHOLD_DESCRIPTOR);</span>
+<span class="fc" id="L89">        threshold = getProperty(THRESHOLD_DESCRIPTOR);</span>
 
-<span class="fc" id="L92">        int concurrentCount = checkConstructor(node, data);</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (hasInitializer(node)) {</span>
-<span class="fc" id="L94">            concurrentCount += checkInitializerExpressions(node);</span>
+<span class="fc" id="L91">        int concurrentCount = checkConstructor(node, data);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        if (hasInitializer(node)) {</span>
+<span class="fc" id="L93">            concurrentCount += checkInitializerExpressions(node);</span>
         }
-<span class="fc" id="L96">        Node lastBlock = getFirstParentBlock(node);</span>
-<span class="fc" id="L97">        Node currentBlock = lastBlock;</span>
-<span class="fc" id="L98">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; decls = node.getScope().getDeclarations(</span>
-                VariableNameDeclaration.class);
-<span class="fc" id="L100">        Node rootNode = null;</span>
+<span class="fc" id="L95">        Node lastBlock = getFirstParentBlock(node);</span>
+<span class="fc" id="L96">        Node currentBlock = lastBlock;</span>
+<span class="fc" id="L97">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; decls = node.getScope()</span>
+                .getDeclarations(VariableNameDeclaration.class);
+<span class="fc" id="L99">        Node rootNode = null;</span>
         // only want the constructor flagged if it's really containing strings
-<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (concurrentCount &gt;= 1) {</span>
-<span class="fc" id="L103">            rootNode = node;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (concurrentCount &gt;= 1) {</span>
+<span class="fc" id="L102">            rootNode = node;</span>
         }
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (List&lt;NameOccurrence&gt; decl : decls.values()) {</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">            for (NameOccurrence no : decl) {</span>
-<span class="fc" id="L107">                JavaNameOccurrence jno = (JavaNameOccurrence) no;</span>
-<span class="fc" id="L108">                Node n = jno.getLocation();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (List&lt;NameOccurrence&gt; decl : decls.values()) {</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (NameOccurrence no : decl) {</span>
+<span class="fc" id="L106">                JavaNameOccurrence jno = (JavaNameOccurrence) no;</span>
+<span class="fc" id="L107">                Node n = jno.getLocation();</span>
 
-                // skip the declarations/usages, that deal with a different variable
+                // skip the declarations/usages, that deal with a different
+                // variable
 <span class="fc bfc" id="L111" title="All 2 branches covered.">                if (!node.getImage().equals(jno.getImage())) {</span>
 <span class="fc" id="L112">                    continue;</span>
                 }
@@ -169,21 +169,22 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
     private int checkConstructor(ASTVariableDeclaratorId node, Object data) {
 <span class="fc" id="L170">        Node parent = node.jjtGetParent();</span>
 <span class="fc bfc" id="L171" title="All 2 branches covered.">        if (parent.jjtGetNumChildren() &gt;= 2) {</span>
-<span class="fc" id="L172">            ASTAllocationExpression allocationExpression = parent.jjtGetChild(1).getFirstDescendantOfType(ASTAllocationExpression.class);</span>
-<span class="fc" id="L173">            ASTArgumentList list = null;</span>
-<span class="fc bfc" id="L174" title="All 2 branches covered.">            if (allocationExpression != null) {</span>
-<span class="fc" id="L175">                list = allocationExpression.getFirstDescendantOfType(ASTArgumentList.class);</span>
+<span class="fc" id="L172">            ASTAllocationExpression allocationExpression = parent.jjtGetChild(1)</span>
+                    .getFirstDescendantOfType(ASTAllocationExpression.class);
+<span class="fc" id="L174">            ASTArgumentList list = null;</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            if (allocationExpression != null) {</span>
+<span class="fc" id="L176">                list = allocationExpression.getFirstDescendantOfType(ASTArgumentList.class);</span>
             }
 
-<span class="fc bfc" id="L178" title="All 2 branches covered.">            if (list != null) {</span>
-<span class="fc" id="L179">                ASTLiteral literal = list.getFirstDescendantOfType(ASTLiteral.class);</span>
-<span class="fc bfc" id="L180" title="All 6 branches covered.">                if (!isAdditive(list) &amp;&amp; literal != null &amp;&amp; literal.isStringLiteral()) {</span>
-<span class="fc" id="L181">                    return 1;</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">            if (list != null) {</span>
+<span class="fc" id="L180">                ASTLiteral literal = list.getFirstDescendantOfType(ASTLiteral.class);</span>
+<span class="fc bfc" id="L181" title="All 6 branches covered.">                if (!isAdditive(list) &amp;&amp; literal != null &amp;&amp; literal.isStringLiteral()) {</span>
+<span class="fc" id="L182">                    return 1;</span>
                 }
-<span class="fc" id="L183">                return processAdditive(data, 0, list, node);</span>
+<span class="fc" id="L184">                return processAdditive(data, 0, list, node);</span>
             }
         }
-<span class="fc" id="L186">        return 0;</span>
+<span class="fc" id="L187">        return 0;</span>
     }
 
     /**
@@ -193,29 +194,32 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      * @return
      */
     private int checkInitializerExpressions(ASTVariableDeclaratorId node) {
-<span class="fc" id="L196">        ASTVariableInitializer initializer = node.jjtGetParent().getFirstChildOfType(ASTVariableInitializer.class);</span>
-<span class="fc" id="L197">        ASTPrimaryExpression primary = initializer.getFirstDescendantOfType(ASTPrimaryExpression.class);</span>
+<span class="fc" id="L197">        ASTVariableInitializer initializer = node.jjtGetParent().getFirstChildOfType(ASTVariableInitializer.class);</span>
+<span class="fc" id="L198">        ASTPrimaryExpression primary = initializer.getFirstDescendantOfType(ASTPrimaryExpression.class);</span>
 
-<span class="fc" id="L199">        int result = 0;</span>
-<span class="fc" id="L200">        boolean previousWasAppend = false;</span>
-<span class="fc bfc" id="L201" title="All 2 branches covered.">        for (int i = 0; i &lt; primary.jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L202">            Node child = primary.jjtGetChild(i);</span>
-<span class="fc bfc" id="L203" title="All 4 branches covered.">            if (child.jjtGetNumChildren() &gt; 0 &amp;&amp; child.jjtGetChild(0) instanceof ASTAllocationExpression) {</span>
-<span class="fc" id="L204">                continue; // skip the constructor call, that has already been checked</span>
+<span class="fc" id="L200">        int result = 0;</span>
+<span class="fc" id="L201">        boolean previousWasAppend = false;</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        for (int i = 0; i &lt; primary.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L203">            Node child = primary.jjtGetChild(i);</span>
+<span class="fc bfc" id="L204" title="All 4 branches covered.">            if (child.jjtGetNumChildren() &gt; 0 &amp;&amp; child.jjtGetChild(0) instanceof ASTAllocationExpression) {</span>
+                // skip the constructor call, that has already been checked
+<span class="fc" id="L206">                continue;</span>
             }
-<span class="fc bfc" id="L206" title="All 2 branches covered.">            if (child instanceof ASTPrimarySuffix) {</span>
-<span class="fc" id="L207">                ASTPrimarySuffix suffix = (ASTPrimarySuffix)child;</span>
-<span class="pc bpc" id="L208" title="1 of 4 branches missed.">                if (suffix.jjtGetNumChildren() == 0 &amp;&amp; suffix.hasImageEqualTo(&quot;append&quot;)) {</span>
-<span class="fc" id="L209">                    previousWasAppend = true;</span>
-<span class="pc bpc" id="L210" title="1 of 4 branches missed.">                } else if (suffix.jjtGetNumChildren() &gt; 0 &amp;&amp; previousWasAppend) {</span>
-<span class="fc" id="L211">                    previousWasAppend = false;</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">            if (child instanceof ASTPrimarySuffix) {</span>
+<span class="fc" id="L209">                ASTPrimarySuffix suffix = (ASTPrimarySuffix) child;</span>
+<span class="pc bpc" id="L210" title="1 of 4 branches missed.">                if (suffix.jjtGetNumChildren() == 0 &amp;&amp; suffix.hasImageEqualTo(&quot;append&quot;)) {</span>
+<span class="fc" id="L211">                    previousWasAppend = true;</span>
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">                } else if (suffix.jjtGetNumChildren() &gt; 0 &amp;&amp; previousWasAppend) {</span>
+<span class="fc" id="L213">                    previousWasAppend = false;</span>
 
-<span class="fc" id="L213">                    ASTLiteral literal = suffix.getFirstDescendantOfType(ASTLiteral.class);</span>
-<span class="pc bpc" id="L214" title="1 of 4 branches missed.">                    if (literal != null &amp;&amp; literal.isStringLiteral()) {</span>
-<span class="fc" id="L215">                        result++;</span>
+<span class="fc" id="L215">                    ASTLiteral literal = suffix.getFirstDescendantOfType(ASTLiteral.class);</span>
+<span class="pc bpc" id="L216" title="1 of 4 branches missed.">                    if (literal != null &amp;&amp; literal.isStringLiteral()) {</span>
+<span class="fc" id="L217">                        result++;</span>
                     } else {
-                        // if it was not a String literal that was appended, then we don't
-                        // have a consecutive literal string append anymore and we can skip
+                        // if it was not a String literal that was appended,
+                        // then we don't
+                        // have a consecutive literal string append anymore and
+                        // we can skip
                         // checking the remainder of the initializer
                         break;
                     }
@@ -223,54 +227,54 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
             }
         }
 
-<span class="fc" id="L226">        return result;</span>
+<span class="fc" id="L230">        return result;</span>
     }
 
     private boolean hasInitializer(ASTVariableDeclaratorId node) {
-<span class="fc" id="L230">        return node.jjtGetParent().hasDescendantOfType(ASTVariableInitializer.class);</span>
+<span class="fc" id="L234">        return node.jjtGetParent().hasDescendantOfType(ASTVariableInitializer.class);</span>
     }
 
     private int processAdditive(Object data, int concurrentCount, Node sn, Node rootNode) {
-<span class="fc" id="L234">        ASTAdditiveExpression additive = sn.getFirstDescendantOfType(ASTAdditiveExpression.class);</span>
+<span class="fc" id="L238">        ASTAdditiveExpression additive = sn.getFirstDescendantOfType(ASTAdditiveExpression.class);</span>
         // The additive expression must of be type String to count
-<span class="fc bfc" id="L236" title="All 6 branches covered.">        if (additive == null || additive.getType() != null &amp;&amp; !TypeHelper.isA(additive, String.class)) {</span>
-<span class="fc" id="L237">            return 0;</span>
+<span class="fc bfc" id="L240" title="All 6 branches covered.">        if (additive == null || additive.getType() != null &amp;&amp; !TypeHelper.isA(additive, String.class)) {</span>
+<span class="fc" id="L241">            return 0;</span>
         }
         // check for at least one string literal
-<span class="fc" id="L240">        List&lt;ASTLiteral&gt; literals = additive.findDescendantsOfType(ASTLiteral.class);</span>
-<span class="fc" id="L241">        boolean stringLiteralFound = false;</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">        for (ASTLiteral l : literals) {</span>
-<span class="pc bpc" id="L243" title="1 of 4 branches missed.">            if (l.isCharLiteral() || l.isStringLiteral()) {</span>
-<span class="fc" id="L244">                stringLiteralFound = true;</span>
-<span class="fc" id="L245">                break;</span>
+<span class="fc" id="L244">        List&lt;ASTLiteral&gt; literals = additive.findDescendantsOfType(ASTLiteral.class);</span>
+<span class="fc" id="L245">        boolean stringLiteralFound = false;</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        for (ASTLiteral l : literals) {</span>
+<span class="pc bpc" id="L247" title="1 of 4 branches missed.">            if (l.isCharLiteral() || l.isStringLiteral()) {</span>
+<span class="fc" id="L248">                stringLiteralFound = true;</span>
+<span class="fc" id="L249">                break;</span>
             }
-<span class="fc" id="L247">        }</span>
-<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (!stringLiteralFound) {</span>
-<span class="fc" id="L249">            return 0;</span>
+<span class="fc" id="L251">        }</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (!stringLiteralFound) {</span>
+<span class="fc" id="L253">            return 0;</span>
         }
 
-<span class="fc" id="L252">        int count = concurrentCount;</span>
-<span class="fc" id="L253">        boolean found = false;</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">        for (int ix = 0; ix &lt; additive.jjtGetNumChildren(); ix++) {</span>
-<span class="fc" id="L255">            Node childNode = additive.jjtGetChild(ix);</span>
-<span class="fc bfc" id="L256" title="All 4 branches covered.">            if (childNode.jjtGetNumChildren() != 1 || childNode.hasDescendantOfType(ASTName.class)) {</span>
-<span class="pc bpc" id="L257" title="1 of 2 branches missed.">                if (!found) {</span>
-<span class="fc" id="L258">                    checkForViolation(rootNode, data, count);</span>
-<span class="fc" id="L259">                    found = true;</span>
+<span class="fc" id="L256">        int count = concurrentCount;</span>
+<span class="fc" id="L257">        boolean found = false;</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        for (int ix = 0; ix &lt; additive.jjtGetNumChildren(); ix++) {</span>
+<span class="fc" id="L259">            Node childNode = additive.jjtGetChild(ix);</span>
+<span class="fc bfc" id="L260" title="All 4 branches covered.">            if (childNode.jjtGetNumChildren() != 1 || childNode.hasDescendantOfType(ASTName.class)) {</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">                if (!found) {</span>
+<span class="fc" id="L262">                    checkForViolation(rootNode, data, count);</span>
+<span class="fc" id="L263">                    found = true;</span>
                 }
-<span class="fc" id="L261">                count = 0;</span>
+<span class="fc" id="L265">                count = 0;</span>
             } else {
-<span class="fc" id="L263">                count++;</span>
+<span class="fc" id="L267">                count++;</span>
             }
         }
 
         // no variables appended, compiler will take care of merging all the
         // string concats, we really only have 1 then
-<span class="fc bfc" id="L269" title="All 2 branches covered.">        if (!found) {</span>
-<span class="fc" id="L270">            count = 1;</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        if (!found) {</span>
+<span class="fc" id="L274">            count = 1;</span>
         }
 
-<span class="fc" id="L273">        return count;</span>
+<span class="fc" id="L277">        return count;</span>
     }
 
     /**
@@ -285,20 +289,20 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      *         Const.WORLD)
      */
     private boolean isAdditive(Node n) {
-<span class="fc" id="L288">        List&lt;ASTAdditiveExpression&gt; lstAdditive = n.findDescendantsOfType(ASTAdditiveExpression.class);</span>
-<span class="fc bfc" id="L289" title="All 2 branches covered.">        if (lstAdditive.isEmpty()) {</span>
-<span class="fc" id="L290">            return false;</span>
+<span class="fc" id="L292">        List&lt;ASTAdditiveExpression&gt; lstAdditive = n.findDescendantsOfType(ASTAdditiveExpression.class);</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">        if (lstAdditive.isEmpty()) {</span>
+<span class="fc" id="L294">            return false;</span>
         }
         // if there are more than 1 set of arguments above us we're not in the
         // append
         // but a sub-method call
-<span class="fc bfc" id="L295" title="All 2 branches covered.">        for (int ix = 0; ix &lt; lstAdditive.size(); ix++) {</span>
-<span class="fc" id="L296">            ASTAdditiveExpression expr = lstAdditive.get(ix);</span>
-<span class="fc bfc" id="L297" title="All 2 branches covered.">            if (expr.getParentsOfType(ASTArgumentList.class).size() != 1) {</span>
-<span class="fc" id="L298">                return false;</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        for (int ix = 0; ix &lt; lstAdditive.size(); ix++) {</span>
+<span class="fc" id="L300">            ASTAdditiveExpression expr = lstAdditive.get(ix);</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">            if (expr.getParentsOfType(ASTArgumentList.class).size() != 1) {</span>
+<span class="fc" id="L302">                return false;</span>
             }
         }
-<span class="fc" id="L301">        return true;</span>
+<span class="fc" id="L305">        return true;</span>
     }
 
     /**
@@ -311,19 +315,19 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      * @return The first parent block
      */
     private Node getFirstParentBlock(Node node) {
-<span class="fc" id="L314">        Node parentNode = node.jjtGetParent();</span>
+<span class="fc" id="L318">        Node parentNode = node.jjtGetParent();</span>
 
-<span class="fc" id="L316">        Node lastNode = node;</span>
-<span class="fc bfc" id="L317" title="All 4 branches covered.">        while (parentNode != null &amp;&amp; !BLOCK_PARENTS.contains(parentNode.getClass())) {</span>
-<span class="fc" id="L318">            lastNode = parentNode;</span>
-<span class="fc" id="L319">            parentNode = parentNode.jjtGetParent();</span>
+<span class="fc" id="L320">        Node lastNode = node;</span>
+<span class="fc bfc" id="L321" title="All 4 branches covered.">        while (parentNode != null &amp;&amp; !BLOCK_PARENTS.contains(parentNode.getClass())) {</span>
+<span class="fc" id="L322">            lastNode = parentNode;</span>
+<span class="fc" id="L323">            parentNode = parentNode.jjtGetParent();</span>
         }
-<span class="fc bfc" id="L321" title="All 2 branches covered.">        if (parentNode instanceof ASTIfStatement) {</span>
-<span class="fc" id="L322">            parentNode = lastNode;</span>
-<span class="fc bfc" id="L323" title="All 2 branches covered.">        } else if (parentNode instanceof ASTSwitchStatement) {</span>
-<span class="fc" id="L324">            parentNode = getSwitchParent(parentNode, lastNode);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (parentNode instanceof ASTIfStatement) {</span>
+<span class="fc" id="L326">            parentNode = lastNode;</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">        } else if (parentNode instanceof ASTSwitchStatement) {</span>
+<span class="fc" id="L328">            parentNode = getSwitchParent(parentNode, lastNode);</span>
         }
-<span class="fc" id="L326">        return parentNode;</span>
+<span class="fc" id="L330">        return parentNode;</span>
     }
 
     /**
@@ -336,19 +340,19 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      * @return The parent node for the switch statement
      */
     private Node getSwitchParent(Node parentNode, Node lastNode) {
-<span class="fc" id="L339">        int allChildren = parentNode.jjtGetNumChildren();</span>
-<span class="fc" id="L340">        Node result = parentNode;</span>
-<span class="fc" id="L341">        ASTSwitchLabel label = null;</span>
-<span class="pc bpc" id="L342" title="1 of 2 branches missed.">        for (int ix = 0; ix &lt; allChildren; ix++) {</span>
-<span class="fc" id="L343">            Node n = result.jjtGetChild(ix);</span>
-<span class="fc bfc" id="L344" title="All 2 branches covered.">            if (n instanceof ASTSwitchLabel) {</span>
-<span class="fc" id="L345">                label = (ASTSwitchLabel) n;</span>
-<span class="fc bfc" id="L346" title="All 2 branches covered.">            } else if (n.equals(lastNode)) {</span>
-<span class="fc" id="L347">                result = label;</span>
-<span class="fc" id="L348">                break;</span>
+<span class="fc" id="L343">        int allChildren = parentNode.jjtGetNumChildren();</span>
+<span class="fc" id="L344">        Node result = parentNode;</span>
+<span class="fc" id="L345">        ASTSwitchLabel label = null;</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        for (int ix = 0; ix &lt; allChildren; ix++) {</span>
+<span class="fc" id="L347">            Node n = result.jjtGetChild(ix);</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">            if (n instanceof ASTSwitchLabel) {</span>
+<span class="fc" id="L349">                label = (ASTSwitchLabel) n;</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">            } else if (n.equals(lastNode)) {</span>
+<span class="fc" id="L351">                result = label;</span>
+<span class="fc" id="L352">                break;</span>
             }
         }
-<span class="fc" id="L351">        return result;</span>
+<span class="fc" id="L355">        return result;</span>
     }
 
     /**
@@ -356,31 +360,31 @@ public class ConsecutiveLiteralAppendsRule extends AbstractJavaRule {
      * RuleViolation if it did
      */
     private void checkForViolation(Node node, Object data, int concurrentCount) {
-<span class="fc bfc" id="L359" title="All 2 branches covered.">        if (concurrentCount &gt; threshold) {</span>
-<span class="fc" id="L360">            String[] param = { String.valueOf(concurrentCount) };</span>
-<span class="fc" id="L361">            addViolation(data, node, param);</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">        if (concurrentCount &gt; threshold) {</span>
+<span class="fc" id="L364">            String[] param = { String.valueOf(concurrentCount) };</span>
+<span class="fc" id="L365">            addViolation(data, node, param);</span>
         }
-<span class="fc" id="L363">    }</span>
+<span class="fc" id="L367">    }</span>
 
     private boolean isAppendingStringLiteral(Node node) {
-<span class="fc" id="L366">        Node n = node;</span>
-<span class="pc bpc" id="L367" title="1 of 4 branches missed.">        while (n.jjtGetNumChildren() != 0 &amp;&amp; !(n instanceof ASTLiteral)) {</span>
-<span class="fc" id="L368">            n = n.jjtGetChild(0);</span>
+<span class="fc" id="L370">        Node n = node;</span>
+<span class="pc bpc" id="L371" title="1 of 4 branches missed.">        while (n.jjtGetNumChildren() != 0 &amp;&amp; !(n instanceof ASTLiteral)) {</span>
+<span class="fc" id="L372">            n = n.jjtGetChild(0);</span>
         }
-<span class="fc" id="L370">        return n instanceof ASTLiteral;</span>
+<span class="fc" id="L374">        return n instanceof ASTLiteral;</span>
     }
 
     private static boolean isStringBuffer(ASTVariableDeclaratorId node) {
 
-<span class="fc bfc" id="L375" title="All 2 branches covered.">        if (node.getType() != null) {</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">        if (node.getType() != null) {</span>
             // return node.getType().equals(StringBuffer.class);
-<span class="fc" id="L377">            return TypeHelper.isEither(node, StringBuffer.class, StringBuilder.class);</span>
+<span class="fc" id="L381">            return TypeHelper.isEither(node, StringBuffer.class, StringBuilder.class);</span>
         }
-<span class="fc" id="L379">        Node nn = node.getTypeNameNode();</span>
-<span class="pc bpc" id="L380" title="2 of 4 branches missed.">        if (nn == null || nn.jjtGetNumChildren() == 0) {</span>
-<span class="nc" id="L381">            return false;</span>
+<span class="fc" id="L383">        Node nn = node.getTypeNameNode();</span>
+<span class="pc bpc" id="L384" title="2 of 4 branches missed.">        if (nn == null || nn.jjtGetNumChildren() == 0) {</span>
+<span class="nc" id="L385">            return false;</span>
         }
-<span class="fc" id="L383">        return TypeHelper.isEither((TypeNode) nn.jjtGetChild(0), StringBuffer.class, StringBuilder.class);</span>
+<span class="fc" id="L387">        return TypeHelper.isEither((TypeNode) nn.jjtGetChild(0), StringBuffer.class, StringBuilder.class);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

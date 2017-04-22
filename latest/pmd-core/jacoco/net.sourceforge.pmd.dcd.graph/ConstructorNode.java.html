@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConstructorNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd.graph</a> &gt; <span class="el_source">ConstructorNode.java</span></div><h1>ConstructorNode.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.dcd.graph;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 
+import org.objectweb.asm.signature.SignatureReader;
+
 import net.sourceforge.pmd.dcd.ClassLoaderUtil;
 import net.sourceforge.pmd.dcd.asm.TypeSignatureVisitor;
-
-import org.objectweb.asm.signature.SignatureReader;
 
 /**
  * Represents a Class Constructor in a UsageGraph.
@@ -17,72 +18,84 @@ import org.objectweb.asm.signature.SignatureReader;
 @SuppressWarnings(&quot;PMD.OverrideBothEqualsAndHashcode&quot;)
 public class ConstructorNode extends MemberNode&lt;ConstructorNode, Constructor&lt;?&gt;&gt; {
 
-	private WeakReference&lt;Constructor&lt;?&gt;&gt; constructorReference;
+    private WeakReference&lt;Constructor&lt;?&gt;&gt; constructorReference;
 
-	public ConstructorNode(ClassNode classNode, String name, String desc) {
-<span class="nc" id="L23">		super(classNode, name, desc);</span>
-		// getMember();
-<span class="nc" id="L25">	}</span>
+    public ConstructorNode(ClassNode classNode, String name, String desc) {
+<span class="nc" id="L24">        super(classNode, name, desc);</span>
+        // getMember();
+<span class="nc" id="L26">    }</span>
 
-	public boolean isStaticInitializer() {
-<span class="nc" id="L28">		return ClassLoaderUtil.CLINIT.equals(name);</span>
-	}
+    public boolean isStaticInitializer() {
+<span class="nc" id="L29">        return ClassLoaderUtil.CLINIT.equals(name);</span>
+    }
 
-	public boolean isInstanceInitializer() {
-<span class="nc" id="L32">		return ClassLoaderUtil.INIT.equals(name);</span>
-	}
+    public boolean isInstanceInitializer() {
+<span class="nc" id="L33">        return ClassLoaderUtil.INIT.equals(name);</span>
+    }
 
-	public Constructor&lt;?&gt; getMember() {
-<span class="nc bnc" id="L36" title="All 2 branches missed.">		if (ClassLoaderUtil.CLINIT.equals(name)) {</span>
-<span class="nc" id="L37">			return null;</span>
-		} else {
-<span class="nc bnc" id="L39" title="All 2 branches missed.">			Constructor&lt;?&gt; constructor = constructorReference == null ? null : constructorReference.get();</span>
-<span class="nc bnc" id="L40" title="All 2 branches missed.">			if (constructor == null) {</span>
-<span class="nc" id="L41">				SignatureReader signatureReader = new SignatureReader(desc);</span>
-<span class="nc" id="L42">				TypeSignatureVisitor visitor = new TypeSignatureVisitor();</span>
-<span class="nc" id="L43">				signatureReader.accept(visitor);</span>
-<span class="nc" id="L44">				constructor = ClassLoaderUtil.getConstructor(super.getClassNode().getType(), name,</span>
-						visitor.getMethodParameterTypes());
-<span class="nc" id="L46">				constructorReference = new WeakReference&lt;Constructor&lt;?&gt;&gt;(constructor);</span>
-			}
-<span class="nc" id="L48">			return constructor;</span>
-		}
-	}
+    @Override
+    public Constructor&lt;?&gt; getMember() {
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (ClassLoaderUtil.CLINIT.equals(name)) {</span>
+<span class="nc" id="L39">            return null;</span>
+        } else {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">            Constructor&lt;?&gt; constructor = constructorReference == null ? null : constructorReference.get();</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">            if (constructor == null) {</span>
+<span class="nc" id="L43">                SignatureReader signatureReader = new SignatureReader(desc);</span>
+<span class="nc" id="L44">                TypeSignatureVisitor visitor = new TypeSignatureVisitor();</span>
+<span class="nc" id="L45">                signatureReader.accept(visitor);</span>
+<span class="nc" id="L46">                constructor = ClassLoaderUtil.getConstructor(super.getClassNode().getType(), name,</span>
+                        visitor.getMethodParameterTypes());
+<span class="nc" id="L48">                constructorReference = new WeakReference&lt;Constructor&lt;?&gt;&gt;(constructor);</span>
+            }
+<span class="nc" id="L50">            return constructor;</span>
+        }
+    }
 
-	public String toStringLong() {
-<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (ClassLoaderUtil.CLINIT.equals(name)) {</span>
-<span class="nc" id="L54">			return name;</span>
-		} else {
-<span class="nc" id="L56">			return super.toStringLong();</span>
-		}
-	}
+    @Override
+    public String toStringLong() {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (ClassLoaderUtil.CLINIT.equals(name)) {</span>
+<span class="nc" id="L57">            return name;</span>
+        } else {
+<span class="nc" id="L59">            return super.toStringLong();</span>
+        }
+    }
 
-	public int compareTo(ConstructorNode that) {
-		// Order by name
-<span class="nc" id="L62">		int cmp = this.getName().compareTo(that.getName());</span>
-<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (cmp == 0) {</span>
-			// Order by parameter list length
-<span class="nc" id="L65">			cmp = this.getMember().getParameterTypes().length - that.getMember().getParameterTypes().length;</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (cmp == 0) {</span>
-				// Order by parameter class name
-<span class="nc bnc" id="L68" title="All 2 branches missed.">				for (int i = 0; i &lt; this.getMember().getParameterTypes().length; i++) {</span>
-<span class="nc" id="L69">					cmp = this.getMember().getParameterTypes()[i].getName().compareTo(</span>
-							that.getMember().getParameterTypes()[i].getName());
-<span class="nc bnc" id="L71" title="All 2 branches missed.">					if (cmp != 0) {</span>
-<span class="nc" id="L72">						break;</span>
-					}
-				}
-			}
-		}
-<span class="nc" id="L77">		return cmp;</span>
-	}
+    @Override
+    public int compareTo(ConstructorNode that) {
+        // Order by name
+<span class="nc" id="L66">        int cmp = this.getName().compareTo(that.getName());</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (cmp == 0) {</span>
+            // Order by parameter list length
+<span class="nc" id="L69">            cmp = this.getMember().getParameterTypes().length - that.getMember().getParameterTypes().length;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">            if (cmp == 0) {</span>
+                // Order by parameter class name
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                for (int i = 0; i &lt; this.getMember().getParameterTypes().length; i++) {</span>
+<span class="nc" id="L73">                    cmp = this.getMember().getParameterTypes()[i].getName()</span>
+                            .compareTo(that.getMember().getParameterTypes()[i].getName());
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                    if (cmp != 0) {</span>
+<span class="nc" id="L76">                        break;</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L81">        return cmp;</span>
+    }
 
-	public boolean equals(Object obj) {
-<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (obj instanceof ConstructorNode) {</span>
-<span class="nc" id="L82">			ConstructorNode that = (ConstructorNode)obj;</span>
-<span class="nc" id="L83">			return super.equals(that);</span>
-		}
-<span class="nc" id="L85">		return false;</span>
-	}
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (obj instanceof ConstructorNode) {</span>
+<span class="nc" id="L87">            ConstructorNode that = (ConstructorNode) obj;</span>
+<span class="nc" id="L88">            return super.equals(that);</span>
+        }
+<span class="nc" id="L90">        return false;</span>
+    }
+
+    /* (non-Javadoc)
+     * @see net.sourceforge.pmd.dcd.graph.MemberNode#hashCode()
+     */
+    @Override
+    public int hashCode() {
+<span class="nc" id="L98">        return super.hashCode();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
