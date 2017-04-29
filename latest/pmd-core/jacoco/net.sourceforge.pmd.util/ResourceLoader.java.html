@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -23,21 +22,21 @@ public final class ResourceLoader {
     public static final int TIMEOUT;
 
     static {
-<span class="fc" id="L26">        int timeoutProperty = 5000;</span>
+<span class="fc" id="L25">        int timeoutProperty = 5000;</span>
         try {
-<span class="fc" id="L28">            timeoutProperty = Integer.parseInt(System.getProperty(&quot;net.sourceforge.pmd.http.timeout&quot;, &quot;5000&quot;));</span>
-<span class="nc" id="L29">        } catch (NumberFormatException e) {</span>
-<span class="nc" id="L30">            e.printStackTrace();</span>
-<span class="fc" id="L31">        }</span>
-<span class="fc" id="L32">        TIMEOUT = timeoutProperty;</span>
-<span class="fc" id="L33">    }</span>
+<span class="fc" id="L27">            timeoutProperty = Integer.parseInt(System.getProperty(&quot;net.sourceforge.pmd.http.timeout&quot;, &quot;5000&quot;));</span>
+<span class="nc" id="L28">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L29">            e.printStackTrace();</span>
+<span class="fc" id="L30">        }</span>
+<span class="fc" id="L31">        TIMEOUT = timeoutProperty;</span>
+<span class="fc" id="L32">    }</span>
 
     // Only static methods, so we shouldn't allow an instance to be created
     /**
      * Constructor for ResourceLoader.
      */
-<span class="nc" id="L39">    private ResourceLoader() {</span>
-<span class="nc" id="L40">    }</span>
+<span class="nc" id="L38">    private ResourceLoader() {</span>
+<span class="nc" id="L39">    }</span>
 
     /**
      * Method to find a file, first by finding it as a file (either by the
@@ -52,12 +51,12 @@ public final class ResourceLoader {
      * @throws RuleSetNotFoundException
      */
     public static InputStream loadResourceAsStream(String name) throws RuleSetNotFoundException {
-<span class="nc" id="L55">        InputStream stream = loadResourceAsStream(name, ResourceLoader.class.getClassLoader());</span>
-<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (stream == null) {</span>
-<span class="nc" id="L57">            throw new RuleSetNotFoundException(&quot;Can't find resource &quot; + name</span>
+<span class="nc" id="L54">        InputStream stream = loadResourceAsStream(name, ResourceLoader.class.getClassLoader());</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (stream == null) {</span>
+<span class="nc" id="L56">            throw new RuleSetNotFoundException(&quot;Can't find resource &quot; + name</span>
                     + &quot;. Make sure the resource is a valid file or URL or is on the CLASSPATH&quot;);
         }
-<span class="nc" id="L60">        return stream;</span>
+<span class="nc" id="L59">        return stream;</span>
     }
 
     /**
@@ -74,59 +73,44 @@ public final class ResourceLoader {
      * @throws RuleSetNotFoundException
      */
     public static InputStream loadResourceAsStream(String name, ClassLoader loader) throws RuleSetNotFoundException {
-<span class="fc" id="L77">        File file = new File(name);</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (file.exists()) {</span>
+<span class="fc" id="L76">        File file = new File(name);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (file.exists()) {</span>
             try {
-<span class="fc" id="L80">                return new FileInputStream(file);</span>
-<span class="nc" id="L81">            } catch (FileNotFoundException e) {</span>
+<span class="fc" id="L79">                return new FileInputStream(file);</span>
+<span class="nc" id="L80">            } catch (FileNotFoundException e) {</span>
                 // if the file didn't exist, we wouldn't be here
-<span class="nc" id="L83">            }</span>
+<span class="nc" id="L82">            }</span>
         } else {
             try {
-<span class="fc" id="L86">                HttpURLConnection connection = (HttpURLConnection) new URL(name).openConnection();</span>
-<span class="fc" id="L87">                connection.setConnectTimeout(TIMEOUT);</span>
-<span class="fc" id="L88">                connection.setReadTimeout(TIMEOUT);</span>
-<span class="fc" id="L89">                return connection.getInputStream();</span>
-<span class="fc" id="L90">            } catch (Exception e) {</span>
+<span class="fc" id="L85">                HttpURLConnection connection = (HttpURLConnection) new URL(name).openConnection();</span>
+<span class="fc" id="L86">                connection.setConnectTimeout(TIMEOUT);</span>
+<span class="fc" id="L87">                connection.setReadTimeout(TIMEOUT);</span>
+<span class="fc" id="L88">                return connection.getInputStream();</span>
+<span class="fc" id="L89">            } catch (Exception e) {</span>
                 try {
                     /*
                      * Don't use getResourceAsStream to void reusing connections between threads
                      * See https://github.com/pmd/pmd/issues/234
                      */
-<span class="fc" id="L96">                    URL resource = loader.getResource(name);</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">                    if (resource == null) {</span>
+<span class="fc" id="L95">                    URL resource = loader.getResource(name);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                    if (resource == null) {</span>
                         // Don't throw RuleSetNotFoundException, keep API compatibility
-<span class="fc" id="L99">                        return null;</span>
+<span class="fc" id="L98">                        return null;</span>
                     } else {
-<span class="fc" id="L101">                        final URLConnection connection = resource.openConnection();</span>
-<span class="fc" id="L102">                        final InputStream inputStream = connection.getInputStream();</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                        if (connection instanceof JarURLConnection) {</span>
-                            // Wrap the InputStream to also close the underlying JarFile if from a JarURLConnection.
-                            // See https://github.com/pmd/pmd/issues/337
-<span class="nc" id="L106">                            return new InputStream() {</span>
-                                @Override
-                                public int read() throws IOException {
-<span class="nc" id="L109">                                    return inputStream.read();</span>
-                                }
-
-                                @Override
-                                public void close() throws IOException {
-<span class="nc" id="L114">                                    inputStream.close();</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">                                    if (connection instanceof JarURLConnection) {</span>
-<span class="nc" id="L116">                                        ((JarURLConnection) connection).getJarFile().close();</span>
-                                    }
-<span class="nc" id="L118">                                }</span>
-                            };
-                        } else {
-<span class="fc" id="L121">                            return inputStream;</span>
-                        }
+<span class="fc" id="L100">                        final URLConnection connection = resource.openConnection();</span>
+                        // This avoids reusing the underlaying file, if the resource is loaded from a Jar file.
+                        // The file is closed with the input stream then thus not leaving a leaked resource behind.
+                        // See https://github.com/pmd/pmd/issues/364 and https://github.com/pmd/pmd/issues/337
+<span class="fc" id="L104">                        connection.setUseCaches(false);</span>
+<span class="fc" id="L105">                        final InputStream inputStream = connection.getInputStream();</span>
+<span class="fc" id="L106">                        return inputStream;</span>
                     }
-<span class="nc" id="L124">                } catch (IOException e1) {</span>
+<span class="nc" id="L108">                } catch (IOException e1) {</span>
                     // Ignored
                 }
             }
         }
-<span class="nc" id="L129">        throw new RuleSetNotFoundException(&quot;Can't find resource &quot; + name</span>
+<span class="nc" id="L113">        throw new RuleSetNotFoundException(&quot;Can't find resource &quot; + name</span>
                 + &quot;. Make sure the resource is a valid file or URL or is on the CLASSPATH&quot;);
     }
 }
