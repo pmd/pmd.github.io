@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceCodePanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.viewer.gui</a> &gt; <span class="el_source">SourceCodePanel.java</span></div><h1>SourceCodePanel.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.util.viewer.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.util.viewer.model.ViewerModel;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelEvent;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelListener;
+import net.sourceforge.pmd.util.viewer.util.NLS;
+
+/**
+ * source code panel
+ *
+ * @author Boris Gruschko ( boris at gruschko.org )
+ * @version $Id$
+ */
+
+public class SourceCodePanel extends JPanel implements ViewerModelListener {
+
+    private ViewerModel model;
+    private JTextArea sourceCodeArea;
+
+<span class="nc" id="L36">    private static final Color HIGHLIGHT_COLOR = new Color(79, 237, 111);</span>
+
+<span class="nc" id="L38">    public SourceCodePanel(ViewerModel model) {</span>
+<span class="nc" id="L39">        this.model = model;</span>
+<span class="nc" id="L40">        init();</span>
+<span class="nc" id="L41">    }</span>
+
+    private void init() {
+<span class="nc" id="L44">        model.addViewerModelListener(this);</span>
+<span class="nc" id="L45">        setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), NLS.nls(&quot;SOURCE.PANEL.TITLE&quot;)));</span>
+<span class="nc" id="L46">        setLayout(new BorderLayout());</span>
+<span class="nc" id="L47">        sourceCodeArea = new JTextArea();</span>
+<span class="nc" id="L48">        add(new JScrollPane(sourceCodeArea), BorderLayout.CENTER);</span>
+<span class="nc" id="L49">    }</span>
+
+    /**
+     * retrieves the string representation of the source code
+     *
+     * @return source code's string representation
+     */
+    public String getSourceCode() {
+<span class="nc" id="L57">        return sourceCodeArea.getText();</span>
+    }
+
+    /**
+     * @see ViewerModelListener#viewerModelChanged(ViewerModelEvent)
+     */
+    @Override
+    public void viewerModelChanged(ViewerModelEvent e) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (e.getReason() == ViewerModelEvent.NODE_SELECTED) {</span>
+<span class="nc" id="L66">            final Node node = (Node) e.getParameter();</span>
+<span class="nc" id="L67">            SwingUtilities.invokeLater(new Runnable() {</span>
+                @Override
+                public void run() {
+                    try {
+<span class="nc" id="L71">                        sourceCodeArea.getHighlighter().removeAllHighlights();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                        if (node == null) {</span>
+<span class="nc" id="L73">                            return;</span>
+                        }
+<span class="nc" id="L75">                        int startOffset = sourceCodeArea.getLineStartOffset(node.getBeginLine() - 1)</span>
+                                + node.getBeginColumn() - 1;
+<span class="nc" id="L77">                        int end = sourceCodeArea.getLineStartOffset(node.getEndLine() - 1) + node.getEndColumn();</span>
+<span class="nc" id="L78">                        sourceCodeArea.getHighlighter().addHighlight(startOffset, end,</span>
+                                new DefaultHighlighter.DefaultHighlightPainter(HIGHLIGHT_COLOR));
+<span class="nc" id="L80">                        sourceCodeArea.moveCaretPosition(startOffset);</span>
+<span class="nc" id="L81">                    } catch (BadLocationException exc) {</span>
+<span class="nc" id="L82">                        throw new IllegalStateException(exc.getMessage());</span>
+<span class="nc" id="L83">                    }</span>
+<span class="nc" id="L84">                }</span>
+            });
+        }
+<span class="nc" id="L87">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

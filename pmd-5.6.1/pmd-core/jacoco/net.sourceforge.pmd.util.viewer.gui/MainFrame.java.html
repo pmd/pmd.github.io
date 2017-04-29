@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MainFrame.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.viewer.gui</a> &gt; <span class="el_source">MainFrame.java</span></div><h1>MainFrame.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.util.viewer.gui;
+
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSplitPane;
+import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.ast.ParseException;
+import net.sourceforge.pmd.util.viewer.model.ViewerModel;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelEvent;
+import net.sourceforge.pmd.util.viewer.model.ViewerModelListener;
+import net.sourceforge.pmd.util.viewer.util.NLS;
+
+/**
+ * viewer's main frame
+ *
+ * @author Boris Gruschko ( boris at gruschko.org )
+ */
+
+public class MainFrame extends JFrame implements ActionListener, ViewerModelListener {
+    private ViewerModel model;
+    private SourceCodePanel sourcePanel;
+    private XPathPanel xPathPanel;
+    private JButton evalBtn;
+    private JLabel statusLbl;
+    private JRadioButtonMenuItem jdk13MenuItem;
+    private JRadioButtonMenuItem jdk14MenuItem;
+    private JRadioButtonMenuItem jdk15MenuItem; // NOPMD
+    private JRadioButtonMenuItem jdk16MenuItem;
+    private JRadioButtonMenuItem jdk17MenuItem;
+    private JRadioButtonMenuItem plsqlMenuItem;
+
+    /**
+     * constructs and shows the frame
+     */
+    public MainFrame() {
+<span class="nc" id="L56">        super(NLS.nls(&quot;MAIN.FRAME.TITLE&quot;) + &quot; (v &quot; + PMD.VERSION + ')');</span>
+<span class="nc" id="L57">        init();</span>
+<span class="nc" id="L58">    }</span>
+
+    private void init() {
+<span class="nc" id="L61">        model = new ViewerModel();</span>
+<span class="nc" id="L62">        model.addViewerModelListener(this);</span>
+<span class="nc" id="L63">        sourcePanel = new SourceCodePanel(model);</span>
+<span class="nc" id="L64">        ASTPanel astPanel = new ASTPanel(model);</span>
+<span class="nc" id="L65">        xPathPanel = new XPathPanel(model);</span>
+<span class="nc" id="L66">        getContentPane().setLayout(new BorderLayout());</span>
+<span class="nc" id="L67">        JSplitPane editingPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sourcePanel, astPanel);</span>
+<span class="nc" id="L68">        editingPane.setResizeWeight(0.5d);</span>
+<span class="nc" id="L69">        JPanel interactionsPane = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L70">        interactionsPane.add(xPathPanel, BorderLayout.SOUTH);</span>
+<span class="nc" id="L71">        interactionsPane.add(editingPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L72">        getContentPane().add(interactionsPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L73">        JButton compileBtn = new JButton(NLS.nls(&quot;MAIN.FRAME.COMPILE_BUTTON.TITLE&quot;));</span>
+<span class="nc" id="L74">        compileBtn.setActionCommand(ActionCommands.COMPILE_ACTION);</span>
+<span class="nc" id="L75">        compileBtn.addActionListener(this);</span>
+<span class="nc" id="L76">        evalBtn = new JButton(NLS.nls(&quot;MAIN.FRAME.EVALUATE_BUTTON.TITLE&quot;));</span>
+<span class="nc" id="L77">        evalBtn.setActionCommand(ActionCommands.EVALUATE_ACTION);</span>
+<span class="nc" id="L78">        evalBtn.addActionListener(this);</span>
+<span class="nc" id="L79">        evalBtn.setEnabled(false);</span>
+<span class="nc" id="L80">        statusLbl = new JLabel();</span>
+<span class="nc" id="L81">        statusLbl.setHorizontalAlignment(SwingConstants.RIGHT);</span>
+<span class="nc" id="L82">        JPanel btnPane = new JPanel(new FlowLayout(FlowLayout.LEFT));</span>
+<span class="nc" id="L83">        btnPane.add(compileBtn);</span>
+<span class="nc" id="L84">        btnPane.add(evalBtn);</span>
+<span class="nc" id="L85">        btnPane.add(statusLbl);</span>
+<span class="nc" id="L86">        getContentPane().add(btnPane, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L88">        JMenuBar menuBar = new JMenuBar();</span>
+<span class="nc" id="L89">        JMenu menu = new JMenu(&quot;Language&quot;);</span>
+<span class="nc" id="L90">        ButtonGroup group = new ButtonGroup();</span>
+<span class="nc" id="L91">        jdk13MenuItem = new JRadioButtonMenuItem(&quot;JDK 1.3&quot;);</span>
+<span class="nc" id="L92">        jdk13MenuItem.setSelected(false);</span>
+<span class="nc" id="L93">        group.add(jdk13MenuItem);</span>
+<span class="nc" id="L94">        menu.add(jdk13MenuItem);</span>
+<span class="nc" id="L95">        jdk14MenuItem = new JRadioButtonMenuItem(&quot;JDK 1.4&quot;);</span>
+<span class="nc" id="L96">        jdk14MenuItem.setSelected(true);</span>
+<span class="nc" id="L97">        group.add(jdk14MenuItem);</span>
+<span class="nc" id="L98">        menu.add(jdk14MenuItem);</span>
+<span class="nc" id="L99">        jdk15MenuItem = new JRadioButtonMenuItem(&quot;JDK 1.5&quot;);</span>
+<span class="nc" id="L100">        jdk15MenuItem.setSelected(false);</span>
+<span class="nc" id="L101">        group.add(jdk15MenuItem);</span>
+<span class="nc" id="L102">        menu.add(jdk15MenuItem);</span>
+<span class="nc" id="L103">        jdk16MenuItem = new JRadioButtonMenuItem(&quot;JDK 1.6&quot;);</span>
+<span class="nc" id="L104">        jdk16MenuItem.setSelected(false);</span>
+<span class="nc" id="L105">        group.add(jdk16MenuItem);</span>
+<span class="nc" id="L106">        menu.add(jdk16MenuItem);</span>
+<span class="nc" id="L107">        jdk17MenuItem = new JRadioButtonMenuItem(&quot;JDK 1.7&quot;);</span>
+<span class="nc" id="L108">        jdk17MenuItem.setSelected(false);</span>
+<span class="nc" id="L109">        group.add(jdk17MenuItem);</span>
+<span class="nc" id="L110">        menu.add(jdk17MenuItem);</span>
+        // PLSQL
+<span class="nc" id="L112">        plsqlMenuItem = new JRadioButtonMenuItem(&quot;PLSQL&quot;);</span>
+<span class="nc" id="L113">        plsqlMenuItem.setSelected(false);</span>
+<span class="nc" id="L114">        group.add(plsqlMenuItem);</span>
+<span class="nc" id="L115">        menu.add(plsqlMenuItem);</span>
+<span class="nc" id="L116">        menuBar.add(menu);</span>
+<span class="nc" id="L117">        setJMenuBar(menuBar);</span>
+
+<span class="nc" id="L119">        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L120">        pack();</span>
+<span class="nc" id="L121">        setSize(800, 600);</span>
+<span class="nc" id="L122">        setVisible(true);</span>
+<span class="nc" id="L123">    }</span>
+
+    private LanguageVersion getLanguageVersion() {
+<span class="nc" id="L126">        String javaName = &quot;Java&quot;;</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (jdk14MenuItem.isSelected()) {</span>
+<span class="nc" id="L129">            return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.4&quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        } else if (jdk13MenuItem.isSelected()) {</span>
+<span class="nc" id="L131">            return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.3&quot;);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        } else if (jdk15MenuItem.isSelected()) {</span>
+<span class="nc" id="L133">            return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.5&quot;);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        } else if (jdk16MenuItem.isSelected()) {</span>
+<span class="nc" id="L135">            return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.6&quot;);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        } else if (jdk17MenuItem.isSelected()) {</span>
+<span class="nc" id="L137">            return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.7&quot;);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        } else if (plsqlMenuItem.isSelected()) {</span>
+<span class="nc" id="L139">            return LanguageRegistry.getLanguage(&quot;PLSQL&quot;).getDefaultVersion();</span>
+        }
+<span class="nc" id="L141">        return LanguageRegistry.getLanguage(javaName).getVersion(&quot;1.5&quot;);</span>
+    }
+
+    /**
+     * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+     */
+    @Override
+    public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L149">        String command = e.getActionCommand();</span>
+        long t0;
+        long t1;
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if (ActionCommands.COMPILE_ACTION.equals(command)) {</span>
+            try {
+<span class="nc" id="L154">                t0 = System.currentTimeMillis();</span>
+<span class="nc" id="L155">                model.commitSource(sourcePanel.getSourceCode(), getLanguageVersion());</span>
+<span class="nc" id="L156">                t1 = System.currentTimeMillis();</span>
+<span class="nc" id="L157">                setStatus(NLS.nls(&quot;MAIN.FRAME.COMPILATION.TOOK&quot;) + &quot; &quot; + (t1 - t0) + &quot; ms&quot;);</span>
+<span class="nc" id="L158">            } catch (ParseException exc) {</span>
+<span class="nc" id="L159">                setStatus(NLS.nls(&quot;MAIN.FRAME.COMPILATION.PROBLEM&quot;) + &quot; &quot; + exc.toString());</span>
+<span class="nc" id="L160">                new ParseExceptionHandler(this, exc);</span>
+<span class="nc" id="L161">            }</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        } else if (ActionCommands.EVALUATE_ACTION.equals(command)) {</span>
+            try {
+<span class="nc" id="L164">                t0 = System.currentTimeMillis();</span>
+<span class="nc" id="L165">                model.evaluateXPathExpression(xPathPanel.getXPathExpression(), this);</span>
+<span class="nc" id="L166">                t1 = System.currentTimeMillis();</span>
+<span class="nc" id="L167">                setStatus(NLS.nls(&quot;MAIN.FRAME.EVALUATION.TOOK&quot;) + &quot; &quot; + (t1 - t0) + &quot; ms&quot;);</span>
+<span class="nc" id="L168">            } catch (Exception exc) {</span>
+<span class="nc" id="L169">                setStatus(NLS.nls(&quot;MAIN.FRAME.EVALUATION.PROBLEM&quot;) + &quot; &quot; + exc.toString());</span>
+<span class="nc" id="L170">                new ParseExceptionHandler(this, exc);</span>
+<span class="nc" id="L171">            }</span>
+        }
+<span class="nc" id="L173">    }</span>
+
+    /**
+     * Sets the status bar message
+     *
+     * @param string
+     *            the new status, the empty string will be set if the value is
+     *            &lt;code&gt;null&lt;/code&gt;
+     */
+    private void setStatus(String string) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">        statusLbl.setText(string == null ? &quot;&quot; : string);</span>
+<span class="nc" id="L184">    }</span>
+
+    /**
+     * @see ViewerModelListener#viewerModelChanged(ViewerModelEvent)
+     */
+    @Override
+    public void viewerModelChanged(ViewerModelEvent e) {
+<span class="nc" id="L191">        evalBtn.setEnabled(model.hasCompiledTree());</span>
+<span class="nc" id="L192">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

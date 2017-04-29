@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SourceFileScope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">SourceFileScope.java</span></div><h1>SourceFileScope.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import net.sourceforge.pmd.lang.symboltable.AbstractScope;
+import net.sourceforge.pmd.lang.symboltable.Applier;
+import net.sourceforge.pmd.lang.symboltable.ImageFinderFunction;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+public class SourceFileScope extends AbstractScope {
+
+    private String packageImage;
+
+    public SourceFileScope() {
+<span class="fc" id="L18">        this(&quot;&quot;);</span>
+<span class="fc" id="L19">    }</span>
+
+<span class="fc" id="L21">    public SourceFileScope(String image) {</span>
+<span class="fc" id="L22">        this.packageImage = image;</span>
+<span class="fc" id="L23">    }</span>
+
+    public String getPackageName() {
+<span class="nc" id="L26">        return packageImage;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws IllegalArgumentException
+     *             if declaration is not a {@link ClassNameDeclaration}
+     */
+    @Override
+    public void addDeclaration(NameDeclaration declaration) {
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (!(declaration instanceof ClassNameDeclaration)) {</span>
+<span class="nc" id="L38">            throw new IllegalArgumentException(&quot;A SourceFileScope can only contain classes.&quot;);</span>
+        }
+<span class="fc" id="L40">        super.addDeclaration(declaration);</span>
+<span class="fc" id="L41">    }</span>
+
+    public String toString() {
+<span class="nc" id="L44">        return &quot;SourceFileScope: &quot; + getDeclarations().keySet();</span>
+    }
+
+    protected NameDeclaration findVariableHere(NameOccurrence occ) {
+<span class="nc" id="L48">        ImageFinderFunction finder = new ImageFinderFunction(occ.getImage());</span>
+<span class="nc" id="L49">        Applier.apply(finder, getDeclarations().keySet().iterator());</span>
+<span class="nc" id="L50">        return finder.getDecl();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

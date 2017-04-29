@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractEnumeratedProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">AbstractEnumeratedProperty.java</span></div><h1>AbstractEnumeratedProperty.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.rule.properties;
+
+import java.util.Map;
+
+import net.sourceforge.pmd.util.CollectionUtil;
+
+/**
+ * @author Brian Remedios
+ * @param &lt;T&gt;
+ */
+public abstract class AbstractEnumeratedProperty&lt;E, T&gt; extends AbstractProperty&lt;T&gt; {
+
+    protected Map&lt;String, E&gt; choicesByLabel;
+    protected Map&lt;E, String&gt; labelsByChoice;
+
+    private String[] orderedLabels;
+    protected Object[][] choices;
+
+    /**
+     * @param theName
+     * @param theDescription
+     * @param theLabels
+     * @param theChoices
+     * @param choiceIndices
+     * @param theUIOrder
+     * @param isMulti
+     * @throws IllegalArgumentException
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public AbstractEnumeratedProperty(String theName, String theDescription, String[] theLabels, E[] theChoices,
+            int[] choiceIndices, float theUIOrder, boolean isMulti) {
+<span class="fc" id="L36">        super(theName, theDescription, (T) selectionsIn(theLabels, choiceIndices, isMulti), theUIOrder);</span>
+
+<span class="fc" id="L38">        choicesByLabel = CollectionUtil.mapFrom(theLabels, theChoices);</span>
+<span class="fc" id="L39">        labelsByChoice = CollectionUtil.invertedMapFrom(choicesByLabel);</span>
+<span class="fc" id="L40">        orderedLabels = theLabels;</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Method selectionsIn.
+     *
+     * @param items
+     *            String[]
+     * @param selectionIndices
+     *            int[]
+     * @param isMulti
+     *            boolean
+     * @return Object
+     */
+    private static Object selectionsIn(String[] items, int[] selectionIndices, boolean isMulti) {
+<span class="fc" id="L55">        String[] selections = new String[selectionIndices.length];</span>
+<span class="fc" id="L56">        final int maxIdx = items.length - 1;</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (int i = 0; i &lt; selections.length; i++) {</span>
+<span class="pc bpc" id="L58" title="1 of 4 branches missed.">            if (i &lt; 0 || i &gt; maxIdx) {</span>
+<span class="fc" id="L59">                throw new IllegalArgumentException(&quot;Invalid item index: &quot; + i);</span>
+            }
+<span class="fc" id="L61">            selections[i] = items[selectionIndices[i]];</span>
+        }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        return isMulti ? selections : selections[0];</span>
+    }
+
+    /**
+     * @return String
+     */
+    @Override
+    protected String defaultAsString() {
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        return isMultiValue() ? (String) defaultValue() : asDelimitedString(defaultValue(), '|');</span>
+    }
+
+    /**
+     * Method nonLegalValueMsgFor.
+     *
+     * @param value
+     *            Object
+     * @return String
+     */
+    protected String nonLegalValueMsgFor(Object value) {
+<span class="fc" id="L83">        return value + &quot; is not a legal value&quot;;</span>
+    }
+
+    /**
+     * Method choiceFrom.
+     *
+     * @param label
+     *            String
+     * @return E
+     */
+    protected E choiceFrom(String label) {
+<span class="fc" id="L94">        E result = choicesByLabel.get(label);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (result != null) {</span>
+<span class="fc" id="L96">            return result;</span>
+        }
+<span class="nc" id="L98">        throw new IllegalArgumentException(label);</span>
+    }
+
+    /**
+     * @see net.sourceforge.pmd.PropertyDescriptor#choices()
+     */
+    @Override
+    public Object[][] choices() {
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (choices != null) {</span>
+<span class="nc" id="L108">            return choices;</span>
+        }
+
+<span class="nc" id="L111">        choices = new Object[orderedLabels.length][2];</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        for (int i = 0; i &lt; choices.length; i++) {</span>
+<span class="nc" id="L114">            choices[i][0] = orderedLabels[i];</span>
+<span class="nc" id="L115">            choices[i][1] = choicesByLabel.get(orderedLabels[i]);</span>
+        }
+<span class="nc" id="L117">        orderedLabels = null; // no longer needed</span>
+<span class="nc" id="L118">        return choices;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

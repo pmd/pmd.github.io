@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexSharingViolationsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexSharingViolationsRule.java</span></div><h1>ApexSharingViolationsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.util.List;
+import java.util.WeakHashMap;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTModifierNode;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+import apex.jorje.semantic.ast.modifier.OldModifiers.ModifierType;
+import apex.jorje.semantic.symbol.type.ModifierOrAnnotationTypeInfo;
+
+/**
+ * Finds Apex class that do not define sharing
+ * 
+ * @author sergey.gorbaty
+ */
+public class ApexSharingViolationsRule extends AbstractApexRule {
+
+<span class="fc" id="L26">    private WeakHashMap&lt;ApexNode&lt;?&gt;, Object&gt; localCacheOfReportedNodes = new WeakHashMap&lt;&gt;();</span>
+
+<span class="fc" id="L28">    public ApexSharingViolationsRule() {</span>
+<span class="fc" id="L29">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L30">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L31">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public Object visit(ASTUserClass node, Object data) {
+
+<span class="pc bpc" id="L37" title="1 of 4 branches missed.">        if (Helper.isTestMethodOrClass(node) || Helper.isSystemLevelClass(node)) {</span>
+<span class="fc" id="L38">            return data; // stops all the rules</span>
+        }
+
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (!Helper.isTestMethodOrClass(node)) {</span>
+<span class="fc" id="L42">            boolean sharingFound = isSharingPresent(node);</span>
+<span class="fc" id="L43">            checkForSharingDeclaration(node, data, sharingFound);</span>
+<span class="fc" id="L44">            checkForDatabaseMethods(node, data, sharingFound);</span>
+        }
+
+<span class="fc" id="L47">        localCacheOfReportedNodes.clear();</span>
+<span class="fc" id="L48">        return data;</span>
+    }
+
+    /**
+     * Check if class contains any Database.query / Database.insert [ Database.*
+     * ] methods
+     * 
+     * @param node
+     * @param data
+     */
+    private void checkForDatabaseMethods(ASTUserClass node, Object data, boolean sharingFound) {
+<span class="fc" id="L59">        List&lt;ASTMethodCallExpression&gt; calls = node.findDescendantsOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (ASTMethodCallExpression call : calls) {</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">            if (Helper.isMethodName(call, &quot;Database&quot;, Helper.ANY_METHOD)) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                if (!sharingFound) {</span>
+<span class="fc" id="L63">                    reportViolation(node, data);</span>
+                }
+            }
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">    }</span>
+
+    private void reportViolation(ApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L70">        ASTModifierNode modifier = node.getFirstChildOfType(ASTModifierNode.class);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (modifier != null) {</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">            if (localCacheOfReportedNodes.put(modifier, data) == null) {</span>
+<span class="fc" id="L73">                addViolation(data, modifier);</span>
+            }
+        } else {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (localCacheOfReportedNodes.put(node, data) == null) {</span>
+<span class="nc" id="L77">                addViolation(data, node);</span>
+            }
+        }
+<span class="fc" id="L80">    }</span>
+
+    /**
+     * Check if class has no sharing declared
+     * 
+     * @param node
+     * @param data
+     */
+    private void checkForSharingDeclaration(ApexNode&lt;?&gt; node, Object data, boolean sharingFound) {
+<span class="fc bfc" id="L89" title="All 4 branches covered.">        final boolean foundAnyDMLorSOQL = Helper.foundAnyDML(node) || Helper.foundAnySOQLorSOSL(node);</span>
+<span class="pc bpc" id="L90" title="1 of 6 branches missed.">        if (!sharingFound &amp;&amp; !Helper.isTestMethodOrClass(node) &amp;&amp; foundAnyDMLorSOQL) {</span>
+<span class="fc" id="L91">            reportViolation(node, data);</span>
+        }
+<span class="fc" id="L93">    }</span>
+
+    /**
+     * Does class have sharing keyword declared?
+     * 
+     * @param node
+     * @return
+     */
+    private boolean isSharingPresent(ApexNode&lt;?&gt; node) {
+<span class="fc" id="L102">        boolean sharingFound = false;</span>
+
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (ModifierOrAnnotationTypeInfo type : node.getNode().getDefiningType().getModifiers().all()) {</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (type.getBytecodeName().equalsIgnoreCase(ModifierType.WithoutSharing.toString())) {</span>
+<span class="fc" id="L106">                sharingFound = true;</span>
+<span class="fc" id="L107">                break;</span>
+            }
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (type.getBytecodeName().equalsIgnoreCase(ModifierType.WithSharing.toString())) {</span>
+<span class="fc" id="L110">                sharingFound = true;</span>
+<span class="fc" id="L111">                break;</span>
+            }
+
+<span class="fc" id="L114">        }</span>
+<span class="fc" id="L115">        return sharingFound;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

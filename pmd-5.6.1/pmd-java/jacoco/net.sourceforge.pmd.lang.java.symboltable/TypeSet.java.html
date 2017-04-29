@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TypeSet.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">TypeSet.java</span></div><h1>TypeSet.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import net.sourceforge.pmd.lang.java.typeresolution.PMDASMClassLoader;
+import net.sourceforge.pmd.util.ClasspathClassLoader;
+
+/**
+ * Keeps track of the types encountered in a ASTCompilationUnit
+ */
+public class TypeSet {
+
+    private final PMDASMClassLoader pmdClassLoader;
+    private boolean hasAuxclasspath;
+    private String pkg;
+<span class="fc" id="L27">    private Set&lt;String&gt; imports = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L28">    private List&lt;Resolver&gt; resolvers = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * The {@link TypeSet} provides type resolution for the symbol facade.
+     */
+    public TypeSet() {
+<span class="fc" id="L34">        this(TypeSet.class.getClassLoader());</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * The {@link TypeSet} provides type resolution for the symbol facade.
+     * 
+     * @param classLoader
+     *            the class loader to use to search classes (could be an
+     *            auxiliary class path)
+     */
+<span class="fc" id="L44">    public TypeSet(ClassLoader classLoader) {</span>
+<span class="fc" id="L45">        ClassLoader cl = classLoader;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (cl == null) {</span>
+<span class="fc" id="L47">            cl = TypeSet.class.getClassLoader();</span>
+        }
+<span class="fc" id="L49">        hasAuxclasspath = cl instanceof ClasspathClassLoader;</span>
+<span class="fc" id="L50">        pmdClassLoader = PMDASMClassLoader.getInstance(cl);</span>
+<span class="fc" id="L51">    }</span>
+
+    /**
+     * Whether the classloader is using the auxclasspath or not.
+     * 
+     * @return &lt;code&gt;true&lt;/code&gt; if the classloader is using the auxclasspath
+     *         feature
+     */
+    public boolean hasAuxclasspath() {
+<span class="fc" id="L60">        return hasAuxclasspath;</span>
+    }
+
+    /**
+     * A resolver that can resolve a class by name. The name can be a simple
+     * name or a fully qualified name.
+     */
+    // TODO should Resolver provide a canResolve() and a resolve()? Requiring 2
+    // calls seems clunky... but so does this throwing an exception for flow
+    // control...
+    public interface Resolver {
+        /**
+         * Resolve the class by the given name
+         *
+         * @param name
+         *            the name of the class, might be fully classified or not.
+         * @return the class
+         * @throws ClassNotFoundException
+         *             if the class couldn't be found
+         */
+        Class&lt;?&gt; resolve(String name) throws ClassNotFoundException;
+
+        /**
+         * Checks if the given class could be resolved by this resolver. Notice,
+         * that a resolver's ability to resolve a class does not imply that the
+         * class will actually be found and resolved.
+         * 
+         * @param name
+         *            the name of the class, might be fully classified or not.
+         * @return whether the class can be resolved
+         */
+        boolean couldResolve(String name);
+    }
+
+    /**
+     * Base Resolver class that support a {@link PMDASMClassLoader} class
+     * loader.
+     */
+    public abstract static class AbstractResolver implements Resolver {
+        /** the class loader. */
+        protected final PMDASMClassLoader pmdClassLoader;
+        private final Map&lt;String, String&gt; classNames;
+
+        /**
+         * Creates a new AbstractResolver that uses the given class loader.
+         * 
+         * @param pmdClassLoader
+         *            the class loader to use
+         */
+<span class="fc" id="L109">        public AbstractResolver(final PMDASMClassLoader pmdClassLoader) {</span>
+<span class="fc" id="L110">            this.pmdClassLoader = pmdClassLoader;</span>
+<span class="fc" id="L111">            classNames = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L112">        }</span>
+
+        /**
+         * Resolves the given class name with the given FQCN, considering it may
+         * be an inner class.
+         *
+         * @param name
+         *            The name of the class to load.
+         * @param fqName
+         *            The proposed FQCN for the class.
+         * @return The matched class or null if not found.
+         */
+        protected Class&lt;?&gt; resolveMaybeInner(final String name, final String fqName) {
+            // Do we know the actual class name?
+<span class="fc" id="L126">            final String className = classNames.get(name);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">            if (className != null) {</span>
+                try {
+<span class="fc" id="L129">                    return pmdClassLoader.loadClass(className);</span>
+<span class="nc" id="L130">                } catch (final ClassNotFoundException e) {</span>
+                    // Ignored, can never actually happen
+                }
+            }
+
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            if (fqName != null) {</span>
+<span class="fc" id="L136">                final StringBuilder sb = new StringBuilder(fqName);</span>
+<span class="fc" id="L137">                String actualClassName = fqName;</span>
+                // We have a FQCN, but it may be an inner class, so we have to
+                // brute force our way...
+                do {
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                    if (pmdClassLoader.couldResolve(actualClassName)) {</span>
+                        try {
+<span class="fc" id="L143">                            final Class&lt;?&gt; c = pmdClassLoader.loadClass(actualClassName);</span>
+                            // Update the mapping
+<span class="fc" id="L145">                            classNames.put(name, actualClassName);</span>
+<span class="fc" id="L146">                            return c;</span>
+<span class="fc" id="L147">                        } catch (final ClassNotFoundException e) {</span>
+                            // Ignored
+                        }
+                    }
+
+                    // Check if the last segment is an inner class
+<span class="fc" id="L153">                    final int lastDot = actualClassName.lastIndexOf('.');</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">                    if (lastDot == -1) {</span>
+<span class="fc" id="L155">                        break;</span>
+                    }
+
+<span class="fc" id="L158">                    sb.setCharAt(lastDot, '$');</span>
+<span class="fc" id="L159">                    actualClassName = sb.toString();</span>
+<span class="fc" id="L160">                } while (true);</span>
+            }
+
+<span class="fc" id="L163">            return null;</span>
+        }
+
+        public boolean couldResolve(final String name) {
+            /*
+             * Resolvers based on this one, will attempt to load the class from
+             * the class loader, so ask him
+             */
+<span class="nc bnc" id="L171" title="All 4 branches missed.">            return classNames.containsKey(name) || pmdClassLoader.couldResolve(name);</span>
+        }
+    }
+
+    /**
+     * Resolver that tries to resolve the given simple class name with the
+     * explicit import statements.
+     */
+    public static class ExplicitImportResolver extends AbstractResolver {
+        private Map&lt;String, String&gt; importStmts;
+
+        /**
+         * Creates a new {@link ExplicitImportResolver}.
+         * 
+         * @param pmdClassLoader
+         *            the class loader to use.
+         * @param importStmts
+         *            the import statements
+         */
+        public ExplicitImportResolver(PMDASMClassLoader pmdClassLoader, Set&lt;String&gt; importStmts) {
+<span class="fc" id="L191">            super(pmdClassLoader);</span>
+
+            // unfold imports, to store both FQ and unqualified names mapped to
+            // the FQ name
+<span class="fc" id="L195">            this.importStmts = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            for (final String stmt : importStmts) {</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                if (stmt.endsWith(&quot;*&quot;)) {</span>
+<span class="fc" id="L198">                    continue;</span>
+                }
+
+<span class="fc" id="L201">                this.importStmts.put(stmt, stmt);</span>
+<span class="fc" id="L202">                final int lastDotIdx = stmt.lastIndexOf('.');</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (lastDotIdx != -1) {</span>
+<span class="fc" id="L204">                    this.importStmts.put(stmt.substring(lastDotIdx + 1), stmt);</span>
+                }
+<span class="fc" id="L206">            }</span>
+<span class="fc" id="L207">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(final String name) throws ClassNotFoundException {
+<span class="fc" id="L211">            final Class&lt;?&gt; c = resolveMaybeInner(name, importStmts.get(name));</span>
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">            if (c == null) {</span>
+<span class="fc" id="L214">                throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+            }
+
+<span class="fc" id="L217">            return c;</span>
+        }
+
+        @Override
+        public boolean couldResolve(final String name) {
+<span class="fc" id="L222">            return importStmts.containsKey(name);</span>
+        }
+    }
+
+    /**
+     * Resolver that uses the current package to resolve a simple class name.
+     */
+    public static class CurrentPackageResolver extends AbstractResolver {
+        private final String pkg;
+
+        /**
+         * Creates a new {@link CurrentPackageResolver}
+         * 
+         * @param pmdClassLoader
+         *            the class loader to use
+         * @param pkg
+         *            the package name
+         */
+        public CurrentPackageResolver(PMDASMClassLoader pmdClassLoader, String pkg) {
+<span class="fc" id="L241">            super(pmdClassLoader);</span>
+<span class="fc bfc" id="L242" title="All 4 branches covered.">            if (pkg == null || pkg.length() == 0) {</span>
+<span class="fc" id="L243">                this.pkg = null;</span>
+            } else {
+<span class="fc" id="L245">                this.pkg = pkg + &quot;.&quot;;</span>
+            }
+<span class="fc" id="L247">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L252">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc" id="L255">            return pmdClassLoader.loadClass(qualifyName(name));</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L260">            return pmdClassLoader.couldResolve(qualifyName(name));</span>
+        }
+
+        private String qualifyName(final String name) {
+<span class="fc" id="L264">            final String qualifiedName = name.replace('.', '$');</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">            if (pkg == null) {</span>
+<span class="fc" id="L266">                return qualifiedName;</span>
+            }
+
+            /*
+             * String.concat is bad in general, but for simple 2 string concatenation, it's the fastest
+             * See http://www.rationaljava.com/2015/02/the-optimum-method-to-concatenate.html
+             */
+<span class="fc" id="L273">            return pkg.concat(qualifiedName);</span>
+        }
+    }
+
+    /**
+     * Resolver that resolves simple class names from the implicit import of
+     * &lt;code&gt;java.lang.*&lt;/code&gt;.
+     */
+    // TODO cite the JLS section on implicit imports
+    public static class ImplicitImportResolver extends AbstractResolver {
+        /*
+         * They aren't so many to bother about memory, but are used all the
+         * time, so we worry about performance. On average, you can expect this
+         * cache to have ~90% hit ratio unless abusing star imports (import on
+         * demand)
+         */
+<span class="fc" id="L289">        private static final ConcurrentHashMap&lt;String, Class&lt;?&gt;&gt; CLASS_CACHE = new ConcurrentHashMap&lt;&gt;();</span>
+
+        /**
+         * Creates a {@link ImplicitImportResolver}
+         * 
+         * @param pmdClassLoader
+         *            the class loader
+         */
+        public ImplicitImportResolver(PMDASMClassLoader pmdClassLoader) {
+<span class="fc" id="L298">            super(pmdClassLoader);</span>
+<span class="fc" id="L299">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L304">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc" id="L307">            Class&lt;?&gt; clazz = CLASS_CACHE.get(name);</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">            if (clazz != null) {</span>
+<span class="fc" id="L309">                return clazz;</span>
+            }
+
+            /*
+             * String.concat is bad in general, but for simple 2 string concatenation, it's the fastest
+             * See http://www.rationaljava.com/2015/02/the-optimum-method-to-concatenate.html
+             */
+<span class="fc" id="L316">            clazz = pmdClassLoader.loadClass(&quot;java.lang.&quot;.concat(name.replace('.', '$')));</span>
+<span class="fc" id="L317">            CLASS_CACHE.putIfAbsent(name, clazz);</span>
+
+<span class="fc" id="L319">            return clazz;</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+            /*
+             * String.concat is bad in general, but for simple 2 string concatenation, it's the fastest
+             * See http://www.rationaljava.com/2015/02/the-optimum-method-to-concatenate.html
+             */
+<span class="fc" id="L328">            return pmdClassLoader.couldResolve(&quot;java.lang.&quot;.concat(name.replace('.', '$')));</span>
+        }
+    }
+
+    /**
+     * Resolver that uses the &quot;on demand&quot; import statements.
+     */
+    public static class ImportOnDemandResolver extends AbstractResolver {
+        private Set&lt;String&gt; importStmts;
+
+        /**
+         * Creates a {@link ImportOnDemandResolver}
+         * 
+         * @param pmdClassLoader
+         *            the class loader to use
+         * @param importStmts
+         *            the import statements
+         */
+        public ImportOnDemandResolver(PMDASMClassLoader pmdClassLoader, Set&lt;String&gt; importStmts) {
+<span class="fc" id="L347">            super(pmdClassLoader);</span>
+<span class="fc" id="L348">            this.importStmts = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            for (final String stmt : importStmts) {</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">                if (stmt.endsWith(&quot;*&quot;)) {</span>
+<span class="fc" id="L351">                    this.importStmts.add(stmt);</span>
+                }
+<span class="fc" id="L353">            }</span>
+<span class="fc" id="L354">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L358" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L359">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc" id="L362">            name = name.replace('.', '$');</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">            for (String importStmt : importStmts) {</span>
+<span class="fc" id="L364">                final String fqClassName = new StringBuilder(importStmt.length() + name.length()).append(importStmt)</span>
+                        .replace(importStmt.length() - 1, importStmt.length(), name).toString();
+<span class="fc bfc" id="L366" title="All 2 branches covered.">                if (pmdClassLoader.couldResolve(fqClassName)) {</span>
+                    try {
+<span class="fc" id="L368">                        return pmdClassLoader.loadClass(fqClassName);</span>
+<span class="fc" id="L369">                    } catch (ClassNotFoundException e) {</span>
+                        // ignored
+                    }
+                }
+<span class="fc" id="L373">            }</span>
+
+<span class="fc" id="L375">            throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L380">            name = name.replace('.', '$');</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">            for (String importStmt : importStmts) {</span>
+<span class="fc" id="L382">                final String fqClassName = new StringBuilder(importStmt.length() + name.length()).append(importStmt)</span>
+                        .replace(importStmt.length() - 1, importStmt.length(), name).toString();
+                // can any class be resolved / was never attempted?
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                if (pmdClassLoader.couldResolve(fqClassName)) {</span>
+<span class="fc" id="L386">                    return true;</span>
+                }
+<span class="fc" id="L388">            }</span>
+
+<span class="fc" id="L390">            return false;</span>
+        }
+    }
+
+    /**
+     * Resolver that resolves primitive types such as int or double.
+     */
+<span class="fc" id="L397">    public static class PrimitiveTypeResolver implements Resolver {</span>
+        private static final Map&lt;String, Class&lt;?&gt;&gt; PRIMITIVE_TYPES;
+
+        static {
+<span class="fc" id="L401">            final Map&lt;String, Class&lt;?&gt;&gt; types = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L402">            types.put(&quot;int&quot;, int.class);</span>
+<span class="fc" id="L403">            types.put(&quot;float&quot;, float.class);</span>
+<span class="fc" id="L404">            types.put(&quot;double&quot;, double.class);</span>
+<span class="fc" id="L405">            types.put(&quot;long&quot;, long.class);</span>
+<span class="fc" id="L406">            types.put(&quot;boolean&quot;, boolean.class);</span>
+<span class="fc" id="L407">            types.put(&quot;byte&quot;, byte.class);</span>
+<span class="fc" id="L408">            types.put(&quot;short&quot;, short.class);</span>
+<span class="fc" id="L409">            types.put(&quot;char&quot;, char.class);</span>
+<span class="fc" id="L410">            PRIMITIVE_TYPES = Collections.unmodifiableMap(types);</span>
+<span class="fc" id="L411">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L415" title="All 2 branches covered.">            if (!PRIMITIVE_TYPES.containsKey(name)) {</span>
+<span class="fc" id="L416">                throw new ClassNotFoundException(name);</span>
+            }
+<span class="fc" id="L418">            return PRIMITIVE_TYPES.get(name);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L423">            return PRIMITIVE_TYPES.containsKey(name);</span>
+        }
+    }
+
+    /**
+     * Resolver that resolves the &quot;void&quot; type.
+     */
+<span class="fc" id="L430">    public static class VoidResolver implements Resolver {</span>
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L433" title="All 2 branches covered.">            if (&quot;void&quot;.equals(name)) {</span>
+<span class="fc" id="L434">                return void.class;</span>
+            }
+<span class="fc" id="L436">            throw new ClassNotFoundException(name);</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+<span class="fc" id="L441">            return &quot;void&quot;.equals(name);</span>
+        }
+    }
+
+    /**
+     * Resolver that simply loads the class by name. This only works if the
+     * class name is given as a fully qualified name.
+     */
+    public static class FullyQualifiedNameResolver extends AbstractResolver {
+        /**
+         * Creates a {@link FullyQualifiedNameResolver}
+         * 
+         * @param pmdClassLoader
+         *            the class loader to use
+         */
+        public FullyQualifiedNameResolver(PMDASMClassLoader pmdClassLoader) {
+<span class="fc" id="L457">            super(pmdClassLoader);</span>
+<span class="fc" id="L458">        }</span>
+
+        @Override
+        public Class&lt;?&gt; resolve(String name) throws ClassNotFoundException {
+<span class="fc bfc" id="L462" title="All 2 branches covered.">            if (name == null) {</span>
+<span class="fc" id="L463">                throw new ClassNotFoundException();</span>
+            }
+
+<span class="fc" id="L466">            final Class&lt;?&gt; c = resolveMaybeInner(name, name);</span>
+
+<span class="fc bfc" id="L468" title="All 2 branches covered.">            if (c == null) {</span>
+<span class="fc" id="L469">                throw new ClassNotFoundException(&quot;Type &quot; + name + &quot; not found&quot;);</span>
+            }
+
+<span class="fc" id="L472">            return c;</span>
+        }
+
+        @Override
+        public boolean couldResolve(String name) {
+            /*
+             * We can always try!
+             * If a file used an explicit import on A.Inner, the class loader will register
+             * A.Inner can't be resolved even if A$Inner can.
+             * If a second file used A.Inner without an explicit import, we would end here,
+             * super.couldResolve(&quot;A.Inner&quot;) will return false, but we CAN resolve it as A$Inner.
+             */
+<span class="fc" id="L484">            return true;</span>
+        }
+    }
+
+    public void setASTCompilationUnitPackage(String pkg) {
+<span class="fc" id="L489">        this.pkg = pkg;</span>
+<span class="fc" id="L490">    }</span>
+
+    public String getASTCompilationUnitPackage() {
+<span class="fc" id="L493">        return pkg;</span>
+    }
+
+    /**
+     * Adds a import to the list of imports
+     * 
+     * @param importString
+     *            the import to add
+     */
+    public void addImport(String importString) {
+<span class="fc" id="L503">        imports.add(importString);</span>
+<span class="fc" id="L504">    }</span>
+
+    public int getImportsCount() {
+<span class="fc" id="L507">        return imports.size();</span>
+    }
+
+    public Set&lt;String&gt; getExplicitImports() {
+<span class="fc" id="L511">        return imports;</span>
+    }
+
+    /**
+     * Resolves a class by its name using all known resolvers.
+     * 
+     * @param name
+     *            the name of the class, can be a simple name or a fully
+     *            qualified name.
+     * @return the class or &lt;code&gt;null&lt;/code&gt; if none found
+     */
+    public Class&lt;?&gt; findClass(String name) {
+        // we don't build the resolvers until now since we first want to get all
+        // the imports
+<span class="fc bfc" id="L525" title="All 2 branches covered.">        if (resolvers.isEmpty()) {</span>
+<span class="fc" id="L526">            buildResolvers();</span>
+        }
+
+<span class="fc bfc" id="L529" title="All 2 branches covered.">        for (final Resolver resolver : resolvers) {</span>
+<span class="fc bfc" id="L530" title="All 2 branches covered.">            if (resolver.couldResolve(name)) {</span>
+                try {
+<span class="fc" id="L532">                    return resolver.resolve(name);</span>
+<span class="fc" id="L533">                } catch (ClassNotFoundException cnfe) {</span>
+                    // ignored, maybe another resolver will find the class
+                }
+            }
+<span class="fc" id="L537">        }</span>
+
+<span class="fc" id="L539">        return null;</span>
+    }
+
+    private void buildResolvers() {
+<span class="fc" id="L543">        resolvers.add(new PrimitiveTypeResolver());</span>
+<span class="fc" id="L544">        resolvers.add(new VoidResolver());</span>
+<span class="fc" id="L545">        resolvers.add(new ExplicitImportResolver(pmdClassLoader, imports));</span>
+<span class="fc" id="L546">        resolvers.add(new CurrentPackageResolver(pmdClassLoader, pkg));</span>
+<span class="fc" id="L547">        resolvers.add(new ImplicitImportResolver(pmdClassLoader));</span>
+<span class="fc" id="L548">        resolvers.add(new ImportOnDemandResolver(pmdClassLoader, imports));</span>
+<span class="fc" id="L549">        resolvers.add(new FullyQualifiedNameResolver(pmdClassLoader));</span>
+<span class="fc" id="L550">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

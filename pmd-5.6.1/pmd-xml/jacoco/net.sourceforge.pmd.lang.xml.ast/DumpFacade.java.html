@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DumpFacade.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD XML and XSL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.xml.ast</a> &gt; <span class="el_source">DumpFacade.java</span></div><h1>DumpFacade.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.xml.ast;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.xpath.Attribute;
+import net.sourceforge.pmd.util.StringUtil;
+
+<span class="nc" id="L17">public class DumpFacade {</span>
+
+    private PrintWriter writer;
+    private boolean recurse;
+
+    public void initializeWith(Writer writer, String prefix, boolean recurse, XmlNode node) {
+<span class="nc bnc" id="L23" title="All 2 branches missed.">        this.writer = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer);</span>
+<span class="nc" id="L24">        this.recurse = recurse;</span>
+<span class="nc" id="L25">        this.dump(node, prefix);</span>
+        try {
+<span class="nc" id="L27">            writer.flush();</span>
+<span class="nc" id="L28">        } catch (IOException e) {</span>
+<span class="nc" id="L29">            throw new RuntimeException(&quot;Problem flushing PrintWriter.&quot;, e);</span>
+<span class="nc" id="L30">        }</span>
+<span class="nc" id="L31">    }</span>
+
+    public Object visit(XmlNode node, Object data) {
+<span class="nc" id="L34">        dump(node, (String) data);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (recurse) {</span>
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
+<span class="nc" id="L37">                visit((XmlNode) node.jjtGetChild(i), data + &quot; &quot;);</span>
+            }
+<span class="nc" id="L39">            return data;</span>
+        } else {
+<span class="nc" id="L41">            return data;</span>
+        }
+    }
+
+    private void dump(XmlNode node, String prefix) {
+        //
+        // Dump format is generally composed of the following items...
+        //
+
+        // 1) Dump prefix
+<span class="nc" id="L51">        writer.print(prefix);</span>
+
+        // 2) JJT Name of the Node
+<span class="nc" id="L54">        writer.print(node.toString());</span>
+
+        //
+        // If there are any additional details, then:
+        // 1) A colon
+        // 2) The Node.getImage() if it is non-empty
+        // 3) Extras in parentheses
+        //
+
+        // Standard image handling
+<span class="nc" id="L64">        String image = node.getImage();</span>
+
+        // Special image handling (e.g. Nodes with normally null images)
+
+<span class="nc" id="L68">        image = StringUtil.escapeWhitespace(image);</span>
+
+        // Extras
+<span class="nc" id="L71">        List&lt;String&gt; extras = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L72">        Iterator&lt;Attribute&gt; iterator = node.getAttributeIterator();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        while (iterator.hasNext()) {</span>
+<span class="nc" id="L74">            Attribute attribute = iterator.next();</span>
+<span class="nc" id="L75">            extras.add(attribute.getName() + &quot;=&quot; + StringUtil.escapeWhitespace(attribute.getValue()));</span>
+<span class="nc" id="L76">        }</span>
+
+        // Output image and extras
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if (image != null || !extras.isEmpty()) {</span>
+<span class="nc" id="L80">            writer.print(':');</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (image != null) {</span>
+<span class="nc" id="L82">                writer.print(image);</span>
+            }
+<span class="nc bnc" id="L84" title="All 2 branches missed.">            for (String extra : extras) {</span>
+<span class="nc" id="L85">                writer.print('(');</span>
+<span class="nc" id="L86">                writer.print(extra);</span>
+<span class="nc" id="L87">                writer.print(')');</span>
+<span class="nc" id="L88">            }</span>
+        }
+
+<span class="nc" id="L91">        writer.println();</span>
+<span class="nc" id="L92">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

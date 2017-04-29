@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PLSQLTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">PLSQLTokenizer.java</span></div><h1>PLSQLTokenizer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cpd;
+
+import java.io.StringReader;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.ast.SimpleCharStream;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserConstants;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLParserTokenManager;
+import net.sourceforge.pmd.lang.plsql.ast.Token;
+
+<span class="fc" id="L17">public class PLSQLTokenizer implements Tokenizer {</span>
+<span class="fc" id="L18">    private static final Logger LOGGER = Logger.getLogger(PLSQLTokenizer.class.getName());</span>
+
+    public static final String IGNORE_COMMENTS = &quot;ignore_comments&quot;;
+    public static final String IGNORE_IDENTIFIERS = &quot;ignore_identifiers&quot;;
+    public static final String IGNORE_LITERALS = &quot;ignore_literals&quot;;
+
+    private boolean ignoreComments;
+    private boolean ignoreIdentifiers;
+    private boolean ignoreLiterals;
+
+    public void setProperties(Properties properties) {
+        /*
+         * The Tokenizer is derived from PLDoc, in which comments are very
+         * important When looking for duplication, we are probably not
+         * interested in comment variation, so we shall default ignoreComments
+         * to true
+         */
+<span class="nc" id="L35">        ignoreComments = Boolean.parseBoolean(properties.getProperty(IGNORE_COMMENTS, &quot;true&quot;));</span>
+<span class="nc" id="L36">        ignoreIdentifiers = Boolean.parseBoolean(properties.getProperty(IGNORE_IDENTIFIERS, &quot;false&quot;));</span>
+<span class="nc" id="L37">        ignoreLiterals = Boolean.parseBoolean(properties.getProperty(IGNORE_LITERALS, &quot;false&quot;));</span>
+<span class="nc" id="L38">    }</span>
+
+    public void setIgnoreComments(boolean ignore) {
+<span class="nc" id="L41">        this.ignoreComments = ignore;</span>
+<span class="nc" id="L42">    }</span>
+
+    public void setIgnoreLiterals(boolean ignore) {
+<span class="nc" id="L45">        this.ignoreLiterals = ignore;</span>
+<span class="nc" id="L46">    }</span>
+
+    public void setIgnoreIdentifiers(boolean ignore) {
+<span class="nc" id="L49">        this.ignoreIdentifiers = ignore;</span>
+<span class="nc" id="L50">    }</span>
+
+    /**
+     * Read Reader from SourceCode and output an ordered tree of PLSQL tokens.
+     * 
+     * @param sourceCode
+     *            PLSQL source in file, string or database (any suitable object
+     *            that can return a Reader).
+     * @param tokenEntries
+     *            Derived based on PLSQL Abstract Syntax Tree (derived from
+     *            PLDOc parser.)
+     */
+    @Override
+    public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
+<span class="fc" id="L64">        long encounteredTokens = 0;</span>
+<span class="fc" id="L65">        long addedTokens = 0;</span>
+
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L68">            LOGGER.fine(&quot;PLSQLTokenizer: ignoreComments==&quot; + ignoreComments);</span>
+<span class="nc" id="L69">            LOGGER.fine(&quot;PLSQLTokenizer: ignoreIdentifiers==&quot; + ignoreIdentifiers);</span>
+<span class="nc" id="L70">            LOGGER.fine(&quot;PLSQLTokenizer: ignoreLiterals==&quot; + ignoreLiterals);</span>
+        }
+
+<span class="fc" id="L73">        String fileName = sourceCode.getFileName();</span>
+<span class="fc" id="L74">        StringBuilder sb = sourceCode.getCodeBuffer();</span>
+
+<span class="fc" id="L76">        PLSQLParserTokenManager tokenMgr = new PLSQLParserTokenManager(</span>
+                new SimpleCharStream(new StringReader(sb.toString())));
+<span class="fc" id="L78">        Token currentToken = tokenMgr.getNextToken();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        while (currentToken.image.length() &gt; 0) {</span>
+<span class="fc" id="L80">            String image = currentToken.image;</span>
+
+<span class="fc" id="L82">            encounteredTokens++;</span>
+<span class="pc bpc" id="L83" title="13 of 14 branches missed.">            if (ignoreComments &amp;&amp; (currentToken.kind == PLSQLParserConstants.SINGLE_LINE_COMMENT</span>
+                    || currentToken.kind == PLSQLParserConstants.MULTI_LINE_COMMENT
+                    || currentToken.kind == PLSQLParserConstants.FORMAL_COMMENT
+                    || currentToken.kind == PLSQLParserConstants.COMMENT
+                    || currentToken.kind == PLSQLParserConstants.IN_MULTI_LINE_COMMENT
+                    || currentToken.kind == PLSQLParserConstants.IN_FORMAL_COMMENT)) {
+<span class="nc" id="L89">                image = String.valueOf(currentToken.kind);</span>
+            }
+
+<span class="pc bpc" id="L92" title="3 of 4 branches missed.">            if (ignoreIdentifiers &amp;&amp; currentToken.kind == PLSQLParserConstants.IDENTIFIER) {</span>
+<span class="nc" id="L93">                image = String.valueOf(currentToken.kind);</span>
+            }
+
+<span class="pc bpc" id="L96" title="13 of 14 branches missed.">            if (ignoreLiterals &amp;&amp; (currentToken.kind == PLSQLParserConstants.UNSIGNED_NUMERIC_LITERAL</span>
+                    || currentToken.kind == PLSQLParserConstants.FLOAT_LITERAL
+                    || currentToken.kind == PLSQLParserConstants.INTEGER_LITERAL
+                    || currentToken.kind == PLSQLParserConstants.CHARACTER_LITERAL
+                    || currentToken.kind == PLSQLParserConstants.STRING_LITERAL
+                    || currentToken.kind == PLSQLParserConstants.QUOTED_LITERAL)) {
+<span class="nc" id="L102">                image = String.valueOf(currentToken.kind);</span>
+            }
+
+<span class="fc" id="L105">            tokenEntries.add(new TokenEntry(image, fileName, currentToken.beginLine));</span>
+<span class="fc" id="L106">            addedTokens++;</span>
+<span class="fc" id="L107">            currentToken = tokenMgr.getNextToken();</span>
+<span class="fc" id="L108">        }</span>
+<span class="fc" id="L109">        tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L111">            LOGGER.fine(sourceCode.getFileName() + &quot;: encountered &quot; + encounteredTokens + &quot; tokens;&quot; + &quot; added &quot;</span>
+                    + addedTokens + &quot; tokens&quot;);
+        }
+<span class="fc" id="L114">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
