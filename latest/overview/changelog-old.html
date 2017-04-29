@@ -57,10 +57,10 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Overview <b class="caret"></b></a>
         <ul class="dropdown-menu">
         
-                      <li>      <a href="https://sourceforge.net/projects/pmd/files/pmd/5.5.7/"  title="Download PMD 5.5.7">Download PMD 5.5.7</a>
+                      <li>      <a href="https://sourceforge.net/projects/pmd/files/pmd/5.6.1/"  title="Download PMD 5.6.1">Download PMD 5.6.1</a>
 </li>
                   
-                      <li>      <a href="../overview/changelog.html"  title="What's new in PMD 5.5.7">What's new in PMD 5.5.7</a>
+                      <li>      <a href="../overview/changelog.html"  title="What's new in PMD 5.6.1">What's new in PMD 5.6.1</a>
 </li>
                   
                       <li>      <a href="../overview/changelog-old.html"  title="Previous versions">Previous versions</a>
@@ -241,6 +241,9 @@
                       <li>      <a href="../pmd-test/index.html"  title="PMD Test Framework">PMD Test Framework</a>
 </li>
                   
+                      <li>      <a href="../pmd-visualforce/index.html"  title="PMD Visualforce">PMD Visualforce</a>
+</li>
+                  
                       <li>      <a href="../pmd-vm/index.html"  title="PMD Velocity">PMD Velocity</a>
 </li>
                   
@@ -362,7 +365,7 @@
                   <li id="publishDate">Last Published: 2017-04-29
                       <span class="divider">|</span>
                    </li>
-                  <li id="projectVersion">Version: 5.5.7
+                  <li id="projectVersion">Version: 5.6.1
                           <span class="divider">|</span>
                       </li>
                                       <li class="">
@@ -394,16 +397,16 @@
                               
       <li>
   
-                          <a href="https://sourceforge.net/projects/pmd/files/pmd/5.5.7/" class="externalLink" title="Download PMD 5.5.7">
+                          <a href="https://sourceforge.net/projects/pmd/files/pmd/5.6.1/" class="externalLink" title="Download PMD 5.6.1">
           <span class="none"></span>
-        Download PMD 5.5.7</a>
+        Download PMD 5.6.1</a>
             </li>
                 
       <li>
   
-                          <a href="../overview/changelog.html" title="What's new in PMD 5.5.7">
+                          <a href="../overview/changelog.html" title="What's new in PMD 5.6.1">
           <span class="none"></span>
-        What's new in PMD 5.5.7</a>
+        What's new in PMD 5.6.1</a>
             </li>
                 
       <li class="active">
@@ -768,6 +771,13 @@
                 
       <li>
   
+                          <a href="../pmd-visualforce/index.html" title="PMD Visualforce">
+          <span class="none"></span>
+        PMD Visualforce</a>
+            </li>
+                
+      <li>
+  
                           <a href="../pmd-vm/index.html" title="PMD Velocity">
           <span class="none"></span>
         PMD Velocity</a>
@@ -848,6 +858,686 @@
                                   
             <h1>Old Changelog</h1>
 <p>Previous versions of PMD can be downloaded here: <a class="externalLink" href="http://sourceforge.net/projects/pmd/files/pmd/">http://sourceforge.net/projects/pmd/files/pmd/</a></p>
+<div class="section">
+<h2><a name="a22-April-2017_-_5.6.0"></a>22-April-2017 - 5.6.0</h2>
+<p>The PMD team is pleased to announce PMD 5.6.0.</p>
+<p>The most significant changes are on analysis performance, support for Salesforce&#x2019;s Visualforce language a whole new <b>Apex Security Rule Set</b> and the new <b>Braces Rule Set for Apex</b>.</p>
+<p>We have added initial support for <b>incremental analysis</b>. The experimental feature allows PMD to cache analysis results between executions to speed up the analysis for all languages. New CLI flags and Ant options are available to configure it. Currently <i>the feature is disabled by default</i>, but this may change as it matures.</p>
+<p>Multithread performance has been enhanced by reducing thread-contention on a bunch of areas. This is still an area of work, as the speedup of running multithreaded analysis is still relatively small (4 threads produce less than a 50% speedup). Future releases will keep improving on this area.</p>
+<p>Once again, <i>Symbol Table</i> has been an area of great performance improvements. This time we were able to further improve it&#x2019;s performance by roughly 10% on all supported languages. In <i>Java</i> in particular, several more improvements were possible, improving <i>Symbol Table</i> performance by a whooping 80%, that&#x2019;s over 15X faster than PMD 5.5.1, when we first started working on it.</p>
+<p>Java developers will also appreciate the revamp of <tt>CloneMethodMustImplementCloneable</tt>, making it over 500X faster, and <tt>PreserveStackTrace</tt> which is now 7X faster.</p>
+<div class="section">
+<h3><a name="Table_Of_Contents"></a>Table Of Contents</h3>
+
+<ul>
+  
+<li><a href="#New_and_noteworthy">New and noteworthy</a>
+  
+<ul>
+    
+<li><a href="#Incremental_Analysis">Incremental Analysis</a></li>
+    
+<li><a href="#Visualforce_support">Visualforce Support</a></li>
+    
+<li><a href="#Apex_Security_Rule_Set">Apex Security Rule Set</a></li>
+    
+<li><a href="#Apex_Braces_Rule_Set">Apex Braces Rule Set</a></li>
+    
+<li><a href="#New_Rules">New Rules</a></li>
+    
+<li><a href="#Modified_Rules">Modified Rules</a></li>
+    
+<li><a href="#CPD_Suppression">CPD Suppression</a></li>
+    
+<li><a href="#CPD_filelist_command_line_option">CPD filelist command line option</a></li>
+  </ul></li>
+  
+<li><a href="#Fixed_Issues">Fixed Issues</a></li>
+  
+<li><a href="#API_Changes">API Changes</a></li>
+  
+<li><a href="#External_Contributions">External Contributions</a></li>
+</ul></div>
+<div class="section">
+<h3><a name="New_and_noteworthy"></a>New and noteworthy</h3>
+<div class="section">
+<h4><a name="Incremental_Analysis"></a>Incremental Analysis</h4>
+<p>PMD now supports incremental analysis. Analysis results can be cached and reused between runs. This allows PMD to skip files without violations that have remained unchanged. In future releases, we plan to extend this behavior to unchanged files with violations too.</p>
+<p>The cache is automatically invalidated if:  * the used PMD version changes  * the <tt>auxclasspath</tt> changed and any rules require type resolution  * the configured rule set has changed</p>
+<p>This feature is <i>incubating</i> and is disabled by default. It&#x2019;s only enabled if you specifically configure a cache file.</p>
+<p>To configure the cache file from CLI, a new <tt>-cache &lt;path/to/file&gt;</tt> flag has been added.</p>
+<p>For Ant, a new <tt>cacheLocation</tt> attribute has been added. For instance:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">    &lt;target name=&quot;pmd&quot;&gt;
+        &lt;taskdef name=&quot;pmd&quot; classname=&quot;net.sourceforge.pmd.ant.PMDTask&quot;/&gt;
+        &lt;pmd cacheLocation=&quot;build/pmd/pmd.cache&quot;&gt;
+            &lt;ruleset&gt;rulesets/java/design.xml&lt;/ruleset&gt;
+            &lt;ruleset&gt;java-basic&lt;/ruleset&gt;
+            &lt;formatter type=&quot;xml&quot; toFile=&quot;c:\pmd_report.xml&quot;/&gt;
+            &lt;fileset dir=&quot;/usr/local/j2sdk1.4.1_01/src/&quot;&gt;
+                &lt;include name=&quot;java/lang/*.java&quot;/&gt;
+            &lt;/fileset&gt;
+        &lt;/pmd&gt;
+    &lt;/target&gt;
+</pre></div></div></div>
+<div class="section">
+<h4><a name="Visualforce_Support"></a>Visualforce Support</h4>
+<p>Salesforce developers rejoice. To out growing Apex support we have added full Visualforce support. Both CPD and PD are available. So far only a security ruleset is available (<tt>vf-security</tt>).</p>
+<div class="section">
+<h5><a name="Visualforce_Security_Rule_Set"></a>Visualforce Security Rule Set</h5>
+<div class="section">
+<h6><a name="VfUnescapeEl"></a>VfUnescapeEl</h6>
+<p>The rule looks for Expression Language occurances printing unescaped values from the backend. These could lead to XSS attacks.</p></div>
+<div class="section">
+<h6><a name="VfCsrf"></a>VfCsrf</h6>
+<p>The rule looks for <tt>&lt;apex:page&gt;</tt> tags performing an action on page load, definish such <tt>action</tt> through Expression Language, as doing so is vulnerable to CSRF attacks.</p></div></div></div>
+<div class="section">
+<h4><a name="Apex_Security_Rule_Set"></a>Apex Security Rule Set</h4>
+<p>A new ruleset focused on security has been added, consisting of a wide range of rules to detect most common security problems.</p>
+<div class="section">
+<h5><a name="ApexBadCrypto"></a>ApexBadCrypto</h5>
+<p>The rule makes sure you are using randomly generated IVs and keys for <tt>Crypto</tt> calls. Hard-wiring these values greatly compromises the security of encrypted data.</p>
+<p>For instance, it would report violations on code such as:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class without sharing Foo {
+    Blob hardCodedIV = Blob.valueOf('Hardcoded IV 123');
+    Blob hardCodedKey = Blob.valueOf('0000000000000000');
+    Blob data = Blob.valueOf('Data to be encrypted');
+    Blob encrypted = Crypto.encrypt('AES128', hardCodedKey, hardCodedIV, data);
+}
+
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ApexCRUDViolation"></a>ApexCRUDViolation</h5>
+<p>The rule validates you are checking for access permissions before a SOQL/SOSL/DML operation. Since Apex runs in system mode not having proper permissions checks results in escalation of privilege and may produce runtime errors. This check forces you to handle such scenarios.</p>
+<p>For example, the following code is considered valid:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class Foo {
+    public Contact foo(String status, String ID) {
+        Contact c = [SELECT Status__c FROM Contact WHERE Id=:ID];
+
+        // Make sure we can update the database before even trying
+        if (!Schema.sObjectType.Contact.fields.Name.isUpdateable()) {
+            return null;
+        }
+
+        c.Status__c = status;
+        update c;
+        return c;
+    }
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ApexCSRF"></a>ApexCSRF</h5>
+<p>Check to avoid making DML operations in Apex class constructor/init method. This prevents modification of the database just by accessing a page.</p>
+<p>For instance, the following code would be invalid:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class Foo {
+    public init() {
+        insert data;
+    }
+
+    public Foo() {
+        insert data;
+    }
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ApexDangerousMethods"></a>ApexDangerousMethods</h5>
+<p>Checks against calling dangerous methods.</p>
+<p>For the time being, it reports:</p>
+
+<ul>
+  
+<li>Against <tt>FinancialForce</tt>&#x2019;s <tt>Configuration.disableTriggerCRUDSecurity()</tt>. Disabling CRUD security opens the door to several attacks and requires manual validation, which is unreliable.</li>
+  
+<li>Calling <tt>System.debug</tt> passing sensitive data as parameter, which could lead to exposure of private data.</li>
+</ul></div>
+<div class="section">
+<h5><a name="ApexInsecureEndpoint"></a>ApexInsecureEndpoint</h5>
+<p>Checks against accessing endpoints under plain <b>http</b>. You should always use <b>https</b> for security.</p></div>
+<div class="section">
+<h5><a name="ApexOpenRedirect"></a>ApexOpenRedirect</h5>
+<p>Checks against redirects to user-controlled locations. This prevents attackers from redirecting users to phishing sites.</p>
+<p>For instance, the following code would be reported:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class without sharing Foo {
+    String unsafeLocation = ApexPage.getCurrentPage().getParameters.get('url_param');
+    PageReference page() {
+       return new PageReference(unsafeLocation);
+    }
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ApexSharingViolations"></a>ApexSharingViolations</h5>
+<p>Detect classes declared without explicit sharing mode if DML methods are used. This forces the developer to take access restrictions into account before modifying objects.</p></div>
+<div class="section">
+<h5><a name="ApexSOQLInjection"></a>ApexSOQLInjection</h5>
+<p>Detects the usage of untrusted / unescaped variables in DML queries.</p>
+<p>For instance, it would report on:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class Foo {
+    public void test1(String t1) {
+        Database.query('SELECT Id FROM Account' + t1);
+    }
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ApexSuggestUsingNamedCred"></a>ApexSuggestUsingNamedCred</h5>
+<p>Detects hardcoded credentials used in requests to an endpoint.</p>
+<p>You should refrain from hardcoding credentials:  * They are hard to mantain by being mixed in application code  * Particularly hard to update them when used from different classes  * Granting a developer access to the codebase means granting knowledge  of credentials, keeping a two-level access is not possible.  * Using different credentials for different environments is troublesome  and error-prone.</p>
+<p>Instead, you should use <i>Named Credentials</i> and a callout endpoint.</p>
+<p>For more information, you can check <a class="externalLink" href="https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_callouts_named_credentials.htm">this</a></p></div>
+<div class="section">
+<h5><a name="ApexXSSFromEscapeFalse"></a>ApexXSSFromEscapeFalse</h5>
+<p>Reports on calls to <tt>addError</tt> with disabled escaping. The message passed to <tt>addError</tt> will be displayed directly to the user in the UI, making it prime ground for XSS attacks if unescaped.</p></div>
+<div class="section">
+<h5><a name="ApexXSSFromURLParam"></a>ApexXSSFromURLParam</h5>
+<p>Makes sure that all values obtained from URL parameters are properly escaped / sanitized to avoid XSS attacks.</p></div></div>
+<div class="section">
+<h4><a name="Apex_Braces_Rule_Set"></a>Apex Braces Rule Set</h4>
+<p>The Braces Rule Set has been added and serves the same purpose as the Braces Rule Set from Java: It checks the use and placement of braces around if-statements, for-loops and so on.</p>
+<div class="section">
+<h5><a name="IfStmtsMustUseBraces"></a>IfStmtsMustUseBraces</h5>
+<p>Avoid using if statements without using braces to surround the code block. If the code formatting or indentation is lost then it becomes difficult to separate the code being controlled from the rest.</p>
+<p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">if (foo)    // not recommended
+    x++;
+
+if (foo) {  // preferred approach
+    x++;
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="WhileLoopsMustUseBraces"></a>WhileLoopsMustUseBraces</h5>
+<p>Avoid using &#x2018;while&#x2019; statements without using braces to surround the code block. If the code formatting or indentation is lost then it becomes difficult to separate the code being controlled from the rest.</p>
+<p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">while (true)    // not recommended
+      x++;
+
+while (true) {  // preferred approach
+      x++;
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="IfElseStmtsMustUseBraces"></a>IfElseStmtsMustUseBraces</h5>
+<p>Avoid using if..else statements without using surrounding braces. If the code formatting or indentation is lost then it becomes difficult to separate the code being controlled from the rest.</p>
+<p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">// this is not recommended
+if (foo)
+       x = x+1;
+   else
+       x = x-1;
+
+// preferred approach
+if (foo) {
+   x = x+1;
+} else {
+   x = x-1;
+}
+</pre></div></div></div>
+<div class="section">
+<h5><a name="ForLoopsMustUseBraces"></a>ForLoopsMustUseBraces</h5>
+<p>Avoid using &#x2018;for&#x2019; statements without using surrounding braces. If the code formatting or indentation is lost then it becomes difficult to separate the code being controlled from the rest.</p>
+<p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">for (int i = 0; i &lt; 42; i++) // not recommended
+    foo();
+
+for (int i = 0; i &lt; 42; i++) { // preferred approach
+    foo();
+}
+</pre></div></div></div></div>
+<div class="section">
+<h4><a name="New_Rules"></a>New Rules</h4>
+<div class="section">
+<h5><a name="AccessorMethodGeneration_java-design"></a>AccessorMethodGeneration (java-design)</h5>
+<p>When accessing a private field / method from another class, the Java compiler will generate an accessor method with package-private visibility. This adds overhead, and to the dex method count on Android. This situation can be avoided by changing the visibility of the field / method from private to package-private.</p>
+<p>For instance, it would report violations on code such as:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">public class OuterClass {
+    private int counter;
+    /* package */ int id;
+
+    public class InnerClass {
+        InnerClass() {
+            OuterClass.this.counter++; // wrong, accessor method will be generated
+        }
+
+        public int getOuterClassId() {
+            return OuterClass.this.id; // id is package-private, no accessor method needed
+        }
+    }
+}
+</pre></div></div>
+<p>This new rule is part of the <tt>java-design</tt> ruleset.</p></div></div>
+<div class="section">
+<h4><a name="Modified_Rules"></a>Modified Rules</h4>
+
+<ul>
+  
+<li>
+<p>The Java rule <tt>UnnecessaryLocalBeforeReturn</tt> (ruleset java-design) now has a new property <tt>statementOrderMatters</tt>. It is enabled by default to stay backwards compatible. But if this property is set to <tt>false</tt>, this rule no longer requires the variable declaration and return statement to be on consecutive lines. Any variable that is used solely in a return statement will be reported.</p></li>
+  
+<li>
+<p>The Java rule <tt>UseLocaleWithCaseConversions</tt> (ruleset java-design) has been modified, to detect calls to <tt>toLowerCase</tt> and to <tt>toUpperCase</tt> also within method call chains. This leads to more detected cases and potentially new false positives. See also <a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1556/">bugfix #1556</a>.</p></li>
+  
+<li>
+<p>The Java rule <tt>AvoidConstantsInterface</tt> (ruleset java-design) has been removed. It is completely replaced by the rule <tt>ConstantsInInterface</tt>.</p></li>
+  
+<li>
+<p>The Java rule <tt>UnusedModifier</tt> (ruleset java-unusedcode) has been moved to the ruleset java-unnecessary and has been renamed to <tt>UnnecessaryModifier</tt>. Additionally, it has been expanded to consider more redundant modifiers:</p>
+  
+<ul>
+    
+<li>Annotations marked as <tt>abstract</tt>.</li>
+    
+<li>Nested annotations marked as <tt>static</tt>.</li>
+    
+<li>Nested annotations within another interface or annotation marked as <tt>public</tt>.</li>
+    
+<li>Classes, interfaces or annotations nested within an annotation marked as <tt>public</tt> or <tt>static</tt>.</li>
+    
+<li>Nested enums marked as <tt>static</tt>.</li>
+  </ul></li>
+  
+<li>
+<p>The Java rule <tt>JUnitTestsShouldIncludeAssert</tt> (ruleset java-junit) now accepts usage of <tt>@Rule</tt> <tt>ExpectedException</tt> to set expectations on exceptions, and are considered as valid assertions.</p></li>
+</ul></div>
+<div class="section">
+<h4><a name="CPD_Suppression"></a>CPD Suppression</h4>
+<p>It is now possible to allow CPD suppression through comments in <b>Java</b>. You tell CPD to ignore the following code with a comment containin <tt>CPD-OFF</tt> and with <tt>CPD-ON</tt> you tell CPD to resume analysis. The old approach via <tt>@SuppressWarnings</tt> annotation is still supported, but is considered <b>deprecated</b>, since it is limited to locations where the <tt>SuppressWarnings</tt> annotation is allowed. See <a class="externalLink" href="https://github.com/pmd/pmd/pull/250">PR #250</a>.</p>
+<p>For example:</p>
+
+<div class="source">
+<div class="source"><pre class="prettyprint linenums">    public Object someMethod(int x) throws Exception {
+        // some unignored code
+
+        // tell cpd to start ignoring code - CPD-OFF
+
+        // mission critical code, manually loop unroll
+        goDoSomethingAwesome(x + x / 2);
+        goDoSomethingAwesome(x + x / 2);
+        goDoSomethingAwesome(x + x / 2);
+        goDoSomethingAwesome(x + x / 2);
+        goDoSomethingAwesome(x + x / 2);
+        goDoSomethingAwesome(x + x / 2);
+
+        // resume CPD analysis - CPD-ON
+
+        // further code will *not* be ignored
+    }
+</pre></div></div></div>
+<div class="section">
+<h4><a name="CPD_filelist_command_line_option"></a>CPD filelist command line option</h4>
+<p>CPD now supports the command line option <tt>--filelist</tt>. With that, you can specify a file, which contains the names and paths of the files, that should be analyzed. This is similar to PMD&#x2019;s filelist option. You need to use this, if you have a large project with many files, and you hit the command line length limit.</p></div></div>
+<div class="section">
+<h3><a name="Fixed_Issues"></a>Fixed Issues</h3>
+
+<ul>
+  
+<li>General
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1511/">#1511</a>: [core] Inconsistent behavior of Rule.start/Rule.end</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/234">#234</a>: [core] Zip file stream closes spuriously when loading rulesets</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/256">#256</a>: [core] shortnames option is broken with relative paths</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/305">#305</a>: [core] PMD not executing under git bash</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/324">#324</a>: [core] Automated release - github release notes missing</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/337">#337</a>: [core] Version 5.5.4 seems to hold file lock on rules JAR (affects Windows only)</li>
+  </ul></li>
+  
+<li>apex-apexunit
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1543/">#1543</a>: [apex] ApexUnitTestClassShouldHaveAsserts assumes APEX is case sensitive</li>
+  </ul></li>
+  
+<li>apex-complexity
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/183">#183</a>: [apex] NCSS Method length is incorrect when using method chaining</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/251">#251</a>: [apex] NCSS Type length is incorrect when using method chaining</li>
+  </ul></li>
+  
+<li>apex-security
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/264">#264</a>: [apex] ApexXSSFromURLParamRule shouldn&#x2019;t enforce ESAPI usage. String.escapeHtml4 is sufficient.</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/315">#315</a>: [apex] Documentation flaw on Apex Sharing Violations</li>
+  </ul></li>
+  
+<li>java
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/185">#185</a>: [java] CPD runs into NPE when analyzing Lucene</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/206">#206</a>: [java] Parse error on annotation fields with generics</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/207">#207</a>: [java] Parse error on method reference with generics</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/208">#208</a>: [java] Parse error with local class with 2 or more annotations</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/213">#213</a>: [java] CPD: OutOfMemory when analyzing Lucene</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/309">#309</a>: [java] Parse error on method reference</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1542/">#1542</a>: [java] CPD throws an NPE when parsing enums with -ignore-identifiers</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1545/">#1545</a>: [java] Symbol Table fails to resolve inner classes</li>
+  </ul></li>
+  
+<li>java-basic
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/232">#232</a>: [java] SimplifiedTernary: Incorrect ternary operation can be simplified.</li>
+  </ul></li>
+  
+<li>java-coupling
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/270">#270</a>: [java] LoD false positive</li>
+  </ul></li>
+  
+<li>java-design
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/933/">#933</a>: [java] UnnecessaryLocalBeforeReturn false positive for SuppressWarnings annotation</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1448/">#1448</a>: [java] ImmutableField: Private field in inner class gives false positive with lambdas</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1495/">#1495</a>: [java] UnnecessaryLocalBeforeReturn with assert</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1496/">#1496</a>: [java] New Rule: AccesorMethodGeneration - complements accessor class rule</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1512/">#1512</a>: [java] Combine rules AvoidConstantsInInterface and ConstantsInInterface</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1552/">#1552</a>: [java] MissingBreakInSwitch - False positive for continue</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1556/">#1556</a>: [java] UseLocaleWithCaseConversions does not works with <tt>ResultSet</tt> (false negative)</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/177">#177</a>: [java] SingularField with lambdas as final fields</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/216">#216</a>: [java] [doc] NonThreadSafeSingleton: Be more explicit as to why double checked locking is not recommended</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/219">#219</a>: [java] UnnecessaryLocalBeforeReturn: ClassCastException in switch case with local variable returned</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/240">#240</a>: [java] UnnecessaryLocalBeforeReturn: Enhance by checking usages</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/274">#274</a>: [java] AccessorMethodGeneration: Method inside static inner class incorrectly reported</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/275">#275</a>: [java] FinalFieldCouldBeStatic: Constant in @interface incorrectly reported as &#x201c;could be made static&#x201d;</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/282">#282</a>: [java] UnnecessaryLocalBeforeReturn false positive when cloning Maps</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/291">#291</a>: [java] Improve quality of AccessorClassGeneration</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/310">#310</a>: [java] UnnecessaryLocalBeforeReturn enhancement is overly restrictive &#x2013; method order matters</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/352">#352</a>: [java] AccessorClassGeneration throws ClassCastException when seeing array construction</li>
+  </ul></li>
+  
+<li>java-imports
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/338">#338</a>: [java] False positive on DontImportJavaLang when importing java.lang.ProcessBuilder</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/339">#339</a>: [java] False positive on DontImportJavaLang when importing Java 7&#x2019;s java.lang.invoke.MethodHandles</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1546/">#1546</a>: [java] UnnecessaryFullyQualifiedNameRule doesn&#x2019;t take into consideration conflict resolution</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1547/">#1547</a>: [java] UnusedImportRule - False Positive for only usage in Javadoc - {@link ClassName#CONSTANT}</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1555/">#1555</a>: [java] UnnecessaryFullyQualifiedName: Really necessary fully qualified name</li>
+  </ul></li>
+  
+<li>java-junit
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/285">#285</a>: [java] JUnitTestsShouldIncludeAssertRule should support @Rule as well as @Test(expected = &#x2026;)</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/330">#330</a>: [java] NPE applying rule JUnitTestsShouldIncludeAssert</li>
+  </ul></li>
+  
+<li>java-logging-java
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1541/">#1541</a>: [java] InvalidSlf4jMessageFormat: False positive with placeholder and exception</li>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1551/">#1551</a>: [java] InvalidSlf4jMessageFormat: fails with NPE</li>
+  </ul></li>
+  
+<li>java-optimizations
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/215">#215</a>: [java] RedundantFieldInitializer report for annotation field not explicitly marked as final</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/222">#222</a>: [java] UseStringBufferForStringAppends: False Positive with ternary operator</li>
+  </ul></li>
+  
+<li>java-strings
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/202">#202</a>: [java] [doc] ConsecutiveAppendsShouldReuse is not really an optimization</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/290">#290</a>: [java] InefficientEmptyStringCheck misses String.trim().isEmpty()</li>
+  </ul></li>
+  
+<li>java-unnecessary
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/199">#199</a>: [java] UselessParentheses: Parentheses in return statement are incorrectly reported as useless</li>
+  </ul></li>
+  
+<li>java-unusedcode
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/246">#246</a>: [java] UnusedModifier doesn&#x2019;t check annotations</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/247">#247</a>: [java] UnusedModifier doesn&#x2019;t check annotations inner classes</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/248">#248</a>: [java] UnusedModifier doesn&#x2019;t check static keyword on nested enum declaration</li>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/257">#257</a>: [java] UnusedLocalVariable false positive</li>
+  </ul></li>
+  
+<li>XML
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1518/">#1518</a>: [xml] Error while processing xml file with &#x201c;.webapp&#x201d; in the file or directory name</li>
+  </ul></li>
+  
+<li>psql
+  
+<ul>
+    
+<li><a class="externalLink" href="https://sourceforge.net/p/pmd/bugs/1549/">#1549</a>: [plsql] Parse error for IS [NOT] NULL construct</li>
+  </ul></li>
+  
+<li>javascript
+  
+<ul>
+    
+<li><a class="externalLink" href="https://github.com/pmd/pmd/issues/201">#201</a>: [javascript] template strings are not correctly parsed</li>
+  </ul></li>
+</ul></div>
+<div class="section">
+<h3><a name="API_Changes"></a>API Changes</h3>
+
+<ul>
+  
+<li><tt>net.sourceforge.pmd.RuleSetFactory</tt> is now immutable and its behavior cannot be changed anymore. It provides constructors to create new adjusted instances. This allows to avoid synchronization in RuleSetFactory. See <a class="externalLink" href="https://github.com/pmd/pmd/pull/131">PR #131</a>.</li>
+  
+<li><tt>net.sourceforge.pmd.RuleSet</tt> is now immutable, too, and can only be created via <tt>RuleSetFactory</tt>. See <a class="externalLink" href="https://github.com/pmd/pmd/pull/145">PR #145</a>.</li>
+  
+<li><tt>net.sourceforge.pmd.cli.XPathCLI</tt> has been removed. It&#x2019;s functionality is fully covered by the Designer.</li>
+  
+<li><tt>net.sourceforge.pmd.Report</tt> now works with <tt>ThreadSafeReportListener</tt>s. Both <tt>ReportListener</tt> and <tt>SynchronizedReportListener</tt> are deprecated in favor of <tt>net.sourceforge.pmd.ThreadSafeReportListener</tt>. Therefore, the methods <tt>getSynchronizedListeners()</tt> and <tt>addSynchronizedListeners(...)</tt> have been replaced by <tt>getListeners()</tt> and <tt>addListeners(...)</tt>. See <a class="externalLink" href="https://github.com/pmd/pmd/pull/193">PR #193</a>.</li>
+</ul></div>
+<div class="section">
+<h3><a name="External_Contributions"></a>External Contributions</h3>
+
+<ul>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/123">#123</a>: [apex] Changing method names to lowercase so casing doesn&#x2019;t matter</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/129">#129</a>: [plsql] Added correct parse of IS [NOT] NULL and multiline DML</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/137">#137</a>: [apex] Adjusted remediation points</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/146">#146</a>: [apex] Detection of missing Apex CRUD checks for SOQL/DML operations</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/147">#147</a>: [apex] Adding XSS detection to return statements</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/148">#148</a>: [apex] Improving detection of SOQL injection</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/149">#149</a>: [apex] Whitelisting String.isEmpty and casting</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/152">#152</a>: [java] fixes #1552 continue does not require break</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/154">#154</a>: [java] Fix #1547: UnusedImports: Adjust regex to support underscores</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/158">#158</a>: [apex] Reducing FPs in SOQL with VF getter methods</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/160">#160</a>: [apex] Flagging of dangerous method call</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/163">#163</a>: [apex] Flagging of System.debug</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/165">#165</a>: [apex] Improving open redirect rule to avoid test classes/methods</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/167">#167</a>: [apex] GC and thread safety changes</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/169">#169</a>: [apex] Improving detection for DML with inline new object</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/170">#170</a>: [core] Ant Task Formatter encoding issue with XMLRenderer</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/172">#172</a>: [apex] Bug fix, detects both Apex fields and class members</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/175">#175</a>: [apex] ApexXSSFromURLParam: Adding missing casting methods</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/176">#176</a>: [apex] Bug fix for FP: open redirect for strings prefixed with / is safe</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/179">#179</a>: [apex] Legacy test class declaration support</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/181">#181</a>: [apex] Control flow based CRUD rule checking</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/184">#184</a>: [apex] Improving open redirect detection for static fields &amp; assignment operations</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/189">#189</a>: [apex] Bug fix of SOQL concatenated vars detection</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/191">#191</a>: [apex] Detection of sharing violation when Database. methods are used</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/192">#192</a>: [apex] Dead code removal</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/200">#200</a>: [javascript] Templatestring grammar fix</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/204">#204</a>: [apex] Sharing violation SOQL detection bug fix</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/214">#214</a>: [apex] Sharing violation improving reporting of the correct node, de-duping</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/217">#217</a>: [core] Make it build on Windows</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/227">#227</a>: [apex] Improving detection of getters</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/228">#228</a>: [apex] Excluding count from CRUD/FLS checks</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/229">#229</a>: [apex] Dynamic SOQL is safe against Integer, Boolean, Double</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/231">#231</a>: [apex] CRUD/FLS rule - add support for fields</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/266">#266</a>: [java] corrected invalid reporting of LoD violation</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/268">#268</a>: [apex] Support safe escaping via String method</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/273">#273</a>: [apex] Shade jackson on apex</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/279">#279</a>: [vf] New Salesforce VisualForce language support</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/280">#280</a>: [apex] Support for Aggregate Result in CRUD rules</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/281">#281</a>: [apex] Add Braces Rule Set</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/283">#283</a>: [vf] CSRF in VF controller pages</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/284">#284</a>: [vf] Adding support for parsing EL in script tags</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/288">#288</a>: [vf] Setting the tab size to 4 for VF</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/289">#289</a>: [apex] Complex SOQL Crud check bug fixes</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/296">#296</a>: [apex] Adding String.IsNotBlank to the whitelist to prevent False positives</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/297">#297</a>: [core] CPD: Adding the &#x2013;filelist option from pmd to cpd</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/303">#303</a>: [java] InefficientEmptyStringCheckRule now reports String.trim().isEmpty()</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/307">#307</a>: [java] Fix false positive with UseStringBufferForStringAppendsRule</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/308">#308</a>: [java] JUnitTestsShouldIncludeAssertRule supports @Rule annotated ExpectedExceptions</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/313">#313</a>: [vf] Apex:iFrame not being detected - bug fix</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/314">#314</a>: [vf] Bug fixes for incorrect Id detection and escaping</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/316">#316</a>: [apex] Ignoring certain rules in Batch classes, Queueable, and install scripts</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/317">#317</a>: [apex] Add support for safe ID assignment from URL param</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/326">#326</a>: [vf] Quote detection improvement and method argument detection</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/327">#327</a>: [apex] Fixed SOQL injection detection for escaped vars</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/331">#331</a>: [java] JunitTestsShouldIncludeAssertRule now handles AllocationExpression correctly</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/332">#332</a>: [java] Future-proof DontImportJavaLangRule</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/340">#340</a>: [vf] Multiple parser bug fixes</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/341">#341</a>: [vf] JSON.parse(..) and NOT(..) are safely evaluated</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/343">#343</a>: [apex] int,id,boolean,ternary operator condition are not injection in Soql</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/344">#344</a>: [apex] ApexCRUDViolationRule: Bug fix for ClassCastException</li>
+  
+<li><a class="externalLink" href="https://github.com/pmd/pmd/pull/351">#351</a>: [vf] Fixing regression introduced by #341</li>
+</ul></div></div>
 <div class="section">
 <h2><a name="a19-April-2017_-_5.5.6"></a>19-April-2017 - 5.5.6</h2>
 <p>The PMD team is pleased to announce PMD 5.5.6.</p>

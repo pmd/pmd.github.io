@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConsecutiveAppendsShouldReuseRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strings</a> &gt; <span class="el_source">ConsecutiveAppendsShouldReuseRule.java</span></div><h1>ConsecutiveAppendsShouldReuseRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.strings;
 
 import java.util.List;
@@ -24,8 +25,8 @@ import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
 /**
- * Original rule was written with XPath, but didn't verify whether the two calls to append
- * would have been done on the same variable.
+ * Original rule was written with XPath, but didn't verify whether the two calls
+ * to append would have been done on the same variable.
  * 
  * &lt;pre&gt;
 //BlockStatement[./Statement/StatementExpression//PrimaryPrefix/Name[ends-with(@Image,'.append')]
@@ -47,122 +48,127 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
                                              ancestor::Block//LocalVariableDeclaration[./Type//ClassOrInterfaceType[@Image='StringBuilder']]//VariableDeclaratorId/@Image
                                          ]
                                       ]
-
+ * 
  * &lt;/pre&gt;
  *
  */
-<span class="fc" id="L54">public class ConsecutiveAppendsShouldReuseRule  extends AbstractJavaRule {</span>
+<span class="fc" id="L55">public class ConsecutiveAppendsShouldReuseRule extends AbstractJavaRule {</span>
 
     @Override
     public Object visit(ASTBlockStatement node, Object data) {
-<span class="fc" id="L58">        String variable = getVariableAppended(node);</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (variable != null) {</span>
-<span class="fc" id="L60">            ASTBlockStatement nextSibling = getNextBlockStatementSibling(node);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">            if (nextSibling != null) {</span>
-<span class="fc" id="L62">                String nextVariable = getVariableAppended(nextSibling);</span>
-<span class="fc bfc" id="L63" title="All 4 branches covered.">                if (nextVariable != null &amp;&amp; nextVariable.equals(variable)) {</span>
-<span class="fc" id="L64">                    addViolation(data, node);</span>
+<span class="fc" id="L59">        String variable = getVariableAppended(node);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (variable != null) {</span>
+<span class="fc" id="L61">            ASTBlockStatement nextSibling = getNextBlockStatementSibling(node);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            if (nextSibling != null) {</span>
+<span class="fc" id="L63">                String nextVariable = getVariableAppended(nextSibling);</span>
+<span class="fc bfc" id="L64" title="All 4 branches covered.">                if (nextVariable != null &amp;&amp; nextVariable.equals(variable)) {</span>
+<span class="fc" id="L65">                    addViolation(data, node);</span>
                 }
             }
         }
-<span class="fc" id="L68">        return super.visit(node, data);</span>
+<span class="fc" id="L69">        return super.visit(node, data);</span>
     }
+
     private ASTBlockStatement getNextBlockStatementSibling(Node node) {
-<span class="fc" id="L71">        Node parent = node.jjtGetParent();</span>
-<span class="fc" id="L72">        int childIndex = -1;</span>
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">            if (parent.jjtGetChild(i) == node) {</span>
-<span class="fc" id="L75">                childIndex = i;</span>
-<span class="fc" id="L76">                break;</span>
+<span class="fc" id="L73">        Node parent = node.jjtGetParent();</span>
+<span class="fc" id="L74">        int childIndex = -1;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if (parent.jjtGetChild(i) == node) {</span>
+<span class="fc" id="L77">                childIndex = i;</span>
+<span class="fc" id="L78">                break;</span>
             }
         }
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (childIndex + 1 &lt; parent.jjtGetNumChildren()) {</span>
-<span class="fc" id="L80">            Node nextSibling = parent.jjtGetChild(childIndex + 1);</span>
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if (nextSibling instanceof ASTBlockStatement) {</span>
-<span class="fc" id="L82">                return (ASTBlockStatement)nextSibling;</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (childIndex + 1 &lt; parent.jjtGetNumChildren()) {</span>
+<span class="fc" id="L82">            Node nextSibling = parent.jjtGetChild(childIndex + 1);</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">            if (nextSibling instanceof ASTBlockStatement) {</span>
+<span class="fc" id="L84">                return (ASTBlockStatement) nextSibling;</span>
             }
         }
-<span class="fc" id="L85">        return null;</span>
+<span class="fc" id="L87">        return null;</span>
     }
+
     private String getVariableAppended(ASTBlockStatement node) {
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (isFirstChild(node, ASTStatement.class)) {</span>
-<span class="fc" id="L89">            ASTStatement statement = (ASTStatement) node.jjtGetChild(0);</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (isFirstChild(statement, ASTStatementExpression.class)) {</span>
-<span class="fc" id="L91">                ASTStatementExpression stmtExp = (ASTStatementExpression) statement.jjtGetChild(0);</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">               if (stmtExp.jjtGetNumChildren() == 1) {</span>
-<span class="fc" id="L93">                   ASTPrimaryPrefix primaryPrefix = stmtExp.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                   if (primaryPrefix != null) {</span>
-<span class="fc" id="L95">                       ASTName name = primaryPrefix.getFirstChildOfType(ASTName.class);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">                       if (name != null) {</span>
-<span class="fc" id="L97">                           String image = name.getImage();</span>
-<span class="fc bfc" id="L98" title="All 2 branches covered.">                           if (image.endsWith(&quot;.append&quot;)) {</span>
-<span class="fc" id="L99">                           String variable = image.substring(0, image.indexOf('.'));</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">                               if (isAStringBuilderBuffer(primaryPrefix, variable)) {</span>
-<span class="fc" id="L101">                                   return variable;</span>
-                               }
-                           }
-                       }
-                   }
-<span class="fc" id="L106">               } else {</span>
-<span class="fc" id="L107">                   final ASTExpression exp = stmtExp.getFirstDescendantOfType(ASTExpression.class);</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">                   if (isFirstChild(exp, ASTPrimaryExpression.class)) {</span>
-<span class="fc" id="L109">                       final ASTPrimarySuffix primarySuffix = ((ASTPrimaryExpression) exp.jjtGetChild(0)).getFirstDescendantOfType(ASTPrimarySuffix.class);</span>
-<span class="fc bfc" id="L110" title="All 2 branches covered.">                       if (primarySuffix != null) {</span>
-<span class="fc" id="L111">                           final String name = primarySuffix.getImage();</span>
-<span class="fc bfc" id="L112" title="All 4 branches covered.">                           if (name != null &amp;&amp; name.equals(&quot;append&quot;)) {</span>
-<span class="fc" id="L113">                               final ASTPrimaryExpression pExp = stmtExp.getFirstDescendantOfType(ASTPrimaryExpression.class);</span>
-<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                               if (pExp != null) {</span>
-<span class="fc" id="L115">                                   final ASTName astName = stmtExp.getFirstDescendantOfType(ASTName.class);</span>
-<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                                   if (astName != null) {</span>
-<span class="fc" id="L117">                                       final String variable = astName.getImage();</span>
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                                       if (isAStringBuilderBuffer(primarySuffix, variable)) {</span>
-<span class="fc" id="L119">                                           return variable;</span>
-                                       }
-                                   }
-                               }
-                           }
-                       }
-                   }
-               }
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (isFirstChild(node, ASTStatement.class)) {</span>
+<span class="fc" id="L92">            ASTStatement statement = (ASTStatement) node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (isFirstChild(statement, ASTStatementExpression.class)) {</span>
+<span class="fc" id="L94">                ASTStatementExpression stmtExp = (ASTStatementExpression) statement.jjtGetChild(0);</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (stmtExp.jjtGetNumChildren() == 1) {</span>
+<span class="fc" id="L96">                    ASTPrimaryPrefix primaryPrefix = stmtExp.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">                    if (primaryPrefix != null) {</span>
+<span class="fc" id="L98">                        ASTName name = primaryPrefix.getFirstChildOfType(ASTName.class);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                        if (name != null) {</span>
+<span class="fc" id="L100">                            String image = name.getImage();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                            if (image.endsWith(&quot;.append&quot;)) {</span>
+<span class="fc" id="L102">                                String variable = image.substring(0, image.indexOf('.'));</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                                if (isAStringBuilderBuffer(primaryPrefix, variable)) {</span>
+<span class="fc" id="L104">                                    return variable;</span>
+                                }
+                            }
+                        }
+                    }
+<span class="fc" id="L109">                } else {</span>
+<span class="fc" id="L110">                    final ASTExpression exp = stmtExp.getFirstDescendantOfType(ASTExpression.class);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                    if (isFirstChild(exp, ASTPrimaryExpression.class)) {</span>
+<span class="fc" id="L112">                        final ASTPrimarySuffix primarySuffix = ((ASTPrimaryExpression) exp.jjtGetChild(0))</span>
+                                .getFirstDescendantOfType(ASTPrimarySuffix.class);
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                        if (primarySuffix != null) {</span>
+<span class="fc" id="L115">                            final String name = primarySuffix.getImage();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                            if (&quot;append&quot;.equals(name)) {</span>
+<span class="fc" id="L117">                                final ASTPrimaryExpression pExp = stmtExp</span>
+                                        .getFirstDescendantOfType(ASTPrimaryExpression.class);
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">                                if (pExp != null) {</span>
+<span class="fc" id="L120">                                    final ASTName astName = stmtExp.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">                                    if (astName != null) {</span>
+<span class="fc" id="L122">                                        final String variable = astName.getImage();</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                                        if (isAStringBuilderBuffer(primarySuffix, variable)) {</span>
+<span class="fc" id="L124">                                            return variable;</span>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-<span class="fc bfc" id="L128" title="All 2 branches covered.">        } else if (isFirstChild(node, ASTLocalVariableDeclaration.class)) {</span>
-<span class="fc" id="L129">            ASTLocalVariableDeclaration lvd = (ASTLocalVariableDeclaration) node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        } else if (isFirstChild(node, ASTLocalVariableDeclaration.class)) {</span>
+<span class="fc" id="L134">            ASTLocalVariableDeclaration lvd = (ASTLocalVariableDeclaration) node.jjtGetChild(0);</span>
 
-<span class="fc" id="L131">            ASTVariableDeclaratorId vdId =  lvd.getFirstDescendantOfType(ASTVariableDeclaratorId.class);</span>
-<span class="fc" id="L132">            ASTExpression exp =  lvd.getFirstDescendantOfType(ASTExpression.class);</span>
+<span class="fc" id="L136">            ASTVariableDeclaratorId vdId = lvd.getFirstDescendantOfType(ASTVariableDeclaratorId.class);</span>
+<span class="fc" id="L137">            ASTExpression exp = lvd.getFirstDescendantOfType(ASTExpression.class);</span>
 
-<span class="fc bfc" id="L134" title="All 2 branches covered.">            if (exp != null) {</span>
-<span class="fc" id="L135">                ASTPrimarySuffix primarySuffix = exp.getFirstDescendantOfType(ASTPrimarySuffix.class);</span>
-<span class="fc bfc" id="L136" title="All 2 branches covered.">                if (primarySuffix != null) {</span>
-<span class="fc" id="L137">                    final String name = primarySuffix.getImage();</span>
-<span class="fc bfc" id="L138" title="All 4 branches covered.">                    if (name != null &amp;&amp; name.equals(&quot;append&quot;)) {</span>
-<span class="fc" id="L139">                        String variable = vdId.getImage();</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                        if (isAStringBuilderBuffer(primarySuffix, variable)) {</span>
-<span class="fc" id="L141">                            return variable;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (exp != null) {</span>
+<span class="fc" id="L140">                ASTPrimarySuffix primarySuffix = exp.getFirstDescendantOfType(ASTPrimarySuffix.class);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                if (primarySuffix != null) {</span>
+<span class="fc" id="L142">                    final String name = primarySuffix.getImage();</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                    if (&quot;append&quot;.equals(name)) {</span>
+<span class="fc" id="L144">                        String variable = vdId.getImage();</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                        if (isAStringBuilderBuffer(primarySuffix, variable)) {</span>
+<span class="fc" id="L146">                            return variable;</span>
                         }
                     }
                 }
             }
         }
 
-<span class="fc" id="L148">        return null;</span>
+<span class="fc" id="L153">        return null;</span>
     }
 
     private boolean isAStringBuilderBuffer(AbstractJavaNode node, String name) {
-<span class="fc" id="L152">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations = node.getScope().getDeclarations(VariableNameDeclaration.class);</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (VariableNameDeclaration decl : declarations.keySet()) {</span>
-<span class="pc bpc" id="L154" title="1 of 4 branches missed.">            if (decl.getName().equals(name) &amp;&amp; TypeHelper.isEither(decl, StringBuilder.class, StringBuffer.class)) {</span>
-<span class="fc" id="L155">                return true;</span>
+<span class="fc" id="L157">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations = node.getScope()</span>
+                .getDeclarations(VariableNameDeclaration.class);
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (VariableNameDeclaration decl : declarations.keySet()) {</span>
+<span class="pc bpc" id="L160" title="1 of 4 branches missed.">            if (decl.getName().equals(name) &amp;&amp; TypeHelper.isEither(decl, StringBuilder.class, StringBuffer.class)) {</span>
+<span class="fc" id="L161">                return true;</span>
             }
-<span class="fc" id="L157">        }</span>
-<span class="fc" id="L158">        return false;</span>
+<span class="fc" id="L163">        }</span>
+<span class="fc" id="L164">        return false;</span>
     }
 
     private boolean isFirstChild(Node node, Class&lt;?&gt; clazz) {
-<span class="fc bfc" id="L162" title="All 4 branches covered.">        if (node.jjtGetNumChildren() == 1 &amp;&amp; clazz.isAssignableFrom(node.jjtGetChild(0).getClass())) {</span>
-<span class="fc" id="L163">            return true;</span>
+<span class="fc bfc" id="L168" title="All 4 branches covered.">        if (node.jjtGetNumChildren() == 1 &amp;&amp; clazz.isAssignableFrom(node.jjtGetChild(0).getClass())) {</span>
+<span class="fc" id="L169">            return true;</span>
         }
-<span class="fc" id="L165">        return false;</span>
+<span class="fc" id="L171">        return false;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

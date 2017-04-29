@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CyclomaticComplexityRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.rule.codesize</a> &gt; <span class="el_source">CyclomaticComplexityRule.java</span></div><h1>CyclomaticComplexityRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.plsql.rule.codesize;
 
 import java.util.Stack;
@@ -34,394 +35,372 @@ import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
 /**
  * @author Donald A. Leckie,
  *
- * @version $Revision: 5956 $, $Date: 2008-04-04 04:59:25 -0500 (Fri, 04 Apr 2008) $
+ * @version $Revision: 5956 $, $Date: 2008-04-04 04:59:25 -0500 (Fri, 04 Apr
+ *          2008) $
  * @since January 14, 2003
  */
 public class CyclomaticComplexityRule extends AbstractPLSQLRule {
-<span class="fc" id="L41">    private static final Logger LOGGER = Logger.getLogger(CyclomaticComplexityRule.class.getName());</span>
-<span class="fc" id="L42">    private static final String CLASS_NAME = CyclomaticComplexityRule.class.getName();</span>
+<span class="fc" id="L43">    private static final Logger LOGGER = Logger.getLogger(CyclomaticComplexityRule.class.getName());</span>
+<span class="fc" id="L44">    private static final String CLASS_NAME = CyclomaticComplexityRule.class.getName();</span>
 
-<span class="fc" id="L44">    public static final IntegerProperty REPORT_LEVEL_DESCRIPTOR = new IntegerProperty(&quot;reportLevel&quot;,</span>
-	    &quot;Cyclomatic Complexity reporting threshold&quot;, 1, 30, 10, 1.0f);
+<span class="fc" id="L46">    public static final IntegerProperty REPORT_LEVEL_DESCRIPTOR = new IntegerProperty(&quot;reportLevel&quot;,</span>
+            &quot;Cyclomatic Complexity reporting threshold&quot;, 1, 30, 10, 1.0f);
 
-<span class="fc" id="L47">    public static final BooleanProperty SHOW_CLASSES_COMPLEXITY_DESCRIPTOR = new BooleanProperty(&quot;showClassesComplexity&quot;,</span>
-	&quot;Add class average violations to the report&quot;, true, 2.0f);
+<span class="fc" id="L49">    public static final BooleanProperty SHOW_CLASSES_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;showClassesComplexity&quot;, &quot;Add class average violations to the report&quot;, true, 2.0f);
 
-<span class="fc" id="L50">    public static final BooleanProperty SHOW_METHODS_COMPLEXITY_DESCRIPTOR = new BooleanProperty(&quot;showMethodsComplexity&quot;,</span>
-	&quot;Add method average violations to the report&quot;, true, 3.0f);
+<span class="fc" id="L52">    public static final BooleanProperty SHOW_METHODS_COMPLEXITY_DESCRIPTOR = new BooleanProperty(</span>
+            &quot;showMethodsComplexity&quot;, &quot;Add method average violations to the report&quot;, true, 3.0f);
 
-  private int reportLevel;
-<span class="fc" id="L54">  private boolean showClassesComplexity = true;</span>
-<span class="fc" id="L55">  private boolean showMethodsComplexity = true;</span>
+    private int reportLevel;
+<span class="fc" id="L56">    private boolean showClassesComplexity = true;</span>
+<span class="fc" id="L57">    private boolean showMethodsComplexity = true;</span>
 
-  private static class Entry {
-    private Node node;
-<span class="fc" id="L59">    private int decisionPoints = 1;</span>
-    public int highestDecisionPoints;
-    public int methodCount;
+    private static class Entry {
+        private Node node;
+<span class="fc" id="L61">        private int decisionPoints = 1;</span>
+        public int highestDecisionPoints;
+        public int methodCount;
 
-<span class="fc" id="L63">    private Entry(Node node) {</span>
-<span class="fc" id="L64">      this.node = node;</span>
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L65">        private Entry(Node node) {</span>
+<span class="fc" id="L66">            this.node = node;</span>
+<span class="fc" id="L67">        }</span>
 
-    public void bumpDecisionPoints() {
-<span class="fc" id="L68">      decisionPoints++;</span>
-<span class="fc" id="L69">    }</span>
+        public void bumpDecisionPoints() {
+<span class="fc" id="L70">            decisionPoints++;</span>
+<span class="fc" id="L71">        }</span>
 
-    public void bumpDecisionPoints(int size) {
-<span class="fc" id="L72">      decisionPoints += size;</span>
-<span class="fc" id="L73">    }</span>
+        public void bumpDecisionPoints(int size) {
+<span class="fc" id="L74">            decisionPoints += size;</span>
+<span class="fc" id="L75">        }</span>
 
-    public int getComplexityAverage() {
-<span class="nc bnc" id="L76" title="All 2 branches missed.">      return (double) methodCount == 0 ? 1</span>
-          : (int) Math.rint( (double) decisionPoints / (double) methodCount );
+        public int getComplexityAverage() {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            return (double) methodCount == 0 ? 1 : (int) Math.rint((double) decisionPoints / (double) methodCount);</span>
+        }
     }
-  }
 
-<span class="fc" id="L81">  private Stack&lt;Entry&gt; entryStack = new Stack&lt;&gt;();</span>
+<span class="fc" id="L82">    private Stack&lt;Entry&gt; entryStack = new Stack&lt;&gt;();</span>
 
-<span class="fc" id="L83">  public CyclomaticComplexityRule() {</span>
-<span class="fc" id="L84">      definePropertyDescriptor(REPORT_LEVEL_DESCRIPTOR);</span>
-<span class="fc" id="L85">      definePropertyDescriptor(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L86">      definePropertyDescriptor(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L87">  }</span>
+<span class="fc" id="L84">    public CyclomaticComplexityRule() {</span>
+<span class="fc" id="L85">        definePropertyDescriptor(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L86">        definePropertyDescriptor(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L87">        definePropertyDescriptor(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L88">    }</span>
 
-  @Override
-public Object visit(ASTInput node, Object data) {
-<span class="fc" id="L91">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTInput)&quot;);</span>
-<span class="fc" id="L92">    reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
-<span class="fc" id="L93">    showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L94">    showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
-<span class="fc" id="L95">    super.visit( node, data );</span>
-<span class="fc" id="L96">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTInput)&quot;);</span>
-<span class="fc" id="L97">    return data;</span>
-  }
-
-
-  @Override
-public Object visit(ASTElsifClause node, Object data) {
-<span class="nc" id="L103">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTElsifClause)&quot;);</span>
-<span class="nc" id="L104">    int boolCompIf = NPathComplexityRule.sumExpressionComplexity( node.getFirstChildOfType( ASTExpression.class ) );</span>
-    // If statement always has a complexity of at least 1
-<span class="nc" id="L106">    boolCompIf++;</span>
-
-<span class="nc" id="L108">    entryStack.peek().bumpDecisionPoints( boolCompIf );</span>
-<span class="nc" id="L109">    super.visit( node, data );</span>
-<span class="nc" id="L110">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTElsifClause)&quot;);</span>
-<span class="nc" id="L111">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTIfStatement node, Object data) {
-<span class="fc" id="L116">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTIfClause)&quot;);</span>
-<span class="fc" id="L117">    int boolCompIf = NPathComplexityRule.sumExpressionComplexity( node.getFirstChildOfType( ASTExpression.class ) );</span>
-    // If statement always has a complexity of at least 1
-<span class="fc" id="L119">    boolCompIf++;</span>
-
-<span class="fc" id="L121">    entryStack.peek().bumpDecisionPoints( boolCompIf );</span>
-<span class="fc" id="L122">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTIfClause)&quot;);</span>
-<span class="fc" id="L123">    super.visit( node, data );</span>
-<span class="fc" id="L124">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTExceptionHandler node, Object data) {
-<span class="fc" id="L129">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTExceptionHandler)&quot;);</span>
-<span class="fc" id="L130">    entryStack.peek().bumpDecisionPoints();</span>
-<span class="fc" id="L131">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTExceptionHandler)&quot;);</span>
-<span class="fc" id="L132">    super.visit( node, data );</span>
-<span class="fc" id="L133">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTForStatement node, Object data) {
-<span class="fc" id="L138">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTForStatement)&quot;);</span>
-<span class="fc" id="L139">    int boolCompFor = NPathComplexityRule.sumExpressionComplexity( node.getFirstDescendantOfType( ASTExpression.class ) );</span>
-    // For statement always has a complexity of at least 1
-<span class="fc" id="L141">    boolCompFor++;</span>
-
-<span class="fc" id="L143">    entryStack.peek().bumpDecisionPoints( boolCompFor );</span>
-<span class="fc" id="L144">    super.visit( node, data );</span>
-<span class="fc" id="L145">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTForStatement)&quot;);</span>
-<span class="fc" id="L146">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTLoopStatement node, Object data) {
-<span class="nc" id="L151">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTLoopStatement)&quot;);</span>
-<span class="nc" id="L152">    int boolCompDo = NPathComplexityRule.sumExpressionComplexity( node.getFirstChildOfType( ASTExpression.class ) );</span>
-    // Do statement always has a complexity of at least 1
-<span class="nc" id="L154">    boolCompDo++;</span>
-
-<span class="nc" id="L156">    entryStack.peek().bumpDecisionPoints( boolCompDo );</span>
-<span class="nc" id="L157">    super.visit( node, data );</span>
-<span class="nc" id="L158">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTLoopStatement)&quot;);</span>
-<span class="nc" id="L159">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTCaseStatement node, Object data) {
-<span class="nc" id="L164">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTCaseStatement)&quot;);</span>
-<span class="nc" id="L165">    Entry entry = entryStack.peek();</span>
-
-<span class="nc" id="L167">    int boolCompSwitch = NPathComplexityRule.sumExpressionComplexity( node.getFirstChildOfType( ASTExpression.class ) );</span>
-<span class="nc" id="L168">    entry.bumpDecisionPoints( boolCompSwitch );</span>
-
-<span class="nc" id="L170">    super.visit( node, data );</span>
-<span class="nc" id="L171">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTCaseStatement)&quot;);</span>
-<span class="nc" id="L172">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTCaseWhenClause node, Object data) {
-<span class="nc" id="L177">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTCaseWhenClause)&quot;);</span>
-<span class="nc" id="L178">    Entry entry = entryStack.peek();</span>
-
-<span class="nc" id="L180">    entry.bumpDecisionPoints();</span>
-<span class="nc" id="L181">    super.visit( node, data );</span>
-<span class="nc" id="L182">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTCaseWhenClause)&quot;);</span>
-<span class="nc" id="L183">    return data;</span>
-  }
-
-@Override
-public Object visit(ASTWhileStatement node, Object data) {
-<span class="fc" id="L188">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTWhileStatement)&quot;);</span>
-<span class="fc" id="L189">    int boolCompWhile = NPathComplexityRule.sumExpressionComplexity( node.getFirstChildOfType( ASTExpression.class ) );</span>
-    // While statement always has a complexity of at least 1
-<span class="fc" id="L191">    boolCompWhile++;</span>
-
-<span class="fc" id="L193">    entryStack.peek().bumpDecisionPoints( boolCompWhile );</span>
-<span class="fc" id="L194">    super.visit( node, data );</span>
-<span class="fc" id="L195">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTWhileStatement)&quot;);</span>
-<span class="fc" id="L196">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTConditionalOrExpression node, Object data) {
-<span class="fc" id="L201">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTPackageSpecification node, Object data) {
-<span class="nc" id="L206">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTPackageSpecification)&quot;);</span>
-    //Treat Package Specification like an Interface
-<span class="nc" id="L208">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTPackageSpecification)&quot;);</span>
-<span class="nc" id="L209">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTTypeSpecification node, Object data) {
-<span class="nc" id="L214">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTTypeSpecification)&quot;);</span>
-    //Treat Type Specification like an Interface
-<span class="nc" id="L216">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTTypeSpecification)&quot;);</span>
-<span class="nc" id="L217">    return data;</span>
-  }
-
-  @Override
-public Object visit(ASTPackageBody node, Object data) {
-<span class="nc" id="L222">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTPackageBody)&quot;);</span>
-
-<span class="nc" id="L224">    entryStack.push( new Entry( node ) );</span>
-<span class="nc" id="L225">    super.visit( node, data );</span>
-<span class="nc" id="L226">    Entry classEntry = entryStack.pop();</span>
-<span class="nc bnc" id="L227" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L228">    LOGGER.finest(&quot;ASTPackageBody: ComplexityAverage==&quot; + classEntry.getComplexityAverage() </span>
-                   +&quot;, highestDecisionPoint=&quot; 
-                   + classEntry.highestDecisionPoints
-                 );
+    @Override
+    public Object visit(ASTInput node, Object data) {
+<span class="fc" id="L92">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTInput)&quot;);</span>
+<span class="fc" id="L93">        reportLevel = getProperty(REPORT_LEVEL_DESCRIPTOR);</span>
+<span class="fc" id="L94">        showClassesComplexity = getProperty(SHOW_CLASSES_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L95">        showMethodsComplexity = getProperty(SHOW_METHODS_COMPLEXITY_DESCRIPTOR);</span>
+<span class="fc" id="L96">        super.visit(node, data);</span>
+<span class="fc" id="L97">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTInput)&quot;);</span>
+<span class="fc" id="L98">        return data;</span>
     }
-<span class="nc bnc" id="L233" title="All 2 branches missed.">    if ( showClassesComplexity ) {</span>
-<span class="nc bnc" id="L234" title="All 4 branches missed.">	    if ( classEntry.getComplexityAverage() &gt;= reportLevel</span>
-	        || classEntry.highestDecisionPoints &gt;= reportLevel ) {
-<span class="nc" id="L236">	      addViolation( data, node, new String[] {</span>
-	          &quot;class&quot;,
-	          node.getImage(),
-	          classEntry.getComplexityAverage() + &quot; (Highest = &quot;
-	              + classEntry.highestDecisionPoints + ')' } );
-	    }
-    }
-<span class="nc" id="L243">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTPackageBody)&quot;);</span>
-<span class="nc" id="L244">    return data;</span>
-  }
 
-  @Override
-public Object visit(ASTTriggerUnit node, Object data) {
-<span class="nc" id="L249">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTTriggerUnit)&quot;);</span>
+    @Override
+    public Object visit(ASTElsifClause node, Object data) {
+<span class="nc" id="L103">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTElsifClause)&quot;);</span>
+<span class="nc" id="L104">        int boolCompIf = NPathComplexityRule.sumExpressionComplexity(node.getFirstChildOfType(ASTExpression.class));</span>
+        // If statement always has a complexity of at least 1
+<span class="nc" id="L106">        boolCompIf++;</span>
 
-<span class="nc" id="L251">    entryStack.push( new Entry( node ) );</span>
-<span class="nc" id="L252">    super.visit( node, data );</span>
-<span class="nc" id="L253">    Entry classEntry = entryStack.pop();</span>
-<span class="nc bnc" id="L254" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L255">    LOGGER.finest(&quot;ASTTriggerUnit: ComplexityAverage==&quot; + classEntry.getComplexityAverage() </span>
-                   +&quot;, highestDecisionPoint=&quot; 
-                   + classEntry.highestDecisionPoints
-                 );
+<span class="nc" id="L108">        entryStack.peek().bumpDecisionPoints(boolCompIf);</span>
+<span class="nc" id="L109">        super.visit(node, data);</span>
+<span class="nc" id="L110">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTElsifClause)&quot;);</span>
+<span class="nc" id="L111">        return data;</span>
     }
-<span class="nc bnc" id="L260" title="All 2 branches missed.">    if ( showClassesComplexity ) {</span>
-<span class="nc bnc" id="L261" title="All 4 branches missed.">	    if ( classEntry.getComplexityAverage() &gt;= reportLevel</span>
-	        || classEntry.highestDecisionPoints &gt;= reportLevel ) {
-<span class="nc" id="L263">	      addViolation( data, node, new String[] {</span>
-	          &quot;class&quot;,
-	          node.getImage(),
-	          classEntry.getComplexityAverage() + &quot; (Highest = &quot;
-	              + classEntry.highestDecisionPoints + ')' } );
-	    }
-    }
-<span class="nc" id="L270">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTTriggerUnit)&quot;);</span>
-<span class="nc" id="L271">    return data;</span>
-  }
 
-@Override
-public Object visit(ASTProgramUnit node, Object data) {
-<span class="fc" id="L276">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTProgramUnit)&quot;);</span>
-<span class="fc" id="L277">    entryStack.push( new Entry( node ) );</span>
-<span class="fc" id="L278">    super.visit( node, data );</span>
-<span class="fc" id="L279">    Entry methodEntry = entryStack.pop();</span>
-<span class="pc bpc" id="L280" title="1 of 2 branches missed.">    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L281">    LOGGER.finest(&quot;ASTProgramUnit: ComplexityAverage==&quot; + methodEntry.getComplexityAverage() </span>
-                   +&quot;, highestDecisionPoint=&quot; 
-                   + methodEntry.highestDecisionPoints
-                 );
-    }
-<span class="pc bpc" id="L286" title="1 of 2 branches missed.">    if ( showMethodsComplexity ) {</span>
-	    //Entry methodEntry = entryStack.pop();
-<span class="nc" id="L288">	    int methodDecisionPoints = methodEntry.decisionPoints;</span>
-<span class="nc bnc" id="L289" title="All 4 branches missed.">            if ( </span>
-                    null != node.getFirstParentOfType(ASTPackageBody.class) //PackageBody (including Object Type Body)
-                    || null != node.getFirstParentOfType(ASTTriggerUnit.class) //Trigger of any form
-                    //@TODO || null != node.getFirstParentOfType(ASTProgramUnit.class) //Another Procedure
-                    //@TODO || null != node.getFirstParentOfType(ASTTypeMethod.class) //Another Type method
-               )
-            {
-              /* @TODO This does not cope with nested methods 
-               * We need the outer most 
-               * ASTPackageBody
-               * ASTTriggerUni
-               * ASTProgramUnit
-               * ASTTypeMethod
-               * 
-               */
-<span class="nc" id="L304">              Entry classEntry = entryStack.peek();</span>
-<span class="nc" id="L305">              classEntry.methodCount++;</span>
-<span class="nc" id="L306">              classEntry.bumpDecisionPoints( methodDecisionPoints );</span>
+    @Override
+    public Object visit(ASTIfStatement node, Object data) {
+<span class="fc" id="L116">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTIfClause)&quot;);</span>
+<span class="fc" id="L117">        int boolCompIf = NPathComplexityRule.sumExpressionComplexity(node.getFirstChildOfType(ASTExpression.class));</span>
+        // If statement always has a complexity of at least 1
+<span class="fc" id="L119">        boolCompIf++;</span>
 
-<span class="nc bnc" id="L308" title="All 2 branches missed.">              if ( methodDecisionPoints &gt; classEntry.highestDecisionPoints ) {</span>
-<span class="nc" id="L309">                classEntry.highestDecisionPoints = methodDecisionPoints;</span>
-              }
+<span class="fc" id="L121">        entryStack.peek().bumpDecisionPoints(boolCompIf);</span>
+<span class="fc" id="L122">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTIfClause)&quot;);</span>
+<span class="fc" id="L123">        super.visit(node, data);</span>
+<span class="fc" id="L124">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTExceptionHandler node, Object data) {
+<span class="fc" id="L129">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTExceptionHandler)&quot;);</span>
+<span class="fc" id="L130">        entryStack.peek().bumpDecisionPoints();</span>
+<span class="fc" id="L131">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTExceptionHandler)&quot;);</span>
+<span class="fc" id="L132">        super.visit(node, data);</span>
+<span class="fc" id="L133">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTForStatement node, Object data) {
+<span class="fc" id="L138">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTForStatement)&quot;);</span>
+<span class="fc" id="L139">        int boolCompFor = NPathComplexityRule</span>
+                .sumExpressionComplexity(node.getFirstDescendantOfType(ASTExpression.class));
+        // For statement always has a complexity of at least 1
+<span class="fc" id="L142">        boolCompFor++;</span>
+
+<span class="fc" id="L144">        entryStack.peek().bumpDecisionPoints(boolCompFor);</span>
+<span class="fc" id="L145">        super.visit(node, data);</span>
+<span class="fc" id="L146">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTForStatement)&quot;);</span>
+<span class="fc" id="L147">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTLoopStatement node, Object data) {
+<span class="nc" id="L152">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTLoopStatement)&quot;);</span>
+<span class="nc" id="L153">        int boolCompDo = NPathComplexityRule.sumExpressionComplexity(node.getFirstChildOfType(ASTExpression.class));</span>
+        // Do statement always has a complexity of at least 1
+<span class="nc" id="L155">        boolCompDo++;</span>
+
+<span class="nc" id="L157">        entryStack.peek().bumpDecisionPoints(boolCompDo);</span>
+<span class="nc" id="L158">        super.visit(node, data);</span>
+<span class="nc" id="L159">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTLoopStatement)&quot;);</span>
+<span class="nc" id="L160">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTCaseStatement node, Object data) {
+<span class="nc" id="L165">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTCaseStatement)&quot;);</span>
+<span class="nc" id="L166">        Entry entry = entryStack.peek();</span>
+
+<span class="nc" id="L168">        int boolCompSwitch = NPathComplexityRule.sumExpressionComplexity(node.getFirstChildOfType(ASTExpression.class));</span>
+<span class="nc" id="L169">        entry.bumpDecisionPoints(boolCompSwitch);</span>
+
+<span class="nc" id="L171">        super.visit(node, data);</span>
+<span class="nc" id="L172">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTCaseStatement)&quot;);</span>
+<span class="nc" id="L173">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTCaseWhenClause node, Object data) {
+<span class="nc" id="L178">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTCaseWhenClause)&quot;);</span>
+<span class="nc" id="L179">        Entry entry = entryStack.peek();</span>
+
+<span class="nc" id="L181">        entry.bumpDecisionPoints();</span>
+<span class="nc" id="L182">        super.visit(node, data);</span>
+<span class="nc" id="L183">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTCaseWhenClause)&quot;);</span>
+<span class="nc" id="L184">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTWhileStatement node, Object data) {
+<span class="fc" id="L189">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTWhileStatement)&quot;);</span>
+<span class="fc" id="L190">        int boolCompWhile = NPathComplexityRule.sumExpressionComplexity(node.getFirstChildOfType(ASTExpression.class));</span>
+        // While statement always has a complexity of at least 1
+<span class="fc" id="L192">        boolCompWhile++;</span>
+
+<span class="fc" id="L194">        entryStack.peek().bumpDecisionPoints(boolCompWhile);</span>
+<span class="fc" id="L195">        super.visit(node, data);</span>
+<span class="fc" id="L196">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTWhileStatement)&quot;);</span>
+<span class="fc" id="L197">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTConditionalOrExpression node, Object data) {
+<span class="fc" id="L202">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTPackageSpecification node, Object data) {
+<span class="nc" id="L207">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTPackageSpecification)&quot;);</span>
+        // Treat Package Specification like an Interface
+<span class="nc" id="L209">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTPackageSpecification)&quot;);</span>
+<span class="nc" id="L210">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTTypeSpecification node, Object data) {
+<span class="nc" id="L215">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTTypeSpecification)&quot;);</span>
+        // Treat Type Specification like an Interface
+<span class="nc" id="L217">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTTypeSpecification)&quot;);</span>
+<span class="nc" id="L218">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTPackageBody node, Object data) {
+<span class="nc" id="L223">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTPackageBody)&quot;);</span>
+
+<span class="nc" id="L225">        entryStack.push(new Entry(node));</span>
+<span class="nc" id="L226">        super.visit(node, data);</span>
+<span class="nc" id="L227">        Entry classEntry = entryStack.pop();</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L229">            LOGGER.finest(&quot;ASTPackageBody: ComplexityAverage==&quot; + classEntry.getComplexityAverage()</span>
+                    + &quot;, highestDecisionPoint=&quot; + classEntry.highestDecisionPoints);
+        }
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (showClassesComplexity) {</span>
+<span class="nc bnc" id="L233" title="All 4 branches missed.">            if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="nc" id="L234">                addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+                    classEntry.getComplexityAverage() + &quot; (Highest = &quot; + classEntry.highestDecisionPoints + ')', });
+            }
+        }
+<span class="nc" id="L238">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTPackageBody)&quot;);</span>
+<span class="nc" id="L239">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTTriggerUnit node, Object data) {
+<span class="nc" id="L244">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTTriggerUnit)&quot;);</span>
+
+<span class="nc" id="L246">        entryStack.push(new Entry(node));</span>
+<span class="nc" id="L247">        super.visit(node, data);</span>
+<span class="nc" id="L248">        Entry classEntry = entryStack.pop();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L250">            LOGGER.finest(&quot;ASTTriggerUnit: ComplexityAverage==&quot; + classEntry.getComplexityAverage()</span>
+                    + &quot;, highestDecisionPoint=&quot; + classEntry.highestDecisionPoints);
+        }
+<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (showClassesComplexity) {</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">            if (classEntry.getComplexityAverage() &gt;= reportLevel || classEntry.highestDecisionPoints &gt;= reportLevel) {</span>
+<span class="nc" id="L255">                addViolation(data, node, new String[] { &quot;class&quot;, node.getImage(),</span>
+                    classEntry.getComplexityAverage() + &quot; (Highest = &quot; + classEntry.highestDecisionPoints + ')', });
+            }
+        }
+<span class="nc" id="L259">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTTriggerUnit)&quot;);</span>
+<span class="nc" id="L260">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTProgramUnit node, Object data) {
+<span class="fc" id="L265">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTProgramUnit)&quot;);</span>
+<span class="fc" id="L266">        entryStack.push(new Entry(node));</span>
+<span class="fc" id="L267">        super.visit(node, data);</span>
+<span class="fc" id="L268">        Entry methodEntry = entryStack.pop();</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L270">            LOGGER.finest(&quot;ASTProgramUnit: ComplexityAverage==&quot; + methodEntry.getComplexityAverage()</span>
+                    + &quot;, highestDecisionPoint=&quot; + methodEntry.highestDecisionPoints);
+        }
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">        if (showMethodsComplexity) {</span>
+            // Entry methodEntry = entryStack.pop();
+<span class="nc" id="L275">            int methodDecisionPoints = methodEntry.decisionPoints;</span>
+            // PackageBody (including Object Type Body)
+<span class="nc bnc" id="L277" title="All 4 branches missed.">            if (null != node.getFirstParentOfType(ASTPackageBody.class)</span>
+                    // Trigger of any form
+                    || null != node.getFirstParentOfType(ASTTriggerUnit.class)
+            // TODO || null != node.getFirstParentOfType(ASTProgramUnit.class)
+            // //Another Procedure
+            // TODO || null != node.getFirstParentOfType(ASTTypeMethod.class)
+            // //Another Type method
+            ) {
+                /*
+                 * TODO This does not cope with nested methods We need the
+                 * outer most ASTPackageBody ASTTriggerUni ASTProgramUnit
+                 * ASTTypeMethod
+                 * 
+                 */
+<span class="nc" id="L291">                Entry classEntry = entryStack.peek();</span>
+<span class="nc" id="L292">                classEntry.methodCount++;</span>
+<span class="nc" id="L293">                classEntry.bumpDecisionPoints(methodDecisionPoints);</span>
+
+<span class="nc bnc" id="L295" title="All 2 branches missed.">                if (methodDecisionPoints &gt; classEntry.highestDecisionPoints) {</span>
+<span class="nc" id="L296">                    classEntry.highestDecisionPoints = methodDecisionPoints;</span>
+                }
             }
 
-<span class="nc" id="L313">	    ASTMethodDeclarator methodDeclarator = null;</span>
-<span class="nc bnc" id="L314" title="All 2 branches missed.">	    for ( int n = 0; n &lt; node.jjtGetNumChildren(); n++ ) {</span>
-<span class="nc" id="L315">	      Node childNode = node.jjtGetChild( n );</span>
-<span class="nc bnc" id="L316" title="All 2 branches missed.">	      if ( childNode instanceof ASTMethodDeclarator ) {</span>
-<span class="nc" id="L317">	        methodDeclarator = (ASTMethodDeclarator) childNode;</span>
-<span class="nc" id="L318">	        break;</span>
-	      }
-	    }
-
-<span class="nc bnc" id="L322" title="All 2 branches missed.">	    if ( methodEntry.decisionPoints &gt;= reportLevel ) {</span>
-<span class="nc bnc" id="L323" title="All 2 branches missed.">	        addViolation( data, node, new String[] { &quot;method&quot;,</span>
-	            methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
-	            String.valueOf( methodEntry.decisionPoints ) } );
-	      }
-    }
-<span class="fc" id="L328">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTProgramUnit)&quot;);</span>
-<span class="fc" id="L329">    return data;</span>
-  }
-
-@Override
-public Object visit(ASTTypeMethod node, Object data) {
-<span class="nc" id="L334">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTTypeMethod)&quot;);</span>
-<span class="nc" id="L335">    entryStack.push( new Entry( node ) );</span>
-<span class="nc" id="L336">    super.visit( node, data );</span>
-<span class="nc" id="L337">    Entry methodEntry = entryStack.pop();</span>
-<span class="nc bnc" id="L338" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L339">    LOGGER.finest(&quot;ASTProgramUnit: ComplexityAverage==&quot; + methodEntry.getComplexityAverage() </span>
-                   +&quot;, highestDecisionPoint=&quot; 
-                   + methodEntry.highestDecisionPoints
-                 );
-    }
-<span class="nc bnc" id="L344" title="All 2 branches missed.">    if ( showMethodsComplexity ) {</span>
-	    //Entry methodEntry = entryStack.pop();
-<span class="nc" id="L346">	    int methodDecisionPoints = methodEntry.decisionPoints;</span>
-<span class="nc bnc" id="L347" title="All 2 branches missed.">            if ( </span>
-               null != node.getFirstParentOfType(ASTPackageBody.class) //PackageBody (including Object Type Body)
-               )
-            {
-              /* @TODO This does not cope with nested methods 
-               * We need the outer most 
-               * ASTPackageBody
-               */
-<span class="nc" id="L355">              Entry classEntry = entryStack.peek();</span>
-<span class="nc" id="L356">              classEntry.methodCount++;</span>
-<span class="nc" id="L357">              classEntry.bumpDecisionPoints( methodDecisionPoints );</span>
-
-<span class="nc bnc" id="L359" title="All 2 branches missed.">              if ( methodDecisionPoints &gt; classEntry.highestDecisionPoints ) {</span>
-<span class="nc" id="L360">                classEntry.highestDecisionPoints = methodDecisionPoints;</span>
-              }
+<span class="nc" id="L300">            ASTMethodDeclarator methodDeclarator = null;</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">            for (int n = 0; n &lt; node.jjtGetNumChildren(); n++) {</span>
+<span class="nc" id="L302">                Node childNode = node.jjtGetChild(n);</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">                if (childNode instanceof ASTMethodDeclarator) {</span>
+<span class="nc" id="L304">                    methodDeclarator = (ASTMethodDeclarator) childNode;</span>
+<span class="nc" id="L305">                    break;</span>
+                }
             }
 
-<span class="nc" id="L364">	    ASTMethodDeclarator methodDeclarator = null;</span>
-<span class="nc bnc" id="L365" title="All 2 branches missed.">	    for ( int n = 0; n &lt; node.jjtGetNumChildren(); n++ ) {</span>
-<span class="nc" id="L366">	      Node childNode = node.jjtGetChild( n );</span>
-<span class="nc bnc" id="L367" title="All 2 branches missed.">	      if ( childNode instanceof ASTMethodDeclarator ) {</span>
-<span class="nc" id="L368">	        methodDeclarator = (ASTMethodDeclarator) childNode;</span>
-<span class="nc" id="L369">	        break;</span>
-	      }
-	    }
-
-<span class="nc bnc" id="L373" title="All 2 branches missed.">	    if ( methodEntry.decisionPoints &gt;= reportLevel ) {</span>
-<span class="nc bnc" id="L374" title="All 2 branches missed.">	        addViolation( data, node, new String[] { &quot;method&quot;,</span>
-	            methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
-	            String.valueOf( methodEntry.decisionPoints ) } );
-	      }
+<span class="nc bnc" id="L309" title="All 2 branches missed.">            if (methodEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                addViolation(data, node,</span>
+                        new String[] { &quot;method&quot;, methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
+                            String.valueOf(methodEntry.decisionPoints), });
+            }
+        }
+<span class="fc" id="L315">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTProgramUnit)&quot;);</span>
+<span class="fc" id="L316">        return data;</span>
     }
-<span class="nc" id="L379">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTTypeMethod)&quot;);</span>
-<span class="nc" id="L380">    return data;</span>
-  }
 
+    @Override
+    public Object visit(ASTTypeMethod node, Object data) {
+<span class="nc" id="L321">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTTypeMethod)&quot;);</span>
+<span class="nc" id="L322">        entryStack.push(new Entry(node));</span>
+<span class="nc" id="L323">        super.visit(node, data);</span>
+<span class="nc" id="L324">        Entry methodEntry = entryStack.pop();</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L326">            LOGGER.finest(&quot;ASTProgramUnit: ComplexityAverage==&quot; + methodEntry.getComplexityAverage()</span>
+                    + &quot;, highestDecisionPoint=&quot; + methodEntry.highestDecisionPoints);
+        }
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        if (showMethodsComplexity) {</span>
+            // Entry methodEntry = entryStack.pop();
+<span class="nc" id="L331">            int methodDecisionPoints = methodEntry.decisionPoints;</span>
+            // PAckageBody (including Object Type Body)
+<span class="nc bnc" id="L333" title="All 2 branches missed.">            if (null != node.getFirstParentOfType(ASTPackageBody.class)) {</span>
+                /*
+                 * TODO This does not cope with nested methods We need the
+                 * outer most ASTPackageBody
+                 */
+<span class="nc" id="L338">                Entry classEntry = entryStack.peek();</span>
+<span class="nc" id="L339">                classEntry.methodCount++;</span>
+<span class="nc" id="L340">                classEntry.bumpDecisionPoints(methodDecisionPoints);</span>
 
-  @Override
-public Object visit(ASTTriggerTimingPointSection node, Object data) {
-<span class="nc" id="L386">    LOGGER.entering(CLASS_NAME,&quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
-<span class="nc" id="L387">    entryStack.push( new Entry( node ) );</span>
-<span class="nc" id="L388">    super.visit( node, data );</span>
-<span class="nc" id="L389">    Entry methodEntry = entryStack.pop();</span>
-<span class="nc bnc" id="L390" title="All 2 branches missed.">    if (LOGGER.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L391">    LOGGER.fine(&quot;ASTTriggerTimingPointSection: ComplexityAverage==&quot; + methodEntry.getComplexityAverage() </span>
-                   +&quot;, highestDecisionPoint=&quot; 
-                   + methodEntry.highestDecisionPoints
-                 );
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                if (methodDecisionPoints &gt; classEntry.highestDecisionPoints) {</span>
+<span class="nc" id="L343">                    classEntry.highestDecisionPoints = methodDecisionPoints;</span>
+                }
+            }
+
+<span class="nc" id="L347">            ASTMethodDeclarator methodDeclarator = null;</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">            for (int n = 0; n &lt; node.jjtGetNumChildren(); n++) {</span>
+<span class="nc" id="L349">                Node childNode = node.jjtGetChild(n);</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">                if (childNode instanceof ASTMethodDeclarator) {</span>
+<span class="nc" id="L351">                    methodDeclarator = (ASTMethodDeclarator) childNode;</span>
+<span class="nc" id="L352">                    break;</span>
+                }
+            }
+
+<span class="nc bnc" id="L356" title="All 2 branches missed.">            if (methodEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">                addViolation(data, node,</span>
+                        new String[] { &quot;method&quot;, methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
+                            String.valueOf(methodEntry.decisionPoints), });
+            }
+        }
+<span class="nc" id="L362">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTTypeMethod)&quot;);</span>
+<span class="nc" id="L363">        return data;</span>
     }
-<span class="nc bnc" id="L396" title="All 2 branches missed.">    if ( showMethodsComplexity ) {</span>
-<span class="nc" id="L397">	    int methodDecisionPoints = methodEntry.decisionPoints;</span>
-<span class="nc" id="L398">	    Entry classEntry = entryStack.peek();</span>
-<span class="nc" id="L399">	    classEntry.methodCount++;</span>
-<span class="nc" id="L400">	    classEntry.bumpDecisionPoints( methodDecisionPoints );</span>
 
-<span class="nc bnc" id="L402" title="All 2 branches missed.">	    if ( methodDecisionPoints &gt; classEntry.highestDecisionPoints ) {</span>
-<span class="nc" id="L403">	      classEntry.highestDecisionPoints = methodDecisionPoints;</span>
-	    }
+    @Override
+    public Object visit(ASTTriggerTimingPointSection node, Object data) {
+<span class="nc" id="L368">        LOGGER.entering(CLASS_NAME, &quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
+<span class="nc" id="L369">        entryStack.push(new Entry(node));</span>
+<span class="nc" id="L370">        super.visit(node, data);</span>
+<span class="nc" id="L371">        Entry methodEntry = entryStack.pop();</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L373">            LOGGER.fine(&quot;ASTTriggerTimingPointSection: ComplexityAverage==&quot; + methodEntry.getComplexityAverage()</span>
+                    + &quot;, highestDecisionPoint=&quot; + methodEntry.highestDecisionPoints);
+        }
+<span class="nc bnc" id="L376" title="All 2 branches missed.">        if (showMethodsComplexity) {</span>
+<span class="nc" id="L377">            int methodDecisionPoints = methodEntry.decisionPoints;</span>
+<span class="nc" id="L378">            Entry classEntry = entryStack.peek();</span>
+<span class="nc" id="L379">            classEntry.methodCount++;</span>
+<span class="nc" id="L380">            classEntry.bumpDecisionPoints(methodDecisionPoints);</span>
 
-<span class="nc" id="L406">	    ASTMethodDeclarator methodDeclarator = null;</span>
-<span class="nc bnc" id="L407" title="All 2 branches missed.">	    for ( int n = 0; n &lt; node.jjtGetNumChildren(); n++ ) {</span>
-<span class="nc" id="L408">	      Node childNode = node.jjtGetChild( n );</span>
-<span class="nc bnc" id="L409" title="All 2 branches missed.">	      if ( childNode instanceof ASTMethodDeclarator ) {</span>
-<span class="nc" id="L410">	        methodDeclarator = (ASTMethodDeclarator) childNode;</span>
-<span class="nc" id="L411">	        break;</span>
-	      }
-	    }
+<span class="nc bnc" id="L382" title="All 2 branches missed.">            if (methodDecisionPoints &gt; classEntry.highestDecisionPoints) {</span>
+<span class="nc" id="L383">                classEntry.highestDecisionPoints = methodDecisionPoints;</span>
+            }
 
-<span class="nc bnc" id="L415" title="All 2 branches missed.">	    if ( methodEntry.decisionPoints &gt;= reportLevel ) {</span>
-<span class="nc bnc" id="L416" title="All 2 branches missed.">	        addViolation( data, node, new String[] { &quot;method&quot;,</span>
-	            methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
-	            String.valueOf( methodEntry.decisionPoints ) } );
-	      }
+<span class="nc" id="L386">            ASTMethodDeclarator methodDeclarator = null;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">            for (int n = 0; n &lt; node.jjtGetNumChildren(); n++) {</span>
+<span class="nc" id="L388">                Node childNode = node.jjtGetChild(n);</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                if (childNode instanceof ASTMethodDeclarator) {</span>
+<span class="nc" id="L390">                    methodDeclarator = (ASTMethodDeclarator) childNode;</span>
+<span class="nc" id="L391">                    break;</span>
+                }
+            }
+
+<span class="nc bnc" id="L395" title="All 2 branches missed.">            if (methodEntry.decisionPoints &gt;= reportLevel) {</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">                addViolation(data, node,</span>
+                        new String[] { &quot;method&quot;, methodDeclarator == null ? &quot;&quot; : methodDeclarator.getImage(),
+                            String.valueOf(methodEntry.decisionPoints), });
+            }
+        }
+<span class="nc" id="L401">        LOGGER.exiting(CLASS_NAME, &quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
+<span class="nc" id="L402">        return data;</span>
     }
-<span class="nc" id="L421">    LOGGER.exiting(CLASS_NAME,&quot;visit(ASTTriggerTimingPointSection)&quot;);</span>
-<span class="nc" id="L422">    return data;</span>
-  }
-
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

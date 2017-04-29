@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CPPTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD C++</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CPPTokenizer.java</span></div><h1>CPPTokenizer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.cpd;
 
 import java.io.BufferedReader;
@@ -8,6 +9,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
 
 import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.lang.LanguageRegistry;
@@ -18,89 +21,91 @@ import net.sourceforge.pmd.lang.cpp.CppLanguageModule;
 import net.sourceforge.pmd.lang.cpp.ast.Token;
 import net.sourceforge.pmd.util.IOUtil;
 
-import org.apache.commons.io.IOUtils;
-
 /**
  * The C++ tokenizer.
  */
-<span class="fc" id="L26">public class CPPTokenizer implements Tokenizer {</span>
+<span class="fc" id="L27">public class CPPTokenizer implements Tokenizer {</span>
 
-<span class="fc" id="L28">    private boolean skipBlocks = true;</span>
+<span class="fc" id="L29">    private boolean skipBlocks = true;</span>
     private String skipBlocksStart;
     private String skipBlocksEnd;
 
     /**
      * Sets the possible options for the C++ tokenizer.
-     * @param properties the properties
+     * 
+     * @param properties
+     *            the properties
      * @see #OPTION_SKIP_BLOCKS
      * @see #OPTION_SKIP_BLOCKS_PATTERN
      */
     public void setProperties(Properties properties) {
-<span class="fc" id="L39">        skipBlocks = Boolean.parseBoolean(properties.getProperty(OPTION_SKIP_BLOCKS, Boolean.TRUE.toString()));</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (skipBlocks) {</span>
-<span class="fc" id="L41">            String skipBlocksPattern = properties.getProperty(OPTION_SKIP_BLOCKS_PATTERN, DEFAULT_SKIP_BLOCKS_PATTERN);</span>
-<span class="fc" id="L42">            String[] split = skipBlocksPattern.split(&quot;\\|&quot;, 2);</span>
-<span class="fc" id="L43">            skipBlocksStart = split[0];</span>
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">            if (split.length == 1) {</span>
-<span class="nc" id="L45">                skipBlocksEnd = split[0];</span>
+<span class="fc" id="L42">        skipBlocks = Boolean.parseBoolean(properties.getProperty(OPTION_SKIP_BLOCKS, Boolean.TRUE.toString()));</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (skipBlocks) {</span>
+<span class="fc" id="L44">            String skipBlocksPattern = properties.getProperty(OPTION_SKIP_BLOCKS_PATTERN, DEFAULT_SKIP_BLOCKS_PATTERN);</span>
+<span class="fc" id="L45">            String[] split = skipBlocksPattern.split(&quot;\\|&quot;, 2);</span>
+<span class="fc" id="L46">            skipBlocksStart = split[0];</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">            if (split.length == 1) {</span>
+<span class="nc" id="L48">                skipBlocksEnd = split[0];</span>
             } else {
-<span class="fc" id="L47">                skipBlocksEnd = split[1];</span>
+<span class="fc" id="L50">                skipBlocksEnd = split[1];</span>
             }
         }
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L53">    }</span>
 
     @Override
     public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-<span class="fc" id="L54">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
-<span class="fc" id="L55">        Reader reader = null;</span>
+<span class="fc" id="L57">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L58">        Reader reader = null;</span>
         try {
-<span class="fc" id="L57">            LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(CppLanguageModule.NAME)</span>
+<span class="fc" id="L60">            LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(CppLanguageModule.NAME)</span>
                     .getDefaultVersion().getLanguageVersionHandler();
-<span class="fc" id="L59">            reader = new StringReader(maybeSkipBlocks(buffer.toString()));</span>
-<span class="fc" id="L60">            reader = IOUtil.skipBOM(reader);</span>
-<span class="fc" id="L61">            TokenManager tokenManager = languageVersionHandler.getParser(</span>
-                    languageVersionHandler.getDefaultParserOptions()).getTokenManager(sourceCode.getFileName(), reader);
-<span class="fc" id="L63">            Token currentToken = (Token) tokenManager.getNextToken();</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">            while (currentToken.image.length() &gt; 0) {</span>
-<span class="fc" id="L65">                tokenEntries.add(new TokenEntry(currentToken.image, sourceCode.getFileName(), currentToken.beginLine));</span>
-<span class="fc" id="L66">                currentToken = (Token) tokenManager.getNextToken();</span>
+<span class="fc" id="L62">            reader = new StringReader(maybeSkipBlocks(buffer.toString()));</span>
+<span class="fc" id="L63">            reader = IOUtil.skipBOM(reader);</span>
+<span class="fc" id="L64">            TokenManager tokenManager = languageVersionHandler</span>
+                    .getParser(languageVersionHandler.getDefaultParserOptions())
+                    .getTokenManager(sourceCode.getFileName(), reader);
+<span class="fc" id="L67">            Token currentToken = (Token) tokenManager.getNextToken();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            while (currentToken.image.length() &gt; 0) {</span>
+<span class="fc" id="L69">                tokenEntries.add(new TokenEntry(currentToken.image, sourceCode.getFileName(), currentToken.beginLine));</span>
+<span class="fc" id="L70">                currentToken = (Token) tokenManager.getNextToken();</span>
             }
-<span class="fc" id="L68">            tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L69">            System.err.println(&quot;Added &quot; + sourceCode.getFileName());</span>
-<span class="fc" id="L70">        } catch (TokenMgrError err) {</span>
-<span class="fc" id="L71">            err.printStackTrace();</span>
-<span class="fc" id="L72">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
-<span class="fc" id="L73">            tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="nc" id="L74">        } catch (IOException e) {</span>
-<span class="nc" id="L75">            e.printStackTrace();</span>
-<span class="nc" id="L76">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
-<span class="nc" id="L77">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L72">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L73">            System.err.println(&quot;Added &quot; + sourceCode.getFileName());</span>
+<span class="fc" id="L74">        } catch (TokenMgrError err) {</span>
+<span class="fc" id="L75">            err.printStackTrace();</span>
+<span class="fc" id="L76">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
+<span class="fc" id="L77">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="nc" id="L78">        } catch (IOException e) {</span>
+<span class="nc" id="L79">            e.printStackTrace();</span>
+<span class="nc" id="L80">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
+<span class="nc" id="L81">            tokenEntries.add(TokenEntry.getEOF());</span>
         } finally {
-<span class="pc" id="L79">            IOUtils.closeQuietly(reader);</span>
-<span class="pc" id="L80">        }</span>
-<span class="fc" id="L81">    }</span>
+<span class="pc" id="L83">            IOUtils.closeQuietly(reader);</span>
+<span class="pc" id="L84">        }</span>
+<span class="fc" id="L85">    }</span>
 
     private String maybeSkipBlocks(String test) throws IOException {
-<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (!skipBlocks) {</span>
-<span class="fc" id="L85">            return test;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (!skipBlocks) {</span>
+<span class="fc" id="L89">            return test;</span>
         }
 
-<span class="fc" id="L88">        BufferedReader reader = new BufferedReader(new StringReader(test));</span>
-<span class="fc" id="L89">        StringBuilder filtered = new StringBuilder(test.length());</span>
+<span class="fc" id="L92">        BufferedReader reader = new BufferedReader(new StringReader(test));</span>
+<span class="fc" id="L93">        StringBuilder filtered = new StringBuilder(test.length());</span>
         String line;
-<span class="fc" id="L91">        boolean skip = false;</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        while ((line = reader.readLine()) != null) {</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (skipBlocksStart.equalsIgnoreCase(line.trim())) {</span>
-<span class="fc" id="L94">                skip = true;</span>
-<span class="fc bfc" id="L95" title="All 4 branches covered.">            } else if (skip &amp;&amp; skipBlocksEnd.equalsIgnoreCase(line.trim())) {</span>
-<span class="fc" id="L96">                skip = false;</span>
+<span class="fc" id="L95">        boolean skip = false;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        while ((line = reader.readLine()) != null) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (skipBlocksStart.equalsIgnoreCase(line.trim())) {</span>
+<span class="fc" id="L98">                skip = true;</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">            } else if (skip &amp;&amp; skipBlocksEnd.equalsIgnoreCase(line.trim())) {</span>
+<span class="fc" id="L100">                skip = false;</span>
             }
-<span class="fc bfc" id="L98" title="All 2 branches covered.">            if (!skip) {</span>
-<span class="fc" id="L99">                filtered.append(line);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (!skip) {</span>
+<span class="fc" id="L103">                filtered.append(line);</span>
             }
-<span class="fc" id="L101">            filtered.append(PMD.EOL); // always add a new line to keep the line-numbering</span>
+            // always add a new line to keep the line-numbering
+<span class="fc" id="L106">            filtered.append(PMD.EOL); </span>
         }
-<span class="fc" id="L103">        return filtered.toString();</span>
+<span class="fc" id="L108">        return filtered.toString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>JaxenXPathRuleQuery.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.xpath</a> &gt; <span class="el_source">JaxenXPathRuleQuery.java</span></div><h1>JaxenXPathRuleQuery.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.rule.xpath;
 
 import java.util.ArrayDeque;
@@ -37,16 +38,16 @@ import net.sourceforge.pmd.lang.ast.Node;
 /**
  * This is a Jaxen based XPathRule query.
  */
-<span class="nc" id="L40">public class JaxenXPathRuleQuery extends AbstractXPathRuleQuery {</span>
+<span class="nc" id="L41">public class JaxenXPathRuleQuery extends AbstractXPathRuleQuery {</span>
 
-<span class="nc" id="L42">    private static final Logger LOG = Logger.getLogger(JaxenXPathRuleQuery.class.getName());</span>
+<span class="nc" id="L43">    private static final Logger LOG = Logger.getLogger(JaxenXPathRuleQuery.class.getName());</span>
 
-<span class="nc" id="L44">    private static enum InitializationStatus {</span>
-<span class="nc" id="L45">	NONE, PARTIAL, FULL</span>
+<span class="nc" id="L45">    private enum InitializationStatus {</span>
+<span class="nc" id="L46">        NONE, PARTIAL, FULL</span>
     }
 
     // Mapping from Node name to applicable XPath queries
-<span class="nc" id="L49">    private InitializationStatus initializationStatus = InitializationStatus.NONE;</span>
+<span class="nc" id="L50">    private InitializationStatus initializationStatus = InitializationStatus.NONE;</span>
     private Map&lt;String, List&lt;XPath&gt;&gt; nodeNameToXPaths;
 
     private static final String AST_ROOT = &quot;_AST_ROOT_&quot;;
@@ -56,7 +57,7 @@ import net.sourceforge.pmd.lang.ast.Node;
      */
     @Override
     public boolean isSupportedVersion(String version) {
-<span class="nc" id="L59">	return XPATH_1_0.equals(version);</span>
+<span class="nc" id="L60">        return XPATH_1_0.equals(version);</span>
     }
 
     /**
@@ -65,22 +66,22 @@ import net.sourceforge.pmd.lang.ast.Node;
     @Override
     @SuppressWarnings(&quot;unchecked&quot;)
     public List&lt;Node&gt; evaluate(Node node, RuleContext data) {
-<span class="nc" id="L68">	List&lt;Node&gt; results = new ArrayList&lt;&gt;();</span>
-	try {
-<span class="nc" id="L70">	    initializeXPathExpression(data.getLanguageVersion().getLanguageVersionHandler().getXPathHandler()</span>
-		    .getNavigator());
-<span class="nc" id="L72">	    List&lt;XPath&gt; xpaths = nodeNameToXPaths.get(node.toString());</span>
-<span class="nc bnc" id="L73" title="All 2 branches missed.">	    if (xpaths == null) {</span>
-<span class="nc" id="L74">		xpaths = nodeNameToXPaths.get(AST_ROOT);</span>
-	    }
-<span class="nc bnc" id="L76" title="All 2 branches missed.">	    for (XPath xpath : xpaths) {</span>
-<span class="nc" id="L77">		List&lt;Node&gt; nodes = xpath.selectNodes(node);</span>
-<span class="nc" id="L78">		results.addAll(nodes);</span>
-<span class="nc" id="L79">	    }</span>
-<span class="nc" id="L80">	} catch (JaxenException ex) {</span>
-<span class="nc" id="L81">	    throw new RuntimeException(ex);</span>
-<span class="nc" id="L82">	}</span>
-<span class="nc" id="L83">	return results;</span>
+<span class="nc" id="L69">        List&lt;Node&gt; results = new ArrayList&lt;&gt;();</span>
+        try {
+<span class="nc" id="L71">            initializeXPathExpression(</span>
+                    data.getLanguageVersion().getLanguageVersionHandler().getXPathHandler().getNavigator());
+<span class="nc" id="L73">            List&lt;XPath&gt; xpaths = nodeNameToXPaths.get(node.toString());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (xpaths == null) {</span>
+<span class="nc" id="L75">                xpaths = nodeNameToXPaths.get(AST_ROOT);</span>
+            }
+<span class="nc bnc" id="L77" title="All 2 branches missed.">            for (XPath xpath : xpaths) {</span>
+<span class="nc" id="L78">                List&lt;Node&gt; nodes = xpath.selectNodes(node);</span>
+<span class="nc" id="L79">                results.addAll(nodes);</span>
+<span class="nc" id="L80">            }</span>
+<span class="nc" id="L81">        } catch (JaxenException ex) {</span>
+<span class="nc" id="L82">            throw new RuntimeException(ex);</span>
+<span class="nc" id="L83">        }</span>
+<span class="nc" id="L84">        return results;</span>
     }
 
     /**
@@ -88,144 +89,157 @@ import net.sourceforge.pmd.lang.ast.Node;
      */
     @Override
     public List&lt;String&gt; getRuleChainVisits() {
-	try {
-	    // No Navigator available in this context
-<span class="nc" id="L93">	    initializeXPathExpression(null);</span>
-<span class="nc" id="L94">	    return super.getRuleChainVisits();</span>
-<span class="nc" id="L95">	} catch (JaxenException ex) {</span>
-<span class="nc" id="L96">	    throw new RuntimeException(ex);</span>
-	}
+        try {
+            // No Navigator available in this context
+<span class="nc" id="L94">            initializeXPathExpression(null);</span>
+<span class="nc" id="L95">            return super.getRuleChainVisits();</span>
+<span class="nc" id="L96">        } catch (JaxenException ex) {</span>
+<span class="nc" id="L97">            throw new RuntimeException(ex);</span>
+        }
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     private void initializeXPathExpression(Navigator navigator) throws JaxenException {
-<span class="nc bnc" id="L102" title="All 2 branches missed.">	if (initializationStatus == InitializationStatus.FULL) {</span>
-<span class="nc" id="L103">	    return;</span>
-<span class="nc bnc" id="L104" title="All 4 branches missed.">	} else if (initializationStatus == InitializationStatus.PARTIAL &amp;&amp; navigator == null) {</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">	    if (LOG.isLoggable(Level.SEVERE)) {</span>
-<span class="nc" id="L106">	    LOG.severe(&quot;XPathRule is not initialized because no navigator was provided. &quot;</span>
-	            + &quot;Please make sure to implement getXPathHandler in the handler of the language. &quot;
-	            + &quot;See also AbstractLanguageVersionHandler.&quot;);
-	    }
-<span class="nc" id="L110">	    return;</span>
-	}
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (initializationStatus == InitializationStatus.FULL) {</span>
+<span class="nc" id="L104">            return;</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        } else if (initializationStatus == InitializationStatus.PARTIAL &amp;&amp; navigator == null) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (LOG.isLoggable(Level.SEVERE)) {</span>
+<span class="nc" id="L107">                LOG.severe(&quot;XPathRule is not initialized because no navigator was provided. &quot;</span>
+                        + &quot;Please make sure to implement getXPathHandler in the handler of the language. &quot;
+                        + &quot;See also AbstractLanguageVersionHandler.&quot;);
+            }
+<span class="nc" id="L111">            return;</span>
+        }
 
-	//
-	// Attempt to use the RuleChain with this XPath query.  To do so, the queries
-	// should generally look like //TypeA or //TypeA | //TypeB.  We will look at the
-	// parsed XPath AST using the Jaxen APIs to make this determination.
-	// If the query is not exactly what we are looking for, do not use the RuleChain.
-	//
-<span class="nc" id="L119">	nodeNameToXPaths = new HashMap&lt;&gt;();</span>
+        //
+        // Attempt to use the RuleChain with this XPath query. To do so, the
+        // queries
+        // should generally look like //TypeA or //TypeA | //TypeB. We will look
+        // at the
+        // parsed XPath AST using the Jaxen APIs to make this determination.
+        // If the query is not exactly what we are looking for, do not use the
+        // RuleChain.
+        //
+<span class="nc" id="L123">        nodeNameToXPaths = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L121">	BaseXPath originalXPath = createXPath(xpath, navigator);</span>
-<span class="nc" id="L122">	indexXPath(originalXPath, AST_ROOT);</span>
+<span class="nc" id="L125">        BaseXPath originalXPath = createXPath(xpath, navigator);</span>
+<span class="nc" id="L126">        indexXPath(originalXPath, AST_ROOT);</span>
 
-<span class="nc" id="L124">	boolean useRuleChain = true;</span>
-<span class="nc" id="L125">	Deque&lt;Expr&gt; pending = new ArrayDeque&lt;&gt;();</span>
-<span class="nc" id="L126">	pending.push(originalXPath.getRootExpr());</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">	while (!pending.isEmpty()) {</span>
-<span class="nc" id="L128">	    Expr node = pending.pop();</span>
+<span class="nc" id="L128">        boolean useRuleChain = true;</span>
+<span class="nc" id="L129">        Deque&lt;Expr&gt; pending = new ArrayDeque&lt;&gt;();</span>
+<span class="nc" id="L130">        pending.push(originalXPath.getRootExpr());</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        while (!pending.isEmpty()) {</span>
+<span class="nc" id="L132">            Expr node = pending.pop();</span>
 
-	    // Need to prove we can handle this part of the query
-<span class="nc" id="L131">	    boolean valid = false;</span>
+            // Need to prove we can handle this part of the query
+<span class="nc" id="L135">            boolean valid = false;</span>
 
-	    // Must be a LocationPath... that is something like //Type
-<span class="nc bnc" id="L134" title="All 2 branches missed.">	    if (node instanceof LocationPath) {</span>
-<span class="nc" id="L135">		LocationPath locationPath = (LocationPath) node;</span>
-<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (locationPath.isAbsolute()) {</span>
-		    // Should be at least two steps
-<span class="nc" id="L138">		    List&lt;Step&gt; steps = locationPath.getSteps();</span>
-<span class="nc bnc" id="L139" title="All 2 branches missed.">		    if (steps.size() &gt;= 2) {</span>
-<span class="nc" id="L140">			Step step1 = steps.get(0);</span>
-<span class="nc" id="L141">			Step step2 = steps.get(1);</span>
-			// First step should be an AllNodeStep using the descendant or self axis
-<span class="nc bnc" id="L143" title="All 4 branches missed.">			if (step1 instanceof AllNodeStep &amp;&amp; ((AllNodeStep) step1).getAxis() == Axis.DESCENDANT_OR_SELF) {</span>
-			    // Second step should be a NameStep using the child axis.
-<span class="nc bnc" id="L145" title="All 4 branches missed.">			    if (step2 instanceof NameStep &amp;&amp; ((NameStep) step2).getAxis() == Axis.CHILD) {</span>
-				// Construct a new expression that is appropriate for RuleChain use
-<span class="nc" id="L147">				XPathFactory xpathFactory = new DefaultXPathFactory();</span>
+            // Must be a LocationPath... that is something like //Type
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (node instanceof LocationPath) {</span>
+<span class="nc" id="L139">                LocationPath locationPath = (LocationPath) node;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">                if (locationPath.isAbsolute()) {</span>
+                    // Should be at least two steps
+<span class="nc" id="L142">                    List&lt;Step&gt; steps = locationPath.getSteps();</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                    if (steps.size() &gt;= 2) {</span>
+<span class="nc" id="L144">                        Step step1 = steps.get(0);</span>
+<span class="nc" id="L145">                        Step step2 = steps.get(1);</span>
+                        // First step should be an AllNodeStep using the
+                        // descendant or self axis
+<span class="nc bnc" id="L148" title="All 4 branches missed.">                        if (step1 instanceof AllNodeStep</span>
+                                &amp;&amp; ((AllNodeStep) step1).getAxis() == Axis.DESCENDANT_OR_SELF) {
+                            // Second step should be a NameStep using the child
+                            // axis.
+<span class="nc bnc" id="L152" title="All 4 branches missed.">                            if (step2 instanceof NameStep &amp;&amp; ((NameStep) step2).getAxis() == Axis.CHILD) {</span>
+                                // Construct a new expression that is
+                                // appropriate for RuleChain use
+<span class="nc" id="L155">                                XPathFactory xpathFactory = new DefaultXPathFactory();</span>
 
-				// Instead of an absolute location path, we'll be using a relative path
-<span class="nc" id="L150">				LocationPath relativeLocationPath = xpathFactory.createRelativeLocationPath();</span>
-				// The first step will be along the self axis
-<span class="nc" id="L152">				Step allNodeStep = xpathFactory.createAllNodeStep(Axis.SELF);</span>
-				// Retain all predicates from the original name step
-<span class="nc bnc" id="L154" title="All 2 branches missed.">				for (Iterator&lt;Predicate&gt; i = step2.getPredicates().iterator(); i.hasNext();) {</span>
-<span class="nc" id="L155">				    allNodeStep.addPredicate(i.next());</span>
-				}
-<span class="nc" id="L157">				relativeLocationPath.addStep(allNodeStep);</span>
+                                // Instead of an absolute location path, we'll
+                                // be using a relative path
+<span class="nc" id="L159">                                LocationPath relativeLocationPath = xpathFactory.createRelativeLocationPath();</span>
+                                // The first step will be along the self axis
+<span class="nc" id="L161">                                Step allNodeStep = xpathFactory.createAllNodeStep(Axis.SELF);</span>
+                                // Retain all predicates from the original name
+                                // step
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                                for (Iterator&lt;Predicate&gt; i = step2.getPredicates().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L165">                                    allNodeStep.addPredicate(i.next());</span>
+                                }
+<span class="nc" id="L167">                                relativeLocationPath.addStep(allNodeStep);</span>
 
-				// Retain the remaining steps from the original location path
-<span class="nc bnc" id="L160" title="All 2 branches missed.">				for (int i = 2; i &lt; steps.size(); i++) {</span>
-<span class="nc" id="L161">				    relativeLocationPath.addStep(steps.get(i));</span>
-				}
+                                // Retain the remaining steps from the original
+                                // location path
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                                for (int i = 2; i &lt; steps.size(); i++) {</span>
+<span class="nc" id="L172">                                    relativeLocationPath.addStep(steps.get(i));</span>
+                                }
 
-<span class="nc" id="L164">				BaseXPath xpath = createXPath(relativeLocationPath.getText(), navigator);</span>
-<span class="nc" id="L165">				indexXPath(xpath, ((NameStep) step2).getLocalName());</span>
-<span class="nc" id="L166">				valid = true;</span>
-			    }
-			}
-		    }
-		}
-<span class="nc bnc" id="L171" title="All 2 branches missed.">	    } else if (node instanceof UnionExpr) { // Or a UnionExpr, that is something like //TypeA | //TypeB</span>
-<span class="nc" id="L172">		UnionExpr unionExpr = (UnionExpr) node;</span>
-<span class="nc" id="L173">		pending.push(unionExpr.getLHS());</span>
-<span class="nc" id="L174">		pending.push(unionExpr.getRHS());</span>
-<span class="nc" id="L175">		valid = true;</span>
-	    }
-<span class="nc bnc" id="L177" title="All 2 branches missed.">	    if (!valid) {</span>
-<span class="nc" id="L178">		useRuleChain = false;</span>
-<span class="nc" id="L179">		break;</span>
-	    }
-<span class="nc" id="L181">	}</span>
+<span class="nc" id="L175">                                BaseXPath xpath = createXPath(relativeLocationPath.getText(), navigator);</span>
+<span class="nc" id="L176">                                indexXPath(xpath, ((NameStep) step2).getLocalName());</span>
+<span class="nc" id="L177">                                valid = true;</span>
+                            }
+                        }
+                    }
+                }
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            } else if (node instanceof UnionExpr) { // Or a UnionExpr, that is</span>
+                // something like //TypeA |
+                // //TypeB
+<span class="nc" id="L185">                UnionExpr unionExpr = (UnionExpr) node;</span>
+<span class="nc" id="L186">                pending.push(unionExpr.getLHS());</span>
+<span class="nc" id="L187">                pending.push(unionExpr.getRHS());</span>
+<span class="nc" id="L188">                valid = true;</span>
+            }
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (!valid) {</span>
+<span class="nc" id="L191">                useRuleChain = false;</span>
+<span class="nc" id="L192">                break;</span>
+            }
+<span class="nc" id="L194">        }</span>
 
-<span class="nc bnc" id="L183" title="All 2 branches missed.">	if (useRuleChain) {</span>
-	    // Use the RuleChain for all the nodes extracted from the xpath queries
-<span class="nc" id="L185">	    super.ruleChainVisits.addAll(nodeNameToXPaths.keySet());</span>
-	} else {
-	    // Use original XPath if we cannot use the RuleChain
-<span class="nc" id="L188">	    nodeNameToXPaths.clear();</span>
-<span class="nc" id="L189">	    indexXPath(originalXPath, AST_ROOT);</span>
-<span class="nc bnc" id="L190" title="All 2 branches missed.">	    if (LOG.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L191">		LOG.log(Level.FINE, &quot;Unable to use RuleChain for for XPath: &quot; + xpath);</span>
-	    }
-	}
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (useRuleChain) {</span>
+            // Use the RuleChain for all the nodes extracted from the xpath
+            // queries
+<span class="nc" id="L199">            super.ruleChainVisits.addAll(nodeNameToXPaths.keySet());</span>
+        } else {
+            // Use original XPath if we cannot use the RuleChain
+<span class="nc" id="L202">            nodeNameToXPaths.clear();</span>
+<span class="nc" id="L203">            indexXPath(originalXPath, AST_ROOT);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            if (LOG.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L205">                LOG.log(Level.FINE, &quot;Unable to use RuleChain for for XPath: &quot; + xpath);</span>
+            }
+        }
 
-<span class="nc bnc" id="L195" title="All 2 branches missed.">	if (navigator == null) {</span>
-<span class="nc" id="L196">	    this.initializationStatus = InitializationStatus.PARTIAL;</span>
-	    // Clear the node data, because we did not have a Navigator
-<span class="nc" id="L198">	    nodeNameToXPaths = null;</span>
-	} else {
-<span class="nc" id="L200">	    this.initializationStatus = InitializationStatus.FULL;</span>
-	}
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (navigator == null) {</span>
+<span class="nc" id="L210">            this.initializationStatus = InitializationStatus.PARTIAL;</span>
+            // Clear the node data, because we did not have a Navigator
+<span class="nc" id="L212">            nodeNameToXPaths = null;</span>
+        } else {
+<span class="nc" id="L214">            this.initializationStatus = InitializationStatus.FULL;</span>
+        }
 
-<span class="nc" id="L203">    }</span>
+<span class="nc" id="L217">    }</span>
 
     private void indexXPath(XPath xpath, String nodeName) {
-<span class="nc" id="L206">	List&lt;XPath&gt; xpaths = nodeNameToXPaths.get(nodeName);</span>
-<span class="nc bnc" id="L207" title="All 2 branches missed.">	if (xpaths == null) {</span>
-<span class="nc" id="L208">	    xpaths = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L209">	    nodeNameToXPaths.put(nodeName, xpaths);</span>
-	}
-<span class="nc" id="L211">	xpaths.add(xpath);</span>
-<span class="nc" id="L212">    }</span>
+<span class="nc" id="L220">        List&lt;XPath&gt; xpaths = nodeNameToXPaths.get(nodeName);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (xpaths == null) {</span>
+<span class="nc" id="L222">            xpaths = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L223">            nodeNameToXPaths.put(nodeName, xpaths);</span>
+        }
+<span class="nc" id="L225">        xpaths.add(xpath);</span>
+<span class="nc" id="L226">    }</span>
 
     private BaseXPath createXPath(String xpathQueryString, Navigator navigator) throws JaxenException {
 
-<span class="nc" id="L216">    	BaseXPath xpath = new BaseXPath(xpathQueryString, navigator);</span>
-<span class="nc bnc" id="L217" title="All 2 branches missed.">    	if (properties.size() &gt; 1) {</span>
-<span class="nc" id="L218">    		SimpleVariableContext vc = new SimpleVariableContext();</span>
-<span class="nc bnc" id="L219" title="All 2 branches missed.">    		for (Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; e : properties.entrySet()) {</span>
-<span class="nc" id="L220">    			String propName = e.getKey().name();</span>
-<span class="nc bnc" id="L221" title="All 2 branches missed.">    			if (!&quot;xpath&quot;.equals(propName)) {</span>
-<span class="nc" id="L222">    				Object value = e.getValue();</span>
-<span class="nc bnc" id="L223" title="All 2 branches missed.">    				vc.setVariableValue(propName, value != null ? value.toString() : null);</span>
-    			}
-<span class="nc" id="L225">    		}</span>
-<span class="nc" id="L226">    		xpath.setVariableContext(vc);</span>
-    	}
-<span class="nc" id="L228">    	return xpath;</span>
+<span class="nc" id="L230">        BaseXPath xpath = new BaseXPath(xpathQueryString, navigator);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (properties.size() &gt; 1) {</span>
+<span class="nc" id="L232">            SimpleVariableContext vc = new SimpleVariableContext();</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            for (Entry&lt;PropertyDescriptor&lt;?&gt;, Object&gt; e : properties.entrySet()) {</span>
+<span class="nc" id="L234">                String propName = e.getKey().name();</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">                if (!&quot;xpath&quot;.equals(propName)) {</span>
+<span class="nc" id="L236">                    Object value = e.getValue();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">                    vc.setVariableValue(propName, value != null ? value.toString() : null);</span>
+                }
+<span class="nc" id="L239">            }</span>
+<span class="nc" id="L240">            xpath.setVariableContext(vc);</span>
+        }
+<span class="nc" id="L242">        return xpath;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

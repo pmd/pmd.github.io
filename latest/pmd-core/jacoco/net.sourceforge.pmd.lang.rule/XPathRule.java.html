@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XPathRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">XPathRule.java</span></div><h1>XPathRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.rule;
 
 import static net.sourceforge.pmd.lang.rule.xpath.XPathRuleQuery.XPATH_1_0;
@@ -21,103 +22,104 @@ import net.sourceforge.pmd.util.StringUtil;
 
 /**
  * Rule that tries to match an XPath expression against a DOM view of an AST.
- * &lt;p/&gt;
+ * 
  * This rule needs a &quot;xpath&quot; property value in order to function.
  */
 public class XPathRule extends AbstractRule {
 
-<span class="fc" id="L29">	public static final StringProperty XPATH_DESCRIPTOR = new StringProperty(&quot;xpath&quot;, &quot;XPath expression&quot;, &quot;&quot;, 1.0f);</span>
-<span class="fc" id="L30">	public static final EnumeratedProperty&lt;String&gt; VERSION_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(&quot;version&quot;,</span>
-			&quot;XPath specification version&quot;, 
-			new String[] { XPATH_1_0, XPATH_1_0_COMPATIBILITY, XPATH_2_0 },
-			new String[] { XPATH_1_0, XPATH_1_0_COMPATIBILITY, XPATH_2_0 }, 
-			0, 2.0f);
+<span class="fc" id="L30">    public static final StringProperty XPATH_DESCRIPTOR = new StringProperty(&quot;xpath&quot;, &quot;XPath expression&quot;, &quot;&quot;, 1.0f);</span>
+<span class="fc" id="L31">    public static final EnumeratedProperty&lt;String&gt; VERSION_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(&quot;version&quot;,</span>
+            &quot;XPath specification version&quot;, new String[] { XPATH_1_0, XPATH_1_0_COMPATIBILITY, XPATH_2_0 },
+            new String[] { XPATH_1_0, XPATH_1_0_COMPATIBILITY, XPATH_2_0 }, 0, 2.0f);
 
-	private XPathRuleQuery xpathRuleQuery;
+    private XPathRuleQuery xpathRuleQuery;
 
-<span class="fc" id="L38">	public XPathRule() {</span>
-<span class="fc" id="L39">		definePropertyDescriptor(XPATH_DESCRIPTOR);</span>
-<span class="fc" id="L40">		definePropertyDescriptor(VERSION_DESCRIPTOR);</span>
-<span class="fc" id="L41">	}</span>
+<span class="fc" id="L37">    public XPathRule() {</span>
+<span class="fc" id="L38">        definePropertyDescriptor(XPATH_DESCRIPTOR);</span>
+<span class="fc" id="L39">        definePropertyDescriptor(VERSION_DESCRIPTOR);</span>
+<span class="fc" id="L40">    }</span>
 
-	public XPathRule(String xPath) {
-<span class="nc" id="L44">		this();</span>
-<span class="nc" id="L45">		setXPath(xPath);</span>
-<span class="nc" id="L46">	}</span>
-	
-	public void setXPath(String xPath) {
-<span class="nc" id="L49">		setProperty(XPathRule.XPATH_DESCRIPTOR, xPath);</span>
-<span class="nc" id="L50">	}</span>
-	
-	public void setVersion(String version) {
-<span class="nc" id="L53">		setProperty(XPathRule.VERSION_DESCRIPTOR, version);</span>
-<span class="nc" id="L54">	}</span>
-	
-	/**
-	 * Apply the rule to all nodes.
-	 */
-	public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
-<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (Node node : nodes) {</span>
-<span class="nc" id="L61">			evaluate(node, ctx);</span>
-<span class="nc" id="L62">		}</span>
-<span class="nc" id="L63">	}</span>
+    public XPathRule(String xPath) {
+<span class="nc" id="L43">        this();</span>
+<span class="nc" id="L44">        setXPath(xPath);</span>
+<span class="nc" id="L45">    }</span>
 
-	/**
-	 * Evaluate the XPath query with the AST node.
-	 * All matches are reported as violations.
-	 *
-	 * @param node The Node that to be checked.
-	 * @param data The RuleContext.
-	 */
-	public void evaluate(Node node, RuleContext data) {
-<span class="nc" id="L73">		init();</span>
-<span class="nc" id="L74">		List&lt;Node&gt; nodes = xpathRuleQuery.evaluate(node, data);</span>
-<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (nodes != null) {</span>
-<span class="nc bnc" id="L76" title="All 2 branches missed.">			for (Node n : nodes) {</span>
-<span class="nc" id="L77">				addViolation(data, n, n.getImage());</span>
-<span class="nc" id="L78">			}</span>
-		}
+    public void setXPath(String xPath) {
+<span class="nc" id="L48">        setProperty(XPathRule.XPATH_DESCRIPTOR, xPath);</span>
+<span class="nc" id="L49">    }</span>
 
-<span class="nc" id="L81">	}</span>
+    public void setVersion(String version) {
+<span class="nc" id="L52">        setProperty(XPathRule.VERSION_DESCRIPTOR, version);</span>
+<span class="nc" id="L53">    }</span>
 
-	@Override
-	public List&lt;String&gt; getRuleChainVisits() {
-<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (init()) {</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">			for (String nodeName : xpathRuleQuery.getRuleChainVisits()) {</span>
-<span class="nc" id="L87">				super.addRuleChainVisit(nodeName);</span>
-<span class="nc" id="L88">			}</span>
-		}
-<span class="nc" id="L90">		return super.getRuleChainVisits();</span>
-	}
+    /**
+     * Apply the rule to all nodes.
+     */
+    @Override
+    public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        for (Node node : nodes) {</span>
+<span class="nc" id="L61">            evaluate(node, ctx);</span>
+<span class="nc" id="L62">        }</span>
+<span class="nc" id="L63">    }</span>
 
-	private boolean init() {
-<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (xpathRuleQuery == null) {</span>
-<span class="nc" id="L95">			String xpath = getProperty(XPATH_DESCRIPTOR);</span>
-<span class="nc" id="L96">			String version = (String) getProperty(VERSION_DESCRIPTOR);</span>
-<span class="nc bnc" id="L97" title="All 2 branches missed.">			if (XPATH_1_0.equals(version)) {</span>
-<span class="nc" id="L98">				xpathRuleQuery = new JaxenXPathRuleQuery();</span>
-			} else {
-<span class="nc" id="L100">				xpathRuleQuery = new SaxonXPathRuleQuery();</span>
-			}
-<span class="nc" id="L102">			xpathRuleQuery.setXPath(xpath);</span>
-<span class="nc" id="L103">			xpathRuleQuery.setVersion(version);</span>
-<span class="nc" id="L104">			xpathRuleQuery.setProperties(this.getPropertiesByPropertyDescriptor());</span>
-<span class="nc" id="L105">			return true;</span>
-		}
-<span class="nc" id="L107">		return false;</span>
-	}
+    /**
+     * Evaluate the XPath query with the AST node. All matches are reported as
+     * violations.
+     *
+     * @param node
+     *            The Node that to be checked.
+     * @param data
+     *            The RuleContext.
+     */
+    public void evaluate(Node node, RuleContext data) {
+<span class="nc" id="L75">        init();</span>
+<span class="nc" id="L76">        List&lt;Node&gt; nodes = xpathRuleQuery.evaluate(node, data);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (nodes != null) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (Node n : nodes) {</span>
+<span class="nc" id="L79">                addViolation(data, n, n.getImage());</span>
+<span class="nc" id="L80">            }</span>
+        }
 
+<span class="nc" id="L83">    }</span>
 
-	public boolean hasXPathExpression() {		
-<span class="nc" id="L112">		String xPath = getProperty(XPATH_DESCRIPTOR);</span>
-<span class="nc" id="L113">		return StringUtil.isNotEmpty(xPath);</span>
-	}
+    @Override
+    public List&lt;String&gt; getRuleChainVisits() {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (init()) {</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            for (String nodeName : xpathRuleQuery.getRuleChainVisits()) {</span>
+<span class="nc" id="L89">                super.addRuleChainVisit(nodeName);</span>
+<span class="nc" id="L90">            }</span>
+        }
+<span class="nc" id="L92">        return super.getRuleChainVisits();</span>
+    }
 
-	/**
-	 * @see PropertySource#dysfunctionReason()
-	 */
-	public String dysfunctionReason() {
-<span class="nc bnc" id="L120" title="All 2 branches missed.">		return hasXPathExpression() ? null : &quot;Missing xPath expression&quot;;</span>
-	}
+    private boolean init() {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (xpathRuleQuery == null) {</span>
+<span class="nc" id="L97">            String xpath = getProperty(XPATH_DESCRIPTOR);</span>
+<span class="nc" id="L98">            String version = (String) getProperty(VERSION_DESCRIPTOR);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if (XPATH_1_0.equals(version)) {</span>
+<span class="nc" id="L100">                xpathRuleQuery = new JaxenXPathRuleQuery();</span>
+            } else {
+<span class="nc" id="L102">                xpathRuleQuery = new SaxonXPathRuleQuery();</span>
+            }
+<span class="nc" id="L104">            xpathRuleQuery.setXPath(xpath);</span>
+<span class="nc" id="L105">            xpathRuleQuery.setVersion(version);</span>
+<span class="nc" id="L106">            xpathRuleQuery.setProperties(this.getPropertiesByPropertyDescriptor());</span>
+<span class="nc" id="L107">            return true;</span>
+        }
+<span class="nc" id="L109">        return false;</span>
+    }
+
+    public boolean hasXPathExpression() {
+<span class="nc" id="L113">        String xPath = getProperty(XPATH_DESCRIPTOR);</span>
+<span class="nc" id="L114">        return StringUtil.isNotEmpty(xPath);</span>
+    }
+
+    /**
+     * @see PropertySource#dysfunctionReason()
+     */
+    @Override
+    public String dysfunctionReason() {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        return hasXPathExpression() ? null : &quot;Missing xPath expression&quot;;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

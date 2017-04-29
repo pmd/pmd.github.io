@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ViewerModel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.viewer.model</a> &gt; <span class="el_source">ViewerModel.java</span></div><h1>ViewerModel.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.util.viewer.model;
 
 import java.io.StringReader;
@@ -20,123 +21,121 @@ import net.sourceforge.pmd.lang.ast.ParseException;
 import net.sourceforge.pmd.lang.ast.xpath.DocumentNavigator;
 
 public class ViewerModel {
-<span class="nc" id="L23">    private static final Logger LOGGER = Logger.getLogger(ViewerModel.class.getName());</span>
+<span class="nc" id="L24">    private static final Logger LOGGER = Logger.getLogger(ViewerModel.class.getName());</span>
 
     private List&lt;ViewerModelListener&gt; listeners;
     private Node rootNode;
     private List&lt;Node&gt; evaluationResults;
 
-<span class="nc" id="L29">    public ViewerModel() {</span>
-<span class="nc" id="L30">        listeners = new ArrayList&lt;&gt;(5);</span>
-<span class="nc" id="L31">    }</span>
+<span class="nc" id="L30">    public ViewerModel() {</span>
+<span class="nc" id="L31">        listeners = new ArrayList&lt;&gt;(5);</span>
+<span class="nc" id="L32">    }</span>
 
     public Node getRootNode() {
-<span class="nc" id="L34">	return rootNode;</span>
+<span class="nc" id="L35">        return rootNode;</span>
     }
 
     /**
-     * commits source code to the model.
-     * all existing source will be replaced
+     * Commits source code to the model. all existing source will be replaced.
      */
     public void commitSource(String source, LanguageVersion languageVersion) {
-<span class="nc" id="L42">	LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
-<span class="nc" id="L43">	Node node =  languageVersionHandler</span>
-		.getParser(languageVersionHandler.getDefaultParserOptions()).parse(null, new StringReader(source));
-<span class="nc" id="L45">	rootNode = node;</span>
-<span class="nc" id="L46">	fireViewerModelEvent(new ViewerModelEvent(this, ViewerModelEvent.CODE_RECOMPILED));</span>
+<span class="nc" id="L42">        LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="nc" id="L43">        Node node = languageVersionHandler.getParser(languageVersionHandler.getDefaultParserOptions()).parse(null,</span>
+                new StringReader(source));
+<span class="nc" id="L45">        rootNode = node;</span>
+<span class="nc" id="L46">        fireViewerModelEvent(new ViewerModelEvent(this, ViewerModelEvent.CODE_RECOMPILED));</span>
 <span class="nc" id="L47">    }</span>
 
     /**
-     * determines whether the model has a compiled tree at it's disposal
+     * Determines whether the model has a compiled tree at it's disposal.
      *
      * @return true if there is an AST, false otherwise
      */
     public boolean hasCompiledTree() {
-<span class="nc bnc" id="L55" title="All 2 branches missed.">	return rootNode != null;</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        return rootNode != null;</span>
     }
 
     /**
-     * evaluates the given XPath expression against the current tree
+     * Evaluates the given XPath expression against the current tree.
      *
-     * @param xPath     XPath expression to be evaluated
-     * @param evaluator object which requests the evaluation
+     * @param xPath
+     *            XPath expression to be evaluated
+     * @param evaluator
+     *            object which requests the evaluation
      */
     public void evaluateXPathExpression(String xPath, Object evaluator) throws ParseException, JaxenException {
-	try 
-	{
-<span class="nc bnc" id="L67" title="All 2 branches missed.">	    if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L68">    	LOGGER.finest(&quot;xPath=&quot;+xPath);</span>
-<span class="nc" id="L69">    	LOGGER.finest(&quot;evaluator=&quot;+evaluator);</span>
-	    }
-<span class="nc" id="L71">	XPath xpath = new BaseXPath(xPath, new DocumentNavigator());</span>
-<span class="nc bnc" id="L72" title="All 2 branches missed.">	if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L73">    	LOGGER.finest(&quot;xpath=&quot;+xpath);</span>
-<span class="nc" id="L74">    	LOGGER.finest(&quot;rootNode=&quot;+rootNode);</span>
-	}
-	try
-	{
-<span class="nc" id="L78">		evaluationResults = xpath.selectNodes(rootNode);</span>
-	}
-<span class="nc" id="L80">	catch (Exception e)</span>
-	{
-<span class="nc" id="L82">		LOGGER.finest(&quot;selectNodes problem:&quot;);</span>
-<span class="nc" id="L83">		e.printStackTrace(System.err);</span>
-<span class="nc" id="L84">	}</span>
-<span class="nc bnc" id="L85" title="All 2 branches missed.">	if (LOGGER.isLoggable(Level.FINEST)) {</span>
-<span class="nc" id="L86">	    LOGGER.finest(&quot;evaluationResults=&quot;+evaluationResults);</span>
-	}
-<span class="nc" id="L88">	fireViewerModelEvent(new ViewerModelEvent(evaluator, ViewerModelEvent.PATH_EXPRESSION_EVALUATED));</span>
-	}
-<span class="nc" id="L90">	catch (JaxenException je)</span>
-	{
-<span class="nc" id="L92">	 je.printStackTrace(System.err);</span>
-<span class="nc" id="L93">         throw je;</span>
-<span class="nc" id="L94">	}</span>
-<span class="nc" id="L95">    }</span>
+        try {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L69">                LOGGER.finest(&quot;xPath=&quot; + xPath);</span>
+<span class="nc" id="L70">                LOGGER.finest(&quot;evaluator=&quot; + evaluator);</span>
+            }
+<span class="nc" id="L72">            XPath xpath = new BaseXPath(xPath, new DocumentNavigator());</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L74">                LOGGER.finest(&quot;xpath=&quot; + xpath);</span>
+<span class="nc" id="L75">                LOGGER.finest(&quot;rootNode=&quot; + rootNode);</span>
+            }
+            try {
+<span class="nc" id="L78">                evaluationResults = xpath.selectNodes(rootNode);</span>
+<span class="nc" id="L79">            } catch (Exception e) {</span>
+<span class="nc" id="L80">                LOGGER.finest(&quot;selectNodes problem:&quot;);</span>
+<span class="nc" id="L81">                e.printStackTrace(System.err);</span>
+<span class="nc" id="L82">            }</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L84">                LOGGER.finest(&quot;evaluationResults=&quot; + evaluationResults);</span>
+            }
+<span class="nc" id="L86">            fireViewerModelEvent(new ViewerModelEvent(evaluator, ViewerModelEvent.PATH_EXPRESSION_EVALUATED));</span>
+<span class="nc" id="L87">        } catch (JaxenException je) {</span>
+<span class="nc" id="L88">            je.printStackTrace(System.err);</span>
+<span class="nc" id="L89">            throw je;</span>
+<span class="nc" id="L90">        }</span>
+<span class="nc" id="L91">    }</span>
 
     /**
-     * retrieves the results of last evaluation
+     * Retrieves the results of last evaluation.
      *
      * @return a list containing the nodes selected by the last XPath expression
-     *         &lt;p/&gt;
      *         evaluation
      */
     public List&lt;Node&gt; getLastEvaluationResults() {
-<span class="nc" id="L105">	return evaluationResults;</span>
+<span class="nc" id="L100">        return evaluationResults;</span>
     }
 
     /**
-     * selects the given node in the AST
+     * Selects the given node in the AST.
      *
-     * @param node     node to be selected
-     * @param selector object which requests the selection
+     * @param node
+     *            node to be selected
+     * @param selector
+     *            object which requests the selection
      */
     public void selectNode(Node node, Object selector) {
-<span class="nc" id="L115">	fireViewerModelEvent(new ViewerModelEvent(selector, ViewerModelEvent.NODE_SELECTED, node));</span>
-<span class="nc" id="L116">    }</span>
+<span class="nc" id="L112">        fireViewerModelEvent(new ViewerModelEvent(selector, ViewerModelEvent.NODE_SELECTED, node));</span>
+<span class="nc" id="L113">    }</span>
 
     /**
-     * appends the given fragment to the XPath expression
+     * Appends the given fragment to the XPath expression.
      *
-     * @param pathFragment fragment to be added
-     * @param appender     object that is trying to append the fragment
+     * @param pathFragment
+     *            fragment to be added
+     * @param appender
+     *            object that is trying to append the fragment
      */
     public void appendToXPathExpression(String pathFragment, Object appender) {
-<span class="nc" id="L125">	fireViewerModelEvent(new ViewerModelEvent(appender, ViewerModelEvent.PATH_EXPRESSION_APPENDED, pathFragment));</span>
-<span class="nc" id="L126">    }</span>
+<span class="nc" id="L124">        fireViewerModelEvent(new ViewerModelEvent(appender, ViewerModelEvent.PATH_EXPRESSION_APPENDED, pathFragment));</span>
+<span class="nc" id="L125">    }</span>
 
     public void addViewerModelListener(ViewerModelListener l) {
-<span class="nc" id="L129">	listeners.add(l);</span>
-<span class="nc" id="L130">    }</span>
+<span class="nc" id="L128">        listeners.add(l);</span>
+<span class="nc" id="L129">    }</span>
 
     public void removeViewerModelListener(ViewerModelListener l) {
-<span class="nc" id="L133">	listeners.remove(l);</span>
-<span class="nc" id="L134">    }</span>
+<span class="nc" id="L132">        listeners.remove(l);</span>
+<span class="nc" id="L133">    }</span>
 
     protected void fireViewerModelEvent(ViewerModelEvent e) {
-<span class="nc bnc" id="L137" title="All 2 branches missed.">	for (int i = 0; i &lt; listeners.size(); i++) {</span>
-<span class="nc" id="L138">	    listeners.get(i).viewerModelChanged(e);</span>
-	}
-<span class="nc" id="L140">    }</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        for (int i = 0; i &lt; listeners.size(); i++) {</span>
+<span class="nc" id="L137">            listeners.get(i).viewerModelChanged(e);</span>
+        }
+<span class="nc" id="L139">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

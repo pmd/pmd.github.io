@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CachedRuleViolation.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cache</a> &gt; <span class="el_source">CachedRuleViolation.java</span></div><h1>CachedRuleViolation.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cache;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleViolation;
+
+/**
+ * A {@link RuleViolation} implementation that is immutable, and therefore cache friendly
+ */
+public final class CachedRuleViolation implements RuleViolation {
+
+    private final CachedRuleMapper mapper;
+
+    private final String description;
+    private final String fileName;
+    private final String ruleClassName;
+    private final int beginLine;
+    private final int beginColumn;
+    private final int endLine;
+    private final int endColumn;
+    private final String packageName;
+    private final String className;
+    private final String methodName;
+    private final String variableName;
+
+    private CachedRuleViolation(final CachedRuleMapper mapper, final String description,
+            final String fileName, final String ruleClassName, final int beginLine,
+            final int beginColumn, final int endLine, final int endColumn, final String packageName,
+<span class="fc" id="L36">            final String className, final String methodName, final String variableName) {</span>
+<span class="fc" id="L37">        this.mapper = mapper;</span>
+<span class="fc" id="L38">        this.description = description;</span>
+<span class="fc" id="L39">        this.fileName = fileName;</span>
+<span class="fc" id="L40">        this.ruleClassName = ruleClassName;</span>
+<span class="fc" id="L41">        this.beginLine = beginLine;</span>
+<span class="fc" id="L42">        this.beginColumn = beginColumn;</span>
+<span class="fc" id="L43">        this.endLine = endLine;</span>
+<span class="fc" id="L44">        this.endColumn = endColumn;</span>
+<span class="fc" id="L45">        this.packageName = packageName;</span>
+<span class="fc" id="L46">        this.className = className;</span>
+<span class="fc" id="L47">        this.methodName = methodName;</span>
+<span class="fc" id="L48">        this.variableName = variableName;</span>
+<span class="fc" id="L49">    }</span>
+
+    @Override
+    public Rule getRule() {
+        // The mapper may be initialized after cache is loaded, so use it lazily
+<span class="nc" id="L54">        return mapper.getRuleForClass(ruleClassName);</span>
+    }
+
+    @Override
+    public String getDescription() {
+<span class="nc" id="L59">        return description;</span>
+    }
+
+    @Override
+    public boolean isSuppressed() {
+<span class="nc" id="L64">        return false; // By definition, if cached, it was not suppressed</span>
+    }
+
+    @Override
+    public String getFilename() {
+<span class="nc" id="L69">        return fileName;</span>
+    }
+
+    @Override
+    public int getBeginLine() {
+<span class="nc" id="L74">        return beginLine;</span>
+    }
+
+    @Override
+    public int getBeginColumn() {
+<span class="nc" id="L79">        return beginColumn;</span>
+    }
+
+    @Override
+    public int getEndLine() {
+<span class="nc" id="L84">        return endLine;</span>
+    }
+
+    @Override
+    public int getEndColumn() {
+<span class="nc" id="L89">        return endColumn;</span>
+    }
+
+    @Override
+    public String getPackageName() {
+<span class="nc" id="L94">        return packageName;</span>
+    }
+
+    @Override
+    public String getClassName() {
+<span class="nc" id="L99">        return className;</span>
+    }
+
+    @Override
+    public String getMethodName() {
+<span class="nc" id="L104">        return methodName;</span>
+    }
+
+    @Override
+    public String getVariableName() {
+<span class="nc" id="L109">        return variableName;</span>
+    }
+
+    /**
+     * Helper method to load a {@link CachedRuleViolation} from an input stream.
+     *
+     * @param stream The stream from which to load the violation.
+     * @param fileName The name of the file on which this rule was reported.
+     * @param mapper The mapper to be used to obtain rule instances from the active rulesets.
+     * @return The loaded rule violation.
+     * @throws IOException
+     */
+    /* package */ static CachedRuleViolation loadFromStream(final DataInputStream stream,
+            final String fileName, final CachedRuleMapper mapper) throws IOException {
+<span class="fc" id="L123">        final String description = stream.readUTF();</span>
+<span class="fc" id="L124">        final String ruleClassName = stream.readUTF();</span>
+<span class="fc" id="L125">        final int beginLine = stream.readInt();</span>
+<span class="fc" id="L126">        final int beginColumn = stream.readInt();</span>
+<span class="fc" id="L127">        final int endLine = stream.readInt();</span>
+<span class="fc" id="L128">        final int endColumn = stream.readInt();</span>
+<span class="fc" id="L129">        final String packageName = stream.readUTF();</span>
+<span class="fc" id="L130">        final String className = stream.readUTF();</span>
+<span class="fc" id="L131">        final String methodName = stream.readUTF();</span>
+<span class="fc" id="L132">        final String variableName = stream.readUTF();</span>
+
+<span class="fc" id="L134">        return new CachedRuleViolation(mapper, description, fileName, ruleClassName, beginLine, beginColumn,</span>
+                endLine, endColumn, packageName, className, methodName, variableName);
+    }
+
+    /**
+     * Helper method to store a {@link RuleViolation} in an output stream to be later
+     * retrieved as a {@link CachedRuleViolation}
+     *
+     * @param stream The stream on which to store the violation.
+     * @param violation The rule violation to cache.
+     * @throws IOException
+     */
+    /* package */ static void storeToStream(final DataOutputStream stream,
+            final RuleViolation violation) throws IOException {
+<span class="fc" id="L148">        stream.writeUTF(violation.getDescription());</span>
+<span class="fc" id="L149">        stream.writeUTF(violation.getRule().getRuleClass());</span>
+<span class="fc" id="L150">        stream.writeInt(violation.getBeginLine());</span>
+<span class="fc" id="L151">        stream.writeInt(violation.getBeginColumn());</span>
+<span class="fc" id="L152">        stream.writeInt(violation.getEndLine());</span>
+<span class="fc" id="L153">        stream.writeInt(violation.getEndColumn());</span>
+<span class="fc" id="L154">        stream.writeUTF(violation.getPackageName());</span>
+<span class="fc" id="L155">        stream.writeUTF(violation.getClassName());</span>
+<span class="fc" id="L156">        stream.writeUTF(violation.getMethodName());</span>
+<span class="fc" id="L157">        stream.writeUTF(violation.getVariableName());</span>
+<span class="fc" id="L158">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

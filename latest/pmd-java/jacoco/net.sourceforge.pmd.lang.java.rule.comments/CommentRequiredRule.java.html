@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CommentRequiredRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.comments</a> &gt; <span class="el_source">CommentRequiredRule.java</span></div><h1>CommentRequiredRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.comments;
 
 import java.util.Arrays;
@@ -20,262 +21,253 @@ import net.sourceforge.pmd.lang.rule.properties.EnumeratedProperty;
  */
 public class CommentRequiredRule extends AbstractCommentRule {
 
-<span class="pc" id="L23">	enum CommentRequirement {</span>
-<span class="fc" id="L24">		Required(&quot;Required&quot;), Ignored(&quot;Ignored&quot;), Unwanted(&quot;Unwanted&quot;);</span>
+<span class="pc" id="L24">    enum CommentRequirement {</span>
+<span class="fc" id="L25">        Required(&quot;Required&quot;), Ignored(&quot;Ignored&quot;), Unwanted(&quot;Unwanted&quot;);</span>
 
-		private final String label;
+        private final String label;
 
-<span class="fc" id="L28">		CommentRequirement(String theLabel) {</span>
-<span class="fc" id="L29">			label = theLabel;</span>
-<span class="fc" id="L30">		}</span>
+<span class="fc" id="L29">        CommentRequirement(String theLabel) {</span>
+<span class="fc" id="L30">            label = theLabel;</span>
+<span class="fc" id="L31">        }</span>
 
-		public static String[] labels() {
-<span class="fc" id="L33">			String[] labels = new String[values().length];</span>
-<span class="fc" id="L34">			int i = 0;</span>
-<span class="fc bfc" id="L35" title="All 2 branches covered.">			for (CommentRequirement requirement : values()) {</span>
-<span class="fc" id="L36">				labels[i++] = requirement.label;</span>
-			}
-<span class="fc" id="L38">			return labels;</span>
-		}
-	}
+        public static String[] labels() {
+<span class="fc" id="L34">            String[] labels = new String[values().length];</span>
+<span class="fc" id="L35">            int i = 0;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            for (CommentRequirement requirement : values()) {</span>
+<span class="fc" id="L37">                labels[i++] = requirement.label;</span>
+            }
+<span class="fc" id="L39">            return labels;</span>
+        }
+    }
 
-<span class="fc" id="L42">	public static final EnumeratedProperty&lt;CommentRequirement&gt; HEADER_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
-			&quot;headerCommentRequirement&quot;, &quot;Header comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-			CommentRequirement.labels(), CommentRequirement.values(), 0, 1.0f);
+<span class="fc" id="L43">    public static final EnumeratedProperty&lt;CommentRequirement&gt; HEADER_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;headerCommentRequirement&quot;,
+            &quot;Header comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 0, 1.0f);
 
-<span class="fc" id="L46">	public static final EnumeratedProperty&lt;CommentRequirement&gt; FIELD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
-			&quot;fieldCommentRequirement&quot;, &quot;Field comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-			CommentRequirement.labels(), CommentRequirement.values(), 0, 2.0f);
+<span class="fc" id="L48">    public static final EnumeratedProperty&lt;CommentRequirement&gt; FIELD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;fieldCommentRequirement&quot;,
+            &quot;Field comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 0, 2.0f);
 
-<span class="fc" id="L50">	public static final EnumeratedProperty&lt;CommentRequirement&gt; PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
-			&quot;publicMethodCommentRequirement&quot;, &quot;Public method and constructor comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-			CommentRequirement.labels(), CommentRequirement.values(), 0, 3.0f);
+<span class="fc" id="L53">    public static final EnumeratedProperty&lt;CommentRequirement&gt; PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;publicMethodCommentRequirement&quot;,
+            &quot;Public method and constructor comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 0, 3.0f);
 
-<span class="fc" id="L54">	public static final EnumeratedProperty&lt;CommentRequirement&gt; PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
-			&quot;protectedMethodCommentRequirement&quot;, &quot;Protected method constructor comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-			CommentRequirement.labels(), CommentRequirement.values(), 0, 4.0f);
+<span class="fc" id="L58">    public static final EnumeratedProperty&lt;CommentRequirement&gt; PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;protectedMethodCommentRequirement&quot;,
+            &quot;Protected method constructor comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 0, 4.0f);
 
-<span class="fc" id="L58">	public static final EnumeratedProperty&lt;CommentRequirement&gt; ENUM_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
-			&quot;enumCommentRequirement&quot;, &quot;Enum comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-			CommentRequirement.labels(), CommentRequirement.values(), 0, 5.0f);
+<span class="fc" id="L63">    public static final EnumeratedProperty&lt;CommentRequirement&gt; ENUM_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;&gt;(</span>
+            &quot;enumCommentRequirement&quot;, &quot;Enum comments. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 0, 5.0f);
 
-<span class="fc" id="L62">	public static final EnumeratedProperty&lt;CommentRequirement&gt; SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;CommentRequirement&gt;(</span>
-	        &quot;serialVersionUIDCommentRequired&quot;, &quot;serial version UID commts. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
-	        CommentRequirement.labels(), CommentRequirement.values(), 1, 6.0f);
+<span class="fc" id="L67">    public static final EnumeratedProperty&lt;CommentRequirement&gt; SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR = new EnumeratedProperty&lt;CommentRequirement&gt;(</span>
+            &quot;serialVersionUIDCommentRequired&quot;,
+            &quot;serial version UID commts. Possible values: &quot; + Arrays.toString(CommentRequirement.values()),
+            CommentRequirement.labels(), CommentRequirement.values(), 1, 6.0f);
 
-<span class="fc" id="L66">	public CommentRequiredRule() {</span>
-<span class="fc" id="L67">		definePropertyDescriptor(HEADER_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L68">		definePropertyDescriptor(FIELD_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L69">		definePropertyDescriptor(PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L70">		definePropertyDescriptor(PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L71">		definePropertyDescriptor(ENUM_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L72">		definePropertyDescriptor(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR);</span>
-<span class="fc" id="L73">	}</span>
+<span class="fc" id="L72">    public CommentRequiredRule() {</span>
+<span class="fc" id="L73">        definePropertyDescriptor(HEADER_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L74">        definePropertyDescriptor(FIELD_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L75">        definePropertyDescriptor(PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L76">        definePropertyDescriptor(PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L77">        definePropertyDescriptor(ENUM_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L78">        definePropertyDescriptor(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR);</span>
+<span class="fc" id="L79">    }</span>
 
-	private CommentRequirement getCommentRequirement(String label) {
-<span class="fc bfc" id="L76" title="All 2 branches covered.">		if (CommentRequirement.Ignored.label.equals(label)) {</span>
-<span class="fc" id="L77">			return CommentRequirement.Ignored;</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">		} else if (CommentRequirement.Required.label.equals(label)) {</span>
-<span class="fc" id="L79">			return CommentRequirement.Required;</span>
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		} else if (CommentRequirement.Unwanted.label.equals(label)) {</span>
-<span class="fc" id="L81">			return CommentRequirement.Unwanted;</span>
-		} else {
-<span class="nc" id="L83">			return null;</span>
-		}
-	}
+    private CommentRequirement getCommentRequirement(String label) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (CommentRequirement.Ignored.label.equals(label)) {</span>
+<span class="fc" id="L83">            return CommentRequirement.Ignored;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        } else if (CommentRequirement.Required.label.equals(label)) {</span>
+<span class="fc" id="L85">            return CommentRequirement.Required;</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        } else if (CommentRequirement.Unwanted.label.equals(label)) {</span>
+<span class="fc" id="L87">            return CommentRequirement.Unwanted;</span>
+        } else {
+<span class="nc" id="L89">            return null;</span>
+        }
+    }
 
-	@Override
-	public Object visit(ASTClassOrInterfaceDeclaration decl, Object data) {
-<span class="fc" id="L89">		CommentRequirement headerRequirement = getCommentRequirement(getProperty(</span>
-				HEADER_CMT_REQUIREMENT_DESCRIPTOR).toString());
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration decl, Object data) {
+<span class="fc" id="L95">        CommentRequirement headerRequirement = getCommentRequirement(</span>
+                getProperty(HEADER_CMT_REQUIREMENT_DESCRIPTOR).toString());
 
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">		if (headerRequirement != CommentRequirement.Ignored) {</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">			if (headerRequirement == CommentRequirement.Required) {</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">				if (decl.comment() == null) {</span>
-<span class="fc" id="L95">					addViolationWithMessage(data, decl,</span>
-							HEADER_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Required,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			} else {
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">				if (decl.comment() != null) {</span>
-<span class="fc" id="L102">					addViolationWithMessage(data, decl,</span>
-							HEADER_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Unwanted,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			}
-		}
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (headerRequirement != CommentRequirement.Ignored) {</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (headerRequirement == CommentRequirement.Required) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                if (decl.comment() == null) {</span>
+<span class="fc" id="L101">                    addViolationWithMessage(data, decl,</span>
+                            HEADER_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            } else {
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">                if (decl.comment() != null) {</span>
+<span class="fc" id="L107">                    addViolationWithMessage(data, decl,</span>
+                            HEADER_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            }
+        }
 
-<span class="fc" id="L110">		return super.visit(decl, data);</span>
-	}
+<span class="fc" id="L114">        return super.visit(decl, data);</span>
+    }
 
-	@Override
-	public Object visit(ASTConstructorDeclaration decl, Object data) {
-<span class="fc" id="L115">	    checkComment(decl, data);</span>
-<span class="fc" id="L116">	    return super.visit(decl, data);</span>
-	}
+    @Override
+    public Object visit(ASTConstructorDeclaration decl, Object data) {
+<span class="fc" id="L119">        checkComment(decl, data);</span>
+<span class="fc" id="L120">        return super.visit(decl, data);</span>
+    }
 
-	@Override
-	public Object visit(ASTMethodDeclaration decl, Object data) {
-<span class="fc" id="L121">	    checkComment(decl, data);</span>
-<span class="fc" id="L122">	    return super.visit(decl, data);</span>
-	}
+    @Override
+    public Object visit(ASTMethodDeclaration decl, Object data) {
+<span class="fc" id="L125">        checkComment(decl, data);</span>
+<span class="fc" id="L126">        return super.visit(decl, data);</span>
+    }
 
-	private void checkComment(AbstractJavaAccessNode decl, Object data) {
-<span class="fc" id="L126">		CommentRequirement pubMethodRequirement = getCommentRequirement(getProperty(</span>
-				PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR).toString());
-<span class="fc" id="L128">		CommentRequirement protMethodRequirement = getCommentRequirement(getProperty(</span>
-				PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR).toString());
+    private void checkComment(AbstractJavaAccessNode decl, Object data) {
+<span class="fc" id="L130">        CommentRequirement pubMethodRequirement = getCommentRequirement(</span>
+                getProperty(PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR).toString());
+<span class="fc" id="L132">        CommentRequirement protMethodRequirement = getCommentRequirement(</span>
+                getProperty(PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR).toString());
 
-<span class="fc bfc" id="L131" title="All 2 branches covered.">		if (decl.isPublic()) {</span>
-<span class="fc bfc" id="L132" title="All 2 branches covered.">			if (pubMethodRequirement != CommentRequirement.Ignored) {</span>
-<span class="fc bfc" id="L133" title="All 2 branches covered.">				if (pubMethodRequirement == CommentRequirement.Required) {</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">					if (decl.comment() == null) {</span>
-<span class="fc" id="L135">						addViolationWithMessage(data, decl,</span>
-								PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name()
-										+ &quot; &quot; + CommentRequirement.Required,
-								decl.getBeginLine(), decl.getEndLine());
-					}
-				} else {
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">					if (decl.comment() != null) {</span>
-<span class="fc" id="L142">						addViolationWithMessage(data, decl,</span>
-								PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name()
-										+ &quot; &quot; + CommentRequirement.Unwanted,
-								decl.getBeginLine(), decl.getEndLine());
-					}
-				}
-			}
-<span class="fc bfc" id="L149" title="All 2 branches covered.">		} else if (decl.isProtected()) {</span>
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">			if (protMethodRequirement != CommentRequirement.Ignored) {</span>
-<span class="pc bpc" id="L151" title="1 of 2 branches missed.">				if (protMethodRequirement == CommentRequirement.Required) {</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">					if (decl.comment() == null) {</span>
-<span class="fc" id="L153">						addViolationWithMessage(data, decl,</span>
-								PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name()
-										+ &quot; &quot; + CommentRequirement.Required,
-								decl.getBeginLine(), decl.getEndLine());
-					}
-				} else {
-<span class="nc bnc" id="L159" title="All 2 branches missed.">					if (decl.comment() != null) {</span>
-<span class="nc" id="L160">						addViolationWithMessage(data, decl,</span>
-								PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name()
-										+ &quot; &quot; + CommentRequirement.Unwanted,
-								decl.getBeginLine(), decl.getEndLine());
-					}
-				}
-			}
-		}
-<span class="fc" id="L168">	}</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (decl.isPublic()) {</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (pubMethodRequirement != CommentRequirement.Ignored) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">                if (pubMethodRequirement == CommentRequirement.Required) {</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                    if (decl.comment() == null) {</span>
+<span class="fc" id="L139">                        addViolationWithMessage(data, decl,</span>
+                                PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
+                                decl.getBeginLine(), decl.getEndLine());
+                    }
+                } else {
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                    if (decl.comment() != null) {</span>
+<span class="fc" id="L145">                        addViolationWithMessage(data, decl,</span>
+                                PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
+                                decl.getBeginLine(), decl.getEndLine());
+                    }
+                }
+            }
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        } else if (decl.isProtected()) {</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (protMethodRequirement != CommentRequirement.Ignored) {</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                if (protMethodRequirement == CommentRequirement.Required) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">                    if (decl.comment() == null) {</span>
+<span class="fc" id="L155">                        addViolationWithMessage(data, decl,</span>
+                                PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
+                                decl.getBeginLine(), decl.getEndLine());
+                    }
+                } else {
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                    if (decl.comment() != null) {</span>
+<span class="nc" id="L161">                        addViolationWithMessage(data, decl,</span>
+                                PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
+                                decl.getBeginLine(), decl.getEndLine());
+                    }
+                }
+            }
+        }
+<span class="fc" id="L168">    }</span>
 
-	@Override
-	public Object visit(ASTFieldDeclaration decl, Object data) {
-<span class="fc" id="L172">		CommentRequirement fieldRequirement = getCommentRequirement(getProperty(</span>
-				FIELD_CMT_REQUIREMENT_DESCRIPTOR).toString());
+    @Override
+    public Object visit(ASTFieldDeclaration decl, Object data) {
+<span class="fc" id="L172">        CommentRequirement fieldRequirement = getCommentRequirement(</span>
+                getProperty(FIELD_CMT_REQUIREMENT_DESCRIPTOR).toString());
 
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (fieldRequirement != CommentRequirement.Ignored) {</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (isSerialVersionUID(decl)) {</span>
+<span class="fc" id="L177">                checkSerialVersionUID(decl, data, fieldRequirement);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            } else if (fieldRequirement == CommentRequirement.Required) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                if (decl.comment() == null) {</span>
+<span class="fc" id="L180">                    addViolationWithMessage(data, decl,</span>
+                            FIELD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            } else {
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if (decl.comment() != null) {</span>
+<span class="fc" id="L186">                    addViolationWithMessage(data, decl,</span>
+                            FIELD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            }
+        }
 
-<span class="fc bfc" id="L176" title="All 2 branches covered.">		if (fieldRequirement != CommentRequirement.Ignored) {</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">		    if (isSerialVersionUID(decl)) {</span>
-<span class="fc" id="L178">		        checkSerialVersionUID(decl, data, fieldRequirement);</span>
-		    } else
-<span class="fc bfc" id="L180" title="All 2 branches covered.">			if (fieldRequirement == CommentRequirement.Required) {</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">				if (decl.comment() == null) {</span>
-<span class="fc" id="L182">					addViolationWithMessage(data, decl,</span>
-							FIELD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Required,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			} else {
-<span class="pc bpc" id="L188" title="1 of 2 branches missed.">				if (decl.comment() != null) {</span>
-<span class="fc" id="L189">					addViolationWithMessage(data, decl,</span>
-							FIELD_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Unwanted,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			}
-		}
-
-<span class="fc" id="L197">		return super.visit(decl, data);</span>
-	}
+<span class="fc" id="L193">        return super.visit(decl, data);</span>
+    }
 
     private void checkSerialVersionUID(ASTFieldDeclaration decl, Object data, CommentRequirement fieldRequirement) {
-<span class="fc" id="L201">	    CommentRequirement serialVersionUIDReq = getCommentRequirement(getProperty(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR).toString());</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">	    if (serialVersionUIDReq != CommentRequirement.Ignored) {</span>
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">	        if (fieldRequirement == CommentRequirement.Required) {</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">	            if (decl.comment() == null) {</span>
-<span class="fc" id="L205">                    addViolationWithMessage(data, decl,</span>
-                            SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-                                    + CommentRequirement.Required,
+<span class="fc" id="L197">        CommentRequirement serialVersionUIDReq = getCommentRequirement(</span>
+                getProperty(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR).toString());
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (serialVersionUIDReq != CommentRequirement.Ignored) {</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (fieldRequirement == CommentRequirement.Required) {</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                if (decl.comment() == null) {</span>
+<span class="fc" id="L202">                    addViolationWithMessage(data, decl,</span>
+                            SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
                             decl.getBeginLine(), decl.getEndLine());
-	            }
-	        } else {
-<span class="nc bnc" id="L211" title="All 2 branches missed.">	            if (decl.comment() != null) {</span>
-<span class="nc" id="L212">                    addViolationWithMessage(data, decl,</span>
-                            SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-                                    + CommentRequirement.Unwanted,
+                }
+            } else {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                if (decl.comment() != null) {</span>
+<span class="nc" id="L208">                    addViolationWithMessage(data, decl,</span>
+                            SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
                             decl.getBeginLine(), decl.getEndLine());
-	            }
-	        }
-	    }
-<span class="fc" id="L219">    }</span>
+                }
+            }
+        }
+<span class="fc" id="L214">    }</span>
 
-	private boolean isSerialVersionUID(ASTFieldDeclaration field) {
-<span class="pc bpc" id="L222" title="2 of 8 branches missed.">	    if (&quot;serialVersionUID&quot;.equals(field.getVariableName())</span>
-	        &amp;&amp; field.isStatic() &amp;&amp; field.isFinal()
-	        &amp;&amp; field.getType() == long.class) {
-<span class="fc" id="L225">	                return true;</span>
-	    }
-<span class="fc" id="L227">	    return false;</span>
-	}
+    private boolean isSerialVersionUID(ASTFieldDeclaration field) {
+<span class="pc bpc" id="L217" title="2 of 8 branches missed.">        if (&quot;serialVersionUID&quot;.equals(field.getVariableName()) &amp;&amp; field.isStatic() &amp;&amp; field.isFinal()</span>
+                &amp;&amp; field.getType() == long.class) {
+<span class="fc" id="L219">            return true;</span>
+        }
+<span class="fc" id="L221">        return false;</span>
+    }
 
-	@Override
-	public Object visit(ASTEnumDeclaration decl, Object data) {
-		
-<span class="fc" id="L233">		CommentRequirement enumRequirement = getCommentRequirement(getProperty(</span>
-				ENUM_CMT_REQUIREMENT_DESCRIPTOR).toString());
+    @Override
+    public Object visit(ASTEnumDeclaration decl, Object data) {
 
-<span class="fc bfc" id="L236" title="All 2 branches covered.">		if (enumRequirement != CommentRequirement.Ignored) {</span>
-<span class="fc bfc" id="L237" title="All 2 branches covered.">			if (enumRequirement == CommentRequirement.Required) {</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">				if (decl.comment() == null) {</span>
-<span class="fc" id="L239">					addViolationWithMessage(data, decl,</span>
-							ENUM_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Required,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			} else {
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">				if (decl.comment() != null) {</span>
-<span class="fc" id="L246">					addViolationWithMessage(data, decl,</span>
-							ENUM_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot;
-									+ CommentRequirement.Unwanted,
-							decl.getBeginLine(), decl.getEndLine());
-				}
-			}
-		}
+<span class="fc" id="L227">        CommentRequirement enumRequirement = getCommentRequirement(</span>
+                getProperty(ENUM_CMT_REQUIREMENT_DESCRIPTOR).toString());
 
-<span class="fc" id="L254">		return super.visit(decl, data);</span>
-	}
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (enumRequirement != CommentRequirement.Ignored) {</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">            if (enumRequirement == CommentRequirement.Required) {</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">                if (decl.comment() == null) {</span>
+<span class="fc" id="L233">                    addViolationWithMessage(data, decl,</span>
+                            ENUM_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Required,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            } else {
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">                if (decl.comment() != null) {</span>
+<span class="fc" id="L239">                    addViolationWithMessage(data, decl,</span>
+                            ENUM_CMT_REQUIREMENT_DESCRIPTOR.name() + &quot; &quot; + CommentRequirement.Unwanted,
+                            decl.getBeginLine(), decl.getEndLine());
+                }
+            }
+        }
 
-	@Override
-	public Object visit(ASTCompilationUnit cUnit, Object data) {
-<span class="fc" id="L259">		assignCommentsToDeclarations(cUnit);</span>
+<span class="fc" id="L246">        return super.visit(decl, data);</span>
+    }
 
-<span class="fc" id="L261">		return super.visit(cUnit, data);</span>
-	}
+    @Override
+    public Object visit(ASTCompilationUnit cUnit, Object data) {
+<span class="fc" id="L251">        assignCommentsToDeclarations(cUnit);</span>
 
-	public boolean allCommentsAreIgnored() {
+<span class="fc" id="L253">        return super.visit(cUnit, data);</span>
+    }
 
-<span class="pc bpc" id="L266" title="9 of 10 branches missed.">		return getProperty(HEADER_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored</span>
-				&amp;&amp; getProperty(FIELD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
-				&amp;&amp; getProperty(PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
-				&amp;&amp; getProperty(PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
-				&amp;&amp; getProperty(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored;
-	}
+    public boolean allCommentsAreIgnored() {
 
-	/**
-	 * @see PropertySource#dysfunctionReason()
-	 */
-	@Override
-	public String dysfunctionReason() {
-<span class="pc bpc" id="L278" title="1 of 2 branches missed.">		return allCommentsAreIgnored() ? &quot;All comment types are ignored&quot; : null;</span>
-	}
+<span class="pc bpc" id="L258" title="9 of 10 branches missed.">        return getProperty(HEADER_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored</span>
+                &amp;&amp; getProperty(FIELD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
+                &amp;&amp; getProperty(PUB_METHOD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
+                &amp;&amp; getProperty(PROT_METHOD_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored
+                &amp;&amp; getProperty(SERIAL_VERSION_UID_CMT_REQUIREMENT_DESCRIPTOR) == CommentRequirement.Ignored;
+    }
+
+    /**
+     * @see PropertySource#dysfunctionReason()
+     */
+    @Override
+    public String dysfunctionReason() {
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        return allCommentsAreIgnored() ? &quot;All comment types are ignored&quot; : null;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

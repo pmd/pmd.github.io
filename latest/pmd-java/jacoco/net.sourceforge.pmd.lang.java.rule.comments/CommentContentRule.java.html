@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CommentContentRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.comments</a> &gt; <span class="el_source">CommentContentRule.java</span></div><h1>CommentContentRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.comments;
 
 import java.util.ArrayList;
@@ -35,51 +36,52 @@ public class CommentContentRule extends AbstractCommentRule {
     private String[] currentBadWords;
 
     // FIXME need some better defaults (or none?)
-<span class="fc" id="L38">    private static final String[] BAD_WORDS = new String[] { &quot;idiot&quot;, &quot;jerk&quot; };</span>
+<span class="fc" id="L39">    private static final String[] BAD_WORDS = new String[] { &quot;idiot&quot;, &quot;jerk&quot; };</span>
 
-<span class="fc" id="L40">    public static final BooleanProperty WORDS_ARE_REGEX_DESCRIPTOR = new BooleanProperty(&quot;wordsAreRegex&quot;,</span>
+<span class="fc" id="L41">    public static final BooleanProperty WORDS_ARE_REGEX_DESCRIPTOR = new BooleanProperty(&quot;wordsAreRegex&quot;,</span>
             &quot;Use regular expressions&quot;, false, 1.0f);
 
     // ignored when property above == True
-<span class="fc" id="L44">    public static final BooleanProperty CASE_SENSITIVE_DESCRIPTOR = new BooleanProperty(&quot;caseSensitive&quot;,</span>
+<span class="fc" id="L45">    public static final BooleanProperty CASE_SENSITIVE_DESCRIPTOR = new BooleanProperty(&quot;caseSensitive&quot;,</span>
             &quot;Case sensitive&quot;, false, 2.0f);
 
-<span class="fc" id="L47">    public static final StringMultiProperty DISSALLOWED_TERMS_DESCRIPTOR = new StringMultiProperty(&quot;disallowedTerms&quot;,</span>
+<span class="fc" id="L48">    public static final StringMultiProperty DISSALLOWED_TERMS_DESCRIPTOR = new StringMultiProperty(&quot;disallowedTerms&quot;,</span>
             &quot;Illegal terms or phrases&quot;, BAD_WORDS, 3.0f, '|');
 
     private static final Set&lt;PropertyDescriptor&lt;?&gt;&gt; NON_REGEX_PROPERTIES;
-    static {
-<span class="fc" id="L52">        NON_REGEX_PROPERTIES = new HashSet&lt;&gt;(1);</span>
-<span class="fc" id="L53">        NON_REGEX_PROPERTIES.add(CASE_SENSITIVE_DESCRIPTOR);</span>
-<span class="fc" id="L54">    }</span>
 
-<span class="fc" id="L56">    public CommentContentRule() {</span>
-<span class="fc" id="L57">        definePropertyDescriptor(WORDS_ARE_REGEX_DESCRIPTOR);</span>
-<span class="fc" id="L58">        definePropertyDescriptor(CASE_SENSITIVE_DESCRIPTOR);</span>
-<span class="fc" id="L59">        definePropertyDescriptor(DISSALLOWED_TERMS_DESCRIPTOR);</span>
-<span class="fc" id="L60">    }</span>
+    static {
+<span class="fc" id="L54">        NON_REGEX_PROPERTIES = new HashSet&lt;&gt;(1);</span>
+<span class="fc" id="L55">        NON_REGEX_PROPERTIES.add(CASE_SENSITIVE_DESCRIPTOR);</span>
+<span class="fc" id="L56">    }</span>
+
+<span class="fc" id="L58">    public CommentContentRule() {</span>
+<span class="fc" id="L59">        definePropertyDescriptor(WORDS_ARE_REGEX_DESCRIPTOR);</span>
+<span class="fc" id="L60">        definePropertyDescriptor(CASE_SENSITIVE_DESCRIPTOR);</span>
+<span class="fc" id="L61">        definePropertyDescriptor(DISSALLOWED_TERMS_DESCRIPTOR);</span>
+<span class="fc" id="L62">    }</span>
 
     /**
      * Capture values and perform all the case-conversions once per run
      */
     @Override
     public void start(RuleContext ctx) {
-<span class="fc" id="L67">        wordsAreRegex = getProperty(WORDS_ARE_REGEX_DESCRIPTOR);</span>
-<span class="fc" id="L68">        originalBadWords = getProperty(DISSALLOWED_TERMS_DESCRIPTOR);</span>
-<span class="fc" id="L69">        caseSensitive = getProperty(CASE_SENSITIVE_DESCRIPTOR);</span>
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (caseSensitive) {</span>
-<span class="nc" id="L71">            currentBadWords = originalBadWords;</span>
+<span class="fc" id="L69">        wordsAreRegex = getProperty(WORDS_ARE_REGEX_DESCRIPTOR);</span>
+<span class="fc" id="L70">        originalBadWords = getProperty(DISSALLOWED_TERMS_DESCRIPTOR);</span>
+<span class="fc" id="L71">        caseSensitive = getProperty(CASE_SENSITIVE_DESCRIPTOR);</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (caseSensitive) {</span>
+<span class="nc" id="L73">            currentBadWords = originalBadWords;</span>
         } else {
-<span class="fc" id="L73">            currentBadWords = new String[originalBadWords.length];</span>
-<span class="fc bfc" id="L74" title="All 2 branches covered.">            for (int i = 0; i &lt; currentBadWords.length; i++) {</span>
-<span class="fc" id="L75">                currentBadWords[i] = originalBadWords[i].toUpperCase();</span>
+<span class="fc" id="L75">            currentBadWords = new String[originalBadWords.length];</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            for (int i = 0; i &lt; currentBadWords.length; i++) {</span>
+<span class="fc" id="L77">                currentBadWords[i] = originalBadWords[i].toUpperCase();</span>
             }
         }
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L80">    }</span>
 
     @Override
     public Set&lt;PropertyDescriptor&lt;?&gt;&gt; ignoredProperties() {
-<span class="nc bnc" id="L82" title="All 2 branches missed.">        return getProperty(WORDS_ARE_REGEX_DESCRIPTOR) ? NON_REGEX_PROPERTIES : Collections.EMPTY_SET;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        return getProperty(WORDS_ARE_REGEX_DESCRIPTOR) ? NON_REGEX_PROPERTIES : Collections.EMPTY_SET;</span>
     }
 
     /**
@@ -88,72 +90,72 @@ public class CommentContentRule extends AbstractCommentRule {
     @Override
     public void end(RuleContext ctx) {
         // Override as needed
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L93">    }</span>
 
     private List&lt;String&gt; illegalTermsIn(Comment comment) {
 
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (currentBadWords.length == 0) {</span>
-<span class="nc" id="L96">            return Collections.emptyList();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (currentBadWords.length == 0) {</span>
+<span class="nc" id="L98">            return Collections.emptyList();</span>
         }
 
-<span class="fc" id="L99">        String commentText = filteredCommentIn(comment);</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (StringUtil.isEmpty(commentText)) {</span>
-<span class="fc" id="L101">            return Collections.emptyList();</span>
+<span class="fc" id="L101">        String commentText = filteredCommentIn(comment);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (StringUtil.isEmpty(commentText)) {</span>
+<span class="fc" id="L103">            return Collections.emptyList();</span>
         }
 
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (!caseSensitive) {</span>
-<span class="fc" id="L105">            commentText = commentText.toUpperCase();</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!caseSensitive) {</span>
+<span class="fc" id="L107">            commentText = commentText.toUpperCase();</span>
         }
 
-<span class="fc" id="L108">        List&lt;String&gt; foundWords = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L110">        List&lt;String&gt; foundWords = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (int i = 0; i &lt; currentBadWords.length; i++) {</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (commentText.indexOf(currentBadWords[i]) &gt;= 0) {</span>
-<span class="fc" id="L112">                foundWords.add(originalBadWords[i]);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (int i = 0; i &lt; currentBadWords.length; i++) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (commentText.indexOf(currentBadWords[i]) &gt;= 0) {</span>
+<span class="fc" id="L114">                foundWords.add(originalBadWords[i]);</span>
             }
         }
 
-<span class="fc" id="L116">        return foundWords;</span>
+<span class="fc" id="L118">        return foundWords;</span>
     }
 
     private String errorMsgFor(List&lt;String&gt; badWords) {
-<span class="fc" id="L120">        StringBuilder msg = new StringBuilder(this.getMessage()).append(&quot;: &quot;);</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if (badWords.size() == 1) {</span>
-<span class="fc" id="L122">            msg.append(&quot;Invalid term: '&quot;).append(badWords.get(0)).append('\'');</span>
+<span class="fc" id="L122">        StringBuilder msg = new StringBuilder(this.getMessage()).append(&quot;: &quot;);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (badWords.size() == 1) {</span>
+<span class="fc" id="L124">            msg.append(&quot;Invalid term: '&quot;).append(badWords.get(0)).append('\'');</span>
         } else {
-<span class="nc" id="L124">            msg.append(&quot;Invalid terms: '&quot;);</span>
-<span class="nc" id="L125">            msg.append(badWords.get(0));</span>
-<span class="nc bnc" id="L126" title="All 2 branches missed.">            for (int i = 1; i &lt; badWords.size(); i++) {</span>
-<span class="nc" id="L127">                msg.append(&quot;', '&quot;).append(badWords.get(i));</span>
+<span class="nc" id="L126">            msg.append(&quot;Invalid terms: '&quot;);</span>
+<span class="nc" id="L127">            msg.append(badWords.get(0));</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            for (int i = 1; i &lt; badWords.size(); i++) {</span>
+<span class="nc" id="L129">                msg.append(&quot;', '&quot;).append(badWords.get(i));</span>
             }
-<span class="nc" id="L129">            msg.append('\'');</span>
+<span class="nc" id="L131">            msg.append('\'');</span>
         }
-<span class="fc" id="L131">        return msg.toString();</span>
+<span class="fc" id="L133">        return msg.toString();</span>
     }
 
     @Override
     public Object visit(ASTCompilationUnit cUnit, Object data) {
 
         // NPE patch: Eclipse plugin doesn't call start() at onset?
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (currentBadWords == null) {</span>
-<span class="nc" id="L139">            start(null);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (currentBadWords == null) {</span>
+<span class="nc" id="L141">            start(null);</span>
         }
 
-<span class="fc bfc" id="L142" title="All 2 branches covered.">        for (Comment comment : cUnit.getComments()) {</span>
-<span class="fc" id="L143">            List&lt;String&gt; badWords = illegalTermsIn(comment);</span>
-<span class="fc bfc" id="L144" title="All 2 branches covered.">            if (badWords.isEmpty()) {</span>
-<span class="fc" id="L145">                continue;</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (Comment comment : cUnit.getComments()) {</span>
+<span class="fc" id="L145">            List&lt;String&gt; badWords = illegalTermsIn(comment);</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (badWords.isEmpty()) {</span>
+<span class="fc" id="L147">                continue;</span>
             }
 
-<span class="fc" id="L148">            addViolationWithMessage(data, cUnit, errorMsgFor(badWords), comment.getBeginLine(), comment.getEndLine());</span>
-<span class="fc" id="L149">        }</span>
+<span class="fc" id="L150">            addViolationWithMessage(data, cUnit, errorMsgFor(badWords), comment.getBeginLine(), comment.getEndLine());</span>
+<span class="fc" id="L151">        }</span>
 
-<span class="fc" id="L151">        return super.visit(cUnit, data);</span>
+<span class="fc" id="L153">        return super.visit(cUnit, data);</span>
     }
 
     public boolean hasDissallowedTerms() {
-<span class="fc" id="L155">        String[] terms = getProperty(DISSALLOWED_TERMS_DESCRIPTOR);</span>
-<span class="fc" id="L156">        return CollectionUtil.isNotEmpty(terms);</span>
+<span class="fc" id="L157">        String[] terms = getProperty(DISSALLOWED_TERMS_DESCRIPTOR);</span>
+<span class="fc" id="L158">        return CollectionUtil.isNotEmpty(terms);</span>
     }
 
     /**
@@ -161,7 +163,7 @@ public class CommentContentRule extends AbstractCommentRule {
      */
     @Override
     public String dysfunctionReason() {
-<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        return hasDissallowedTerms() ? null : &quot;No disallowed terms specified&quot;;</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        return hasDissallowedTerms() ? null : &quot;No disallowed terms specified&quot;;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

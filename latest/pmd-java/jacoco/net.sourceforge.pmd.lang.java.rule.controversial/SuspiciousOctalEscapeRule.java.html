@@ -1,82 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SuspiciousOctalEscapeRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.controversial</a> &gt; <span class="el_source">SuspiciousOctalEscapeRule.java</span></div><h1>SuspiciousOctalEscapeRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.java.rule.controversial;
 
 import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 
-<span class="fc" id="L9">public class SuspiciousOctalEscapeRule extends AbstractJavaRule {</span>
+<span class="fc" id="L10">public class SuspiciousOctalEscapeRule extends AbstractJavaRule {</span>
 
     @Override
     public Object visit(ASTLiteral node, Object data) {
-<span class="fc bfc" id="L13" title="All 2 branches covered.">        if (node.isStringLiteral()) {</span>
-<span class="fc" id="L14">            String image = node.getImage();</span>
+<span class="fc bfc" id="L14" title="All 2 branches covered.">        if (node.isStringLiteral()) {</span>
+<span class="fc" id="L15">            String image = node.getImage();</span>
             // trim quotes
-<span class="fc" id="L16">            String s = image.substring(1, image.length() - 1);</span>
+<span class="fc" id="L17">            String s = image.substring(1, image.length() - 1);</span>
 
             // process escape sequences
-<span class="fc" id="L19">            int offset = 0;</span>
-<span class="fc" id="L20">            for (int slash = s.indexOf('\\', offset);</span>
-<span class="pc bpc" id="L21" title="1 of 4 branches missed.">                 slash != -1 &amp;&amp; slash &lt; s.length() - 1;</span>
-<span class="fc" id="L22">                 slash = s.indexOf('\\', offset)) {</span>
+<span class="fc" id="L20">            int offset = 0;</span>
+<span class="fc" id="L21">            for (int slash = s.indexOf('\\', offset); slash != -1</span>
+<span class="pc bpc" id="L22" title="1 of 4 branches missed.">                    &amp;&amp; slash &lt; s.length() - 1; slash = s.indexOf('\\', offset)) {</span>
 <span class="fc" id="L23">                String escapeSequence = s.substring(slash + 1);</span>
 <span class="fc" id="L24">                char first = escapeSequence.charAt(0);</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">                if (isOctal(first)) {</span>
-<span class="pc bpc" id="L26" title="1 of 2 branches missed.">                    if (escapeSequence.length() &gt; 1) {</span>
-<span class="fc" id="L27">                        char second = escapeSequence.charAt(1);</span>
-<span class="pc bpc" id="L28" title="1 of 2 branches missed.">                        if (isOctal(second)) {</span>
-<span class="pc bpc" id="L29" title="1 of 2 branches missed.">                            if (escapeSequence.length() &gt; 2) {</span>
-<span class="fc" id="L30">                                char third = escapeSequence.charAt(2);</span>
-<span class="fc bfc" id="L31" title="All 2 branches covered.">                                if (isOctal(third)) {</span>
-                                    // this is either a three digit octal escape or a two-digit
-                                    // octal escape followed by an octal digit. the value of
-                                    // the first digit in the sequence determines which is the
+<span class="fc" id="L25">                offset = slash + 1; // next offset - after slash</span>
+
+<span class="fc bfc" id="L27" title="All 2 branches covered.">                if (isOctal(first)) {</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">                    if (escapeSequence.length() &gt; 1) {</span>
+<span class="fc" id="L29">                        char second = escapeSequence.charAt(1);</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">                        if (isOctal(second)) {</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">                            if (escapeSequence.length() &gt; 2) {</span>
+<span class="fc" id="L32">                                char third = escapeSequence.charAt(2);</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">                                if (isOctal(third)) {</span>
+                                    // this is either a three digit octal escape
+                                    // or a two-digit
+                                    // octal escape followed by an octal digit.
+                                    // the value of
+                                    // the first digit in the sequence
+                                    // determines which is the
                                     // case
-<span class="pc bpc" id="L36" title="3 of 8 branches missed.">                                    if (first != '0' &amp;&amp; first != '1' &amp;&amp; first != '2' &amp;&amp; first != '3') {</span>
-                                        // VIOLATION: it's a two-digit octal escape followed by
-                                        // an octal digit -- legal but very confusing!
-<span class="fc" id="L39">                                        addViolation(data, node);</span>
+<span class="pc bpc" id="L41" title="3 of 8 branches missed.">                                    if (first != '0' &amp;&amp; first != '1' &amp;&amp; first != '2' &amp;&amp; first != '3') {</span>
+                                        // VIOLATION: it's a two-digit octal
+                                        // escape followed by
+                                        // an octal digit -- legal but very
+                                        // confusing!
+<span class="fc" id="L46">                                        addViolation(data, node);</span>
                                     } else {
-                                        // if there is a 4th decimal digit, it could never be part of
-                                        // the escape sequence, which is confusing
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">                                        if (escapeSequence.length() &gt; 3) {</span>
-<span class="fc" id="L44">                                            char fourth = escapeSequence.charAt(3);</span>
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">                                            if (isDecimal(fourth)) {</span>
-<span class="fc" id="L46">                                                addViolation(data, node);</span>
+                                        // if there is a 4th decimal digit, it
+                                        // could never be part of
+                                        // the escape sequence, which is
+                                        // confusing
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">                                        if (escapeSequence.length() &gt; 3) {</span>
+<span class="fc" id="L53">                                            char fourth = escapeSequence.charAt(3);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">                                            if (isDecimal(fourth)) {</span>
+<span class="fc" id="L55">                                                addViolation(data, node);</span>
                                             }
-<span class="fc" id="L48">                                        }</span>
+<span class="fc" id="L57">                                        }</span>
                                     }
 
-<span class="pc bpc" id="L51" title="1 of 2 branches missed.">                                } else if (isDecimal(third)) {</span>
-                                    // this is a two-digit octal escape followed by a decimal digit
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">                                } else if (isDecimal(third)) {</span>
+                                    // this is a two-digit octal escape followed
+                                    // by a decimal digit
                                     // legal but very confusing
-<span class="fc" id="L54">                                    addViolation(data, node);</span>
+<span class="fc" id="L64">                                    addViolation(data, node);</span>
                                 }
-<span class="fc" id="L56">                            }</span>
-<span class="nc bnc" id="L57" title="All 2 branches missed.">                        } else if (isDecimal(second)) {</span>
-                            // this is a one-digit octal escape followed by a decimal digit
+<span class="fc" id="L66">                            }</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                        } else if (isDecimal(second)) {</span>
+                            // this is a one-digit octal escape followed by a
+                            // decimal digit
                             // legal but very confusing
-<span class="nc" id="L60">                            addViolation(data, node);</span>
+<span class="nc" id="L71">                            addViolation(data, node);</span>
                         }
-<span class="fc" id="L62">                    }</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">                } else if (first == '\\') {</span>
-<span class="fc" id="L64">                    slash++;</span>
+<span class="fc" id="L73">                    }</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                } else if (first == '\\') {</span>
+<span class="fc" id="L75">                    offset++;</span>
                 }
-
-<span class="fc" id="L67">                offset = slash + 1;</span>
             }
         }
 
-<span class="fc" id="L71">        return super.visit(node, data);</span>
+<span class="fc" id="L80">        return super.visit(node, data);</span>
     }
 
     private boolean isOctal(char c) {
-<span class="fc bfc" id="L75" title="All 4 branches covered.">        return c &gt;= '0' &amp;&amp; c &lt;= '7';</span>
+<span class="fc bfc" id="L84" title="All 4 branches covered.">        return c &gt;= '0' &amp;&amp; c &lt;= '7';</span>
     }
 
     private boolean isDecimal(char c) {
-<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        return c &gt;= '0' &amp;&amp; c &lt;= '9';</span>
+<span class="pc bpc" id="L88" title="2 of 4 branches missed.">        return c &gt;= '0' &amp;&amp; c &lt;= '9';</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

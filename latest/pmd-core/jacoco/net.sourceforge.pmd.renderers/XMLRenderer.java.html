@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XMLRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.renderers</a> &gt; <span class="el_source">XMLRenderer.java</span></div><h1>XMLRenderer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.renderers;
 
 import java.io.IOException;
@@ -22,10 +23,9 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
 
     public static final String NAME = &quot;xml&quot;;
 
-<span class="fc" id="L25">    public static final StringProperty ENCODING = new StringProperty(&quot;encoding&quot;,</span>
+<span class="fc" id="L26">    public static final StringProperty ENCODING = new StringProperty(&quot;encoding&quot;,</span>
             &quot;XML encoding format, defaults to UTF-8.&quot;, &quot;UTF-8&quot;, 0);
-<span class="fc" id="L27">    private boolean useUTF8 = false;</span>
-
+<span class="fc" id="L28">    private boolean useUTF8 = false;</span>
 
     public XMLRenderer() {
 <span class="fc" id="L31">        super(NAME, &quot;XML format.&quot;);</span>
@@ -37,8 +37,9 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
 <span class="nc" id="L37">        setProperty(ENCODING, encoding);</span>
 <span class="nc" id="L38">    }</span>
 
+    @Override
     public String defaultFileExtension() {
-<span class="nc" id="L41">        return &quot;xml&quot;;</span>
+<span class="nc" id="L42">        return &quot;xml&quot;;</span>
     }
 
     /**
@@ -46,129 +47,131 @@ public class XMLRenderer extends AbstractIncrementingRenderer {
      */
     @Override
     public void start() throws IOException {
-<span class="fc" id="L49">        String encoding = getProperty(ENCODING);</span>
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (encoding.equalsIgnoreCase(&quot;utf-8&quot;)) {</span>
-<span class="fc" id="L51">            useUTF8 = true;</span>
+<span class="fc" id="L50">        String encoding = getProperty(ENCODING);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (&quot;utf-8&quot;.equalsIgnoreCase(encoding)) {</span>
+<span class="fc" id="L52">            useUTF8 = true;</span>
         }
 
-<span class="fc" id="L54">        Writer writer = getWriter();</span>
-<span class="fc" id="L55">        StringBuilder buf = new StringBuilder(500);</span>
-<span class="fc" id="L56">        buf.append(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;?&gt;&quot;).append(PMD.EOL);</span>
-<span class="fc" id="L57">        createVersionAttr(buf);</span>
-<span class="fc" id="L58">        createTimestampAttr(buf);</span>
+<span class="fc" id="L55">        Writer writer = getWriter();</span>
+<span class="fc" id="L56">        StringBuilder buf = new StringBuilder(500);</span>
+<span class="fc" id="L57">        buf.append(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;&quot; + encoding + &quot;\&quot;?&gt;&quot;).append(PMD.EOL);</span>
+<span class="fc" id="L58">        createVersionAttr(buf);</span>
+<span class="fc" id="L59">        createTimestampAttr(buf);</span>
         // FIXME: elapsed time not available until the end of the processing
         // buf.append(createTimeElapsedAttr(report));
-<span class="fc" id="L61">        buf.append('&gt;').append(PMD.EOL);</span>
-<span class="fc" id="L62">        writer.write(buf.toString());</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L62">        buf.append('&gt;').append(PMD.EOL);</span>
+<span class="fc" id="L63">        writer.write(buf.toString());</span>
+<span class="fc" id="L64">    }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void renderFileViolations(Iterator&lt;RuleViolation&gt; violations) throws IOException {
-<span class="fc" id="L70">        Writer writer = getWriter();</span>
-<span class="fc" id="L71">        StringBuilder buf = new StringBuilder(500);</span>
-<span class="fc" id="L72">        String filename = null;</span>
+<span class="fc" id="L71">        Writer writer = getWriter();</span>
+<span class="fc" id="L72">        StringBuilder buf = new StringBuilder(500);</span>
+<span class="fc" id="L73">        String filename = null;</span>
 
         // rule violations
-<span class="fc bfc" id="L75" title="All 2 branches covered.">        while (violations.hasNext()) {</span>
-<span class="fc" id="L76">            buf.setLength(0);</span>
-<span class="fc" id="L77">            RuleViolation rv = violations.next();</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (!rv.getFilename().equals(filename)) { // New File</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">                if (filename != null) {// Not first file ?</span>
-<span class="fc" id="L80">                    buf.append(&quot;&lt;/file&gt;&quot;).append(PMD.EOL);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        while (violations.hasNext()) {</span>
+<span class="fc" id="L77">            buf.setLength(0);</span>
+<span class="fc" id="L78">            RuleViolation rv = violations.next();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (!rv.getFilename().equals(filename)) {</span>
+                // New File
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                if (filename != null) {</span>
+                    // Not first file ?
+<span class="fc" id="L83">                    buf.append(&quot;&lt;/file&gt;&quot;).append(PMD.EOL);</span>
                 }
-<span class="fc" id="L82">                filename = rv.getFilename();</span>
-<span class="fc" id="L83">                buf.append(&quot;&lt;file name=\&quot;&quot;);</span>
-<span class="fc" id="L84">                StringUtil.appendXmlEscaped(buf, filename, useUTF8);</span>
-<span class="fc" id="L85">                buf.append(&quot;\&quot;&gt;&quot;).append(PMD.EOL);</span>
+<span class="fc" id="L85">                filename = rv.getFilename();</span>
+<span class="fc" id="L86">                buf.append(&quot;&lt;file name=\&quot;&quot;);</span>
+<span class="fc" id="L87">                StringUtil.appendXmlEscaped(buf, filename, useUTF8);</span>
+<span class="fc" id="L88">                buf.append(&quot;\&quot;&gt;&quot;).append(PMD.EOL);</span>
             }
 
-<span class="fc" id="L88">            buf.append(&quot;&lt;violation beginline=\&quot;&quot;).append(rv.getBeginLine());</span>
-<span class="fc" id="L89">            buf.append(&quot;\&quot; endline=\&quot;&quot;).append(rv.getEndLine());</span>
-<span class="fc" id="L90">            buf.append(&quot;\&quot; begincolumn=\&quot;&quot;).append(rv.getBeginColumn());</span>
-<span class="fc" id="L91">            buf.append(&quot;\&quot; endcolumn=\&quot;&quot;).append(rv.getEndColumn());</span>
-<span class="fc" id="L92">            buf.append(&quot;\&quot; rule=\&quot;&quot;);</span>
-<span class="fc" id="L93">            StringUtil.appendXmlEscaped(buf, rv.getRule().getName(), useUTF8);</span>
-<span class="fc" id="L94">            buf.append(&quot;\&quot; ruleset=\&quot;&quot;);</span>
-<span class="fc" id="L95">            StringUtil.appendXmlEscaped(buf, rv.getRule().getRuleSetName(), useUTF8);</span>
-<span class="fc" id="L96">            buf.append('&quot;');</span>
-<span class="fc" id="L97">            maybeAdd(&quot;package&quot;, rv.getPackageName(), buf);</span>
-<span class="fc" id="L98">            maybeAdd(&quot;class&quot;, rv.getClassName(), buf);</span>
-<span class="fc" id="L99">            maybeAdd(&quot;method&quot;, rv.getMethodName(), buf);</span>
-<span class="fc" id="L100">            maybeAdd(&quot;variable&quot;, rv.getVariableName(), buf);</span>
-<span class="fc" id="L101">            maybeAdd(&quot;externalInfoUrl&quot;, rv.getRule().getExternalInfoUrl(), buf);</span>
-<span class="fc" id="L102">            buf.append(&quot; priority=\&quot;&quot;);</span>
-<span class="fc" id="L103">            buf.append(rv.getRule().getPriority().getPriority());</span>
-<span class="fc" id="L104">            buf.append(&quot;\&quot;&gt;&quot;).append(PMD.EOL);</span>
-<span class="fc" id="L105">            StringUtil.appendXmlEscaped(buf, rv.getDescription(), useUTF8);</span>
+<span class="fc" id="L91">            buf.append(&quot;&lt;violation beginline=\&quot;&quot;).append(rv.getBeginLine());</span>
+<span class="fc" id="L92">            buf.append(&quot;\&quot; endline=\&quot;&quot;).append(rv.getEndLine());</span>
+<span class="fc" id="L93">            buf.append(&quot;\&quot; begincolumn=\&quot;&quot;).append(rv.getBeginColumn());</span>
+<span class="fc" id="L94">            buf.append(&quot;\&quot; endcolumn=\&quot;&quot;).append(rv.getEndColumn());</span>
+<span class="fc" id="L95">            buf.append(&quot;\&quot; rule=\&quot;&quot;);</span>
+<span class="fc" id="L96">            StringUtil.appendXmlEscaped(buf, rv.getRule().getName(), useUTF8);</span>
+<span class="fc" id="L97">            buf.append(&quot;\&quot; ruleset=\&quot;&quot;);</span>
+<span class="fc" id="L98">            StringUtil.appendXmlEscaped(buf, rv.getRule().getRuleSetName(), useUTF8);</span>
+<span class="fc" id="L99">            buf.append('&quot;');</span>
+<span class="fc" id="L100">            maybeAdd(&quot;package&quot;, rv.getPackageName(), buf);</span>
+<span class="fc" id="L101">            maybeAdd(&quot;class&quot;, rv.getClassName(), buf);</span>
+<span class="fc" id="L102">            maybeAdd(&quot;method&quot;, rv.getMethodName(), buf);</span>
+<span class="fc" id="L103">            maybeAdd(&quot;variable&quot;, rv.getVariableName(), buf);</span>
+<span class="fc" id="L104">            maybeAdd(&quot;externalInfoUrl&quot;, rv.getRule().getExternalInfoUrl(), buf);</span>
+<span class="fc" id="L105">            buf.append(&quot; priority=\&quot;&quot;);</span>
+<span class="fc" id="L106">            buf.append(rv.getRule().getPriority().getPriority());</span>
+<span class="fc" id="L107">            buf.append(&quot;\&quot;&gt;&quot;).append(PMD.EOL);</span>
+<span class="fc" id="L108">            StringUtil.appendXmlEscaped(buf, rv.getDescription(), useUTF8);</span>
 
-<span class="fc" id="L107">            buf.append(PMD.EOL);</span>
-<span class="fc" id="L108">            buf.append(&quot;&lt;/violation&gt;&quot;);</span>
-<span class="fc" id="L109">            buf.append(PMD.EOL);</span>
-<span class="fc" id="L110">            writer.write(buf.toString());</span>
-<span class="fc" id="L111">        }</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (filename != null) { // Not first file ?</span>
-<span class="fc" id="L113">            writer.write(&quot;&lt;/file&gt;&quot;);</span>
-<span class="fc" id="L114">            writer.write(PMD.EOL);</span>
+<span class="fc" id="L110">            buf.append(PMD.EOL);</span>
+<span class="fc" id="L111">            buf.append(&quot;&lt;/violation&gt;&quot;);</span>
+<span class="fc" id="L112">            buf.append(PMD.EOL);</span>
+<span class="fc" id="L113">            writer.write(buf.toString());</span>
+<span class="fc" id="L114">        }</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (filename != null) { // Not first file ?</span>
+<span class="fc" id="L116">            writer.write(&quot;&lt;/file&gt;&quot;);</span>
+<span class="fc" id="L117">            writer.write(PMD.EOL);</span>
         }
-<span class="fc" id="L116">    }</span>
+<span class="fc" id="L119">    }</span>
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void end() throws IOException {
-<span class="fc" id="L123">        Writer writer = getWriter();</span>
-<span class="fc" id="L124">        StringBuilder buf = new StringBuilder(500);</span>
+<span class="fc" id="L126">        Writer writer = getWriter();</span>
+<span class="fc" id="L127">        StringBuilder buf = new StringBuilder(500);</span>
         // errors
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        for (Report.ProcessingError pe : errors) {</span>
-<span class="fc" id="L127">            buf.setLength(0);</span>
-<span class="fc" id="L128">            buf.append(&quot;&lt;error &quot;).append(&quot;filename=\&quot;&quot;);</span>
-<span class="fc" id="L129">            StringUtil.appendXmlEscaped(buf, pe.getFile(), useUTF8);</span>
-<span class="fc" id="L130">            buf.append(&quot;\&quot; msg=\&quot;&quot;);</span>
-<span class="fc" id="L131">            StringUtil.appendXmlEscaped(buf, pe.getMsg(), useUTF8);</span>
-<span class="fc" id="L132">            buf.append(&quot;\&quot;/&gt;&quot;).append(PMD.EOL);</span>
-<span class="fc" id="L133">            writer.write(buf.toString());</span>
-<span class="fc" id="L134">        }</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        for (Report.ProcessingError pe : errors) {</span>
+<span class="fc" id="L130">            buf.setLength(0);</span>
+<span class="fc" id="L131">            buf.append(&quot;&lt;error &quot;).append(&quot;filename=\&quot;&quot;);</span>
+<span class="fc" id="L132">            StringUtil.appendXmlEscaped(buf, pe.getFile(), useUTF8);</span>
+<span class="fc" id="L133">            buf.append(&quot;\&quot; msg=\&quot;&quot;);</span>
+<span class="fc" id="L134">            StringUtil.appendXmlEscaped(buf, pe.getMsg(), useUTF8);</span>
+<span class="fc" id="L135">            buf.append(&quot;\&quot;/&gt;&quot;).append(PMD.EOL);</span>
+<span class="fc" id="L136">            writer.write(buf.toString());</span>
+<span class="fc" id="L137">        }</span>
 
         // suppressed violations
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (showSuppressedViolations) {</span>
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">            for (Report.SuppressedViolation s : suppressed) {</span>
-<span class="nc" id="L139">                buf.setLength(0);</span>
-<span class="nc" id="L140">                buf.append(&quot;&lt;suppressedviolation &quot;).append(&quot;filename=\&quot;&quot;);</span>
-<span class="nc" id="L141">                StringUtil.appendXmlEscaped(buf, s.getRuleViolation().getFilename(), useUTF8);</span>
-<span class="nc" id="L142">                buf.append(&quot;\&quot; suppressiontype=\&quot;&quot;);</span>
-<span class="nc bnc" id="L143" title="All 2 branches missed.">                StringUtil.appendXmlEscaped(buf, s.suppressedByNOPMD() ? &quot;nopmd&quot; : &quot;annotation&quot;, useUTF8);</span>
-<span class="nc" id="L144">                buf.append(&quot;\&quot; msg=\&quot;&quot;);</span>
-<span class="nc" id="L145">                StringUtil.appendXmlEscaped(buf, s.getRuleViolation().getDescription(), useUTF8);</span>
-<span class="nc" id="L146">                buf.append(&quot;\&quot; usermsg=\&quot;&quot;);</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">                StringUtil.appendXmlEscaped(buf, s.getUserMessage() == null ? &quot;&quot; : s.getUserMessage(), useUTF8);</span>
-<span class="nc" id="L148">                buf.append(&quot;\&quot;/&gt;&quot;).append(PMD.EOL);</span>
-<span class="nc" id="L149">                writer.write(buf.toString());</span>
-<span class="nc" id="L150">            }</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (showSuppressedViolations) {</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            for (Report.SuppressedViolation s : suppressed) {</span>
+<span class="nc" id="L142">                buf.setLength(0);</span>
+<span class="nc" id="L143">                buf.append(&quot;&lt;suppressedviolation &quot;).append(&quot;filename=\&quot;&quot;);</span>
+<span class="nc" id="L144">                StringUtil.appendXmlEscaped(buf, s.getRuleViolation().getFilename(), useUTF8);</span>
+<span class="nc" id="L145">                buf.append(&quot;\&quot; suppressiontype=\&quot;&quot;);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                StringUtil.appendXmlEscaped(buf, s.suppressedByNOPMD() ? &quot;nopmd&quot; : &quot;annotation&quot;, useUTF8);</span>
+<span class="nc" id="L147">                buf.append(&quot;\&quot; msg=\&quot;&quot;);</span>
+<span class="nc" id="L148">                StringUtil.appendXmlEscaped(buf, s.getRuleViolation().getDescription(), useUTF8);</span>
+<span class="nc" id="L149">                buf.append(&quot;\&quot; usermsg=\&quot;&quot;);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                StringUtil.appendXmlEscaped(buf, s.getUserMessage() == null ? &quot;&quot; : s.getUserMessage(), useUTF8);</span>
+<span class="nc" id="L151">                buf.append(&quot;\&quot;/&gt;&quot;).append(PMD.EOL);</span>
+<span class="nc" id="L152">                writer.write(buf.toString());</span>
+<span class="nc" id="L153">            }</span>
         }
 
-<span class="fc" id="L153">        writer.write(&quot;&lt;/pmd&gt;&quot; + PMD.EOL);</span>
-<span class="fc" id="L154">    }</span>
+<span class="fc" id="L156">        writer.write(&quot;&lt;/pmd&gt;&quot; + PMD.EOL);</span>
+<span class="fc" id="L157">    }</span>
 
     private void maybeAdd(String attr, String value, StringBuilder buf) {
-<span class="pc bpc" id="L157" title="1 of 4 branches missed.">        if (value != null &amp;&amp; value.length() &gt; 0) {</span>
-<span class="nc" id="L158">            buf.append(' ').append(attr).append(&quot;=\&quot;&quot;);</span>
-<span class="nc" id="L159">            StringUtil.appendXmlEscaped(buf, value, useUTF8);</span>
-<span class="nc" id="L160">            buf.append('&quot;');</span>
+<span class="pc bpc" id="L160" title="1 of 4 branches missed.">        if (value != null &amp;&amp; value.length() &gt; 0) {</span>
+<span class="nc" id="L161">            buf.append(' ').append(attr).append(&quot;=\&quot;&quot;);</span>
+<span class="nc" id="L162">            StringUtil.appendXmlEscaped(buf, value, useUTF8);</span>
+<span class="nc" id="L163">            buf.append('&quot;');</span>
         }
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L165">    }</span>
 
     private void createVersionAttr(StringBuilder buffer) {
-<span class="fc" id="L165">        buffer.append(&quot;&lt;pmd version=\&quot;&quot;).append(PMD.VERSION).append('&quot;');</span>
-<span class="fc" id="L166">    }</span>
+<span class="fc" id="L168">        buffer.append(&quot;&lt;pmd version=\&quot;&quot;).append(PMD.VERSION).append('&quot;');</span>
+<span class="fc" id="L169">    }</span>
 
     private void createTimestampAttr(StringBuilder buffer) {
-<span class="fc" id="L169">        buffer.append(&quot; timestamp=\&quot;&quot;).append(new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSS&quot;).format(new Date()))</span>
+<span class="fc" id="L172">        buffer.append(&quot; timestamp=\&quot;&quot;).append(new SimpleDateFormat(&quot;yyyy-MM-dd'T'HH:mm:ss.SSS&quot;).format(new Date()))</span>
                 .append('&quot;');
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L174">    }</span>
 
     // FIXME: elapsed time not available until the end of the processing
     /*

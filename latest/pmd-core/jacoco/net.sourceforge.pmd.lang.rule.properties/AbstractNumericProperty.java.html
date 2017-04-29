@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractNumericProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">AbstractNumericProperty.java</span></div><h1>AbstractNumericProperty.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.rule.properties;
 
 import static net.sourceforge.pmd.PropertyDescriptorFields.MAX;
@@ -14,21 +15,21 @@ import net.sourceforge.pmd.lang.rule.properties.factories.BasicPropertyDescripto
 /**
  * Maintains a pair of boundary limit values between which all values managed by
  * the subclasses must fit.
- * 
+ *
  * @author Brian Remedios
  * @param &lt;T&gt;
  */
-public abstract class AbstractNumericProperty&lt;T&gt; extends AbstractScalarProperty&lt;T&gt; implements
-        NumericPropertyDescriptor&lt;T&gt; {
+public abstract class AbstractNumericProperty&lt;T&gt; extends AbstractScalarProperty&lt;T&gt;
+        implements NumericPropertyDescriptor&lt;T&gt; {
 
     private Number lowerLimit;
     private Number upperLimit;
 
-<span class="fc" id="L27">    public static final Map&lt;String, Boolean&gt; NUMBER_FIELD_TYPES_BY_KEY = BasicPropertyDescriptorFactory</span>
+<span class="fc" id="L28">    public static final Map&lt;String, Boolean&gt; NUMBER_FIELD_TYPES_BY_KEY = BasicPropertyDescriptorFactory</span>
             .expectedFieldTypesWith(new String[] { MIN, MAX }, new Boolean[] { Boolean.TRUE, Boolean.TRUE });
 
     /**
-     * 
+     *
      * @param theName
      * @param theDescription
      * @param lower
@@ -39,80 +40,81 @@ public abstract class AbstractNumericProperty&lt;T&gt; extends AbstractScalarPro
      */
     protected AbstractNumericProperty(String theName, String theDescription, Number lower, Number upper, T theDefault,
             float theUIOrder) {
-<span class="fc" id="L42">        super(theName, theDescription, theDefault, theUIOrder);</span>
+<span class="fc" id="L43">        super(theName, theDescription, theDefault, theUIOrder);</span>
 
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (lower.doubleValue() &gt; upper.doubleValue()) {</span>
-<span class="fc" id="L45">            throw new IllegalArgumentException(&quot;Lower limit cannot be greater than the upper limit&quot;);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (lower.doubleValue() &gt; upper.doubleValue()) {</span>
+<span class="fc" id="L46">            throw new IllegalArgumentException(&quot;Lower limit cannot be greater than the upper limit&quot;);</span>
         }
 
-<span class="fc" id="L48">        lowerLimit = lower;</span>
-<span class="fc" id="L49">        upperLimit = upper;</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L49">        lowerLimit = lower;</span>
+<span class="fc" id="L50">        upperLimit = upper;</span>
+<span class="fc" id="L51">    }</span>
 
     /**
      * Returns the minimum value that instances of the property can have
-     * 
+     *
      * @return The minimum value.
      * @see net.sourceforge.pmd.NumericPropertyDescriptor#lowerLimit()
      */
+    @Override
     public Number lowerLimit() {
-<span class="nc" id="L59">        return lowerLimit;</span>
+<span class="nc" id="L61">        return lowerLimit;</span>
     }
 
     /**
      * @return String
      */
+    @Override
     protected String defaultAsString() {
-<span class="nc" id="L66">        return defaultValue().toString();</span>
+<span class="nc" id="L69">        return defaultValue().toString();</span>
     }
 
     /**
      * Returns the maximum value that instances of the property can have
-     * 
+     *
      * @return The maximum value.
      * @see net.sourceforge.pmd.NumericPropertyDescriptor#upperLimit()
      */
+    @Override
     public Number upperLimit() {
-<span class="nc" id="L76">        return upperLimit;</span>
+<span class="nc" id="L80">        return upperLimit;</span>
     }
 
     /**
      * @return String
      */
     public String rangeString() {
-<span class="fc" id="L83">        StringBuilder sb = new StringBuilder().append('(').append(lowerLimit).append(&quot; -&gt; &quot;).append(upperLimit)</span>
+<span class="fc" id="L87">        StringBuilder sb = new StringBuilder().append('(').append(lowerLimit).append(&quot; -&gt; &quot;).append(upperLimit)</span>
                 .append(')');
-<span class="fc" id="L85">        return sb.toString();</span>
+<span class="fc" id="L89">        return sb.toString();</span>
     }
 
     /**
      * Returns a string describing any error the value may have when
      * characterized by the receiver.
-     * 
-     * @param value Object
+     *
+     * @param value
+     *            Object
      * @return String
      */
+    @Override
     protected String valueErrorFor(Object value) {
 
-<span class="fc" id="L97">        double number = ((Number) value).doubleValue();</span>
+<span class="fc" id="L103">        double number = ((Number) value).doubleValue();</span>
 
-<span class="pc bpc" id="L99" title="1 of 4 branches missed.">        if (number &gt; upperLimit.doubleValue() || number &lt; lowerLimit.doubleValue()) {</span>
-<span class="fc" id="L100">            return value + &quot; is out of range &quot; + rangeString();</span>
+<span class="pc bpc" id="L105" title="1 of 4 branches missed.">        if (number &gt; upperLimit.doubleValue() || number &lt; lowerLimit.doubleValue()) {</span>
+<span class="fc" id="L106">            return value + &quot; is out of range &quot; + rangeString();</span>
         }
 
-<span class="fc" id="L103">        return null;</span>
+<span class="fc" id="L109">        return null;</span>
     }
 
-    /**
-     * Method addAttributesTo.
-     * 
-     * @param attributes Map&lt;String,String&gt;
-     */
+    @Override
     protected void addAttributesTo(Map&lt;String, String&gt; attributes) {
-<span class="nc" id="L112">        super.addAttributesTo(attributes);</span>
+<span class="nc" id="L114">        super.addAttributesTo(attributes);</span>
 
-<span class="nc" id="L114">        attributes.put(MIN, lowerLimit.toString());</span>
-<span class="nc" id="L115">        attributes.put(MAX, upperLimit.toString());</span>
-<span class="nc" id="L116">    }</span>
+<span class="nc" id="L116">        attributes.put(MIN, lowerLimit.toString());</span>
+<span class="nc" id="L117">        attributes.put(MAX, upperLimit.toString());</span>
+<span class="nc" id="L118">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

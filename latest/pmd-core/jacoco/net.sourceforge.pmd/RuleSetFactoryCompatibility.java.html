@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RuleSetFactoryCompatibility.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">RuleSetFactoryCompatibility.java</span></div><h1>RuleSetFactoryCompatibility.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd;
 
 import java.io.IOException;
@@ -18,102 +19,114 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 
 /**
- * Provides a simple filter mechanism to avoid failing to parse an old ruleset, which references rules, that
- * have either been removed from PMD already or renamed or moved to another ruleset.
+ * Provides a simple filter mechanism to avoid failing to parse an old ruleset,
+ * which references rules, that have either been removed from PMD already or
+ * renamed or moved to another ruleset.
  *
  * @see &lt;a href=&quot;https://sourceforge.net/p/pmd/bugs/1360/&quot;&gt;issue 1360&lt;/a&gt;
  */
 public class RuleSetFactoryCompatibility {
-<span class="fc" id="L27">    private static final Logger LOG = Logger.getLogger(RuleSetFactoryCompatibility.class.getName());</span>
+<span class="fc" id="L29">    private static final Logger LOG = Logger.getLogger(RuleSetFactoryCompatibility.class.getName());</span>
 
-<span class="fc" id="L29">    private List&lt;RuleSetFilter&gt; filters = new LinkedList&lt;RuleSetFilter&gt;();</span>
+<span class="fc" id="L31">    private List&lt;RuleSetFilter&gt; filters = new LinkedList&lt;&gt;();</span>
 
     /**
-     * Creates a new instance of the compatibility filter with the built-in filters for the
-     * modified PMD rules.
+     * Creates a new instance of the compatibility filter with the built-in
+     * filters for the modified PMD rules.
      */
-<span class="fc" id="L35">    public RuleSetFactoryCompatibility() {</span>
+<span class="fc" id="L37">    public RuleSetFactoryCompatibility() {</span>
         // PMD 5.3.0
-<span class="fc" id="L37">        addFilterRuleRenamed(&quot;java&quot;, &quot;design&quot;, &quot;UncommentedEmptyMethod&quot;, &quot;UncommentedEmptyMethodBody&quot;);</span>
-<span class="fc" id="L38">        addFilterRuleRemoved(&quot;java&quot;, &quot;controversial&quot;, &quot;BooleanInversion&quot;);</span>
+<span class="fc" id="L39">        addFilterRuleRenamed(&quot;java&quot;, &quot;design&quot;, &quot;UncommentedEmptyMethod&quot;, &quot;UncommentedEmptyMethodBody&quot;);</span>
+<span class="fc" id="L40">        addFilterRuleRemoved(&quot;java&quot;, &quot;controversial&quot;, &quot;BooleanInversion&quot;);</span>
 
         // PMD 5.3.1
-<span class="fc" id="L41">        addFilterRuleRenamed(&quot;java&quot;, &quot;design&quot;, &quot;UseSingleton&quot;, &quot;UseUtilityClass&quot;);</span>
+<span class="fc" id="L43">        addFilterRuleRenamed(&quot;java&quot;, &quot;design&quot;, &quot;UseSingleton&quot;, &quot;UseUtilityClass&quot;);</span>
 
         // PMD 5.4.0
-<span class="fc" id="L44">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyCatchBlock&quot;);</span>
-<span class="fc" id="L45">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyIfStatement&quot;);</span>
-<span class="fc" id="L46">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyWhileStmt&quot;);</span>
-<span class="fc" id="L47">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyTryBlock&quot;);</span>
-<span class="fc" id="L48">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyFinallyBlock&quot;);</span>
-<span class="fc" id="L49">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptySwitchStatements&quot;);</span>
-<span class="fc" id="L50">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptySynchronizedBlock&quot;);</span>
-<span class="fc" id="L51">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStatementNotInLoop&quot;);</span>
-<span class="fc" id="L52">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyInitializer&quot;);</span>
-<span class="fc" id="L53">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStatementBlock&quot;);</span>
-<span class="fc" id="L54">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStaticInitializer&quot;);</span>
-<span class="fc" id="L55">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryConversionTemporary&quot;);</span>
-<span class="fc" id="L56">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryReturn&quot;);</span>
-<span class="fc" id="L57">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryFinalModifier&quot;);</span>
-<span class="fc" id="L58">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessOverridingMethod&quot;);</span>
-<span class="fc" id="L59">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessOperationOnImmutable&quot;);</span>
-<span class="fc" id="L60">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnusedNullCheckInEquals&quot;);</span>
-<span class="fc" id="L61">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessParentheses&quot;);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L46">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyCatchBlock&quot;);</span>
+<span class="fc" id="L47">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyIfStatement&quot;);</span>
+<span class="fc" id="L48">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyWhileStmt&quot;);</span>
+<span class="fc" id="L49">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyTryBlock&quot;);</span>
+<span class="fc" id="L50">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyFinallyBlock&quot;);</span>
+<span class="fc" id="L51">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptySwitchStatements&quot;);</span>
+<span class="fc" id="L52">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptySynchronizedBlock&quot;);</span>
+<span class="fc" id="L53">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStatementNotInLoop&quot;);</span>
+<span class="fc" id="L54">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyInitializer&quot;);</span>
+<span class="fc" id="L55">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStatementBlock&quot;);</span>
+<span class="fc" id="L56">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;empty&quot;, &quot;EmptyStaticInitializer&quot;);</span>
+<span class="fc" id="L57">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryConversionTemporary&quot;);</span>
+<span class="fc" id="L58">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryReturn&quot;);</span>
+<span class="fc" id="L59">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnnecessaryFinalModifier&quot;);</span>
+<span class="fc" id="L60">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessOverridingMethod&quot;);</span>
+<span class="fc" id="L61">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessOperationOnImmutable&quot;);</span>
+<span class="fc" id="L62">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UnusedNullCheckInEquals&quot;);</span>
+<span class="fc" id="L63">        addFilterRuleMoved(&quot;java&quot;, &quot;basic&quot;, &quot;unnecessary&quot;, &quot;UselessParentheses&quot;);</span>
+        
+        // PMD 5.6.0
+<span class="fc" id="L66">        addFilterRuleRenamed(&quot;java&quot;, &quot;design&quot;, &quot;AvoidConstantsInterface&quot;, &quot;ConstantsInInterface&quot;);</span>
+        // unused/UnusedModifier moved AND renamed, order is important!
+<span class="fc" id="L68">        addFilterRuleMoved(&quot;java&quot;, &quot;unused&quot;, &quot;unnecessary&quot;, &quot;UnusedModifier&quot;);</span>
+<span class="fc" id="L69">        addFilterRuleRenamed(&quot;java&quot;, &quot;unnecessary&quot;, &quot;UnusedModifier&quot;, &quot;UnnecessaryModifier&quot;);</span>
+<span class="fc" id="L70">    }</span>
 
     void addFilterRuleRenamed(String language, String ruleset, String oldName, String newName) {
-<span class="fc" id="L65">        filters.add(RuleSetFilter.ruleRenamed(language, ruleset, oldName, newName));</span>
-<span class="fc" id="L66">    }</span>
+<span class="fc" id="L73">        filters.add(RuleSetFilter.ruleRenamed(language, ruleset, oldName, newName));</span>
+<span class="fc" id="L74">    }</span>
+
     void addFilterRuleMoved(String language, String oldRuleset, String newRuleset, String ruleName) {
-<span class="fc" id="L68">        filters.add(RuleSetFilter.ruleMoved(language, oldRuleset, newRuleset, ruleName));</span>
-<span class="fc" id="L69">    }</span>
+<span class="fc" id="L77">        filters.add(RuleSetFilter.ruleMoved(language, oldRuleset, newRuleset, ruleName));</span>
+<span class="fc" id="L78">    }</span>
+
     void addFilterRuleRemoved(String language, String ruleset, String name) {
-<span class="fc" id="L71">        filters.add(RuleSetFilter.ruleRemoved(language, ruleset, name));</span>
-<span class="fc" id="L72">    }</span>
+<span class="fc" id="L81">        filters.add(RuleSetFilter.ruleRemoved(language, ruleset, name));</span>
+<span class="fc" id="L82">    }</span>
 
     /**
-     * Applies all configured filters against the given input stream.
-     * The resulting reader will contain the original ruleset modified by
-     * the filters.
+     * Applies all configured filters against the given input stream. The
+     * resulting reader will contain the original ruleset modified by the
+     * filters.
      *
-     * @param stream
-     * @return
-     * @throws IOException
+     * @param stream the original ruleset file input stream
+     * @return a reader, from which the filtered ruleset can be read
+     * @throws IOException if the stream couldn't be read
      */
     public Reader filterRuleSetFile(InputStream stream) throws IOException {
-<span class="fc" id="L84">        byte[] bytes = IOUtils.toByteArray(stream);</span>
-<span class="fc" id="L85">        String encoding = determineEncoding(bytes);</span>
-<span class="fc" id="L86">        String ruleset = new String(bytes, encoding);</span>
+<span class="fc" id="L94">        byte[] bytes = IOUtils.toByteArray(stream);</span>
+<span class="fc" id="L95">        String encoding = determineEncoding(bytes);</span>
+<span class="fc" id="L96">        String ruleset = new String(bytes, encoding);</span>
 
-<span class="fc" id="L88">        ruleset = applyAllFilters(ruleset);</span>
+<span class="fc" id="L98">        ruleset = applyAllFilters(ruleset);</span>
 
-<span class="fc" id="L90">        return new StringReader(ruleset);</span>
+<span class="fc" id="L100">        return new StringReader(ruleset);</span>
     }
 
     private String applyAllFilters(String in) {
-<span class="fc" id="L94">        String result = in;</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (RuleSetFilter filter : filters) {</span>
-<span class="fc" id="L96">            result = filter.apply(result);</span>
-<span class="fc" id="L97">        }</span>
-<span class="fc" id="L98">        return result;</span>
+<span class="fc" id="L104">        String result = in;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (RuleSetFilter filter : filters) {</span>
+<span class="fc" id="L106">            result = filter.apply(result);</span>
+<span class="fc" id="L107">        }</span>
+<span class="fc" id="L108">        return result;</span>
     }
 
-<span class="fc" id="L101">    private static final Pattern ENCODING_PATTERN = Pattern.compile(&quot;encoding=\&quot;([^\&quot;]+)\&quot;&quot;);</span>
+<span class="fc" id="L111">    private static final Pattern ENCODING_PATTERN = Pattern.compile(&quot;encoding=\&quot;([^\&quot;]+)\&quot;&quot;);</span>
+
     /**
-     * Determines the encoding of the given bytes, assuming this is a XML document, which specifies
-     * the encoding in the first 1024 bytes.
-     * 
-     * @param bytes the input bytes, might be more or less than 1024 bytes
+     * Determines the encoding of the given bytes, assuming this is a XML
+     * document, which specifies the encoding in the first 1024 bytes.
+     *
+     * @param bytes
+     *            the input bytes, might be more or less than 1024 bytes
      * @return the determined encoding, falls back to the default UTF-8 encoding
      */
     String determineEncoding(byte[] bytes) {
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        String firstBytes = new String(bytes, 0, bytes.length &gt; 1024 ? 1024 : bytes.length, Charset.forName(&quot;ISO-8859-1&quot;));</span>
-<span class="fc" id="L111">        Matcher matcher = ENCODING_PATTERN.matcher(firstBytes);</span>
-<span class="fc" id="L112">        String encoding = Charset.forName(&quot;UTF-8&quot;).name();</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (matcher.find()) {</span>
-<span class="fc" id="L114">            encoding = matcher.group(1);</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        String firstBytes = new String(bytes, 0, bytes.length &gt; 1024 ? 1024 : bytes.length,</span>
+                Charset.forName(&quot;ISO-8859-1&quot;));
+<span class="fc" id="L124">        Matcher matcher = ENCODING_PATTERN.matcher(firstBytes);</span>
+<span class="fc" id="L125">        String encoding = Charset.forName(&quot;UTF-8&quot;).name();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (matcher.find()) {</span>
+<span class="fc" id="L127">            encoding = matcher.group(1);</span>
         }
-<span class="fc" id="L116">        return encoding;</span>
+<span class="fc" id="L129">        return encoding;</span>
     }
 
     private static class RuleSetFilter {
@@ -122,69 +135,76 @@ public class RuleSetFactoryCompatibility {
         private Pattern exclusionPattern;
         private String exclusionReplacement;
         private final String logMessage;
-<span class="fc" id="L125">        private RuleSetFilter(String refPattern, String replacement, String logMessage) {</span>
-<span class="fc" id="L126">            this.logMessage = logMessage;</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">            if (replacement != null) {</span>
-<span class="fc" id="L128">                this.refPattern = Pattern.compile(&quot;ref=\&quot;&quot; + Pattern.quote(refPattern) + &quot;\&quot;&quot;);</span>
-<span class="fc" id="L129">                this.replacement = &quot;ref=\&quot;&quot; + replacement + &quot;\&quot;&quot;;</span>
+
+<span class="fc" id="L139">        private RuleSetFilter(String refPattern, String replacement, String logMessage) {</span>
+<span class="fc" id="L140">            this.logMessage = logMessage;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (replacement != null) {</span>
+<span class="fc" id="L142">                this.refPattern = Pattern.compile(&quot;ref=\&quot;&quot; + Pattern.quote(refPattern) + &quot;\&quot;&quot;);</span>
+<span class="fc" id="L143">                this.replacement = &quot;ref=\&quot;&quot; + replacement + &quot;\&quot;&quot;;</span>
             } else {
-<span class="fc" id="L131">                this.refPattern = Pattern.compile(&quot;&lt;rule\\s+ref=\&quot;&quot; + Pattern.quote(refPattern) + &quot;\&quot;\\s*/&gt;&quot;);</span>
-<span class="fc" id="L132">                this.replacement = &quot;&quot;;</span>
+<span class="fc" id="L145">                this.refPattern = Pattern.compile(&quot;&lt;rule\\s+ref=\&quot;&quot; + Pattern.quote(refPattern) + &quot;\&quot;\\s*/&gt;&quot;);</span>
+<span class="fc" id="L146">                this.replacement = &quot;&quot;;</span>
             }
-<span class="fc" id="L134">        }</span>
+<span class="fc" id="L148">        }</span>
 
         private void setExclusionPattern(String oldName, String newName) {
-<span class="fc" id="L137">            exclusionPattern = Pattern.compile(&quot;&lt;exclude\\s+name=[\&quot;']&quot; + Pattern.quote(oldName) + &quot;[\&quot;']\\s*/&gt;&quot;);</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">            if (newName != null) {</span>
-<span class="fc" id="L139">                exclusionReplacement = &quot;&lt;exclude name=\&quot;&quot; + newName + &quot;\&quot; /&gt;&quot;;</span>
+<span class="fc" id="L151">            exclusionPattern = Pattern.compile(&quot;&lt;exclude\\s+name=[\&quot;']&quot; + Pattern.quote(oldName) + &quot;[\&quot;']\\s*/&gt;&quot;);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (newName != null) {</span>
+<span class="fc" id="L153">                exclusionReplacement = &quot;&lt;exclude name=\&quot;&quot; + newName + &quot;\&quot; /&gt;&quot;;</span>
             } else {
-<span class="fc" id="L141">                exclusionReplacement = &quot;&quot;;</span>
+<span class="fc" id="L155">                exclusionReplacement = &quot;&quot;;</span>
             }
-<span class="fc" id="L143">        }</span>
+<span class="fc" id="L157">        }</span>
 
         public static RuleSetFilter ruleRenamed(String language, String ruleset, String oldName, String newName) {
-<span class="fc" id="L146">            String base = &quot;rulesets/&quot; + language + &quot;/&quot; + ruleset + &quot;.xml/&quot;;</span>
-<span class="fc" id="L147">            RuleSetFilter filter = new RuleSetFilter(base + oldName, base + newName,</span>
-                    &quot;The rule \&quot;&quot; + oldName + &quot;\&quot; has been renamed to \&quot;&quot; + newName + &quot;\&quot;. Please change your ruleset!&quot;);
-<span class="fc" id="L149">            filter.setExclusionPattern(oldName, newName);</span>
-<span class="fc" id="L150">            return filter;</span>
+<span class="fc" id="L160">            String base = &quot;rulesets/&quot; + language + &quot;/&quot; + ruleset + &quot;.xml/&quot;;</span>
+<span class="fc" id="L161">            RuleSetFilter filter = new RuleSetFilter(base + oldName, base + newName, &quot;The rule \&quot;&quot; + oldName</span>
+                    + &quot;\&quot; has been renamed to \&quot;&quot; + newName + &quot;\&quot;. Please change your ruleset!&quot;);
+<span class="fc" id="L163">            filter.setExclusionPattern(oldName, newName);</span>
+<span class="fc" id="L164">            return filter;</span>
         }
+
         public static RuleSetFilter ruleMoved(String language, String oldRuleset, String newRuleset, String ruleName) {
-<span class="fc" id="L153">            String base = &quot;rulesets/&quot; + language + &quot;/&quot;;</span>
-<span class="fc" id="L154">            return new RuleSetFilter(base + oldRuleset + &quot;.xml/&quot; + ruleName, base + newRuleset + &quot;.xml/&quot; + ruleName,</span>
-                    &quot;The rule \&quot;&quot; + ruleName + &quot;\&quot; has been moved from ruleset \&quot;&quot; + oldRuleset + &quot;\&quot; to \&quot;&quot; + newRuleset + &quot;\&quot;. Please change your ruleset!&quot;);
+<span class="fc" id="L168">            String base = &quot;rulesets/&quot; + language + &quot;/&quot;;</span>
+<span class="fc" id="L169">            return new RuleSetFilter(base + oldRuleset + &quot;.xml/&quot; + ruleName, base + newRuleset + &quot;.xml/&quot; + ruleName,</span>
+                    &quot;The rule \&quot;&quot; + ruleName + &quot;\&quot; has been moved from ruleset \&quot;&quot; + oldRuleset + &quot;\&quot; to \&quot;&quot;
+                            + newRuleset + &quot;\&quot;. Please change your ruleset!&quot;);
         }
+
         public static RuleSetFilter ruleRemoved(String language, String ruleset, String name) {
-<span class="fc" id="L158">            RuleSetFilter filter = new RuleSetFilter(&quot;rulesets/&quot; + language + &quot;/&quot; + ruleset + &quot;.xml/&quot; + name, null,</span>
-                    &quot;The rule \&quot;&quot; + name + &quot;\&quot; in ruleset \&quot;&quot; + ruleset + &quot;\&quot; has been removed from PMD and no longer exists. Please change your ruleset!&quot;);
-<span class="fc" id="L160">            filter.setExclusionPattern(name, null);</span>
-<span class="fc" id="L161">            return filter;</span>
+<span class="fc" id="L175">            RuleSetFilter filter = new RuleSetFilter(&quot;rulesets/&quot; + language + &quot;/&quot; + ruleset + &quot;.xml/&quot; + name, null,</span>
+                    &quot;The rule \&quot;&quot; + name + &quot;\&quot; in ruleset \&quot;&quot; + ruleset
+                            + &quot;\&quot; has been removed from PMD and no longer exists. Please change your ruleset!&quot;);
+<span class="fc" id="L178">            filter.setExclusionPattern(name, null);</span>
+<span class="fc" id="L179">            return filter;</span>
         }
 
         String apply(String in) {
-<span class="fc" id="L165">            String result = in;</span>
-<span class="fc" id="L166">            Matcher matcher = refPattern.matcher(in);</span>
+<span class="fc" id="L183">            String result = in;</span>
+<span class="fc" id="L184">            Matcher matcher = refPattern.matcher(in);</span>
 
-<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (matcher.find()) {</span>
-<span class="fc" id="L169">                result = matcher.replaceAll(replacement);</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            if (matcher.find()) {</span>
+<span class="fc" id="L187">                result = matcher.replaceAll(replacement);</span>
 
-<span class="pc bpc" id="L171" title="1 of 2 branches missed.">                if (LOG.isLoggable(Level.WARNING)) {</span>
-<span class="fc" id="L172">                    LOG.warning(&quot;Applying rule set filter: &quot; + logMessage);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="fc" id="L190">                    LOG.warning(&quot;Applying rule set filter: &quot; + logMessage);</span>
                 }
             }
 
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (exclusionPattern == null) return result;</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">            if (exclusionPattern == null) {</span>
+<span class="fc" id="L195">                return result;</span>
+            }
 
-<span class="fc" id="L178">            Matcher exclusions = exclusionPattern.matcher(result);</span>
-<span class="fc bfc" id="L179" title="All 2 branches covered.">            if (exclusions.find()) {</span>
-<span class="fc" id="L180">                result = exclusions.replaceAll(exclusionReplacement);</span>
+<span class="fc" id="L198">            Matcher exclusions = exclusionPattern.matcher(result);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (exclusions.find()) {</span>
+<span class="fc" id="L200">                result = exclusions.replaceAll(exclusionReplacement);</span>
 
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                if (LOG.isLoggable(Level.WARNING)) {</span>
-<span class="fc" id="L183">                    LOG.warning(&quot;Applying rule set filter for exclusions: &quot; + logMessage);</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">                if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="fc" id="L203">                    LOG.warning(&quot;Applying rule set filter for exclusions: &quot; + logMessage);</span>
                 }
             }
 
-<span class="fc" id="L187">            return result;</span>
+<span class="fc" id="L207">            return result;</span>
         }
     }
 }

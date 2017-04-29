@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SwiftTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Swift</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">SwiftTokenizer.java</span></div><h1>SwiftTokenizer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-package net.sourceforge.pmd.cpd;
 
-import net.sourceforge.pmd.lang.ast.TokenMgrError;
-import net.sourceforge.pmd.lang.swift.antlr4.SwiftLexer;
+package net.sourceforge.pmd.cpd;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -13,69 +11,72 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 
+import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.lang.swift.antlr4.SwiftLexer;
+
 /**
  * The Swift Tokenizer
  */
-<span class="fc" id="L19">public class SwiftTokenizer implements Tokenizer {</span>
+<span class="fc" id="L20">public class SwiftTokenizer implements Tokenizer {</span>
 
     @Override
     public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-<span class="fc" id="L23">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L24">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
 
         try {
-<span class="fc" id="L26">            ANTLRInputStream ais = new ANTLRInputStream(buffer.toString());</span>
-<span class="fc" id="L27">            SwiftLexer lexer = new SwiftLexer(ais);</span>
+<span class="fc" id="L27">            ANTLRInputStream ais = new ANTLRInputStream(buffer.toString());</span>
+<span class="fc" id="L28">            SwiftLexer lexer = new SwiftLexer(ais);</span>
 
-<span class="fc" id="L29">            lexer.removeErrorListeners();</span>
-<span class="fc" id="L30">            lexer.addErrorListener(new ErrorHandler());</span>
-<span class="fc" id="L31">            Token token = lexer.nextToken();</span>
+<span class="fc" id="L30">            lexer.removeErrorListeners();</span>
+<span class="fc" id="L31">            lexer.addErrorListener(new ErrorHandler());</span>
+<span class="fc" id="L32">            Token token = lexer.nextToken();</span>
 
-<span class="fc bfc" id="L33" title="All 2 branches covered.">            while (token.getType() != Token.EOF) {</span>
-<span class="fc bfc" id="L34" title="All 2 branches covered.">                if (token.getChannel() != Lexer.HIDDEN) {</span>
-<span class="fc" id="L35">                    TokenEntry tokenEntry =</span>
-                            new TokenEntry(token.getText(), sourceCode.getFileName(), token.getLine());
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            while (token.getType() != Token.EOF) {</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">                if (token.getChannel() != Lexer.HIDDEN) {</span>
+<span class="fc" id="L36">                    TokenEntry tokenEntry = new TokenEntry(token.getText(), sourceCode.getFileName(), token.getLine());</span>
 
 <span class="fc" id="L38">                    tokenEntries.add(tokenEntry);</span>
                 }
 <span class="fc" id="L40">                token = lexer.nextToken();</span>
             }
 <span class="nc" id="L42">        } catch (ANTLRSyntaxError err) {</span>
-            // Wrap exceptions of the Swift tokenizer in a TokenMgrError, so they are correctly handled
-            // when CPD is executed with the '--skipLexicalErrors' command line option
-<span class="nc" id="L45">            throw new TokenMgrError(</span>
-                    &quot;Lexical error in file &quot; + sourceCode.getFileName() + &quot; at line &quot; +
-                    err.getLine() + &quot;, column &quot; + err.getColumn() + &quot;.  Encountered: &quot; + err.getMessage(),
+            // Wrap exceptions of the Swift tokenizer in a TokenMgrError, so
+            // they are correctly handled
+            // when CPD is executed with the '--skipLexicalErrors' command line
+            // option
+<span class="nc" id="L47">            throw new TokenMgrError(&quot;Lexical error in file &quot; + sourceCode.getFileName() + &quot; at line &quot; + err.getLine()</span>
+                    + &quot;, column &quot; + err.getColumn() + &quot;.  Encountered: &quot; + err.getMessage(),
                     TokenMgrError.LEXICAL_ERROR);
         } finally {
-<span class="pc" id="L50">            tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L51">        }</span>
-<span class="fc" id="L52">    }</span>
+<span class="pc" id="L51">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L52">        }</span>
+<span class="fc" id="L53">    }</span>
 
-<span class="fc" id="L54">    private static class ErrorHandler extends BaseErrorListener {</span>
+<span class="fc" id="L55">    private static class ErrorHandler extends BaseErrorListener {</span>
         @Override
-        public void syntaxError(Recognizer&lt;?, ?&gt; recognizer, Object offendingSymbol, int line,
-                int charPositionInLine, String msg, RecognitionException ex) {
-<span class="nc" id="L58">            throw new ANTLRSyntaxError(msg, line, charPositionInLine, ex);</span>
+        public void syntaxError(Recognizer&lt;?, ?&gt; recognizer, Object offendingSymbol, int line, int charPositionInLine,
+                String msg, RecognitionException ex) {
+<span class="nc" id="L59">            throw new ANTLRSyntaxError(msg, line, charPositionInLine, ex);</span>
         }
     }
 
-<span class="fc" id="L62">    private static class ANTLRSyntaxError extends RuntimeException {</span>
+<span class="fc" id="L63">    private static class ANTLRSyntaxError extends RuntimeException {</span>
         private static final long serialVersionUID = 1L;
         private final int line;
         private final int column;
 
-        public ANTLRSyntaxError (String msg, int line, int column, RecognitionException cause) {
-<span class="nc" id="L68">            super(msg, cause);</span>
-<span class="nc" id="L69">            this.line = line;</span>
-<span class="nc" id="L70">            this.column = column;</span>
-<span class="nc" id="L71">        }</span>
+        ANTLRSyntaxError(String msg, int line, int column, RecognitionException cause) {
+<span class="nc" id="L69">            super(msg, cause);</span>
+<span class="nc" id="L70">            this.line = line;</span>
+<span class="nc" id="L71">            this.column = column;</span>
+<span class="nc" id="L72">        }</span>
 
         public int getLine() {
-<span class="nc" id="L74">            return line;</span>
+<span class="nc" id="L75">            return line;</span>
         }
 
         public int getColumn() {
-<span class="nc" id="L78">            return column;</span>
+<span class="nc" id="L79">            return column;</span>
         }
     }
 }

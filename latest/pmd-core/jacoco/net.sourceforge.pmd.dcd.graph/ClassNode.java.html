@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClassNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd.graph</a> &gt; <span class="el_source">ClassNode.java</span></div><h1>ClassNode.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.dcd.graph;
 
 import java.lang.ref.WeakReference;
@@ -11,114 +12,118 @@ import java.util.List;
 import net.sourceforge.pmd.dcd.ClassLoaderUtil;
 
 /**
- * Represents a Class in a UsageGraph.  Contains lists of FieldNodes,
+ * Represents a Class in a UsageGraph. Contains lists of FieldNodes,
  * ConstructorNodes, and MethodNodes.
  */
 public class ClassNode implements NodeVisitorAcceptor, Comparable&lt;ClassNode&gt; {
 
-	private final String name;
+    private final String name;
 
-	private WeakReference&lt;Class&lt;?&gt;&gt; typeReference;
+    private WeakReference&lt;Class&lt;?&gt;&gt; typeReference;
 
-	private List&lt;FieldNode&gt; fieldNodes;
+    private List&lt;FieldNode&gt; fieldNodes;
 
-	private List&lt;ConstructorNode&gt; constructorNodes;
+    private List&lt;ConstructorNode&gt; constructorNodes;
 
-	private List&lt;MethodNode&gt; methodNodes;
+    private List&lt;MethodNode&gt; methodNodes;
 
-<span class="nc" id="L29">	public ClassNode(String name) {</span>
-<span class="nc" id="L30">		this.name = name;</span>
-<span class="nc" id="L31">	}</span>
+<span class="nc" id="L30">    public ClassNode(String name) {</span>
+<span class="nc" id="L31">        this.name = name;</span>
+<span class="nc" id="L32">    }</span>
 
-	public Object accept(NodeVisitor visitor, Object data) {
-<span class="nc" id="L34">		visitor.visitFields(this, data);</span>
-<span class="nc" id="L35">		visitor.visitConstructors(this, data);</span>
-<span class="nc" id="L36">		visitor.visitMethods(this, data);</span>
-<span class="nc" id="L37">		return data;</span>
-	}
+    @Override
+    public Object accept(NodeVisitor visitor, Object data) {
+<span class="nc" id="L36">        visitor.visitFields(this, data);</span>
+<span class="nc" id="L37">        visitor.visitConstructors(this, data);</span>
+<span class="nc" id="L38">        visitor.visitMethods(this, data);</span>
+<span class="nc" id="L39">        return data;</span>
+    }
 
-	public String getName() {
-<span class="nc" id="L41">		return name;</span>
-	}
+    public String getName() {
+<span class="nc" id="L43">        return name;</span>
+    }
 
-	public Class&lt;?&gt; getType() {
-<span class="nc bnc" id="L45" title="All 2 branches missed.">		Class&lt;?&gt; type = typeReference == null ? null : typeReference.get();</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">		if (type == null) {</span>
-<span class="nc" id="L47">			type = ClassLoaderUtil.getClass(ClassLoaderUtil.fromInternalForm(name));</span>
-<span class="nc" id="L48">			typeReference = new WeakReference&lt;Class&lt;?&gt;&gt;(type);</span>
-		}
-<span class="nc" id="L50">		return type;</span>
-	}
+    public Class&lt;?&gt; getType() {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        Class&lt;?&gt; type = typeReference == null ? null : typeReference.get();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        if (type == null) {</span>
+<span class="nc" id="L49">            type = ClassLoaderUtil.getClass(ClassLoaderUtil.fromInternalForm(name));</span>
+<span class="nc" id="L50">            typeReference = new WeakReference&lt;Class&lt;?&gt;&gt;(type);</span>
+        }
+<span class="nc" id="L52">        return type;</span>
+    }
 
-	public FieldNode defineField(String name, String desc) {
-<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (fieldNodes == null) {</span>
-<span class="nc" id="L55">			fieldNodes = new ArrayList&lt;&gt;(1);</span>
-		}
-<span class="nc bnc" id="L57" title="All 2 branches missed.">		for (FieldNode fieldNode : fieldNodes) {</span>
-<span class="nc bnc" id="L58" title="All 2 branches missed.">			if (fieldNode.equals(name, desc)) {</span>
-<span class="nc" id="L59">				return fieldNode;</span>
-			}
-<span class="nc" id="L61">		}</span>
-<span class="nc" id="L62">		FieldNode fieldNode = new FieldNode(this, name, desc);</span>
-<span class="nc" id="L63">		fieldNodes.add(fieldNode);</span>
-<span class="nc" id="L64">		return fieldNode;</span>
-	}
+    public FieldNode defineField(String name, String desc) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (fieldNodes == null) {</span>
+<span class="nc" id="L57">            fieldNodes = new ArrayList&lt;&gt;(1);</span>
+        }
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        for (FieldNode fieldNode : fieldNodes) {</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            if (fieldNode.equals(name, desc)) {</span>
+<span class="nc" id="L61">                return fieldNode;</span>
+            }
+<span class="nc" id="L63">        }</span>
+<span class="nc" id="L64">        FieldNode fieldNode = new FieldNode(this, name, desc);</span>
+<span class="nc" id="L65">        fieldNodes.add(fieldNode);</span>
+<span class="nc" id="L66">        return fieldNode;</span>
+    }
 
-	public ConstructorNode defineConstructor(String name, String desc) {
-<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (constructorNodes == null) {</span>
-<span class="nc" id="L69">			constructorNodes = new ArrayList&lt;&gt;(1);</span>
-		}
-<span class="nc bnc" id="L71" title="All 2 branches missed.">		for (ConstructorNode constructorNode : constructorNodes) {</span>
-<span class="nc bnc" id="L72" title="All 2 branches missed.">			if (constructorNode.equals(name, desc)) {</span>
-<span class="nc" id="L73">				return constructorNode;</span>
-			}
-<span class="nc" id="L75">		}</span>
+    public ConstructorNode defineConstructor(String name, String desc) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (constructorNodes == null) {</span>
+<span class="nc" id="L71">            constructorNodes = new ArrayList&lt;&gt;(1);</span>
+        }
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        for (ConstructorNode constructorNode : constructorNodes) {</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (constructorNode.equals(name, desc)) {</span>
+<span class="nc" id="L75">                return constructorNode;</span>
+            }
+<span class="nc" id="L77">        }</span>
 
-<span class="nc" id="L77">		ConstructorNode constructorNode = new ConstructorNode(this, name, desc);</span>
-<span class="nc" id="L78">		constructorNodes.add(constructorNode);</span>
-<span class="nc" id="L79">		return constructorNode;</span>
-	}
+<span class="nc" id="L79">        ConstructorNode constructorNode = new ConstructorNode(this, name, desc);</span>
+<span class="nc" id="L80">        constructorNodes.add(constructorNode);</span>
+<span class="nc" id="L81">        return constructorNode;</span>
+    }
 
-	public MethodNode defineMethod(String name, String desc) {
-<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (methodNodes == null) {</span>
-<span class="nc" id="L84">			methodNodes = new ArrayList&lt;&gt;(1);</span>
-		}
-<span class="nc bnc" id="L86" title="All 2 branches missed.">		for (MethodNode methodNode : methodNodes) {</span>
-<span class="nc bnc" id="L87" title="All 2 branches missed.">			if (methodNode.equals(name, desc)) {</span>
-<span class="nc" id="L88">				return methodNode;</span>
-			}
-<span class="nc" id="L90">		}</span>
+    public MethodNode defineMethod(String name, String desc) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (methodNodes == null) {</span>
+<span class="nc" id="L86">            methodNodes = new ArrayList&lt;&gt;(1);</span>
+        }
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        for (MethodNode methodNode : methodNodes) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (methodNode.equals(name, desc)) {</span>
+<span class="nc" id="L90">                return methodNode;</span>
+            }
+<span class="nc" id="L92">        }</span>
 
-<span class="nc" id="L92">		MethodNode methodNode = new MethodNode(this, name, desc);</span>
-<span class="nc" id="L93">		methodNodes.add(methodNode);</span>
-<span class="nc" id="L94">		return methodNode;</span>
-	}
+<span class="nc" id="L94">        MethodNode methodNode = new MethodNode(this, name, desc);</span>
+<span class="nc" id="L95">        methodNodes.add(methodNode);</span>
+<span class="nc" id="L96">        return methodNode;</span>
+    }
 
-	public List&lt;FieldNode&gt; getFieldNodes() {
-<span class="nc bnc" id="L98" title="All 2 branches missed.">		return fieldNodes != null ? fieldNodes : Collections.&lt;FieldNode&gt; emptyList();</span>
-	}
+    public List&lt;FieldNode&gt; getFieldNodes() {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        return fieldNodes != null ? fieldNodes : Collections.&lt;FieldNode&gt;emptyList();</span>
+    }
 
-	public List&lt;ConstructorNode&gt; getConstructorNodes() {
-<span class="nc bnc" id="L102" title="All 2 branches missed.">		return constructorNodes != null ? constructorNodes : Collections.&lt;ConstructorNode&gt; emptyList();</span>
-	}
+    public List&lt;ConstructorNode&gt; getConstructorNodes() {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        return constructorNodes != null ? constructorNodes : Collections.&lt;ConstructorNode&gt;emptyList();</span>
+    }
 
-	public List&lt;MethodNode&gt; getMethodNodes() {
-<span class="nc bnc" id="L106" title="All 2 branches missed.">		return methodNodes != null ? methodNodes : Collections.&lt;MethodNode&gt; emptyList();</span>
-	}
+    public List&lt;MethodNode&gt; getMethodNodes() {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        return methodNodes != null ? methodNodes : Collections.&lt;MethodNode&gt;emptyList();</span>
+    }
 
-	public int compareTo(ClassNode that) {
-<span class="nc" id="L110">		return this.name.compareTo(that.name);</span>
-	}
+    @Override
+    public int compareTo(ClassNode that) {
+<span class="nc" id="L113">        return this.name.compareTo(that.name);</span>
+    }
 
-	public boolean equals(Object obj) {
-<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (obj instanceof ClassNode) {</span>
-<span class="nc" id="L115">			return this.name.equals(((ClassNode)obj).name);</span>
-		}
-<span class="nc" id="L117">		return false;</span>
-	}
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (obj instanceof ClassNode) {</span>
+<span class="nc" id="L119">            return this.name.equals(((ClassNode) obj).name);</span>
+        }
+<span class="nc" id="L121">        return false;</span>
+    }
 
-	public int hashCode() {
-<span class="nc" id="L121">		return name.hashCode();</span>
-	}
+    @Override
+    public int hashCode() {
+<span class="nc" id="L126">        return name.hashCode();</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BaseCLITest.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cli</a> &gt; <span class="el_source">BaseCLITest.java</span></div><h1>BaseCLITest.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.cli;
 
 import static org.junit.Assert.assertTrue;
@@ -11,17 +12,17 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-import net.sourceforge.pmd.PMD;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
+import net.sourceforge.pmd.PMD;
+
 /**
- * @author Romain Pelisse &lt;belaran@gmail.com&gt;
- * 
+ * @author Romain Pelisse &amp;lt;belaran@gmail.com&amp;gt;
+ *
  */
-<span class="nc" id="L24">public abstract class BaseCLITest {</span>
+<span class="nc" id="L25">public abstract class BaseCLITest {</span>
 
     protected static final String TEST_OUPUT_DIRECTORY = &quot;target/cli-tests/&quot;;
 
@@ -37,63 +38,64 @@ import org.junit.BeforeClass;
      */
     @BeforeClass
     public static void setUp() throws Exception {
-<span class="nc" id="L40">        System.setProperty(PMDCommandLineInterface.NO_EXIT_AFTER_RUN, &quot;true&quot;);</span>
-<span class="nc" id="L41">        File testOuputDir = new File(TEST_OUPUT_DIRECTORY);</span>
-<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (!testOuputDir.exists()) {</span>
-<span class="nc" id="L43">            assertTrue(&quot;failed to create output directory for test:&quot; + testOuputDir.getAbsolutePath(),</span>
+<span class="nc" id="L41">        System.setProperty(PMDCommandLineInterface.NO_EXIT_AFTER_RUN, &quot;true&quot;);</span>
+<span class="nc" id="L42">        File testOuputDir = new File(TEST_OUPUT_DIRECTORY);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (!testOuputDir.exists()) {</span>
+<span class="nc" id="L44">            assertTrue(&quot;failed to create output directory for test:&quot; + testOuputDir.getAbsolutePath(),</span>
                     testOuputDir.mkdirs());
         }
-<span class="nc" id="L46">    }</span>
+<span class="nc" id="L47">    }</span>
 
     @Before
     public void setup() {
-<span class="nc" id="L50">        originalOut = System.out;</span>
-<span class="nc" id="L51">        originalErr = System.err;</span>
-<span class="nc" id="L52">    }</span>
+<span class="nc" id="L51">        originalOut = System.out;</span>
+<span class="nc" id="L52">        originalErr = System.err;</span>
+<span class="nc" id="L53">    }</span>
 
     @After
     public void tearDown() {
-<span class="nc" id="L56">        System.setOut(originalOut);</span>
-<span class="nc" id="L57">        System.setErr(originalErr);</span>
-<span class="nc" id="L58">    }</span>
+<span class="nc" id="L57">        System.setOut(originalOut);</span>
+<span class="nc" id="L58">        System.setErr(originalErr);</span>
+<span class="nc" id="L59">    }</span>
 
     protected void createTestOutputFile(String filename) {
         try {
-<span class="nc" id="L62">            PrintStream out = new PrintStream(new FileOutputStream(filename));</span>
-<span class="nc" id="L63">            System.setOut(out);</span>
-<span class="nc" id="L64">            System.setErr(out);</span>
-<span class="nc" id="L65">        } catch (FileNotFoundException e) {</span>
-<span class="nc" id="L66">            fail(&quot;Can't create file &quot; + filename + &quot; for test.&quot;);</span>
-<span class="nc" id="L67">        }</span>
-<span class="nc" id="L68">    }</span>
+<span class="nc" id="L63">            PrintStream out = new PrintStream(new FileOutputStream(filename));</span>
+<span class="nc" id="L64">            System.setOut(out);</span>
+<span class="nc" id="L65">            System.setErr(out);</span>
+<span class="nc" id="L66">        } catch (FileNotFoundException e) {</span>
+<span class="nc" id="L67">            fail(&quot;Can't create file &quot; + filename + &quot; for test.&quot;);</span>
+<span class="nc" id="L68">        }</span>
+<span class="nc" id="L69">    }</span>
 
     protected String runTest(String[] args, String testname) {
-<span class="nc" id="L71">        return runTest(args, testname, 0);</span>
+<span class="nc" id="L72">        return runTest(args, testname, 0);</span>
     }
+
     protected String runTest(String[] args, String testname, int expectedExitCode) {
-<span class="nc" id="L74">        String filename = TEST_OUPUT_DIRECTORY + testname + &quot;.txt&quot;;</span>
-<span class="nc" id="L75">        long start = System.currentTimeMillis();</span>
-<span class="nc" id="L76">        createTestOutputFile(filename);</span>
-<span class="nc" id="L77">        System.out.println(&quot;Start running test &quot; + testname);</span>
-<span class="nc" id="L78">        runPMDWith(args);</span>
-<span class="nc" id="L79">        checkStatusCode(expectedExitCode);</span>
-<span class="nc" id="L80">        System.out.println(&quot;Test finished successfully after &quot; + (System.currentTimeMillis() - start) + &quot;ms.&quot;);</span>
-<span class="nc" id="L81">        return filename;</span>
+<span class="nc" id="L76">        String filename = TEST_OUPUT_DIRECTORY + testname + &quot;.txt&quot;;</span>
+<span class="nc" id="L77">        long start = System.currentTimeMillis();</span>
+<span class="nc" id="L78">        createTestOutputFile(filename);</span>
+<span class="nc" id="L79">        System.out.println(&quot;Start running test &quot; + testname);</span>
+<span class="nc" id="L80">        runPMDWith(args);</span>
+<span class="nc" id="L81">        checkStatusCode(expectedExitCode);</span>
+<span class="nc" id="L82">        System.out.println(&quot;Test finished successfully after &quot; + (System.currentTimeMillis() - start) + &quot;ms.&quot;);</span>
+<span class="nc" id="L83">        return filename;</span>
     }
 
     protected void runPMDWith(String[] args) {
-<span class="nc" id="L85">        PMD.main(args);</span>
-<span class="nc" id="L86">    }</span>
+<span class="nc" id="L87">        PMD.main(args);</span>
+<span class="nc" id="L88">    }</span>
 
     protected void checkStatusCode(int expectedExitCode) {
-<span class="nc" id="L89">        int statusCode = getStatusCode();</span>
-<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (statusCode != expectedExitCode) {</span>
-<span class="nc" id="L91">            fail(&quot;PMD failed with status code:&quot; + statusCode);</span>
+<span class="nc" id="L91">        int statusCode = getStatusCode();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (statusCode != expectedExitCode) {</span>
+<span class="nc" id="L93">            fail(&quot;PMD failed with status code:&quot; + statusCode);</span>
         }
-<span class="nc" id="L93">    }</span>
+<span class="nc" id="L95">    }</span>
 
     protected int getStatusCode() {
-<span class="nc" id="L96">        return Integer.parseInt(System.getProperty(PMDCommandLineInterface.STATUS_CODE_PROPERTY));</span>
+<span class="nc" id="L98">        return Integer.parseInt(System.getProperty(PMDCommandLineInterface.STATUS_CODE_PROPERTY));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

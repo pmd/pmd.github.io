@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Helper.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">Helper.java</span></div><h1>Helper.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
+
 package net.sourceforge.pmd.lang.apex.rule.security;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,16 +23,19 @@ import net.sourceforge.pmd.lang.apex.ast.ASTNewNameValueObjectExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTReferenceExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTSoqlExpression;
 import net.sourceforge.pmd.lang.apex.ast.ASTSoslExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
 import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
 import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
 import net.sourceforge.pmd.lang.apex.ast.ApexNode;
 
 import apex.jorje.data.ast.Identifier;
+import apex.jorje.data.ast.TypeRef;
 import apex.jorje.data.ast.TypeRef.ClassTypeRef;
 import apex.jorje.semantic.ast.expression.MethodCallExpression;
 import apex.jorje.semantic.ast.expression.NewNameValueObjectExpression;
 import apex.jorje.semantic.ast.expression.VariableExpression;
 import apex.jorje.semantic.ast.member.Field;
+import apex.jorje.semantic.ast.member.Parameter;
 import apex.jorje.semantic.ast.statement.FieldDeclaration;
 import apex.jorje.semantic.ast.statement.VariableDeclaration;
 
@@ -43,35 +48,35 @@ import apex.jorje.semantic.ast.statement.VariableDeclaration;
 public final class Helper {
     protected static final String ANY_METHOD = &quot;*&quot;;
 
-<span class="nc" id="L46">    private Helper() {</span>
-<span class="nc" id="L47">        throw new AssertionError(&quot;Can't instantiate helper classes&quot;);</span>
+<span class="nc" id="L51">    private Helper() {</span>
+<span class="nc" id="L52">        throw new AssertionError(&quot;Can't instantiate helper classes&quot;);</span>
     }
 
     static boolean isTestMethodOrClass(final ApexNode&lt;?&gt; node) {
-<span class="fc" id="L51">        final List&lt;ASTModifierNode&gt; modifierNode = node.findChildrenOfType(ASTModifierNode.class);</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (final ASTModifierNode m : modifierNode) {</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">            if (m.getNode().getModifiers().isTest()) {</span>
-<span class="fc" id="L54">                return true;</span>
+<span class="fc" id="L56">        final List&lt;ASTModifierNode&gt; modifierNode = node.findChildrenOfType(ASTModifierNode.class);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (final ASTModifierNode m : modifierNode) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            if (m.getNode().getModifiers().isTest()) {</span>
+<span class="fc" id="L59">                return true;</span>
             }
-<span class="fc" id="L56">        }</span>
+<span class="fc" id="L61">        }</span>
 
-<span class="fc" id="L58">        final String className = node.getNode().getDefiningType().getApexName();</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (className.endsWith(&quot;Test&quot;)) {</span>
-<span class="fc" id="L60">            return true;</span>
+<span class="fc" id="L63">        final String className = node.getNode().getDefiningType().getApexName();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (className.endsWith(&quot;Test&quot;)) {</span>
+<span class="fc" id="L65">            return true;</span>
         }
 
-<span class="fc" id="L63">        return false;</span>
+<span class="fc" id="L68">        return false;</span>
     }
 
     static boolean foundAnySOQLorSOSL(final ApexNode&lt;?&gt; node) {
-<span class="fc" id="L67">        final List&lt;ASTSoqlExpression&gt; dmlSoqlExpression = node.findDescendantsOfType(ASTSoqlExpression.class);</span>
-<span class="fc" id="L68">        final List&lt;ASTSoslExpression&gt; dmlSoslExpression = node.findDescendantsOfType(ASTSoslExpression.class);</span>
+<span class="fc" id="L72">        final List&lt;ASTSoqlExpression&gt; dmlSoqlExpression = node.findDescendantsOfType(ASTSoqlExpression.class);</span>
+<span class="fc" id="L73">        final List&lt;ASTSoslExpression&gt; dmlSoslExpression = node.findDescendantsOfType(ASTSoslExpression.class);</span>
 
-<span class="pc bpc" id="L70" title="1 of 4 branches missed.">        if (dmlSoqlExpression.isEmpty() &amp;&amp; dmlSoslExpression.isEmpty()) {</span>
-<span class="fc" id="L71">            return false;</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">        if (dmlSoqlExpression.isEmpty() &amp;&amp; dmlSoslExpression.isEmpty()) {</span>
+<span class="fc" id="L76">            return false;</span>
         }
 
-<span class="fc" id="L74">        return true;</span>
+<span class="fc" id="L79">        return true;</span>
     }
 
     /**
@@ -83,61 +88,61 @@ public final class Helper {
      */
     static boolean foundAnyDML(final ApexNode&lt;?&gt; node) {
 
-<span class="fc" id="L86">        final List&lt;ASTDmlUpsertStatement&gt; dmlUpsertStatement = node.findDescendantsOfType(ASTDmlUpsertStatement.class);</span>
-<span class="fc" id="L87">        final List&lt;ASTDmlUpdateStatement&gt; dmlUpdateStatement = node.findDescendantsOfType(ASTDmlUpdateStatement.class);</span>
-<span class="fc" id="L88">        final List&lt;ASTDmlUndeleteStatement&gt; dmlUndeleteStatement = node</span>
-<span class="fc" id="L89">                .findDescendantsOfType(ASTDmlUndeleteStatement.class);</span>
-<span class="fc" id="L90">        final List&lt;ASTDmlMergeStatement&gt; dmlMergeStatement = node.findDescendantsOfType(ASTDmlMergeStatement.class);</span>
-<span class="fc" id="L91">        final List&lt;ASTDmlInsertStatement&gt; dmlInsertStatement = node.findDescendantsOfType(ASTDmlInsertStatement.class);</span>
-<span class="fc" id="L92">        final List&lt;ASTDmlDeleteStatement&gt; dmlDeleteStatement = node.findDescendantsOfType(ASTDmlDeleteStatement.class);</span>
+<span class="fc" id="L91">        final List&lt;ASTDmlUpsertStatement&gt; dmlUpsertStatement = node.findDescendantsOfType(ASTDmlUpsertStatement.class);</span>
+<span class="fc" id="L92">        final List&lt;ASTDmlUpdateStatement&gt; dmlUpdateStatement = node.findDescendantsOfType(ASTDmlUpdateStatement.class);</span>
+<span class="fc" id="L93">        final List&lt;ASTDmlUndeleteStatement&gt; dmlUndeleteStatement = node</span>
+<span class="fc" id="L94">                .findDescendantsOfType(ASTDmlUndeleteStatement.class);</span>
+<span class="fc" id="L95">        final List&lt;ASTDmlMergeStatement&gt; dmlMergeStatement = node.findDescendantsOfType(ASTDmlMergeStatement.class);</span>
+<span class="fc" id="L96">        final List&lt;ASTDmlInsertStatement&gt; dmlInsertStatement = node.findDescendantsOfType(ASTDmlInsertStatement.class);</span>
+<span class="fc" id="L97">        final List&lt;ASTDmlDeleteStatement&gt; dmlDeleteStatement = node.findDescendantsOfType(ASTDmlDeleteStatement.class);</span>
 
-<span class="pc bpc" id="L94" title="2 of 6 branches missed.">        if (dmlUpsertStatement.isEmpty() &amp;&amp; dmlUpdateStatement.isEmpty() &amp;&amp; dmlUndeleteStatement.isEmpty()</span>
-<span class="pc bpc" id="L95" title="3 of 6 branches missed.">                &amp;&amp; dmlMergeStatement.isEmpty() &amp;&amp; dmlInsertStatement.isEmpty() &amp;&amp; dmlDeleteStatement.isEmpty()) {</span>
-<span class="fc" id="L96">            return false;</span>
+<span class="pc bpc" id="L99" title="2 of 6 branches missed.">        if (dmlUpsertStatement.isEmpty() &amp;&amp; dmlUpdateStatement.isEmpty() &amp;&amp; dmlUndeleteStatement.isEmpty()</span>
+<span class="pc bpc" id="L100" title="3 of 6 branches missed.">                &amp;&amp; dmlMergeStatement.isEmpty() &amp;&amp; dmlInsertStatement.isEmpty() &amp;&amp; dmlDeleteStatement.isEmpty()) {</span>
+<span class="fc" id="L101">            return false;</span>
         }
 
-<span class="fc" id="L99">        return true;</span>
+<span class="fc" id="L104">        return true;</span>
     }
 
     static boolean isMethodName(final ASTMethodCallExpression methodNode, final String className,
             final String methodName) {
-<span class="fc" id="L104">        final ASTReferenceExpression reference = methodNode.getFirstChildOfType(ASTReferenceExpression.class);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (reference.getNode().getJadtIdentifiers().size() == 1) {</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (reference.getNode().getJadtIdentifiers().get(0).value.equalsIgnoreCase(className)) {</span>
-<span class="fc bfc" id="L107" title="All 4 branches covered.">                if (methodName.equals(ANY_METHOD) || isMethodName(methodNode, methodName)) {</span>
-<span class="fc" id="L108">                    return true;</span>
+<span class="fc" id="L109">        final ASTReferenceExpression reference = methodNode.getFirstChildOfType(ASTReferenceExpression.class);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (reference.getNode().getJadtIdentifiers().size() == 1) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (reference.getNode().getJadtIdentifiers().get(0).value.equalsIgnoreCase(className)) {</span>
+<span class="fc bfc" id="L112" title="All 4 branches covered.">                if (methodName.equals(ANY_METHOD) || isMethodName(methodNode, methodName)) {</span>
+<span class="fc" id="L113">                    return true;</span>
                 }
             }
         }
 
-<span class="fc" id="L113">        return false;</span>
+<span class="fc" id="L118">        return false;</span>
 
     }
 
     static boolean isMethodName(final ASTMethodCallExpression m, final String methodName) {
-<span class="fc" id="L118">        return isMethodName(m.getNode(), methodName);</span>
+<span class="fc" id="L123">        return isMethodName(m.getNode(), methodName);</span>
     }
 
     static boolean isMethodName(final MethodCallExpression m, final String methodName) {
-<span class="fc" id="L122">        return m.getMethodName().equalsIgnoreCase(methodName);</span>
+<span class="fc" id="L127">        return m.getMethodName().equalsIgnoreCase(methodName);</span>
     }
 
     static boolean isMethodCallChain(final ASTMethodCallExpression methodNode, final String... methodNames) {
-<span class="fc" id="L126">        String methodName = methodNames[methodNames.length - 1];</span>
-<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (Helper.isMethodName(methodNode, methodName)) {</span>
-<span class="fc" id="L128">            final ASTReferenceExpression reference = methodNode.getFirstChildOfType(ASTReferenceExpression.class);</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            if (reference != null) {</span>
-<span class="fc" id="L130">                final ASTDottedExpression dottedExpression = reference.getFirstChildOfType(ASTDottedExpression.class);</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                if (dottedExpression != null) {</span>
-<span class="fc" id="L132">                    final ASTMethodCallExpression nestedMethod = dottedExpression</span>
-<span class="fc" id="L133">                            .getFirstChildOfType(ASTMethodCallExpression.class);</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">                    if (nestedMethod != null) {</span>
-<span class="fc" id="L135">                        String[] newMethodNames = Arrays.copyOf(methodNames, methodNames.length - 1);</span>
-<span class="fc" id="L136">                        return isMethodCallChain(nestedMethod, newMethodNames);</span>
+<span class="fc" id="L131">        String methodName = methodNames[methodNames.length - 1];</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (Helper.isMethodName(methodNode, methodName)) {</span>
+<span class="fc" id="L133">            final ASTReferenceExpression reference = methodNode.getFirstChildOfType(ASTReferenceExpression.class);</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">            if (reference != null) {</span>
+<span class="fc" id="L135">                final ASTDottedExpression dottedExpression = reference.getFirstChildOfType(ASTDottedExpression.class);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">                if (dottedExpression != null) {</span>
+<span class="fc" id="L137">                    final ASTMethodCallExpression nestedMethod = dottedExpression</span>
+<span class="fc" id="L138">                            .getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                    if (nestedMethod != null) {</span>
+<span class="fc" id="L140">                        String[] newMethodNames = Arrays.copyOf(methodNames, methodNames.length - 1);</span>
+<span class="fc" id="L141">                        return isMethodCallChain(nestedMethod, newMethodNames);</span>
                     } else {
-<span class="fc" id="L138">                        String[] newClassName = Arrays.copyOf(methodNames, methodNames.length - 1);</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">                        if (newClassName.length == 1) {</span>
-<span class="fc" id="L140">                            return Helper.isMethodName(methodNode, newClassName[0], methodName);</span>
+<span class="fc" id="L143">                        String[] newClassName = Arrays.copyOf(methodNames, methodNames.length - 1);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                        if (newClassName.length == 1) {</span>
+<span class="fc" id="L145">                            return Helper.isMethodName(methodNode, newClassName[0], methodName);</span>
                         }
                     }
                 }
@@ -145,69 +150,124 @@ public final class Helper {
             }
         }
 
-<span class="fc" id="L148">        return false;</span>
+<span class="fc" id="L153">        return false;</span>
     }
 
     static String getFQVariableName(final ASTVariableExpression variable) {
-<span class="fc" id="L152">        final ASTReferenceExpression ref = variable.getFirstChildOfType(ASTReferenceExpression.class);</span>
-<span class="fc" id="L153">        String objectName = &quot;&quot;;</span>
-<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if (ref != null) {</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">            if (ref.getNode().getJadtIdentifiers().size() == 1) {</span>
-<span class="fc" id="L156">                objectName = ref.getNode().getJadtIdentifiers().get(0).value + &quot;.&quot;;</span>
+<span class="fc" id="L157">        final ASTReferenceExpression ref = variable.getFirstChildOfType(ASTReferenceExpression.class);</span>
+<span class="fc" id="L158">        String objectName = &quot;&quot;;</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (ref != null) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (ref.getNode().getJadtIdentifiers().size() == 1) {</span>
+<span class="fc" id="L161">                objectName = ref.getNode().getJadtIdentifiers().get(0).value + &quot;.&quot;;</span>
             }
         }
 
-<span class="fc" id="L160">        VariableExpression n = variable.getNode();</span>
-<span class="fc" id="L161">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(objectName)</span>
-<span class="fc" id="L162">                .append(n.getIdentifier().value);</span>
-<span class="fc" id="L163">        return sb.toString();</span>
+<span class="fc" id="L165">        VariableExpression n = variable.getNode();</span>
+<span class="fc" id="L166">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(objectName)</span>
+<span class="fc" id="L167">                .append(n.getIdentifier().value);</span>
+<span class="fc" id="L168">        return sb.toString();</span>
     }
 
     static String getFQVariableName(final ASTVariableDeclaration variable) {
-<span class="fc" id="L167">        VariableDeclaration n = variable.getNode();</span>
-<span class="fc" id="L168">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
-<span class="fc" id="L169">                .append(n.getLocalInfo().getName());</span>
-<span class="fc" id="L170">        return sb.toString();</span>
+<span class="fc" id="L172">        VariableDeclaration n = variable.getNode();</span>
+<span class="fc" id="L173">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
+<span class="fc" id="L174">                .append(n.getLocalInfo().getName());</span>
+<span class="fc" id="L175">        return sb.toString();</span>
     }
 
     static String getFQVariableName(final ASTField variable) {
-<span class="fc" id="L174">        Field n = variable.getNode();</span>
-<span class="fc" id="L175">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
-<span class="fc" id="L176">                .append(n.getFieldInfo().getName());</span>
-<span class="fc" id="L177">        return sb.toString();</span>
+<span class="fc" id="L179">        Field n = variable.getNode();</span>
+<span class="fc" id="L180">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
+<span class="fc" id="L181">                .append(n.getFieldInfo().getName());</span>
+<span class="fc" id="L182">        return sb.toString();</span>
     }
 
+    static String getVariableType(final ASTField variable) {
+<span class="nc" id="L186">        Field n = variable.getNode();</span>
+<span class="nc" id="L187">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;)</span>
+<span class="nc" id="L188">                .append(n.getFieldInfo().getName());</span>
+<span class="nc" id="L189">        return sb.toString();</span>
+    }
+    
     static String getFQVariableName(final ASTFieldDeclaration variable) {
-<span class="fc" id="L181">        FieldDeclaration n = variable.getNode();</span>
-<span class="fc" id="L182">        String name = &quot;&quot;;</span>
+<span class="fc" id="L193">        FieldDeclaration n = variable.getNode();</span>
+<span class="fc" id="L194">        String name = &quot;&quot;;</span>
 
         try {
-<span class="fc" id="L185">            java.lang.reflect.Field f = n.getClass().getDeclaredField(&quot;name&quot;);</span>
-<span class="fc" id="L186">            f.setAccessible(true);</span>
-<span class="fc" id="L187">            Identifier nameField = (Identifier) f.get(n);</span>
-<span class="fc" id="L188">            name = nameField.value;</span>
+<span class="fc" id="L197">            java.lang.reflect.Field f = n.getClass().getDeclaredField(&quot;name&quot;);</span>
+<span class="fc" id="L198">            f.setAccessible(true);</span>
+<span class="fc" id="L199">            Identifier nameField = (Identifier) f.get(n);</span>
+<span class="fc" id="L200">            name = nameField.value;</span>
 
-<span class="nc" id="L190">        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {</span>
-<span class="fc" id="L191">        }</span>
+<span class="nc" id="L202">        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {</span>
+<span class="fc" id="L203">        }</span>
 
-<span class="fc" id="L193">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(name);</span>
-<span class="fc" id="L194">        return sb.toString();</span>
+<span class="fc" id="L205">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(name);</span>
+<span class="fc" id="L206">        return sb.toString();</span>
     }
 
     static String getFQVariableName(final ASTNewNameValueObjectExpression variable) {
-<span class="fc" id="L198">        NewNameValueObjectExpression n = variable.getNode();</span>
-<span class="fc" id="L199">        String objType = &quot;&quot;;</span>
+<span class="fc" id="L210">        NewNameValueObjectExpression n = variable.getNode();</span>
+<span class="fc" id="L211">        String objType = &quot;&quot;;</span>
         try {
             // no other way to get this field, Apex Jorje does not expose it
-<span class="fc" id="L202">            java.lang.reflect.Field f = n.getClass().getDeclaredField(&quot;typeRef&quot;);</span>
-<span class="fc" id="L203">            f.setAccessible(true);</span>
-<span class="fc" id="L204">            ClassTypeRef hiddenField = (ClassTypeRef) f.get(n);</span>
-<span class="fc" id="L205">            objType = hiddenField.className.get(0).value;</span>
-<span class="nc" id="L206">        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {</span>
-<span class="fc" id="L207">        }</span>
+<span class="fc" id="L214">            java.lang.reflect.Field f = n.getClass().getDeclaredField(&quot;typeRef&quot;);</span>
+<span class="fc" id="L215">            f.setAccessible(true);</span>
+<span class="fc" id="L216">            ClassTypeRef hiddenField = (ClassTypeRef) f.get(n);</span>
+<span class="fc" id="L217">            objType = hiddenField.className.get(0).value;</span>
+<span class="nc" id="L218">        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {</span>
+<span class="fc" id="L219">        }</span>
 
-<span class="fc" id="L209">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(objType);</span>
-<span class="fc" id="L210">        return sb.toString();</span>
+<span class="fc" id="L221">        StringBuilder sb = new StringBuilder().append(n.getDefiningType().getApexName()).append(&quot;:&quot;).append(objType);</span>
+<span class="fc" id="L222">        return sb.toString();</span>
+    }
+
+    static boolean isSystemLevelClass(ASTUserClass node) {
+<span class="fc" id="L226">        List&lt;TypeRef&gt; interfaces = node.getNode().getDefiningType().getCodeUnitDetails().getInterfaceTypeRefs();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        for (TypeRef intObject : interfaces) {</span>
+            try {
+<span class="fc" id="L229">                java.lang.reflect.Field f = intObject.getClass().getDeclaredField(&quot;className&quot;);</span>
+<span class="fc" id="L230">                f.setAccessible(true);</span>
+                @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L232">                ArrayList&lt;Identifier&gt; ids = (ArrayList&lt;Identifier&gt;) f.get(intObject);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">                if (isWhitelisted(ids)) {</span>
+<span class="fc" id="L234">                    return true;</span>
+                }
+
+<span class="nc" id="L237">            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {</span>
+<span class="nc" id="L238">            }</span>
+
+<span class="nc" id="L240">        }</span>
+
+<span class="fc" id="L242">        return false;</span>
+    }
+
+    private static boolean isWhitelisted(List&lt;Identifier&gt; ids) {
+<span class="fc" id="L246">        StringBuffer sb = new StringBuffer();</span>
+
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        for (int i = 0; i &lt; ids.size(); i++) {</span>
+<span class="fc" id="L249">            sb.append(ids.get(i).value);</span>
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (i != (ids.size() - 1)) {</span>
+<span class="fc" id="L252">                sb.append(&quot;.&quot;);</span>
+            }
+        }
+
+<span class="pc bpc" id="L256" title="7 of 12 branches missed.">        switch (sb.toString().toLowerCase()) {</span>
+        case &quot;queueable&quot;:
+        case &quot;database.batchable&quot;:
+        case &quot;installhandler&quot;:
+<span class="fc" id="L260">            return true;</span>
+        default:
+            break;
+        }
+<span class="nc" id="L264">        return false;</span>
+    }
+
+    public static String getFQVariableName(Parameter p) {
+<span class="fc" id="L268">        StringBuffer sb = new StringBuffer();        </span>
+<span class="fc" id="L269">        sb.append(p.getDefiningType()).append(&quot;:&quot;).append(p.getName().value);        </span>
+<span class="fc" id="L270">        return sb.toString();</span>
     }
 
 }

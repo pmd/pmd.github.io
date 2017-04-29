@@ -72,25 +72,28 @@ public class AccessorClassGenerationRule extends AbstractJavaRule {
 <span class="fc" id="L72">            final List&lt;ASTConstructorDeclaration&gt; constructors = privateConstructors.get(type.getImage());</span>
 
 <span class="fc bfc" id="L74" title="All 2 branches covered.">            if (constructors != null) {</span>
-<span class="fc" id="L75">                final ASTArguments callArguments = (ASTArguments) node.jjtGetChild(1);</span>
-<span class="fc" id="L76">                final ClassScope enclosingScope = node.getScope().getEnclosingScope(ClassScope.class);</span>
-
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                for (final ASTConstructorDeclaration cd : constructors) {</span>
-                    // Are we within the same class scope?
-<span class="fc bfc" id="L80" title="All 2 branches covered.">                    if (cd.getScope().getEnclosingScope(ClassScope.class) == enclosingScope) {</span>
-<span class="fc" id="L81">                        break;</span>
-                    }
-
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                    if (cd.getParameterCount() == callArguments.getArgumentCount()) {</span>
-                        // TODO : Check types
-<span class="fc" id="L86">                        addViolation(data, node);</span>
-<span class="fc" id="L87">                        break;</span>
-                    }
-<span class="nc" id="L89">                }</span>
+<span class="fc" id="L75">                final ASTArguments callArguments = node.getFirstChildOfType(ASTArguments.class);</span>
+                // Is this really a constructor call and not an array?
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (callArguments != null) {</span>
+<span class="fc" id="L78">                    final ClassScope enclosingScope = node.getScope().getEnclosingScope(ClassScope.class);</span>
+    
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">                    for (final ASTConstructorDeclaration cd : constructors) {</span>
+                        // Are we within the same class scope?
+<span class="fc bfc" id="L82" title="All 2 branches covered.">                        if (cd.getScope().getEnclosingScope(ClassScope.class) == enclosingScope) {</span>
+<span class="fc" id="L83">                            break;</span>
+                        }
+    
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                        if (cd.getParameterCount() == callArguments.getArgumentCount()) {</span>
+                            // TODO : Check types
+<span class="fc" id="L88">                            addViolation(data, node);</span>
+<span class="fc" id="L89">                            break;</span>
+                        }
+<span class="nc" id="L91">                    }</span>
+                }
             }
         }
 
-<span class="fc" id="L93">        return data;</span>
+<span class="fc" id="L96">        return data;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
