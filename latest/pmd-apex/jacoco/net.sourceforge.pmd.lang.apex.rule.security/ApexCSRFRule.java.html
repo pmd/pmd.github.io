@@ -1,12 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexCSRFRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexCSRFRule.java</span></div><h1>ApexCSRFRule.java</h1><pre class="source lang-java linenums">/**
- * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
- */
-
-package net.sourceforge.pmd.lang.apex.rule.security;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexCSRFRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexCSRFRule.java</span></div><h1>ApexCSRFRule.java</h1><pre class="source lang-java linenums">package net.sourceforge.pmd.lang.apex.rule.security;
 
 import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
-import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
-import net.sourceforge.pmd.lang.apex.ast.ApexNode;
 import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
 
 /**
@@ -17,50 +11,41 @@ import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
  *
  */
 public class ApexCSRFRule extends AbstractApexRule {
-    public static final String INIT = &quot;init&quot;;
+	public static final String INIT = &quot;init&quot;;
 
-<span class="fc" id="L22">    public ApexCSRFRule() {</span>
-<span class="fc" id="L23">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
-<span class="fc" id="L24">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
-<span class="fc" id="L25">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
-<span class="fc" id="L26">    }</span>
+<span class="fc" id="L16">	public ApexCSRFRule() {</span>
+<span class="fc" id="L17">		setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L18">		setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L19">		setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L20">	}</span>
 
-    @Override
-    public Object visit(ASTUserClass node, Object data) {
-<span class="pc bpc" id="L30" title="1 of 4 branches missed.">        if (Helper.isTestMethodOrClass(node) || Helper.isSystemLevelClass(node)) {</span>
-<span class="fc" id="L31">            return data; // stops all the rules</span>
-        }
+	@Override
+	public Object visit(ASTMethod node, Object data) {
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">		if (!Helper.isTestMethodOrClass(node)) {</span>
+<span class="fc" id="L25">			checkForCSRF(node, data);</span>
+		}
+<span class="fc" id="L27">		return data;</span>
+	}
 
-<span class="fc" id="L34">        return visit((ApexNode&lt;?&gt;) node, data);</span>
-    }
+	/**
+	 * @param node
+	 * @param data
+	 */
+	private void checkForCSRF(ASTMethod node, Object data) {
+<span class="fc bfc" id="L35" title="All 2 branches covered.">		if (node.getNode().getMethodInfo().isConstructor()) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">			if (Helper.foundAnyDML(node)) {</span>
+<span class="fc" id="L37">				addViolation(data, node);</span>
+			}
 
-    @Override
-    public Object visit(ASTMethod node, Object data) {
-<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (!Helper.isTestMethodOrClass(node)) {</span>
-<span class="fc" id="L40">            checkForCSRF(node, data);</span>
-        }
-<span class="fc" id="L42">        return data;</span>
-    }
+		}
 
-    /**
-     * @param node
-     * @param data
-     */
-    private void checkForCSRF(ASTMethod node, Object data) {
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (node.getNode().getMethodInfo().isConstructor()) {</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">            if (Helper.foundAnyDML(node)) {</span>
-<span class="fc" id="L52">                addViolation(data, node);</span>
-            }
+<span class="fc" id="L42">		String name = node.getNode().getMethodInfo().getName();</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">		if (name.equalsIgnoreCase(INIT)) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">			if (Helper.foundAnyDML(node)) {</span>
+<span class="fc" id="L45">				addViolation(data, node);</span>
+			}
+		}
 
-        }
-
-<span class="fc" id="L57">        String name = node.getNode().getMethodInfo().getName();</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (name.equalsIgnoreCase(INIT)) {</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">            if (Helper.foundAnyDML(node)) {</span>
-<span class="fc" id="L60">                addViolation(data, node);</span>
-            }
-        }
-
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L49">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

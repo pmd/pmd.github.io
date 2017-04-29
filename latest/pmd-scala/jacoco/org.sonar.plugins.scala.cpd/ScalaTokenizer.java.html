@@ -17,13 +17,9 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
-
 package org.sonar.plugins.scala.cpd;
 
 import java.util.List;
-
-import org.sonar.plugins.scala.compiler.Lexer;
-import org.sonar.plugins.scala.compiler.Token;
 
 import net.sourceforge.pmd.cpd.SourceCode;
 import net.sourceforge.pmd.cpd.TokenEntry;
@@ -31,21 +27,25 @@ import net.sourceforge.pmd.cpd.Tokenizer;
 import net.sourceforge.pmd.cpd.Tokens;
 import net.sourceforge.pmd.lang.ast.TokenMgrError;
 
+import org.sonar.plugins.scala.compiler.Lexer;
+import org.sonar.plugins.scala.compiler.Token;
+
 /**
  * Scala tokenizer for PMD CPD.
  *
  * @since 0.1
  */
-<span class="fc" id="L39">public final class ScalaTokenizer implements Tokenizer {</span>
+<span class="fc" id="L38">public final class ScalaTokenizer implements Tokenizer {</span>
 
     public void tokenize(SourceCode source, Tokens cpdTokens) {
-<span class="fc" id="L42">        String filename = source.getFileName();</span>
+<span class="fc" id="L41">        String filename = source.getFileName();</span>
 
         try {
-<span class="fc" id="L45">            Lexer lexer = new Lexer();</span>
-<span class="fc" id="L46">            List&lt;Token&gt; tokens = lexer.getTokensOfFile(filename);</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">            for (Token token : tokens) {</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">                String tokenVal = token.tokenVal() != null ? token.tokenVal() : Integer.toString(token.tokenType());</span>
+<span class="fc" id="L44">            Lexer lexer = new Lexer();</span>
+<span class="fc" id="L45">            List&lt;Token&gt; tokens =  lexer.getTokensOfFile(filename);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            for (Token token : tokens) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">                String tokenVal =</span>
+                    token.tokenVal() != null ? token.tokenVal()  : Integer.toString(token.tokenType());
 
 <span class="fc" id="L50">                TokenEntry cpdToken = new TokenEntry(tokenVal, filename, token.line());</span>
 <span class="fc" id="L51">                cpdTokens.add(cpdToken);</span>
@@ -53,15 +53,13 @@ import net.sourceforge.pmd.lang.ast.TokenMgrError;
 <span class="fc" id="L53">            cpdTokens.add(TokenEntry.getEOF());</span>
 <span class="nc" id="L54">        } catch (RuntimeException e) {</span>
 <span class="nc" id="L55">            e.printStackTrace();</span>
-            // Wrap exceptions of the Scala tokenizer in a TokenMgrError, so
-            // they are correctly handled
-            // when CPD is executed with the '--skipLexicalErrors' command line
-            // option
-<span class="nc" id="L60">            throw new TokenMgrError(</span>
-                    &quot;Lexical error in file &quot; + filename + &quot;. The scala tokenizer exited with error: &quot; + e.getMessage(),
-                    TokenMgrError.LEXICAL_ERROR);
-<span class="fc" id="L63">        }</span>
-<span class="fc" id="L64">    }</span>
+            // Wrap exceptions of the Scala tokenizer in a TokenMgrError, so they are correctly handled
+            // when CPD is executed with the '--skipLexicalErrors' command line option
+<span class="nc" id="L58">            throw new TokenMgrError(</span>
+                &quot;Lexical error in file &quot; + filename + &quot;. The scala tokenizer exited with error: &quot; + e.getMessage(),
+                TokenMgrError.LEXICAL_ERROR);
+<span class="fc" id="L61">        }</span>
+<span class="fc" id="L62">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

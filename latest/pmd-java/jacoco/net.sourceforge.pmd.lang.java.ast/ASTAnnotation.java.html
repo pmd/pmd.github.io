@@ -14,51 +14,50 @@ import net.sourceforge.pmd.lang.ast.Node;
 public class ASTAnnotation extends AbstractJavaNode {
 
 <span class="fc" id="L16">    private static List&lt;String&gt; unusedRules = Arrays.asList(new String[] { &quot;UnusedPrivateField&quot;, &quot;UnusedLocalVariable&quot;,</span>
-        &quot;UnusedPrivateMethod&quot;, &quot;UnusedFormalParameter&quot;, });
+	    &quot;UnusedPrivateMethod&quot;, &quot;UnusedFormalParameter&quot; });
 
-<span class="fc" id="L19">    private static List&lt;String&gt; serialRules = Arrays</span>
-            .asList(new String[] { &quot;BeanMembersShouldSerialize&quot;, &quot;MissingSerialVersionUID&quot; });
+<span class="fc" id="L19">    private static List&lt;String&gt; serialRules = Arrays.asList(new String[] { &quot;BeanMembersShouldSerialize&quot;, &quot;MissingSerialVersionUID&quot;});</span>
 
     public ASTAnnotation(int id) {
-<span class="nc" id="L23">        super(id);</span>
-<span class="nc" id="L24">    }</span>
+<span class="nc" id="L22">	super(id);</span>
+<span class="nc" id="L23">    }</span>
 
     public ASTAnnotation(JavaParser p, int id) {
-<span class="fc" id="L27">        super(p, id);</span>
-<span class="fc" id="L28">    }</span>
+<span class="fc" id="L26">	super(p, id);</span>
+<span class="fc" id="L27">    }</span>
 
     public boolean suppresses(Rule rule) {
-<span class="fc" id="L31">        final String ruleAnno = &quot;\&quot;PMD.&quot; + rule.getName() + &quot;\&quot;&quot;;</span>
+<span class="fc" id="L30">	final String ruleAnno = &quot;\&quot;PMD.&quot; + rule.getName() + &quot;\&quot;&quot;;</span>
 
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (jjtGetChild(0) instanceof ASTSingleMemberAnnotation) {</span>
-<span class="fc" id="L34">            ASTSingleMemberAnnotation n = (ASTSingleMemberAnnotation) jjtGetChild(0);</span>
-<span class="fc" id="L35">            return checkAnnototation(n, ruleAnno, rule);</span>
-<span class="fc bfc" id="L36" title="All 2 branches covered.">        } else if (jjtGetChild(0) instanceof ASTNormalAnnotation) {</span>
-<span class="fc" id="L37">            ASTNormalAnnotation n = (ASTNormalAnnotation) jjtGetChild(0);</span>
-<span class="fc" id="L38">            return checkAnnototation(n, ruleAnno, rule);</span>
-        }
-<span class="fc" id="L40">        return false;</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">	if (jjtGetChild(0) instanceof ASTSingleMemberAnnotation) {</span>
+<span class="fc" id="L33">	    ASTSingleMemberAnnotation n = (ASTSingleMemberAnnotation) jjtGetChild(0);</span>
+<span class="fc" id="L34">	    return checkAnnototation(n, ruleAnno, rule);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">	} else if (jjtGetChild(0) instanceof ASTNormalAnnotation) {</span>
+<span class="fc" id="L36">	    ASTNormalAnnotation n = (ASTNormalAnnotation) jjtGetChild(0);</span>
+<span class="fc" id="L37">	    return checkAnnototation(n, ruleAnno, rule);</span>
+	}
+<span class="fc" id="L39">	return false;</span>
     }
 
     private boolean checkAnnototation(Node n, String ruleAnno, Rule rule) {
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (n.jjtGetChild(0) instanceof ASTName) {</span>
-<span class="fc" id="L45">            ASTName annName = (ASTName) n.jjtGetChild(0);</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">	if (n.jjtGetChild(0) instanceof ASTName) {</span>
+<span class="fc" id="L44">	    ASTName annName = (ASTName) n.jjtGetChild(0);</span>
 
-<span class="fc bfc" id="L47" title="All 4 branches covered.">            if (&quot;SuppressWarnings&quot;.equals(annName.getImage())</span>
-                    || &quot;java.lang.SuppressWarnings&quot;.equals(annName.getImage())) {
-<span class="fc" id="L49">                List&lt;ASTLiteral&gt; nodes = n.findDescendantsOfType(ASTLiteral.class);</span>
-<span class="fc bfc" id="L50" title="All 2 branches covered.">                for (ASTLiteral element : nodes) {</span>
-<span class="pc bpc" id="L51" title="2 of 14 branches missed.">                    if (element.hasImageEqualTo(&quot;\&quot;PMD\&quot;&quot;) || element.hasImageEqualTo(ruleAnno)</span>
-                            // Check for standard annotations values
-                            || element.hasImageEqualTo(&quot;\&quot;all\&quot;&quot;)
-                            || element.hasImageEqualTo(&quot;\&quot;serial\&quot;&quot;) &amp;&amp; serialRules.contains(rule.getName())
-                            || element.hasImageEqualTo(&quot;\&quot;unused\&quot;&quot;) &amp;&amp; unusedRules.contains(rule.getName())) {
-<span class="fc" id="L56">                        return true;</span>
-                    }
-<span class="fc" id="L58">                }</span>
-            }
-        }
-<span class="fc" id="L61">        return false;</span>
+<span class="fc bfc" id="L46" title="All 4 branches covered.">	    if (&quot;SuppressWarnings&quot;.equals(annName.getImage())</span>
+	            || &quot;java.lang.SuppressWarnings&quot;.equals(annName.getImage())) {
+<span class="fc" id="L48">		List&lt;ASTLiteral&gt; nodes = n.findDescendantsOfType(ASTLiteral.class);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">		for (ASTLiteral element : nodes) {</span>
+<span class="pc bpc" id="L50" title="2 of 14 branches missed.">		    if (element.hasImageEqualTo(&quot;\&quot;PMD\&quot;&quot;) || element.hasImageEqualTo(ruleAnno)</span>
+			    // Check for standard annotations values
+			    || element.hasImageEqualTo(&quot;\&quot;all\&quot;&quot;)
+			    || element.hasImageEqualTo(&quot;\&quot;serial\&quot;&quot;) &amp;&amp; serialRules.contains(rule.getName())
+			    || element.hasImageEqualTo(&quot;\&quot;unused\&quot;&quot;) &amp;&amp; unusedRules.contains(rule.getName())) {
+<span class="fc" id="L55">			return true;</span>
+		    }
+<span class="fc" id="L57">		}</span>
+	    }
+	}
+<span class="fc" id="L60">	return false;</span>
     }
 
     /**
@@ -66,7 +65,7 @@ public class ASTAnnotation extends AbstractJavaNode {
      */
     @Override
     public Object jjtAccept(JavaParserVisitor visitor, Object data) {
-<span class="fc" id="L69">        return visitor.visit(this, data);</span>
+<span class="fc" id="L68">	return visitor.visit(this, data);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

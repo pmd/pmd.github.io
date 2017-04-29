@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SimplifyBooleanReturnsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">SimplifyBooleanReturnsRule.java</span></div><h1>SimplifyBooleanReturnsRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.java.rule.design;
 
 import net.sourceforge.pmd.lang.ast.Node;
@@ -15,55 +14,55 @@ import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTUnaryExpressionNotPlusMinus;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 
-<span class="fc" id="L18">public class SimplifyBooleanReturnsRule extends AbstractJavaRule {</span>
+<span class="fc" id="L17">public class SimplifyBooleanReturnsRule extends AbstractJavaRule {</span>
 
     public Object visit(ASTMethodDeclaration node, Object data) {
         // only boolean methods should be inspected
-<span class="fc" id="L22">        ASTResultType r = node.getResultType();</span>
+<span class="fc" id="L21">        ASTResultType r = node.getResultType();</span>
 
-<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (!r.isVoid()) {</span>
-<span class="fc" id="L25">            Node t = r.jjtGetChild(0);</span>
-<span class="pc bpc" id="L26" title="1 of 2 branches missed.">            if (t.jjtGetNumChildren() == 1) {</span>
-<span class="fc" id="L27">                t = t.jjtGetChild(0);</span>
-<span class="fc bfc" id="L28" title="All 4 branches covered.">                if (t instanceof ASTPrimitiveType &amp;&amp; ((ASTPrimitiveType) t).isBoolean()) {</span>
-<span class="fc" id="L29">                    return super.visit(node, data);</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        if (!r.isVoid()) {</span>
+<span class="fc" id="L24">            Node t = r.jjtGetChild(0);</span>
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">            if (t.jjtGetNumChildren() == 1) {</span>
+<span class="fc" id="L26">                t = t.jjtGetChild(0);</span>
+<span class="fc bfc" id="L27" title="All 4 branches covered.">                if (t instanceof ASTPrimitiveType &amp;&amp; ((ASTPrimitiveType) t).isBoolean()) {</span>
+<span class="fc" id="L28">                    return super.visit(node, data);</span>
                 }
             }
         }
         // skip method
-<span class="fc" id="L34">        return data;</span>
+<span class="fc" id="L33">        return data;</span>
     }
 
     public Object visit(ASTIfStatement node, Object data) {
         // that's the case: if..then..return; return;
-<span class="fc bfc" id="L39" title="All 6 branches covered.">        if (!node.hasElse() &amp;&amp; isIfJustReturnsBoolean(node) &amp;&amp; isJustReturnsBooleanAfter(node)) {</span>
-<span class="fc" id="L40">            addViolation(data, node);</span>
-<span class="fc" id="L41">            return super.visit(node, data);</span>
+<span class="fc bfc" id="L38" title="All 6 branches covered.">        if (!node.hasElse() &amp;&amp; isIfJustReturnsBoolean(node) &amp;&amp; isJustReturnsBooleanAfter(node)) {</span>
+<span class="fc" id="L39">            addViolation(data, node);</span>
+<span class="fc" id="L40">            return super.visit(node, data);</span>
         }
 
         // only deal with if..then..else stmts
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (node.jjtGetNumChildren() != 3) {</span>
-<span class="fc" id="L46">            return super.visit(node, data);</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (node.jjtGetNumChildren() != 3) {</span>
+<span class="fc" id="L45">            return super.visit(node, data);</span>
         }
 
         // don't bother if either the if or the else block is empty
-<span class="pc bpc" id="L50" title="2 of 4 branches missed.">        if (node.jjtGetChild(1).jjtGetNumChildren() == 0 || node.jjtGetChild(2).jjtGetNumChildren() == 0) {</span>
-<span class="nc" id="L51">            return super.visit(node, data);</span>
+<span class="pc bpc" id="L49" title="2 of 4 branches missed.">        if (node.jjtGetChild(1).jjtGetNumChildren() == 0 || node.jjtGetChild(2).jjtGetNumChildren() == 0) {</span>
+<span class="nc" id="L50">            return super.visit(node, data);</span>
         }
 
-<span class="fc" id="L54">        Node returnStatement1 = node.jjtGetChild(1).jjtGetChild(0);</span>
-<span class="fc" id="L55">        Node returnStatement2 = node.jjtGetChild(2).jjtGetChild(0);</span>
+<span class="fc" id="L53">        Node returnStatement1 = node.jjtGetChild(1).jjtGetChild(0);</span>
+<span class="fc" id="L54">        Node returnStatement2 = node.jjtGetChild(2).jjtGetChild(0);</span>
 
-<span class="pc bpc" id="L57" title="1 of 4 branches missed.">        if (returnStatement1 instanceof ASTReturnStatement &amp;&amp; returnStatement2 instanceof ASTReturnStatement) {</span>
-<span class="fc" id="L58">            Node expression1 = returnStatement1.jjtGetChild(0).jjtGetChild(0);</span>
-<span class="fc" id="L59">            Node expression2 = returnStatement2.jjtGetChild(0).jjtGetChild(0);</span>
-<span class="pc bpc" id="L60" title="2 of 4 branches missed.">            if (terminatesInBooleanLiteral(returnStatement1) &amp;&amp; terminatesInBooleanLiteral(returnStatement2)) {</span>
-<span class="fc" id="L61">                addViolation(data, node);</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">            } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus</span>
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">        if (returnStatement1 instanceof ASTReturnStatement &amp;&amp; returnStatement2 instanceof ASTReturnStatement) {</span>
+<span class="fc" id="L57">            Node expression1 = returnStatement1.jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc" id="L58">            Node expression2 = returnStatement2.jjtGetChild(0).jjtGetChild(0);</span>
+<span class="pc bpc" id="L59" title="2 of 4 branches missed.">            if (terminatesInBooleanLiteral(returnStatement1) &amp;&amp; terminatesInBooleanLiteral(returnStatement2)) {</span>
+<span class="fc" id="L60">                addViolation(data, node);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">            } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus</span>
                     ^ expression2 instanceof ASTUnaryExpressionNotPlusMinus) {
                 // We get the nodes under the '!' operator
                 // If they are the same =&gt; error
-<span class="nc bnc" id="L66" title="All 2 branches missed.">                if (isNodesEqualWithUnaryExpression(expression1, expression2)) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">                if (isNodesEqualWithUnaryExpression(expression1, expression2)) {</span>
                     // second case:
                     // If
                     // Expr
@@ -79,17 +78,17 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
                     // return !a;
                     // else
                     // return a;
-<span class="nc" id="L82">                    addViolation(data, node);</span>
+<span class="nc" id="L81">                    addViolation(data, node);</span>
                 }
             }
-<span class="fc bfc" id="L85" title="All 4 branches covered.">        } else if (hasOneBlockStmt(node.jjtGetChild(1)) &amp;&amp; hasOneBlockStmt(node.jjtGetChild(2))) {</span>
+<span class="fc bfc" id="L84" title="All 4 branches covered.">        } else if (hasOneBlockStmt(node.jjtGetChild(1)) &amp;&amp; hasOneBlockStmt(node.jjtGetChild(2))) {</span>
             // We have blocks so we must go down three levels (BlockStatement,
             // Statement, ReturnStatement)
-<span class="fc" id="L88">            returnStatement1 = returnStatement1.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
-<span class="fc" id="L89">            returnStatement2 = returnStatement2.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc" id="L87">            returnStatement1 = returnStatement1.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc" id="L88">            returnStatement2 = returnStatement2.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
 
             // if we have 2 return;
-<span class="pc bpc" id="L92" title="3 of 4 branches missed.">            if (isSimpleReturn(returnStatement1) &amp;&amp; isSimpleReturn(returnStatement2)) {</span>
+<span class="pc bpc" id="L91" title="3 of 4 branches missed.">            if (isSimpleReturn(returnStatement1) &amp;&amp; isSimpleReturn(returnStatement2)) {</span>
                 // third case
                 // If
                 // Expr
@@ -109,18 +108,18 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
                 // } else {
                 // return false;
                 // }
-<span class="nc" id="L112">                addViolation(data, node);</span>
+<span class="nc" id="L111">                addViolation(data, node);</span>
             } else {
-<span class="fc" id="L114">                Node expression1 = getDescendant(returnStatement1, 4);</span>
-<span class="fc" id="L115">                Node expression2 = getDescendant(returnStatement2, 4);</span>
-<span class="pc bpc" id="L116" title="2 of 4 branches missed.">                if (terminatesInBooleanLiteral(node.jjtGetChild(1).jjtGetChild(0))</span>
+<span class="fc" id="L113">                Node expression1 = getDescendant(returnStatement1, 4);</span>
+<span class="fc" id="L114">                Node expression2 = getDescendant(returnStatement2, 4);</span>
+<span class="pc bpc" id="L115" title="2 of 4 branches missed.">                if (terminatesInBooleanLiteral(node.jjtGetChild(1).jjtGetChild(0))</span>
                         &amp;&amp; terminatesInBooleanLiteral(node.jjtGetChild(2).jjtGetChild(0))) {
-<span class="fc" id="L118">                    addViolation(data, node);</span>
-<span class="nc bnc" id="L119" title="All 2 branches missed.">                } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus</span>
+<span class="fc" id="L117">                    addViolation(data, node);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">                } else if (expression1 instanceof ASTUnaryExpressionNotPlusMinus</span>
                         ^ expression2 instanceof ASTUnaryExpressionNotPlusMinus) {
                     // We get the nodes under the '!' operator
                     // If they are the same =&gt; error
-<span class="nc bnc" id="L123" title="All 2 branches missed.">                    if (isNodesEqualWithUnaryExpression(expression1, expression2)) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                    if (isNodesEqualWithUnaryExpression(expression1, expression2)) {</span>
                         // forth case
                         // If
                         // Expr
@@ -143,12 +142,12 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
                         // } else {
                         // return a;
                         // }
-<span class="nc" id="L146">                        addViolation(data, node);</span>
+<span class="nc" id="L145">                        addViolation(data, node);</span>
                     }
                 }
             }
         }
-<span class="fc" id="L151">        return super.visit(node, data);</span>
+<span class="fc" id="L150">        return super.visit(node, data);</span>
     }
 
     /**
@@ -160,14 +159,14 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * @return
      */
     private boolean isJustReturnsBooleanAfter(ASTIfStatement ifNode) {
-<span class="fc" id="L163">        Node blockStatement = ifNode.jjtGetParent().jjtGetParent();</span>
-<span class="fc" id="L164">        Node block = blockStatement.jjtGetParent();</span>
-<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (block.jjtGetNumChildren() != blockStatement.jjtGetChildIndex() + 1 + 1) {</span>
-<span class="fc" id="L166">            return false;</span>
+<span class="fc" id="L162">        Node blockStatement = ifNode.jjtGetParent().jjtGetParent();</span>
+<span class="fc" id="L163">        Node block = blockStatement.jjtGetParent();</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (block.jjtGetNumChildren() != blockStatement.jjtGetChildIndex() + 1 + 1) {</span>
+<span class="fc" id="L165">            return false;</span>
         }
 
-<span class="fc" id="L169">        Node nextBlockStatement = block.jjtGetChild(blockStatement.jjtGetChildIndex() + 1);</span>
-<span class="fc" id="L170">        return terminatesInBooleanLiteral(nextBlockStatement);</span>
+<span class="fc" id="L168">        Node nextBlockStatement = block.jjtGetChild(blockStatement.jjtGetChildIndex() + 1);</span>
+<span class="fc" id="L169">        return terminatesInBooleanLiteral(nextBlockStatement);</span>
     }
 
     /**
@@ -179,13 +178,13 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * @return
      */
     private boolean isIfJustReturnsBoolean(ASTIfStatement ifNode) {
-<span class="fc" id="L182">        Node node = ifNode.jjtGetChild(1);</span>
-<span class="pc bpc" id="L183" title="1 of 6 branches missed.">        return node.jjtGetNumChildren() == 1</span>
+<span class="fc" id="L181">        Node node = ifNode.jjtGetChild(1);</span>
+<span class="pc bpc" id="L182" title="1 of 6 branches missed.">        return node.jjtGetNumChildren() == 1</span>
                 &amp;&amp; (hasOneBlockStmt(node) || terminatesInBooleanLiteral(node.jjtGetChild(0)));
     }
 
     private boolean hasOneBlockStmt(Node node) {
-<span class="fc bfc" id="L188" title="All 6 branches covered.">        return node.jjtGetChild(0) instanceof ASTBlock &amp;&amp; node.jjtGetChild(0).jjtGetNumChildren() == 1</span>
+<span class="fc bfc" id="L187" title="All 6 branches covered.">        return node.jjtGetChild(0) instanceof ASTBlock &amp;&amp; node.jjtGetChild(0).jjtGetNumChildren() == 1</span>
                 &amp;&amp; terminatesInBooleanLiteral(node.jjtGetChild(0).jjtGetChild(0));
     }
 
@@ -194,75 +193,75 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * is invalid
      */
     private Node getDescendant(Node node, int level) {
-<span class="fc" id="L197">        Node n = node;</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">        for (int i = 0; i &lt; level; i++) {</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">            if (n.jjtGetNumChildren() == 0) {</span>
-<span class="nc" id="L200">                return null;</span>
+<span class="fc" id="L196">        Node n = node;</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        for (int i = 0; i &lt; level; i++) {</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (n.jjtGetNumChildren() == 0) {</span>
+<span class="nc" id="L199">                return null;</span>
             }
-<span class="fc" id="L202">            n = n.jjtGetChild(0);</span>
+<span class="fc" id="L201">            n = n.jjtGetChild(0);</span>
         }
-<span class="fc" id="L204">        return n;</span>
+<span class="fc" id="L203">        return n;</span>
     }
 
     private boolean terminatesInBooleanLiteral(Node node) {
-<span class="fc bfc" id="L208" title="All 4 branches covered.">        return eachNodeHasOneChild(node) &amp;&amp; getLastChild(node) instanceof ASTBooleanLiteral;</span>
+<span class="fc bfc" id="L207" title="All 4 branches covered.">        return eachNodeHasOneChild(node) &amp;&amp; getLastChild(node) instanceof ASTBooleanLiteral;</span>
     }
 
     private boolean eachNodeHasOneChild(Node node) {
-<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt; 1) {</span>
-<span class="fc" id="L213">            return false;</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt; 1) {</span>
+<span class="fc" id="L212">            return false;</span>
         }
-<span class="fc bfc" id="L215" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 0) {</span>
-<span class="fc" id="L216">            return true;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L215">            return true;</span>
         }
-<span class="fc" id="L218">        return eachNodeHasOneChild(node.jjtGetChild(0));</span>
+<span class="fc" id="L217">        return eachNodeHasOneChild(node.jjtGetChild(0));</span>
     }
 
     private Node getLastChild(Node node) {
-<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 0) {</span>
-<span class="fc" id="L223">            return node;</span>
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L222">            return node;</span>
         }
-<span class="fc" id="L225">        return getLastChild(node.jjtGetChild(0));</span>
+<span class="fc" id="L224">        return getLastChild(node.jjtGetChild(0));</span>
     }
 
     private boolean isNodesEqualWithUnaryExpression(Node n1, Node n2) {
         Node node1;
         Node node2;
-<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (n1 instanceof ASTUnaryExpressionNotPlusMinus) {</span>
-<span class="nc" id="L232">            node1 = n1.jjtGetChild(0);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (n1 instanceof ASTUnaryExpressionNotPlusMinus) {</span>
+<span class="nc" id="L231">            node1 = n1.jjtGetChild(0);</span>
         } else {
-<span class="nc" id="L234">            node1 = n1;</span>
+<span class="nc" id="L233">            node1 = n1;</span>
         }
-<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (n2 instanceof ASTUnaryExpressionNotPlusMinus) {</span>
-<span class="nc" id="L237">            node2 = n2.jjtGetChild(0);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if (n2 instanceof ASTUnaryExpressionNotPlusMinus) {</span>
+<span class="nc" id="L236">            node2 = n2.jjtGetChild(0);</span>
         } else {
-<span class="nc" id="L239">            node2 = n2;</span>
+<span class="nc" id="L238">            node2 = n2;</span>
         }
-<span class="nc" id="L241">        return isNodesEquals(node1, node2);</span>
+<span class="nc" id="L240">        return isNodesEquals(node1, node2);</span>
     }
 
     private boolean isNodesEquals(Node n1, Node n2) {
-<span class="nc" id="L245">        int numberChild1 = n1.jjtGetNumChildren();</span>
-<span class="nc" id="L246">        int numberChild2 = n2.jjtGetNumChildren();</span>
-<span class="nc bnc" id="L247" title="All 2 branches missed.">        if (numberChild1 != numberChild2) {</span>
-<span class="nc" id="L248">            return false;</span>
+<span class="nc" id="L244">        int numberChild1 = n1.jjtGetNumChildren();</span>
+<span class="nc" id="L245">        int numberChild2 = n2.jjtGetNumChildren();</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        if (numberChild1 != numberChild2) {</span>
+<span class="nc" id="L247">            return false;</span>
         }
-<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (!n1.getClass().equals(n2.getClass())) {</span>
-<span class="nc" id="L251">            return false;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if (!n1.getClass().equals(n2.getClass())) {</span>
+<span class="nc" id="L250">            return false;</span>
         }
-<span class="nc bnc" id="L253" title="All 2 branches missed.">        if (!n1.toString().equals(n2.toString())) {</span>
-<span class="nc" id="L254">            return false;</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (!n1.toString().equals(n2.toString())) {</span>
+<span class="nc" id="L253">            return false;</span>
         }
-<span class="nc bnc" id="L256" title="All 2 branches missed.">        for (int i = 0; i &lt; numberChild1; i++) {</span>
-<span class="nc bnc" id="L257" title="All 2 branches missed.">            if (!isNodesEquals(n1.jjtGetChild(i), n2.jjtGetChild(i))) {</span>
-<span class="nc" id="L258">                return false;</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        for (int i = 0; i &lt; numberChild1; i++) {</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">            if (!isNodesEquals(n1.jjtGetChild(i), n2.jjtGetChild(i))) {</span>
+<span class="nc" id="L257">                return false;</span>
             }
         }
-<span class="nc" id="L261">        return true;</span>
+<span class="nc" id="L260">        return true;</span>
     }
 
     private boolean isSimpleReturn(Node node) {
-<span class="pc bpc" id="L265" title="2 of 4 branches missed.">        return node instanceof ASTReturnStatement &amp;&amp; node.jjtGetNumChildren() == 0;</span>
+<span class="pc bpc" id="L264" title="2 of 4 branches missed.">        return node instanceof ASTReturnStatement &amp;&amp; node.jjtGetNumChildren() == 0;</span>
     }
 
 }

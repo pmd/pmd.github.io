@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VelocityCharStream.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Velocity</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.vm.util</a> &gt; <span class="el_source">VelocityCharStream.java</span></div><h1>VelocityCharStream.java</h1><pre class="source lang-java linenums">
-package net.sourceforge.pmd.lang.vm.util;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VelocityCharStream.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Velocity</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.vm.util</a> &gt; <span class="el_source">VelocityCharStream.java</span></div><h1>VelocityCharStream.java</h1><pre class="source lang-java linenums">package net.sourceforge.pmd.lang.vm.util;
 
 import net.sourceforge.pmd.lang.ast.CharStream;
 
@@ -38,28 +37,30 @@ import net.sourceforge.pmd.lang.ast.CharStream;
  * contain only ASCII characters (without unicode processing).
  */
 
-public final class VelocityCharStream implements CharStream {
+public final class VelocityCharStream
+implements CharStream
+{
     public static final boolean STATIC_FLAG = false;
     int bufsize;
     private int nextBufExpand;
     int available;
     int tokenBegin;
 
-<span class="fc" id="L48">    public int bufpos = -1;</span>
+<span class="fc" id="L49">    public int bufpos = -1;</span>
     private int[] bufline;
     private int[] bufcolumn;
 
-<span class="fc" id="L52">    private int column = 0;</span>
-<span class="fc" id="L53">    private int line = 1;</span>
+<span class="fc" id="L53">    private int column = 0;</span>
+<span class="fc" id="L54">    private int line = 1;</span>
 
-<span class="fc" id="L55">    private boolean prevCharIsCR = false;</span>
-<span class="fc" id="L56">    private boolean prevCharIsLF = false;</span>
+<span class="fc" id="L56">    private boolean prevCharIsCR = false;</span>
+<span class="fc" id="L57">    private boolean prevCharIsLF = false;</span>
 
     private java.io.Reader inputStream;
 
     private char[] buffer;
-<span class="fc" id="L61">    private int maxNextCharInd = 0;</span>
-<span class="fc" id="L62">    private int inBuf = 0;</span>
+<span class="fc" id="L62">    private int maxNextCharInd = 0;</span>
+<span class="fc" id="L63">    private int inBuf = 0;</span>
 
     /**
      * @param dstream
@@ -68,8 +69,8 @@ public final class VelocityCharStream implements CharStream {
      * @param buffersize
      */
     public VelocityCharStream(java.io.InputStream dstream, int startline, int startcolumn, int buffersize) {
-<span class="nc" id="L71">        this(new java.io.InputStreamReader(dstream), startline, startcolumn, buffersize);</span>
-<span class="nc" id="L72">    }</span>
+<span class="nc" id="L72">        this(new java.io.InputStreamReader(dstream), startline, startcolumn, buffersize);</span>
+<span class="nc" id="L73">    }</span>
 
     /**
      * @param dstream
@@ -77,8 +78,8 @@ public final class VelocityCharStream implements CharStream {
      * @param startcolumn
      */
     public VelocityCharStream(java.io.InputStream dstream, int startline, int startcolumn) {
-<span class="nc" id="L80">        this(dstream, startline, startcolumn, 4096);</span>
-<span class="nc" id="L81">    }</span>
+<span class="nc" id="L81">        this(dstream, startline, startcolumn, 4096);</span>
+<span class="nc" id="L82">    }</span>
 
     /**
      * @param dstream
@@ -86,18 +87,16 @@ public final class VelocityCharStream implements CharStream {
      * @param startcolumn
      * @param buffersize
      */
-<span class="fc" id="L89">    public VelocityCharStream(java.io.Reader dstream, int startline, int startcolumn, int buffersize) {</span>
-<span class="fc" id="L90">        inputStream = dstream;</span>
-<span class="fc" id="L91">        line = startline;</span>
-<span class="fc" id="L92">        column = startcolumn - 1;</span>
+<span class="fc" id="L90">    public VelocityCharStream(java.io.Reader dstream, int startline, int startcolumn, int buffersize) {</span>
+<span class="fc" id="L91">        inputStream = dstream;</span>
+<span class="fc" id="L92">        line = startline;</span>
+<span class="fc" id="L93">        column = startcolumn - 1;</span>
 
-<span class="fc" id="L94">        available = buffersize;</span>
-<span class="fc" id="L95">        bufsize = buffersize;</span>
-<span class="fc" id="L96">        nextBufExpand = buffersize;</span>
-<span class="fc" id="L97">        buffer = new char[buffersize];</span>
-<span class="fc" id="L98">        bufline = new int[buffersize];</span>
-<span class="fc" id="L99">        bufcolumn = new int[buffersize];</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L95">        available = bufsize = nextBufExpand = buffersize;</span>
+<span class="fc" id="L96">        buffer = new char[buffersize];</span>
+<span class="fc" id="L97">        bufline = new int[buffersize];</span>
+<span class="fc" id="L98">        bufcolumn = new int[buffersize];</span>
+<span class="fc" id="L99">    }</span>
 
     /**
      * @param dstream
@@ -105,218 +104,278 @@ public final class VelocityCharStream implements CharStream {
      * @param startcolumn
      */
     public VelocityCharStream(java.io.Reader dstream, int startline, int startcolumn) {
-<span class="fc" id="L108">        this(dstream, startline, startcolumn, 4096);</span>
-<span class="fc" id="L109">    }</span>
+<span class="fc" id="L107">        this(dstream, startline, startcolumn, 4096);</span>
+<span class="fc" id="L108">    }</span>
 
-    private void expandBuff(boolean wrapAround) {
+    private void ExpandBuff(boolean wrapAround)
+    {
 <span class="nc" id="L112">        char[] newbuffer = new char[bufsize + nextBufExpand];</span>
 <span class="nc" id="L113">        int[] newbufline = new int[bufsize + nextBufExpand];</span>
 <span class="nc" id="L114">        int[] newbufcolumn = new int[bufsize + nextBufExpand];</span>
 
-        try {
-<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (wrapAround) {</span>
-<span class="nc" id="L118">                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L119">                System.arraycopy(buffer, 0, newbuffer, bufsize - tokenBegin, bufpos);</span>
-<span class="nc" id="L120">                buffer = newbuffer;</span>
+        try
+        {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (wrapAround)</span>
+            {
+<span class="nc" id="L120">                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L121">                System.arraycopy(buffer, 0, newbuffer,</span>
+                        bufsize - tokenBegin, bufpos);
+<span class="nc" id="L123">                buffer = newbuffer;</span>
 
-<span class="nc" id="L122">                System.arraycopy(bufline, tokenBegin, newbufline, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L123">                System.arraycopy(bufline, 0, newbufline, bufsize - tokenBegin, bufpos);</span>
-<span class="nc" id="L124">                bufline = newbufline;</span>
+<span class="nc" id="L125">                System.arraycopy(bufline, tokenBegin, newbufline, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L126">                System.arraycopy(bufline, 0, newbufline, bufsize - tokenBegin, bufpos);</span>
+<span class="nc" id="L127">                bufline = newbufline;</span>
 
-<span class="nc" id="L126">                System.arraycopy(bufcolumn, tokenBegin, newbufcolumn, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L127">                System.arraycopy(bufcolumn, 0, newbufcolumn, bufsize - tokenBegin, bufpos);</span>
-<span class="nc" id="L128">                bufcolumn = newbufcolumn;</span>
+<span class="nc" id="L129">                System.arraycopy(bufcolumn, tokenBegin, newbufcolumn, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L130">                System.arraycopy(bufcolumn, 0, newbufcolumn, bufsize - tokenBegin, bufpos);</span>
+<span class="nc" id="L131">                bufcolumn = newbufcolumn;</span>
 
-<span class="nc" id="L130">                bufpos += bufsize - tokenBegin;</span>
-<span class="nc" id="L131">                maxNextCharInd = bufpos;</span>
-            } else {
-<span class="nc" id="L133">                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L134">                buffer = newbuffer;</span>
-
-<span class="nc" id="L136">                System.arraycopy(bufline, tokenBegin, newbufline, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L137">                bufline = newbufline;</span>
-
-<span class="nc" id="L139">                System.arraycopy(bufcolumn, tokenBegin, newbufcolumn, 0, bufsize - tokenBegin);</span>
-<span class="nc" id="L140">                bufcolumn = newbufcolumn;</span>
-
-<span class="nc" id="L142">                bufpos -= tokenBegin;</span>
-<span class="nc" id="L143">                maxNextCharInd = bufpos;</span>
+<span class="nc" id="L133">                maxNextCharInd = (bufpos += bufsize - tokenBegin);</span>
             }
-<span class="nc" id="L145">        } catch (Throwable t) {</span>
-<span class="nc" id="L146">            throw new Error(t.getMessage());</span>
-<span class="nc" id="L147">        }</span>
+            else
+            {
+<span class="nc" id="L137">                System.arraycopy(buffer, tokenBegin, newbuffer, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L138">                buffer = newbuffer;</span>
 
-<span class="nc" id="L149">        bufsize += nextBufExpand;</span>
-<span class="nc" id="L150">        nextBufExpand = bufsize;</span>
-<span class="nc" id="L151">        available = bufsize;</span>
-<span class="nc" id="L152">        tokenBegin = 0;</span>
-<span class="nc" id="L153">    }</span>
+<span class="nc" id="L140">                System.arraycopy(bufline, tokenBegin, newbufline, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L141">                bufline = newbufline;</span>
 
-    private void fillBuff() throws java.io.IOException {
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (maxNextCharInd == available) {</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (available == bufsize) {</span>
-<span class="nc bnc" id="L158" title="All 2 branches missed.">                if (tokenBegin &gt; nextBufExpand) {</span>
-<span class="nc" id="L159">                    bufpos = 0;</span>
-<span class="nc" id="L160">                    maxNextCharInd = 0;</span>
-<span class="nc" id="L161">                    available = tokenBegin;</span>
-<span class="nc bnc" id="L162" title="All 2 branches missed.">                } else if (tokenBegin &lt; 0) {</span>
-<span class="nc" id="L163">                    bufpos = 0;</span>
-<span class="nc" id="L164">                    maxNextCharInd = 0;</span>
-                } else {
-<span class="nc" id="L166">                    expandBuff(false);</span>
+<span class="nc" id="L143">                System.arraycopy(bufcolumn, tokenBegin, newbufcolumn, 0, bufsize - tokenBegin);</span>
+<span class="nc" id="L144">                bufcolumn = newbufcolumn;</span>
+
+<span class="nc" id="L146">                maxNextCharInd = (bufpos -= tokenBegin);</span>
+            }
+        }
+<span class="nc" id="L149">        catch (Throwable t)</span>
+        {
+<span class="nc" id="L151">            throw new Error(t.getMessage());</span>
+<span class="nc" id="L152">        }</span>
+
+
+<span class="nc" id="L155">        bufsize += nextBufExpand;</span>
+<span class="nc" id="L156">        nextBufExpand = bufsize;</span>
+<span class="nc" id="L157">        available = bufsize;</span>
+<span class="nc" id="L158">        tokenBegin = 0;</span>
+<span class="nc" id="L159">    }</span>
+
+    private void FillBuff() throws java.io.IOException
+    {
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (maxNextCharInd == available)</span>
+        {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (available == bufsize)</span>
+            {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                if (tokenBegin &gt; nextBufExpand)</span>
+                {
+<span class="nc" id="L169">                    bufpos = maxNextCharInd = 0;</span>
+<span class="nc" id="L170">                    available = tokenBegin;</span>
                 }
-<span class="nc bnc" id="L168" title="All 2 branches missed.">            } else if (available &gt; tokenBegin) {</span>
-<span class="nc" id="L169">                available = bufsize;</span>
-<span class="nc bnc" id="L170" title="All 2 branches missed.">            } else if ((tokenBegin - available) &lt; nextBufExpand) {</span>
-<span class="nc" id="L171">                expandBuff(true);</span>
-            } else {
-<span class="nc" id="L173">                available = tokenBegin;</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                else if (tokenBegin &lt; 0)</span>
+                {
+<span class="nc" id="L174">                    bufpos = maxNextCharInd = 0;</span>
+                }
+                else
+                {
+<span class="nc" id="L178">                    ExpandBuff(false);</span>
+                }
+            }
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            else if (available &gt; tokenBegin)</span>
+            {
+<span class="nc" id="L183">                available = bufsize;</span>
+            }
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            else if ((tokenBegin - available) &lt; nextBufExpand)</span>
+            {
+<span class="nc" id="L187">                ExpandBuff(true);</span>
+            }
+            else
+            {
+<span class="nc" id="L191">                available = tokenBegin;</span>
             }
         }
 
         int i;
-        try {
-<span class="fc" id="L179">            i = inputStream.read(buffer, maxNextCharInd, available - maxNextCharInd);</span>
-<span class="fc bfc" id="L180" title="All 2 branches covered.">            if (i == -1) {</span>
-<span class="fc" id="L181">                inputStream.close();</span>
-<span class="fc" id="L182">                throw new java.io.IOException();</span>
-            } else {
-<span class="fc" id="L184">                maxNextCharInd += i;</span>
+        try 
+        {
+<span class="fc" id="L198">            i = inputStream.read(buffer, maxNextCharInd, available - maxNextCharInd);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (i == -1)</span>
+            {
+<span class="fc" id="L201">                inputStream.close();</span>
+<span class="fc" id="L202">                throw new java.io.IOException();</span>
             }
-<span class="fc" id="L186">            return;</span>
-<span class="fc" id="L187">        } catch (java.io.IOException e) {</span>
-<span class="fc" id="L188">            --bufpos;</span>
-<span class="fc" id="L189">            backup(0);</span>
-<span class="fc bfc" id="L190" title="All 2 branches covered.">            if (tokenBegin == -1) {</span>
-<span class="fc" id="L191">                tokenBegin = bufpos;</span>
+            else
+            {
+<span class="fc" id="L206">                maxNextCharInd += i;</span>
             }
-<span class="fc" id="L193">            throw e;</span>
+<span class="fc" id="L208">            return;</span>
+        }
+<span class="fc" id="L210">        catch(java.io.IOException e) </span>
+        {
+<span class="fc" id="L212">            --bufpos;</span>
+<span class="fc" id="L213">            backup(0);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">            if (tokenBegin == -1)</span>
+            {
+<span class="fc" id="L216">                tokenBegin = bufpos;</span>
+            }
+<span class="fc" id="L218">            throw e;</span>
         }
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#BeginToken()
+     */
     @Override
-    public char BeginToken() throws java.io.IOException {
-<span class="fc" id="L199">        tokenBegin = -1;</span>
-<span class="fc" id="L200">        char c = readChar();</span>
-<span class="fc" id="L201">        tokenBegin = bufpos;</span>
+    public char BeginToken() throws java.io.IOException
+    {
+<span class="fc" id="L228">        tokenBegin = -1;</span>
+<span class="fc" id="L229">        char c = readChar();</span>
+<span class="fc" id="L230">        tokenBegin = bufpos;</span>
 
-<span class="fc" id="L203">        return c;</span>
+<span class="fc" id="L232">        return c;</span>
     }
 
-    private void updateLineColumn(char c) {
-<span class="fc" id="L207">        column++;</span>
+    private void UpdateLineColumn(char c)
+    {
+<span class="fc" id="L237">        column++;</span>
 
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        if (prevCharIsLF) {</span>
-<span class="fc" id="L210">            prevCharIsLF = false;</span>
-<span class="fc" id="L211">            column = 1;</span>
-<span class="fc" id="L212">            line += 1;</span>
-<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        } else if (prevCharIsCR) {</span>
-<span class="nc" id="L214">            prevCharIsCR = false;</span>
-<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (c == '\n') {</span>
-<span class="nc" id="L216">                prevCharIsLF = true;</span>
-            } else {
-<span class="nc" id="L218">                column = 1;</span>
-<span class="nc" id="L219">                line += 1;</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (prevCharIsLF)</span>
+        {
+<span class="fc" id="L241">            prevCharIsLF = false;</span>
+<span class="fc" id="L242">            line += (column = 1);</span>
+        }
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        else if (prevCharIsCR)</span>
+        {
+<span class="nc" id="L246">            prevCharIsCR = false;</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (c == '\n')</span>
+            {
+<span class="nc" id="L249">                prevCharIsLF = true;</span>
+            }
+            else
+            {
+<span class="nc" id="L253">                line += (column = 1);</span>
             }
         }
 
-<span class="pc bpc" id="L223" title="1 of 4 branches missed.">        switch (c) {</span>
-        case '\r':
-<span class="nc" id="L225">            prevCharIsCR = true;</span>
-<span class="nc" id="L226">            break;</span>
-        case '\n':
-<span class="fc" id="L228">            prevCharIsLF = true;</span>
-<span class="fc" id="L229">            break;</span>
-        case '\t':
-<span class="fc" id="L231">            column--;</span>
-<span class="fc" id="L232">            column += 8 - (column &amp; 07);</span>
-<span class="fc" id="L233">            break;</span>
-        default:
+<span class="pc bpc" id="L257" title="1 of 4 branches missed.">        switch (c)</span>
+        {
+        case '\r' :
+<span class="nc" id="L260">            prevCharIsCR = true;</span>
+<span class="nc" id="L261">            break;</span>
+        case '\n' :
+<span class="fc" id="L263">            prevCharIsLF = true;</span>
+<span class="fc" id="L264">            break;</span>
+        case '\t' :
+<span class="fc" id="L266">            column--;</span>
+<span class="fc" id="L267">            column += 8 - (column &amp; 07);</span>
+<span class="fc" id="L268">            break;</span>
+        default :
             break;
         }
 
-<span class="fc" id="L238">        bufline[bufpos] = line;</span>
-<span class="fc" id="L239">        bufcolumn[bufpos] = column;</span>
-<span class="fc" id="L240">    }</span>
+<span class="fc" id="L273">        bufline[bufpos] = line;</span>
+<span class="fc" id="L274">        bufcolumn[bufpos] = column;</span>
+<span class="fc" id="L275">    }</span>
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#readChar()
+     */
     @Override
-    public char readChar() throws java.io.IOException {
-<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (inBuf &gt; 0) {</span>
-<span class="fc" id="L245">            --inBuf;</span>
+    public char readChar() throws java.io.IOException
+    {
+<span class="fc bfc" id="L283" title="All 2 branches covered.">        if (inBuf &gt; 0)</span>
+        {
+<span class="fc" id="L285">            --inBuf;</span>
 
             /*
-             * was : return (char)((char)0xff &amp; buffer[(bufpos == bufsize - 1) ?
-             * (bufpos = 0) : ++bufpos]);
+             *  was : return (char)((char)0xff &amp; buffer[(bufpos == bufsize - 1) ? (bufpos = 0) : ++bufpos]);
              */
-<span class="pc bpc" id="L251" title="1 of 2 branches missed.">            if (bufpos == bufsize - 1) {</span>
-<span class="nc" id="L252">                bufpos = 0;</span>
-            } else {
-<span class="fc" id="L254">                bufpos++;</span>
-            }
-<span class="fc" id="L256">            return buffer[bufpos];</span>
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">            return  buffer[(bufpos == bufsize - 1) ? (bufpos = 0) : ++bufpos];</span>
         }
 
-<span class="fc" id="L259">        bufpos++;</span>
-<span class="fc bfc" id="L260" title="All 2 branches covered.">        if (bufpos &gt;= maxNextCharInd) {</span>
-<span class="fc" id="L261">            fillBuff();</span>
+<span class="fc" id="L293">        bufpos++;</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (bufpos &gt;= maxNextCharInd)</span>
+        {
+<span class="fc" id="L296">            FillBuff();</span>
         }
 
         /*
-         * was : char c = (char)((char)0xff &amp; buffer[bufpos]);
+         *  was : char c = (char)((char)0xff &amp; buffer[bufpos]);
          */
-<span class="fc" id="L267">        char c = buffer[bufpos];</span>
+<span class="fc" id="L302">        char c = buffer[bufpos];</span>
 
-<span class="fc" id="L269">        updateLineColumn(c);</span>
-<span class="fc" id="L270">        return c;</span>
+<span class="fc" id="L304">        UpdateLineColumn(c);</span>
+<span class="fc" id="L305">        return c;</span>
     }
 
     /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getColumn()
      * @deprecated
      */
     @Deprecated
     @Override
-    public int getColumn() {
-<span class="nc" id="L279">        return bufcolumn[bufpos];</span>
+    public int getColumn() 
+    {
+<span class="nc" id="L316">        return bufcolumn[bufpos];</span>
     }
 
     /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getLine()
      * @deprecated
      */
     @Deprecated
     @Override
-    public int getLine() {
-<span class="nc" id="L288">        return bufline[bufpos];</span>
+    public int getLine() 
+    {
+<span class="nc" id="L327">        return bufline[bufpos];</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getEndColumn()
+     */
     @Override
-    public int getEndColumn() {
-<span class="fc" id="L293">        return bufcolumn[bufpos];</span>
+    public int getEndColumn() 
+    {
+<span class="fc" id="L336">        return bufcolumn[bufpos];</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getEndLine()
+     */
     @Override
-    public int getEndLine() {
-<span class="fc" id="L298">        return bufline[bufpos];</span>
+    public int getEndLine() 
+    {
+<span class="fc" id="L345">        return bufline[bufpos];</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getBeginColumn()
+     */
     @Override
-    public int getBeginColumn() {
-<span class="fc" id="L303">        return bufcolumn[tokenBegin];</span>
+    public int getBeginColumn() 
+    {
+<span class="fc" id="L354">        return bufcolumn[tokenBegin];</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#getBeginLine()
+     */
     @Override
-    public int getBeginLine() {
-<span class="fc" id="L308">        return bufline[tokenBegin];</span>
+    public int getBeginLine() 
+    {
+<span class="fc" id="L363">        return bufline[tokenBegin];</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#backup(int)
+     */
     @Override
-    public void backup(int amount) {
+    public void backup(int amount) 
+    {
 
-<span class="fc" id="L314">        inBuf += amount;</span>
-<span class="fc" id="L315">        bufpos -= amount;</span>
-<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        if (bufpos &lt; 0) {</span>
-<span class="nc" id="L317">            bufpos += bufsize;</span>
+<span class="fc" id="L373">        inBuf += amount;</span>
+<span class="fc" id="L374">        bufpos -= amount;</span>
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">        if (bufpos &lt; 0) {</span>
+<span class="nc" id="L376">            bufpos += bufsize;</span>
         }
-<span class="fc" id="L319">    }</span>
+<span class="fc" id="L378">    }</span>
 
     /**
      * @param dstream
@@ -324,35 +383,35 @@ public final class VelocityCharStream implements CharStream {
      * @param startcolumn
      * @param buffersize
      */
-    public void reInit(java.io.Reader dstream, int startline, int startcolumn, int buffersize) {
-<span class="nc" id="L328">        inputStream = dstream;</span>
-<span class="nc" id="L329">        line = startline;</span>
-<span class="nc" id="L330">        column = startcolumn - 1;</span>
+    public void ReInit(java.io.Reader dstream, int startline,
+            int startcolumn, int buffersize)
+    {
+<span class="nc" id="L389">        inputStream = dstream;</span>
+<span class="nc" id="L390">        line = startline;</span>
+<span class="nc" id="L391">        column = startcolumn - 1;</span>
 
-<span class="nc bnc" id="L332" title="All 4 branches missed.">        if (buffer == null || buffersize != buffer.length) {</span>
-<span class="nc" id="L333">            available = buffersize;</span>
-<span class="nc" id="L334">            bufsize = buffersize;</span>
-<span class="nc" id="L335">            nextBufExpand = buffersize;</span>
-<span class="nc" id="L336">            buffer = new char[buffersize];</span>
-<span class="nc" id="L337">            bufline = new int[buffersize];</span>
-<span class="nc" id="L338">            bufcolumn = new int[buffersize];</span>
+<span class="nc bnc" id="L393" title="All 4 branches missed.">        if (buffer == null || buffersize != buffer.length)</span>
+        {
+<span class="nc" id="L395">            available = bufsize = nextBufExpand = buffersize;</span>
+<span class="nc" id="L396">            buffer = new char[buffersize];</span>
+<span class="nc" id="L397">            bufline = new int[buffersize];</span>
+<span class="nc" id="L398">            bufcolumn = new int[buffersize];</span>
         }
-<span class="nc" id="L340">        prevCharIsLF = false;</span>
-<span class="nc" id="L341">        prevCharIsCR = false;</span>
-<span class="nc" id="L342">        tokenBegin = 0;</span>
-<span class="nc" id="L343">        inBuf = 0;</span>
-<span class="nc" id="L344">        maxNextCharInd = 0;</span>
-<span class="nc" id="L345">        bufpos = -1;</span>
-<span class="nc" id="L346">    }</span>
+<span class="nc" id="L400">        prevCharIsLF = prevCharIsCR = false;</span>
+<span class="nc" id="L401">        tokenBegin = inBuf = maxNextCharInd = 0;</span>
+<span class="nc" id="L402">        bufpos = -1;</span>
+<span class="nc" id="L403">    }</span>
 
     /**
      * @param dstream
      * @param startline
      * @param startcolumn
      */
-    public void reInit(java.io.Reader dstream, int startline, int startcolumn) {
-<span class="nc" id="L354">        reInit(dstream, startline, startcolumn, 4096);</span>
-<span class="nc" id="L355">    }</span>
+    public void ReInit(java.io.Reader dstream, int startline,
+            int startcolumn)
+    {
+<span class="nc" id="L413">        ReInit(dstream, startline, startcolumn, 4096);</span>
+<span class="nc" id="L414">    }</span>
 
     /**
      * @param dstream
@@ -360,101 +419,127 @@ public final class VelocityCharStream implements CharStream {
      * @param startcolumn
      * @param buffersize
      */
-    public void reInit(java.io.InputStream dstream, int startline, int startcolumn, int buffersize) {
-<span class="nc" id="L364">        reInit(new java.io.InputStreamReader(dstream), startline, startcolumn, buffersize);</span>
-<span class="nc" id="L365">    }</span>
-
+    public void ReInit(java.io.InputStream dstream, int startline,
+            int startcolumn, int buffersize)
+    {
+<span class="nc" id="L425">        ReInit(new java.io.InputStreamReader(dstream), startline, startcolumn, buffersize);</span>
+<span class="nc" id="L426">    }</span>
     /**
      * @param dstream
      * @param startline
      * @param startcolumn
      */
-    public void reInit(java.io.InputStream dstream, int startline, int startcolumn) {
-<span class="nc" id="L373">        reInit(dstream, startline, startcolumn, 4096);</span>
-<span class="nc" id="L374">    }</span>
-
+    public void ReInit(java.io.InputStream dstream, int startline,
+            int startcolumn)
+    {
+<span class="nc" id="L435">        ReInit(dstream, startline, startcolumn, 4096);</span>
+<span class="nc" id="L436">    }</span>
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#GetImage()
+     */
     @Override
-    public String GetImage() {
-<span class="pc bpc" id="L378" title="1 of 2 branches missed.">        if (bufpos &gt;= tokenBegin) {</span>
-<span class="fc" id="L379">            return new String(buffer, tokenBegin, bufpos - tokenBegin + 1);</span>
-        } else {
-<span class="nc" id="L381">            return new String(buffer, tokenBegin, bufsize - tokenBegin) + new String(buffer, 0, bufpos + 1);</span>
+    public String GetImage()
+    {
+<span class="pc bpc" id="L443" title="1 of 2 branches missed.">        if (bufpos &gt;= tokenBegin)</span>
+        {
+<span class="fc" id="L445">            return new String(buffer, tokenBegin, bufpos - tokenBegin + 1);</span>
+        }
+        else
+        {
+<span class="nc" id="L449">            return new String(buffer, tokenBegin, bufsize - tokenBegin) +</span>
+            new String(buffer, 0, bufpos + 1);
         }
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#GetSuffix(int)
+     */
     @Override
-    public char[] GetSuffix(int len) {
-<span class="fc" id="L387">        char[] ret = new char[len];</span>
+    public char[] GetSuffix(int len)
+    {
+<span class="fc" id="L460">        char[] ret = new char[len];</span>
 
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        if ((bufpos + 1) &gt;= len) {</span>
-<span class="fc" id="L390">            System.arraycopy(buffer, bufpos - len + 1, ret, 0, len);</span>
-        } else {
-<span class="nc" id="L392">            System.arraycopy(buffer, bufsize - (len - bufpos - 1), ret, 0, len - bufpos - 1);</span>
-<span class="nc" id="L393">            System.arraycopy(buffer, 0, ret, len - bufpos - 1, bufpos + 1);</span>
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">        if ((bufpos + 1) &gt;= len)</span>
+        {
+<span class="fc" id="L464">            System.arraycopy(buffer, bufpos - len + 1, ret, 0, len);</span>
+        }
+        else
+        {
+<span class="nc" id="L468">            System.arraycopy(buffer, bufsize - (len - bufpos - 1), ret, 0,</span>
+                    len - bufpos - 1);
+<span class="nc" id="L470">            System.arraycopy(buffer, 0, ret, len - bufpos - 1, bufpos + 1);</span>
         }
 
-<span class="fc" id="L396">        return ret;</span>
+<span class="fc" id="L473">        return ret;</span>
     }
 
+    /**
+     * @see org.apache.velocity.runtime.parser.CharStream#Done()
+     */
     @Override
-    public void Done() {
-<span class="nc" id="L401">        buffer = null;</span>
-<span class="nc" id="L402">        bufline = null;</span>
-<span class="nc" id="L403">        bufcolumn = null;</span>
-<span class="nc" id="L404">    }</span>
+    public void Done()
+    {
+<span class="nc" id="L482">        buffer = null;</span>
+<span class="nc" id="L483">        bufline = null;</span>
+<span class="nc" id="L484">        bufcolumn = null;</span>
+<span class="nc" id="L485">    }</span>
 
     /**
      * Method to adjust line and column numbers for the start of a token.&lt;BR&gt;
-     * 
      * @param newLine
      * @param newCol
      */
-    public void adjustBeginLineColumn(int newLine, int newCol) {
-<span class="nc" id="L413">        int start = tokenBegin;</span>
+    public void adjustBeginLineColumn(int newLine, int newCol)
+    {
+<span class="nc" id="L494">        int start = tokenBegin;</span>
         int len;
 
-<span class="nc bnc" id="L416" title="All 2 branches missed.">        if (bufpos &gt;= tokenBegin) {</span>
-<span class="nc" id="L417">            len = bufpos - tokenBegin + inBuf + 1;</span>
-        } else {
-<span class="nc" id="L419">            len = bufsize - tokenBegin + bufpos + 1 + inBuf;</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">        if (bufpos &gt;= tokenBegin)</span>
+        {
+<span class="nc" id="L499">            len = bufpos - tokenBegin + inBuf + 1;</span>
+        }
+        else
+        {
+<span class="nc" id="L503">            len = bufsize - tokenBegin + bufpos + 1 + inBuf;</span>
         }
 
-<span class="nc" id="L422">        int i = 0;</span>
-<span class="nc" id="L423">        int j = start % bufsize;</span>
-<span class="nc" id="L424">        int k = (start + 1) % bufsize;</span>
-<span class="nc" id="L425">        int nextColDiff = 0;</span>
-<span class="nc" id="L426">        int columnDiff = 0;</span>
+<span class="nc" id="L506">        int i = 0;</span>
+<span class="nc" id="L507">        int j = 0;</span>
+<span class="nc" id="L508">        int k = 0;</span>
+<span class="nc" id="L509">        int nextColDiff = 0;</span>
+<span class="nc" id="L510">        int columnDiff = 0;</span>
 
-<span class="nc bnc" id="L428" title="All 4 branches missed.">        while (i &lt; len &amp;&amp; bufline[j] == bufline[k]) {</span>
-<span class="nc" id="L429">            bufline[j] = newLine;</span>
-<span class="nc" id="L430">            nextColDiff = columnDiff + bufcolumn[k] - bufcolumn[j];</span>
-<span class="nc" id="L431">            bufcolumn[j] = newCol + columnDiff;</span>
-<span class="nc" id="L432">            columnDiff = nextColDiff;</span>
-<span class="nc" id="L433">            i++;</span>
-
-<span class="nc" id="L435">            start++;</span>
-<span class="nc" id="L436">            j = start % bufsize;</span>
-<span class="nc" id="L437">            k = (start + 1) % bufsize;</span>
+<span class="nc bnc" id="L512" title="All 4 branches missed.">        while (i &lt; len &amp;&amp;</span>
+                bufline[j = start % bufsize] == bufline[k = ++start % bufsize])
+        {
+<span class="nc" id="L515">            bufline[j] = newLine;</span>
+<span class="nc" id="L516">            nextColDiff = columnDiff + bufcolumn[k] - bufcolumn[j];</span>
+<span class="nc" id="L517">            bufcolumn[j] = newCol + columnDiff;</span>
+<span class="nc" id="L518">            columnDiff = nextColDiff;</span>
+<span class="nc" id="L519">            i++;</span>
         }
 
-<span class="nc bnc" id="L440" title="All 2 branches missed.">        if (i &lt; len) {</span>
-<span class="nc" id="L441">            bufline[j] = newLine++;</span>
-<span class="nc" id="L442">            bufcolumn[j] = newCol + columnDiff;</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">        if (i &lt; len)</span>
+        {
+<span class="nc" id="L524">            bufline[j] = newLine++;</span>
+<span class="nc" id="L525">            bufcolumn[j] = newCol + columnDiff;</span>
 
-<span class="nc bnc" id="L444" title="All 2 branches missed.">            while (i++ &lt; len) {</span>
-<span class="nc" id="L445">                j = start % bufsize;</span>
-<span class="nc" id="L446">                start++;</span>
-<span class="nc bnc" id="L447" title="All 2 branches missed.">                if (bufline[j] != bufline[start % bufsize]) {</span>
-<span class="nc" id="L448">                    bufline[j] = newLine++;</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">            while (i++ &lt; len)</span>
+            {
+<span class="nc" id="L529">                j = start % bufsize;</span>
+<span class="nc" id="L530">                start++;</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">                if (bufline[j] != bufline[start % bufsize]) {</span>
+<span class="nc" id="L532">                    bufline[j] = newLine++;</span>
                 } else {
-<span class="nc" id="L450">                    bufline[j] = newLine;</span>
+<span class="nc" id="L534">                    bufline[j] = newLine;</span>
                 }
             }
         }
 
-<span class="nc" id="L455">        line = bufline[j];</span>
-<span class="nc" id="L456">        column = bufcolumn[j];</span>
-<span class="nc" id="L457">    }</span>
+<span class="nc" id="L539">        line = bufline[j];</span>
+<span class="nc" id="L540">        column = bufcolumn[j];</span>
+<span class="nc" id="L541">    }</span>
 
 }
+
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

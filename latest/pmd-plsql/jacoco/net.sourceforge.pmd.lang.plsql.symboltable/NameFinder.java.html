@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NameFinder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">NameFinder.java</span></div><h1>NameFinder.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.plsql.symboltable;
 
 import java.util.ArrayList;
@@ -19,18 +18,19 @@ import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
 
 public class NameFinder {
 
-<span class="fc" id="L22">    private List&lt;PLSQLNameOccurrence&gt; names = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L21">    private List&lt;PLSQLNameOccurrence&gt; names = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L24">    public NameFinder(ASTPrimaryExpression node) {</span>
-<span class="fc" id="L25">        Node simpleNode = node.jjtGetChild(0);</span>
-<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (simpleNode instanceof ASTPrimaryPrefix) {</span>
-<span class="fc" id="L27">            ASTPrimaryPrefix prefix = (ASTPrimaryPrefix) simpleNode;</span>
-            // if (prefix.usesSuperModifier()) {
-            // add(new NameOccurrence(prefix, &quot;super&quot;));
-            // } else
-<span class="pc bpc" id="L31" title="1 of 2 branches missed.">            if (prefix.usesSelfModifier()) {</span>
-<span class="nc" id="L32">                add(new PLSQLNameOccurrence(prefix, &quot;this&quot;));</span>
-            }
+<span class="fc" id="L23">    public NameFinder(ASTPrimaryExpression node) {</span>
+<span class="fc" id="L24">    	Node simpleNode = node.jjtGetChild(0);</span>
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">        if (simpleNode instanceof ASTPrimaryPrefix) </span>
+        {
+<span class="fc" id="L27">          ASTPrimaryPrefix prefix = (ASTPrimaryPrefix) simpleNode ;</span>
+          //if (prefix.usesSuperModifier()) {
+          //    add(new NameOccurrence(prefix, &quot;super&quot;));
+          //} else 
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">          if (prefix.usesSelfModifier()) {</span>
+<span class="nc" id="L32">              add(new PLSQLNameOccurrence(prefix, &quot;this&quot;));</span>
+          }
         }
 <span class="fc bfc" id="L35" title="All 2 branches covered.">        for (int i = 0; i &lt; node.jjtGetNumChildren(); i++) {</span>
 <span class="fc" id="L36">            checkForNameChild(node.jjtGetChild(i));</span>
@@ -58,27 +58,27 @@ public class NameFinder {
 <span class="nc" id="L58">                occurrence.setIsMethodOrConstructorInvocation();</span>
 <span class="nc" id="L59">                ASTArguments args = (ASTArguments) ((ASTPrimarySuffix) node).jjtGetChild(0);</span>
 <span class="nc" id="L60">                occurrence.setArgumentCount(args.getArgumentCount());</span>
-            } // else if (suffix.jjtGetNumChildren() == 1
-            // &amp;&amp; suffix.jjtGetChild(0) instanceof ASTMemberSelector)
-            // {
-            // add(new NameOccurrence((SimpleNode)suffix.jjtGetChild(0),
-            // suffix.jjtGetChild(0).getImage()));
-            // }
+            } //else if (suffix.jjtGetNumChildren() == 1 
+		//       &amp;&amp; suffix.jjtGetChild(0) instanceof ASTMemberSelector) 
+	    //{
+            //    add(new NameOccurrence((SimpleNode)suffix.jjtGetChild(0), suffix.jjtGetChild(0).getImage()));
+            //}
         }
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L67">    }</span>
 
     private void add(PLSQLNameOccurrence name) {
-<span class="fc" id="L71">        names.add(name);</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (names.size() &gt; 1) {</span>
-<span class="fc" id="L73">            PLSQLNameOccurrence qualifiedName = names.get(names.size() - 2);</span>
-<span class="fc" id="L74">            qualifiedName.setNameWhichThisQualifies(name);</span>
+<span class="fc" id="L70">        names.add(name);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (names.size() &gt; 1) {</span>
+<span class="fc" id="L72">            PLSQLNameOccurrence qualifiedName = names.get(names.size() - 2);</span>
+<span class="fc" id="L73">            qualifiedName.setNameWhichThisQualifies(name);</span>
         }
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L75">    }</span>
+
 
     @Override
     public String toString() {
-<span class="nc" id="L80">        StringBuilder result = new StringBuilder();</span>
-<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (PLSQLNameOccurrence occ : names) {</span>
+<span class="nc" id="L80">    	StringBuilder result = new StringBuilder();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (PLSQLNameOccurrence occ: names) {</span>
 <span class="nc" id="L82">            result.append(occ.getImage());</span>
 <span class="nc" id="L83">        }</span>
 <span class="nc" id="L84">        return result.toString();</span>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MethodProperty.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule.properties</a> &gt; <span class="el_source">MethodProperty.java</span></div><h1>MethodProperty.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.rule.properties;
 
 import java.lang.reflect.Array;
@@ -17,9 +16,9 @@ import net.sourceforge.pmd.util.StringUtil;
  * Defines a property type that can specify a single method to use as part of a
  * rule.
  *
- * &lt;p&gt;Rule developers can limit the rules to those within designated packages per
+ * Rule developers can limit the rules to those within designated packages per
  * the 'legalPackages' argument in the constructor which can be an array of
- * partial package names, i.e., [&quot;java.lang&quot;, &quot;com.mycompany&quot; ].&lt;/p&gt;
+ * partial package names, i.e., [&quot;java.lang&quot;, &quot;com.mycompany&quot; ].
  *
  * @author Brian Remedios
  */
@@ -27,18 +26,18 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
 
     public static final char CLASS_METHOD_DELIMITER = '#';
     public static final char METHOD_ARG_DELIMITER = ',';
-<span class="fc" id="L30">    public static final char[] METHOD_GROUP_DELIMITERS = new char[] { '(', ')' };</span>
+<span class="fc" id="L29">    public static final char[] METHOD_GROUP_DELIMITERS = new char[] { '(', ')' };</span>
 
     private static final String ARRAY_FLAG = &quot;[]&quot;;
-<span class="fc" id="L33">    private static final Map&lt;Class&lt;?&gt;, String&gt; TYPE_SHORTCUTS = ClassUtil.getClassShortNames();</span>
+<span class="fc" id="L32">    private static final Map&lt;Class&lt;?&gt;, String&gt; TYPE_SHORTCUTS = ClassUtil.getClassShortNames();</span>
 
-<span class="fc" id="L35">    public static final PropertyDescriptorFactory FACTORY = new BasicPropertyDescriptorFactory&lt;MethodProperty&gt;(</span>
-<span class="fc" id="L36">            Method.class, PACKAGED_FIELD_TYPES_BY_KEY) {</span>
+<span class="fc" id="L34">    public static final PropertyDescriptorFactory FACTORY = new BasicPropertyDescriptorFactory&lt;MethodProperty&gt;(</span>
+<span class="fc" id="L35">            Method.class, PACKAGED_FIELD_TYPES_BY_KEY) {</span>
 
         @Override
         public MethodProperty createWith(Map&lt;String, String&gt; valuesById) {
-<span class="fc" id="L40">            char delimiter = delimiterIn(valuesById);</span>
-<span class="fc" id="L41">            return new MethodProperty(nameIn(valuesById), descriptionIn(valuesById), defaultValueIn(valuesById),</span>
+<span class="fc" id="L39">            char delimiter = delimiterIn(valuesById);</span>
+<span class="fc" id="L40">            return new MethodProperty(nameIn(valuesById), descriptionIn(valuesById), defaultValueIn(valuesById),</span>
                     legalPackageNamesIn(valuesById, delimiter), 0f);
         }
     };
@@ -46,65 +45,68 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
     /**
      * Constructor for MethodProperty.
      *
-     * @param theName
-     *            String
-     * @param theDescription
-     *            String
-     * @param theDefault
-     *            Method
-     * @param legalPackageNames
-     *            String[]
-     * @param theUIOrder
-     *            float
+     * @param theName String
+     * @param theDescription String
+     * @param theDefault Method
+     * @param legalPackageNames String[]
+     * @param theUIOrder float
      * @throws IllegalArgumentException
      */
     public MethodProperty(String theName, String theDescription, Method theDefault, String[] legalPackageNames,
             float theUIOrder) {
-<span class="fc" id="L63">        super(theName, theDescription, theDefault, legalPackageNames, theUIOrder);</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L57">        super(theName, theDescription, theDefault, legalPackageNames, theUIOrder);</span>
+<span class="fc" id="L58">    }</span>
 
     /**
      * Constructor for MethodProperty.
      *
-     * @param theName
-     *            String
-     * @param theDescription
-     *            String
-     * @param defaultMethodStr
-     *            String
-     * @param legalPackageNames
-     *            String[]
-     * @param theUIOrder
-     *            float
+     * @param theName String
+     * @param theDescription String
+     * @param defaultMethodStr String
+     * @param legalPackageNames String[]
+     * @param theUIOrder float
      * @throws IllegalArgumentException
      */
     public MethodProperty(String theName, String theDescription, String defaultMethodStr, String[] legalPackageNames,
             float theUIOrder) {
-<span class="fc" id="L83">        super(theName, theDescription, methodFrom(defaultMethodStr), legalPackageNames, theUIOrder);</span>
-<span class="fc" id="L84">    }</span>
+<span class="fc" id="L72">        super(theName, theDescription, methodFrom(defaultMethodStr), legalPackageNames, theUIOrder);</span>
+<span class="fc" id="L73">    }</span>
 
+    /**
+     * Constructor for MethodProperty.
+     *
+     * @param theName String
+     * @param theDescription String
+     * @param defaultMethodStr String
+     * @param otherParams Map&lt;String, String&gt;
+     * @param theUIOrder float
+     * @throws IllegalArgumentException
+     */
     public MethodProperty(String theName, String theDescription, String defaultMethodStr,
             Map&lt;String, String&gt; otherParams, float theUIOrder) {
-<span class="nc" id="L88">        this(theName, theDescription, methodFrom(defaultMethodStr), packageNamesIn(otherParams), theUIOrder);</span>
-<span class="nc" id="L89">    }</span>
+<span class="nc" id="L87">        this(theName, theDescription, methodFrom(defaultMethodStr), packageNamesIn(otherParams), theUIOrder);</span>
+<span class="nc" id="L88">    }</span>
 
+    /**
+     * @param cls Class&lt;?&gt;
+     * @return String
+     */
     private static String shortestNameFor(Class&lt;?&gt; cls) {
-<span class="fc" id="L92">        String compactName = TYPE_SHORTCUTS.get(cls);</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        return compactName == null ? cls.getName() : compactName;</span>
+<span class="fc" id="L95">        String compactName = TYPE_SHORTCUTS.get(cls);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        return compactName == null ? cls.getName() : compactName;</span>
     }
 
     /**
      * Return the value of `method' as a string that can be easily recognized
      * and parsed when we see it again.
      *
-     * @param method
-     *            the method to convert
+     * @param method the method to convert
      * @return the string value
      */
     public static String asStringFor(Method method) {
-<span class="fc" id="L105">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc" id="L106">        asStringOn(method, sb);</span>
-<span class="fc" id="L107">        return sb.toString();</span>
+<span class="fc" id="L107">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L108">        asStringOn(method, sb);</span>
+<span class="fc" id="L109">        return sb.toString();</span>
     }
 
     /**
@@ -112,72 +114,78 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
      */
     @Override
     protected String defaultAsString() {
-<span class="nc" id="L115">        return asStringFor(defaultValue());</span>
+<span class="nc" id="L117">        return asStringFor(defaultValue());</span>
     }
 
+    /**
+     * @param type Class&lt;?&gt;
+     * @param sb StringBuilder
+     */
     private static void serializedTypeIdOn(Class&lt;?&gt; type, StringBuilder sb) {
 
-<span class="fc" id="L120">        Class&lt;?&gt; arrayType = type.getComponentType();</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (arrayType == null) {</span>
-<span class="fc" id="L122">            sb.append(shortestNameFor(type));</span>
-<span class="fc" id="L123">            return;</span>
+<span class="fc" id="L126">        Class&lt;?&gt; arrayType = type.getComponentType();</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (arrayType == null) {</span>
+<span class="fc" id="L128">            sb.append(shortestNameFor(type));</span>
+<span class="fc" id="L129">            return;</span>
         }
-<span class="fc" id="L125">        sb.append(shortestNameFor(arrayType)).append(ARRAY_FLAG);</span>
-<span class="fc" id="L126">    }</span>
+<span class="fc" id="L131">        sb.append(shortestNameFor(arrayType)).append(ARRAY_FLAG);</span>
+<span class="fc" id="L132">    }</span>
 
     /**
      * Serializes the method signature onto the specified buffer.
      *
-     * @param method
-     *            Method
-     * @param sb
-     *            StringBuilder
+     * @param method Method
+     * @param sb StringBuilder
      */
     public static void asStringOn(Method method, StringBuilder sb) {
 
-<span class="fc" id="L138">        Class&lt;?&gt; clazz = method.getDeclaringClass();</span>
+<span class="fc" id="L142">        Class&lt;?&gt; clazz = method.getDeclaringClass();</span>
 
-<span class="fc" id="L140">        sb.append(shortestNameFor(clazz));</span>
-<span class="fc" id="L141">        sb.append(CLASS_METHOD_DELIMITER);</span>
-<span class="fc" id="L142">        sb.append(method.getName());</span>
+<span class="fc" id="L144">        sb.append(shortestNameFor(clazz));</span>
+<span class="fc" id="L145">        sb.append(CLASS_METHOD_DELIMITER);</span>
+<span class="fc" id="L146">        sb.append(method.getName());</span>
 
-<span class="fc" id="L144">        sb.append(METHOD_GROUP_DELIMITERS[0]);</span>
+<span class="fc" id="L148">        sb.append(METHOD_GROUP_DELIMITERS[0]);</span>
 
-<span class="fc" id="L146">        Class&lt;?&gt;[] argTypes = method.getParameterTypes();</span>
-<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (argTypes.length == 0) {</span>
-<span class="fc" id="L148">            sb.append(METHOD_GROUP_DELIMITERS[1]);</span>
-<span class="fc" id="L149">            return;</span>
+<span class="fc" id="L150">        Class&lt;?&gt;[] argTypes = method.getParameterTypes();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (argTypes.length == 0) {</span>
+<span class="fc" id="L152">            sb.append(METHOD_GROUP_DELIMITERS[1]);</span>
+<span class="fc" id="L153">            return;</span>
         }
 
-<span class="fc" id="L152">        serializedTypeIdOn(argTypes[0], sb);</span>
-<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (int i = 1; i &lt; argTypes.length; i++) {</span>
-<span class="fc" id="L154">            sb.append(METHOD_ARG_DELIMITER);</span>
-<span class="fc" id="L155">            serializedTypeIdOn(argTypes[i], sb);</span>
+<span class="fc" id="L156">        serializedTypeIdOn(argTypes[0], sb);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        for (int i = 1; i &lt; argTypes.length; i++) {</span>
+<span class="fc" id="L158">            sb.append(METHOD_ARG_DELIMITER);</span>
+<span class="fc" id="L159">            serializedTypeIdOn(argTypes[i], sb);</span>
         }
-<span class="fc" id="L157">        sb.append(METHOD_GROUP_DELIMITERS[1]);</span>
-<span class="fc" id="L158">    }</span>
+<span class="fc" id="L161">        sb.append(METHOD_GROUP_DELIMITERS[1]);</span>
+<span class="fc" id="L162">    }</span>
 
+    /**
+     * @param typeName String
+     * @return Class&lt;?&gt;
+     */
     private static Class&lt;?&gt; typeFor(String typeName) {
 
-<span class="fc" id="L162">        Class&lt;?&gt; type = null;</span>
+<span class="fc" id="L170">        Class&lt;?&gt; type = null;</span>
 
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (typeName.endsWith(ARRAY_FLAG)) {</span>
-<span class="fc" id="L165">            String arrayTypeName = typeName.substring(0, typeName.length() - ARRAY_FLAG.length());</span>
-<span class="fc" id="L166">            type = typeFor(arrayTypeName); // recurse</span>
-<span class="fc" id="L167">            return Array.newInstance(type, 0).getClass(); // TODO is there a</span>
-            // better way to get
-            // an array type?
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (typeName.endsWith(ARRAY_FLAG)) {</span>
+<span class="fc" id="L173">            String arrayTypeName = typeName.substring(0, typeName.length() - ARRAY_FLAG.length());</span>
+<span class="fc" id="L174">            type = typeFor(arrayTypeName); // recurse</span>
+<span class="fc" id="L175">            return Array.newInstance(type, 0).getClass(); // TODO is there a</span>
+                                                          // better way to get
+                                                          // an array type?
         }
 
-<span class="fc" id="L172">        type = ClassUtil.getTypeFor(typeName); // try shortcut first</span>
-<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (type != null) {</span>
-<span class="fc" id="L174">            return type;</span>
+<span class="fc" id="L180">        type = ClassUtil.getTypeFor(typeName); // try shortcut first</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (type != null) {</span>
+<span class="fc" id="L182">            return type;</span>
         }
 
         try {
-<span class="fc" id="L178">            return Class.forName(typeName);</span>
-<span class="nc" id="L179">        } catch (Exception ex) {</span>
-<span class="nc" id="L180">            return null;</span>
+<span class="fc" id="L186">            return Class.forName(typeName);</span>
+<span class="nc" id="L187">        } catch (Exception ex) {</span>
+<span class="nc" id="L188">            return null;</span>
         }
     }
 
@@ -207,85 +215,82 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
         // classname#methodname(arg1,arg2)
         // 0 1 2
 
-<span class="fc" id="L210">        int delimPos0 = -1;</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (methodNameAndArgTypes != null) {</span>
-<span class="fc" id="L212">            delimPos0 = methodNameAndArgTypes.indexOf(classMethodDelimiter);</span>
+<span class="fc" id="L218">        int delimPos0 = -1;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (methodNameAndArgTypes != null) {</span>
+<span class="fc" id="L220">            delimPos0 = methodNameAndArgTypes.indexOf(classMethodDelimiter);</span>
         } else {
-<span class="fc" id="L214">            return null;</span>
+<span class="fc" id="L222">            return null;</span>
         }
 
-<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (delimPos0 &lt; 0) {</span>
-<span class="fc" id="L218">            return null;</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        if (delimPos0 &lt; 0) {</span>
+<span class="fc" id="L226">            return null;</span>
         }
 
-<span class="fc" id="L221">        String className = methodNameAndArgTypes.substring(0, delimPos0);</span>
-<span class="fc" id="L222">        Class&lt;?&gt; type = ClassUtil.getTypeFor(className);</span>
-<span class="pc bpc" id="L223" title="1 of 2 branches missed.">        if (type == null) {</span>
-<span class="nc" id="L224">            return null;</span>
+<span class="fc" id="L229">        String className = methodNameAndArgTypes.substring(0, delimPos0);</span>
+<span class="fc" id="L230">        Class&lt;?&gt; type = ClassUtil.getTypeFor(className);</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if (type == null) {</span>
+<span class="nc" id="L232">            return null;</span>
         }
 
-<span class="fc" id="L227">        int delimPos1 = methodNameAndArgTypes.indexOf(METHOD_GROUP_DELIMITERS[0]);</span>
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if (delimPos1 &lt; 0) {</span>
-<span class="nc" id="L229">            String methodName = methodNameAndArgTypes.substring(delimPos0 + 1);</span>
-<span class="nc" id="L230">            return ClassUtil.methodFor(type, methodName, ClassUtil.EMPTY_CLASS_ARRAY);</span>
+<span class="fc" id="L235">        int delimPos1 = methodNameAndArgTypes.indexOf(METHOD_GROUP_DELIMITERS[0]);</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">        if (delimPos1 &lt; 0) {</span>
+<span class="nc" id="L237">            String methodName = methodNameAndArgTypes.substring(delimPos0 + 1);</span>
+<span class="nc" id="L238">            return ClassUtil.methodFor(type, methodName, ClassUtil.EMPTY_CLASS_ARRAY);</span>
         }
 
-<span class="fc" id="L233">        String methodName = methodNameAndArgTypes.substring(delimPos0 + 1, delimPos1);</span>
-<span class="pc bpc" id="L234" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(methodName)) {</span>
-<span class="nc" id="L235">            return null;</span>
+<span class="fc" id="L241">        String methodName = methodNameAndArgTypes.substring(delimPos0 + 1, delimPos1);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(methodName)) {</span>
+<span class="nc" id="L243">            return null;</span>
         } // missing method name?
 
-<span class="fc" id="L238">        int delimPos2 = methodNameAndArgTypes.indexOf(METHOD_GROUP_DELIMITERS[1]);</span>
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        if (delimPos2 &lt; 0) {</span>
-<span class="nc" id="L240">            return null;</span>
+<span class="fc" id="L246">        int delimPos2 = methodNameAndArgTypes.indexOf(METHOD_GROUP_DELIMITERS[1]);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">        if (delimPos2 &lt; 0) {</span>
+<span class="nc" id="L248">            return null;</span>
         } // error!
 
-<span class="fc" id="L243">        String argTypesStr = methodNameAndArgTypes.substring(delimPos1 + 1, delimPos2);</span>
-<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (StringUtil.isEmpty(argTypesStr)) {</span>
-<span class="fc" id="L245">            return ClassUtil.methodFor(type, methodName, ClassUtil.EMPTY_CLASS_ARRAY);</span>
+<span class="fc" id="L251">        String argTypesStr = methodNameAndArgTypes.substring(delimPos1 + 1, delimPos2);</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (StringUtil.isEmpty(argTypesStr)) {</span>
+<span class="fc" id="L253">            return ClassUtil.methodFor(type, methodName, ClassUtil.EMPTY_CLASS_ARRAY);</span>
         } // no arg(s)
 
-<span class="fc" id="L248">        String[] argTypeNames = StringUtil.substringsOf(argTypesStr, methodArgDelimiter);</span>
-<span class="fc" id="L249">        Class&lt;?&gt;[] argTypes = new Class[argTypeNames.length];</span>
-<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (int i = 0; i &lt; argTypes.length; i++) {</span>
-<span class="fc" id="L251">            argTypes[i] = typeFor(argTypeNames[i]);</span>
+<span class="fc" id="L256">        String[] argTypeNames = StringUtil.substringsOf(argTypesStr, methodArgDelimiter);</span>
+<span class="fc" id="L257">        Class&lt;?&gt;[] argTypes = new Class[argTypeNames.length];</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        for (int i = 0; i &lt; argTypes.length; i++) {</span>
+<span class="fc" id="L259">            argTypes[i] = typeFor(argTypeNames[i]);</span>
         }
 
-<span class="fc" id="L254">        return ClassUtil.methodFor(type, methodName, argTypes);</span>
+<span class="fc" id="L262">        return ClassUtil.methodFor(type, methodName, argTypes);</span>
     }
 
     /**
-     * @param methodStr
-     *            String
+     * @param methodStr String
      * @return Method
      */
     public static Method methodFrom(String methodStr) {
-<span class="fc" id="L263">        return methodFrom(methodStr, CLASS_METHOD_DELIMITER, METHOD_ARG_DELIMITER);</span>
+<span class="fc" id="L270">        return methodFrom(methodStr, CLASS_METHOD_DELIMITER, METHOD_ARG_DELIMITER);</span>
     }
 
     /**
      * Return the value as a string that can be easily recognized and parsed
      * when we see it again.
      *
-     * @param value
-     *            Object
+     * @param value Object
      * @return String
      */
     @Override
     protected String asString(Object value) {
-<span class="pc bpc" id="L276" title="1 of 2 branches missed.">        return value == null ? &quot;&quot; : asStringFor((Method) value);</span>
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">        return value == null ? &quot;&quot; : asStringFor((Method) value);</span>
     }
 
     /**
-     * @param item
-     *            Object
+     * @param item Object
      * @return String
      */
     @Override
     protected String packageNameOf(Object item) {
 
-<span class="fc" id="L287">        final Method method = (Method) item;</span>
-<span class="fc" id="L288">        return method.getDeclaringClass().getName() + '.' + method.getName();</span>
+<span class="fc" id="L292">        final Method method = (Method) item;</span>
+<span class="fc" id="L293">        return method.getDeclaringClass().getName() + '.' + method.getName();</span>
     }
 
     /**
@@ -293,7 +298,7 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
      */
     @Override
     protected String itemTypeName() {
-<span class="fc" id="L296">        return &quot;method&quot;;</span>
+<span class="fc" id="L301">        return &quot;method&quot;;</span>
     }
 
     /**
@@ -302,19 +307,18 @@ public class MethodProperty extends AbstractPackagedProperty&lt;Method&gt; {
      */
     @Override
     public Class&lt;Method&gt; type() {
-<span class="fc" id="L305">        return Method.class;</span>
+<span class="fc" id="L310">        return Method.class;</span>
     }
 
     /**
-     * @param valueString
-     *            String
+     * @param valueString String
      * @return Object
      * @throws IllegalArgumentException
      * @see net.sourceforge.pmd.PropertyDescriptor#valueFrom(String)
      */
     @Override
     public Method valueFrom(String valueString) throws IllegalArgumentException {
-<span class="fc" id="L317">        return methodFrom(valueString);</span>
+<span class="fc" id="L321">        return methodFrom(valueString);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

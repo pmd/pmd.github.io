@@ -57,7 +57,7 @@ import net.sourceforge.pmd.util.StringUtil;
 <span class="fc" id="L57">    }</span>
 
     public void addConfiguredParam(Parameter parameter) {
-<span class="nc" id="L60">        this.parameters.add(parameter);</span>
+<span class="nc" id="L60">	this.parameters.add(parameter);</span>
 <span class="nc" id="L61">    }</span>
 
     public Renderer getRenderer() {
@@ -135,103 +135,104 @@ import net.sourceforge.pmd.util.StringUtil;
     }
 
     private static String[] validRendererCodes() {
-<span class="nc" id="L138">        return RendererFactory.REPORT_FORMAT_TO_RENDERER.keySet()</span>
-                .toArray(new String[RendererFactory.REPORT_FORMAT_TO_RENDERER.size()]);
+<span class="nc" id="L138">        return RendererFactory.REPORT_FORMAT_TO_RENDERER.keySet().toArray(new String[RendererFactory.REPORT_FORMAT_TO_RENDERER.size()]);</span>
     }
 
     private static String unknownRendererMessage(String userSpecifiedType) {
-<span class="nc" id="L143">        String[] typeCodes = validRendererCodes();</span>
-<span class="nc" id="L144">        StringBuilder sb = new StringBuilder(100);</span>
-<span class="nc" id="L145">        sb.append(&quot;Formatter type must be one of: '&quot;).append(typeCodes[0]);</span>
+<span class="nc" id="L142">        String[] typeCodes = validRendererCodes();</span>
+<span class="nc" id="L143">    	StringBuilder sb = new StringBuilder(100);</span>
+<span class="nc" id="L144">        sb.append(&quot;Formatter type must be one of: '&quot;)</span>
+          .append(typeCodes[0]);
 <span class="nc bnc" id="L146" title="All 2 branches missed.">        for (int i = 1; i &lt; typeCodes.length; i++) {</span>
 <span class="nc" id="L147">            sb.append(&quot;', '&quot;).append(typeCodes[i]);</span>
         }
-<span class="nc" id="L149">        sb.append(&quot;', or a class name; you specified: &quot;).append(userSpecifiedType);</span>
-<span class="nc" id="L150">        return sb.toString();</span>
+<span class="nc" id="L149">        sb.append(&quot;', or a class name; you specified: &quot;)</span>
+          .append(userSpecifiedType);
+<span class="nc" id="L151">        return sb.toString();</span>
     }
 
     // FIXME - hm, what about this consoleRenderer thing... need a test for this
     Renderer createRenderer() {
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(type)) {</span>
-<span class="nc" id="L156">            throw new BuildException(unknownRendererMessage(&quot;&lt;unspecified&gt;&quot;));</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(type)) {</span>
+<span class="nc" id="L157">            throw new BuildException(unknownRendererMessage(&quot;&lt;unspecified&gt;&quot;));</span>
         }
 
-<span class="fc" id="L159">        Properties properties = createProperties();</span>
-<span class="fc" id="L160">        Renderer renderer = RendererFactory.createRenderer(type, properties);</span>
-<span class="fc" id="L161">        renderer.setShowSuppressedViolations(showSuppressed);</span>
-<span class="fc" id="L162">        return renderer;</span>
+<span class="fc" id="L160">        Properties properties = createProperties();</span>
+<span class="fc" id="L161">        Renderer renderer = RendererFactory.createRenderer(type, properties);</span>
+<span class="fc" id="L162">        renderer.setShowSuppressedViolations(showSuppressed);</span>
+<span class="fc" id="L163">        return renderer;</span>
     }
 
     private Properties createProperties() {
-<span class="fc" id="L166">        Properties properties = new Properties();</span>
-<span class="fc bfc" id="L167" title="All 2 branches covered.">        for (Parameter parameter : parameters) {</span>
-<span class="fc" id="L168">            properties.put(parameter.getName(), parameter.getValue());</span>
-<span class="fc" id="L169">        }</span>
-<span class="fc" id="L170">        return properties;</span>
+<span class="fc" id="L167">	Properties properties = new Properties();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">	for (Parameter parameter : parameters) {</span>
+<span class="fc" id="L169">	    properties.put(parameter.getName(), parameter.getValue());</span>
+<span class="fc" id="L170">	}</span>
+<span class="fc" id="L171">	return properties;</span>
     }
 
     private static Writer getToFileWriter(String baseDir, File toFile, Charset charset) throws IOException {
         final File file;
-<span class="nc bnc" id="L175" title="All 2 branches missed.">        if (toFile.isAbsolute()) {</span>
-<span class="nc" id="L176">            file = toFile;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (toFile.isAbsolute()) {</span>
+<span class="nc" id="L177">            file = toFile;</span>
         } else {
-<span class="nc" id="L178">            file = new File(baseDir + System.getProperty(&quot;file.separator&quot;) + toFile.getPath());</span>
+<span class="nc" id="L179">            file = new File(baseDir + System.getProperty(&quot;file.separator&quot;) + toFile.getPath());</span>
         }
 
-<span class="nc" id="L181">        OutputStream output = null;</span>
-<span class="nc" id="L182">        Writer writer = null;</span>
-<span class="nc" id="L183">        boolean isOnError = true;</span>
+<span class="nc" id="L182">        OutputStream output = null;</span>
+<span class="nc" id="L183">        Writer writer = null;</span>
+<span class="nc" id="L184">        boolean isOnError = true;</span>
         try {
-<span class="nc" id="L185">            output = new FileOutputStream(file);</span>
-<span class="nc" id="L186">            writer = new OutputStreamWriter(output, charset);</span>
-<span class="nc" id="L187">            writer = new BufferedWriter(writer);</span>
-<span class="nc" id="L188">            isOnError = false;</span>
+<span class="nc" id="L186">            output = new FileOutputStream(file);</span>
+<span class="nc" id="L187">            writer = new OutputStreamWriter(output, charset);</span>
+<span class="nc" id="L188">            writer = new BufferedWriter(writer);</span>
+<span class="nc" id="L189">            isOnError = false;</span>
         } finally {
-<span class="nc bnc" id="L190" title="All 4 branches missed.">            if (isOnError) {</span>
-<span class="nc" id="L191">                IOUtils.closeQuietly(output);</span>
-<span class="nc" id="L192">                IOUtils.closeQuietly(writer);</span>
+<span class="nc bnc" id="L191" title="All 4 branches missed.">            if (isOnError) {</span>
+<span class="nc" id="L192">                IOUtils.closeQuietly(output);</span>
+<span class="nc" id="L193">                IOUtils.closeQuietly(writer);</span>
             }
         }
-<span class="nc" id="L195">        return writer;</span>
+<span class="nc" id="L196">        return writer;</span>
     }
 
     private static String getConsoleEncoding() {
-<span class="fc" id="L199">        Console console = System.console();</span>
+<span class="fc" id="L200">        Console console = System.console();</span>
         // in case of pipe or redirect, no interactive console.
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">        if (console != null) {</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (console != null) {</span>
             try {
-<span class="nc" id="L203">                Field f = Console.class.getDeclaredField(&quot;cs&quot;);</span>
-<span class="nc" id="L204">                f.setAccessible(true);</span>
-<span class="nc" id="L205">                Object res = f.get(console);</span>
-<span class="nc bnc" id="L206" title="All 2 branches missed.">                if (res instanceof Charset) {</span>
-<span class="nc" id="L207">                    return ((Charset) res).name();</span>
+<span class="nc" id="L204">                Field f = Console.class.getDeclaredField(&quot;cs&quot;);</span>
+<span class="nc" id="L205">                f.setAccessible(true);</span>
+<span class="nc" id="L206">                Object res = f.get(console);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                if (res instanceof Charset) {</span>
+<span class="nc" id="L208">                    return ((Charset) res).name();</span>
                 }
-<span class="nc" id="L209">            } catch (NoSuchFieldException e) {</span>
+<span class="nc" id="L210">            } catch (NoSuchFieldException e) {</span>
                 // fall-through
-<span class="nc" id="L211">            } catch (IllegalAccessException e) {</span>
+<span class="nc" id="L212">            } catch (IllegalAccessException e) {</span>
                 // fall-through
-<span class="nc" id="L213">            }</span>
-<span class="nc" id="L214">            return getNativeConsoleEncoding();</span>
+<span class="nc" id="L214">            }</span>
+<span class="nc" id="L215">            return getNativeConsoleEncoding();</span>
         }
-<span class="fc" id="L216">        return null;</span>
+<span class="fc" id="L217">        return null;</span>
     }
 
     private static String getNativeConsoleEncoding() {
         try {
-<span class="nc" id="L221">            Method m = Console.class.getDeclaredMethod(&quot;encoding&quot;);</span>
-<span class="nc" id="L222">            m.setAccessible(true);</span>
-<span class="nc" id="L223">            Object res = m.invoke(null);</span>
-<span class="nc bnc" id="L224" title="All 2 branches missed.">            if (res instanceof String) {</span>
-<span class="nc" id="L225">                return (String) res;</span>
+<span class="nc" id="L222">            Method m = Console.class.getDeclaredMethod(&quot;encoding&quot;);</span>
+<span class="nc" id="L223">            m.setAccessible(true);</span>
+<span class="nc" id="L224">            Object res = m.invoke(null);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">            if (res instanceof String) {</span>
+<span class="nc" id="L226">                return (String) res;</span>
             }
-<span class="nc" id="L227">        } catch (NoSuchMethodException e) {</span>
+<span class="nc" id="L228">        } catch (NoSuchMethodException e) {</span>
             // fall-through
-<span class="nc" id="L229">        } catch (InvocationTargetException e) {</span>
+<span class="nc" id="L230">        } catch (InvocationTargetException e) {</span>
             // fall-through
-<span class="nc" id="L231">        } catch (IllegalAccessException e) {</span>
+<span class="nc" id="L232">        } catch (IllegalAccessException e) {</span>
             // fall-through
-<span class="nc" id="L233">        }</span>
-<span class="nc" id="L234">        return null;</span>
+<span class="nc" id="L234">        }</span>
+<span class="nc" id="L235">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

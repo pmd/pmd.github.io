@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MatlabTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Matlab</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">MatlabTokenizer.java</span></div><h1>MatlabTokenizer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.cpd;
 
 import java.io.Reader;
 import java.io.StringReader;
-
-import org.apache.commons.io.IOUtils;
 
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersionHandler;
@@ -17,37 +14,38 @@ import net.sourceforge.pmd.lang.matlab.MatlabLanguageModule;
 import net.sourceforge.pmd.lang.matlab.ast.Token;
 import net.sourceforge.pmd.util.IOUtil;
 
+import org.apache.commons.io.IOUtils;
+
 /**
  * The Matlab Tokenizer.
  */
-<span class="fc" id="L23">public class MatlabTokenizer implements Tokenizer {</span>
+<span class="fc" id="L22">public class MatlabTokenizer implements Tokenizer {</span>
 
     @Override
     public void tokenize(SourceCode sourceCode, Tokens tokenEntries) {
-<span class="fc" id="L27">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
-<span class="fc" id="L28">        Reader reader = null;</span>
+<span class="fc" id="L26">        StringBuilder buffer = sourceCode.getCodeBuffer();</span>
+<span class="fc" id="L27">        Reader reader = null;</span>
         try {
-<span class="fc" id="L30">            LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(MatlabLanguageModule.NAME)</span>
+<span class="fc" id="L29">            LanguageVersionHandler languageVersionHandler = LanguageRegistry.getLanguage(MatlabLanguageModule.NAME)</span>
                     .getDefaultVersion().getLanguageVersionHandler();
-<span class="fc" id="L32">            reader = new StringReader(buffer.toString());</span>
-<span class="fc" id="L33">            reader = IOUtil.skipBOM(reader);</span>
-<span class="fc" id="L34">            TokenManager tokenManager = languageVersionHandler</span>
-                    .getParser(languageVersionHandler.getDefaultParserOptions())
-                    .getTokenManager(sourceCode.getFileName(), reader);
-<span class="fc" id="L37">            Token currentToken = (Token) tokenManager.getNextToken();</span>
-<span class="fc bfc" id="L38" title="All 2 branches covered.">            while (currentToken.image.length() &gt; 0) {</span>
-<span class="fc" id="L39">                tokenEntries.add(new TokenEntry(currentToken.image, sourceCode.getFileName(), currentToken.beginLine));</span>
-<span class="fc" id="L40">                currentToken = (Token) tokenManager.getNextToken();</span>
+<span class="fc" id="L31">            reader = new StringReader(buffer.toString());</span>
+<span class="fc" id="L32">            reader = IOUtil.skipBOM(reader);</span>
+<span class="fc" id="L33">            TokenManager tokenManager = languageVersionHandler.getParser(</span>
+                    languageVersionHandler.getDefaultParserOptions()).getTokenManager(sourceCode.getFileName(), reader);
+<span class="fc" id="L35">            Token currentToken = (Token) tokenManager.getNextToken();</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            while (currentToken.image.length() &gt; 0) {</span>
+<span class="fc" id="L37">                tokenEntries.add(new TokenEntry(currentToken.image, sourceCode.getFileName(), currentToken.beginLine));</span>
+<span class="fc" id="L38">                currentToken = (Token) tokenManager.getNextToken();</span>
             }
-<span class="fc" id="L42">            tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L43">            System.err.println(&quot;Added &quot; + sourceCode.getFileName());</span>
-<span class="nc" id="L44">        } catch (TokenMgrError err) {</span>
-<span class="nc" id="L45">            err.printStackTrace();</span>
-<span class="nc" id="L46">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
-<span class="nc" id="L47">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L40">            tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L41">            System.err.println(&quot;Added &quot; + sourceCode.getFileName());</span>
+<span class="nc" id="L42">        } catch (TokenMgrError err) {</span>
+<span class="nc" id="L43">            err.printStackTrace();</span>
+<span class="nc" id="L44">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot; due to parse error&quot;);</span>
+<span class="nc" id="L45">            tokenEntries.add(TokenEntry.getEOF());</span>
         } finally {
-<span class="pc" id="L49">            IOUtils.closeQuietly(reader);</span>
-<span class="pc" id="L50">        }</span>
-<span class="fc" id="L51">    }</span>
+<span class="pc" id="L47">            IOUtils.closeQuietly(reader);</span>
+<span class="pc" id="L48">        }</span>
+<span class="fc" id="L49">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

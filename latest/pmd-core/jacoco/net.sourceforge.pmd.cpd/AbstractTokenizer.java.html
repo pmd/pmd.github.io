@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractTokenizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">AbstractTokenizer.java</span></div><h1>AbstractTokenizer.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.cpd;
 
 import java.util.List;
@@ -11,157 +10,156 @@ import java.util.List;
  * @author Zev Blut zb@ubit.com
  * @author Romain PELISSE belaran@gmail.com
  */
-<span class="fc" id="L14">public abstract class AbstractTokenizer implements Tokenizer {</span>
+<span class="fc" id="L13">public abstract class AbstractTokenizer implements Tokenizer {</span>
 
     // FIXME depending on subclasses to assign local vars is rather fragile -
     // better to make private and setup via explicit hook methods
 
     protected List&lt;String&gt; stringToken; // List&lt;String&gt;, should be set by sub
-    // classes
+                                        // classes
     protected List&lt;String&gt; ignorableCharacter; // List&lt;String&gt;, should be set by
-    // sub classes
-    // FIXME:Maybe an array of 'char'
-    // would be better for
-    // performance ?
+                                               // sub classes
+                                               // FIXME:Maybe an array of 'char'
+                                               // would be better for
+                                               // performance ?
     protected List&lt;String&gt; ignorableStmt; // List&lt;String&gt;, should be set by sub
-    // classes
-<span class="fc" id="L28">    protected char oneLineCommentChar = '#'; // Most script languages ( shell,</span>
-    // ruby, python,...) use this
-    // symbol for comment line
+                                          // classes
+<span class="fc" id="L27">    protected char oneLineCommentChar = '#'; // Most script languages ( shell,</span>
+                                             // ruby, python,...) use this
+                                             // symbol for comment line
 
     private List&lt;String&gt; code;
-<span class="fc" id="L33">    private int lineNumber = 0;</span>
+<span class="fc" id="L32">    private int lineNumber = 0;</span>
     private String currentLine;
 
-<span class="fc" id="L36">    protected boolean spanMultipleLinesString = true; // Most languages do, so</span>
-    // default is true
-<span class="fc" id="L38">    protected Character spanMultipleLinesLineContinuationCharacter = null;</span>
+<span class="fc" id="L35">    protected boolean spanMultipleLinesString = true; // Most languages do, so</span>
+                                                      // default is true
+<span class="fc" id="L37">    protected Character spanMultipleLinesLineContinuationCharacter = null;</span>
 
-<span class="fc" id="L40">    private boolean downcaseString = true;</span>
+<span class="fc" id="L39">    private boolean downcaseString = true;</span>
 
-    @Override
     public void tokenize(SourceCode tokens, Tokens tokenEntries) {
-<span class="fc" id="L44">        code = tokens.getCode();</span>
+<span class="fc" id="L42">        code = tokens.getCode();</span>
 
-<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (lineNumber = 0; lineNumber &lt; code.size(); lineNumber++) {</span>
-<span class="fc" id="L47">            currentLine = code.get(lineNumber);</span>
-<span class="fc" id="L48">            int loc = 0;</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">            while (loc &lt; currentLine.length()) {</span>
-<span class="fc" id="L50">                StringBuilder token = new StringBuilder();</span>
-<span class="fc" id="L51">                loc = getTokenFromLine(token, loc);</span>
-<span class="pc bpc" id="L52" title="2 of 4 branches missed.">                if (token.length() &gt; 0 &amp;&amp; !isIgnorableString(token.toString())) {</span>
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">                    if (downcaseString) {</span>
-<span class="fc" id="L54">                        token = new StringBuilder(token.toString().toLowerCase());</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (lineNumber = 0; lineNumber &lt; code.size(); lineNumber++) {</span>
+<span class="fc" id="L45">            currentLine = code.get(lineNumber);</span>
+<span class="fc" id="L46">            int loc = 0;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">            while (loc &lt; currentLine.length()) {</span>
+<span class="fc" id="L48">                StringBuilder token = new StringBuilder();</span>
+<span class="fc" id="L49">                loc = getTokenFromLine(token, loc);</span>
+<span class="pc bpc" id="L50" title="2 of 4 branches missed.">                if (token.length() &gt; 0 &amp;&amp; !isIgnorableString(token.toString())) {</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">                    if (downcaseString) {</span>
+<span class="fc" id="L52">                        token = new StringBuilder(token.toString().toLowerCase());</span>
                     }
                     // need to re-think how to link this
                     // if ( CPD.debugEnable ) {
                     // System.out.println(&quot;Token added:&quot; + token.toString());
                     // }
-<span class="fc" id="L60">                    tokenEntries.add(new TokenEntry(token.toString(), tokens.getFileName(), lineNumber));</span>
+<span class="fc" id="L58">                    tokenEntries.add(new TokenEntry(token.toString(), tokens.getFileName(), lineNumber));</span>
 
                 }
-<span class="fc" id="L63">            }</span>
+<span class="fc" id="L61">            }</span>
         }
-<span class="fc" id="L65">        tokenEntries.add(TokenEntry.getEOF());</span>
-<span class="fc" id="L66">    }</span>
+<span class="fc" id="L63">        tokenEntries.add(TokenEntry.getEOF());</span>
+<span class="fc" id="L64">    }</span>
 
     private int getTokenFromLine(StringBuilder token, int loc) {
-<span class="fc bfc" id="L69" title="All 2 branches covered.">        for (int j = loc; j &lt; currentLine.length(); j++) {</span>
-<span class="fc" id="L70">            char tok = currentLine.charAt(j);</span>
-<span class="pc bpc" id="L71" title="1 of 4 branches missed.">            if (!Character.isWhitespace(tok) &amp;&amp; !ignoreCharacter(tok)) {</span>
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                if (isComment(tok)) {</span>
-<span class="nc bnc" id="L73" title="All 2 branches missed.">                    if (token.length() &gt; 0) {</span>
-<span class="nc" id="L74">                        return j;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (int j = loc; j &lt; currentLine.length(); j++) {</span>
+<span class="fc" id="L68">            char tok = currentLine.charAt(j);</span>
+<span class="pc bpc" id="L69" title="1 of 4 branches missed.">            if (!Character.isWhitespace(tok) &amp;&amp; !ignoreCharacter(tok)) {</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">                if (isComment(tok)) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">                    if (token.length() &gt; 0) {</span>
+<span class="nc" id="L72">                        return j;</span>
                     } else {
-<span class="nc" id="L76">                        return getCommentToken(token, loc);</span>
+<span class="nc" id="L74">                        return getCommentToken(token, loc);</span>
                     }
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                } else if (isString(tok)) {</span>
-<span class="nc bnc" id="L79" title="All 2 branches missed.">                    if (token.length() &gt; 0) {</span>
-<span class="nc" id="L80">                        return j; // we need to now parse the string as a</span>
-                        // separate token.
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">                } else if (isString(tok)) {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                    if (token.length() &gt; 0) {</span>
+<span class="nc" id="L78">                        return j; // we need to now parse the string as a</span>
+                                  // separate token.
                     } else {
                         // we are at the start of a string
-<span class="nc" id="L84">                        return parseString(token, j, tok);</span>
+<span class="nc" id="L82">                        return parseString(token, j, tok);</span>
                     }
                 } else {
-<span class="fc" id="L87">                    token.append(tok);</span>
+<span class="fc" id="L85">                    token.append(tok);</span>
                 }
             } else {
-<span class="fc bfc" id="L90" title="All 2 branches covered.">                if (token.length() &gt; 0) {</span>
-<span class="fc" id="L91">                    return j;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                if (token.length() &gt; 0) {</span>
+<span class="fc" id="L89">                    return j;</span>
                 }
             }
-<span class="fc" id="L94">            loc = j;</span>
+<span class="fc" id="L92">            loc = j;</span>
         }
-<span class="fc" id="L96">        return loc + 1;</span>
+<span class="fc" id="L94">        return loc + 1;</span>
     }
 
     private int parseString(StringBuilder token, int loc, char stringDelimiter) {
-<span class="nc" id="L100">        boolean escaped = false;</span>
-<span class="nc" id="L101">        boolean done = false;</span>
-<span class="nc" id="L102">        char tok = ' '; // this will be replaced.</span>
-<span class="nc bnc" id="L103" title="All 4 branches missed.">        while (loc &lt; currentLine.length() &amp;&amp; !done) {</span>
-<span class="nc" id="L104">            tok = currentLine.charAt(loc);</span>
-<span class="nc bnc" id="L105" title="All 4 branches missed.">            if (escaped &amp;&amp; tok == stringDelimiter) { // Found an escaped string</span>
-<span class="nc" id="L106">                escaped = false;</span>
-<span class="nc bnc" id="L107" title="All 4 branches missed.">            } else if (tok == stringDelimiter &amp;&amp; token.length() &gt; 0) {</span>
+<span class="nc" id="L98">        boolean escaped = false;</span>
+<span class="nc" id="L99">        boolean done = false;</span>
+<span class="nc" id="L100">        char tok = ' '; // this will be replaced.</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">        while (loc &lt; currentLine.length() &amp;&amp; !done) {</span>
+<span class="nc" id="L102">            tok = currentLine.charAt(loc);</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">            if (escaped &amp;&amp; tok == stringDelimiter) { // Found an escaped string</span>
+<span class="nc" id="L104">                escaped = false;</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">            } else if (tok == stringDelimiter &amp;&amp; token.length() &gt; 0) {</span>
                 // We are done, we found the end of the string...
-<span class="nc" id="L109">                done = true;</span>
-<span class="nc bnc" id="L110" title="All 2 branches missed.">            } else if (tok == '\\') { // Found an escaped char</span>
-<span class="nc" id="L111">                escaped = true;</span>
+<span class="nc" id="L107">                done = true;</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            } else if (tok == '\\') { // Found an escaped char</span>
+<span class="nc" id="L109">                escaped = true;</span>
             } else { // Adding char...
-<span class="nc" id="L113">                escaped = false;</span>
+<span class="nc" id="L111">                escaped = false;</span>
             }
             // Adding char to String:&quot; + token.toString());
-<span class="nc" id="L116">            token.append(tok);</span>
-<span class="nc" id="L117">            loc++;</span>
+<span class="nc" id="L114">            token.append(tok);</span>
+<span class="nc" id="L115">            loc++;</span>
         }
         // Handling multiple lines string
-<span class="nc bnc" id="L120" title="All 8 branches missed.">        if (!done &amp;&amp; // ... we didn't find the end of the string</span>
+<span class="nc bnc" id="L118" title="All 8 branches missed.">        if (!done &amp;&amp; // ... we didn't find the end of the string</span>
                 loc &gt;= currentLine.length() &amp;&amp; // ... we have reach the end of
-                // the line ( the String is
-                // incomplete, for the moment at
-                // least)
+                                               // the line ( the String is
+                                               // incomplete, for the moment at
+                                               // least)
                 spanMultipleLinesString &amp;&amp; // ... the language allow multiple
-                // line span Strings
+                                           // line span Strings
                 lineNumber &lt; code.size() - 1 // ... there is still more lines to
-        // parse
+                                             // parse
         ) {
             // removes last character, if it is the line continuation (e.g.
             // backslash) character
-<span class="nc bnc" id="L132" title="All 6 branches missed.">            if (spanMultipleLinesLineContinuationCharacter != null &amp;&amp; token.length() &gt; 0</span>
+<span class="nc bnc" id="L130" title="All 6 branches missed.">            if (spanMultipleLinesLineContinuationCharacter != null &amp;&amp; token.length() &gt; 0</span>
                     &amp;&amp; token.charAt(token.length() - 1) == spanMultipleLinesLineContinuationCharacter.charValue()) {
-<span class="nc" id="L134">                token.deleteCharAt(token.length() - 1);</span>
+<span class="nc" id="L132">                token.deleteCharAt(token.length() - 1);</span>
             }
             // parsing new line
-<span class="nc" id="L137">            currentLine = code.get(++lineNumber);</span>
+<span class="nc" id="L135">            currentLine = code.get(++lineNumber);</span>
             // Warning : recursive call !
-<span class="nc" id="L139">            loc = parseString(token, 0, stringDelimiter);</span>
+<span class="nc" id="L137">            loc = parseString(token, 0, stringDelimiter);</span>
         }
-<span class="nc" id="L141">        return loc + 1;</span>
+<span class="nc" id="L139">        return loc + 1;</span>
     }
 
     private boolean ignoreCharacter(char tok) {
-<span class="fc" id="L145">        return ignorableCharacter.contains(String.valueOf(tok));</span>
+<span class="fc" id="L143">        return ignorableCharacter.contains(String.valueOf(tok));</span>
     }
 
     private boolean isString(char tok) {
-<span class="fc" id="L149">        return stringToken.contains(String.valueOf(tok));</span>
+<span class="fc" id="L147">        return stringToken.contains(String.valueOf(tok));</span>
     }
 
     private boolean isComment(char tok) {
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        return tok == oneLineCommentChar;</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">        return tok == oneLineCommentChar;</span>
     }
 
     private int getCommentToken(StringBuilder token, int loc) {
-<span class="nc bnc" id="L157" title="All 2 branches missed.">        while (loc &lt; currentLine.length()) {</span>
-<span class="nc" id="L158">            token.append(currentLine.charAt(loc++));</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        while (loc &lt; currentLine.length()) {</span>
+<span class="nc" id="L156">            token.append(currentLine.charAt(loc++));</span>
         }
-<span class="nc" id="L160">        return loc;</span>
+<span class="nc" id="L158">        return loc;</span>
     }
 
     private boolean isIgnorableString(String token) {
-<span class="fc" id="L164">        return ignorableStmt.contains(token);</span>
+<span class="fc" id="L162">        return ignorableStmt.contains(token);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

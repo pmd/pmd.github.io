@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TypeSignatureVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd.asm</a> &gt; <span class="el_source">TypeSignatureVisitor.java</span></div><h1>TypeSignatureVisitor.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.dcd.asm;
 
 import java.lang.reflect.Array;
@@ -32,7 +31,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
     private Class&lt;?&gt; type;
 
     // The number of dimensions on an array for the current Type.
-<span class="nc" id="L35">    private int arrayDimensions = 0;</span>
+<span class="nc" id="L34">    private int arrayDimensions = 0;</span>
 
     // Completed Field Type is stored here
     private Class&lt;?&gt; fieldType;
@@ -41,102 +40,102 @@ public class TypeSignatureVisitor extends SignatureVisitor {
     private Class&lt;?&gt; returnType;
 
     // Completed Parameter Types are stored here
-<span class="nc" id="L44">    private List&lt;Class&lt;?&gt;&gt; parameterTypes = new ArrayList&lt;&gt;(0);</span>
+<span class="nc" id="L43">    private List&lt;Class&lt;?&gt;&gt; parameterTypes = new ArrayList&lt;&gt;(0);</span>
 
     private final PrintVisitor p;
 
     public TypeSignatureVisitor() {
-<span class="nc" id="L49">        super(Opcodes.ASM5);</span>
-<span class="nc" id="L50">        p = new PrintVisitor();</span>
-<span class="nc" id="L51">        init();</span>
-<span class="nc" id="L52">    }</span>
+<span class="nc" id="L48">        super(Opcodes.ASM5);</span>
+<span class="nc" id="L49">        p = new PrintVisitor();</span>
+<span class="nc" id="L50">        init();</span>
+<span class="nc" id="L51">    }</span>
 
     public TypeSignatureVisitor(PrintVisitor parent) {
-<span class="nc" id="L55">        super(Opcodes.ASM5);</span>
-<span class="nc" id="L56">        p = new PrintVisitor(parent);</span>
-<span class="nc" id="L57">        init();</span>
-<span class="nc" id="L58">    }</span>
+<span class="nc" id="L54">        super(Opcodes.ASM5);</span>
+<span class="nc" id="L55">        p = new PrintVisitor(parent);</span>
+<span class="nc" id="L56">        init();</span>
+<span class="nc" id="L57">    }</span>
 
     protected void println(String s) {
-<span class="nc" id="L61">        p.println(s);</span>
-<span class="nc" id="L62">    }</span>
+<span class="nc" id="L60">        p.println(s);</span>
+<span class="nc" id="L61">    }</span>
 
     protected void printlnIndent(String s) {
-<span class="nc" id="L65">        p.printlnIndent(s);</span>
-<span class="nc" id="L66">    }</span>
+<span class="nc" id="L64">        p.printlnIndent(s);</span>
+<span class="nc" id="L65">    }</span>
 
     public void init() {
-<span class="nc" id="L69">        typeType = FIELD_TYPE;</span>
-<span class="nc" id="L70">        type = null;</span>
-<span class="nc" id="L71">        arrayDimensions = 0;</span>
-<span class="nc" id="L72">        parameterTypes.clear();</span>
-<span class="nc" id="L73">    }</span>
+<span class="nc" id="L68">        typeType = FIELD_TYPE;</span>
+<span class="nc" id="L69">        type = null;</span>
+<span class="nc" id="L70">        arrayDimensions = 0;</span>
+<span class="nc" id="L71">        parameterTypes.clear();</span>
+<span class="nc" id="L72">    }</span>
 
     public Class&lt;?&gt; getFieldType() {
-<span class="nc" id="L76">        popType();</span>
-<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (fieldType == null) {</span>
-<span class="nc" id="L78">            throw new RuntimeException();</span>
+<span class="nc" id="L75">        popType();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (fieldType == null) {</span>
+<span class="nc" id="L77">            throw new RuntimeException();</span>
         }
-<span class="nc" id="L80">        return fieldType;</span>
+<span class="nc" id="L79">        return fieldType;</span>
     }
 
     public Class&lt;?&gt; getMethodReturnType() {
-<span class="nc" id="L84">        popType();</span>
-<span class="nc bnc" id="L85" title="All 2 branches missed.">        if (returnType == null) {</span>
-<span class="nc" id="L86">            throw new RuntimeException();</span>
+<span class="nc" id="L83">        popType();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (returnType == null) {</span>
+<span class="nc" id="L85">            throw new RuntimeException();</span>
         }
-<span class="nc" id="L88">        return returnType;</span>
+<span class="nc" id="L87">        return returnType;</span>
     }
 
     public Class&lt;?&gt;[] getMethodParameterTypes() {
-<span class="nc" id="L92">        popType();</span>
-<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (parameterTypes == null) {</span>
-<span class="nc" id="L94">            throw new RuntimeException();</span>
+<span class="nc" id="L91">        popType();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (parameterTypes == null) {</span>
+<span class="nc" id="L93">            throw new RuntimeException();</span>
         }
-<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (parameterTypes != null) {</span>
-<span class="nc" id="L97">            return parameterTypes.toArray(new Class&lt;?&gt;[parameterTypes.size()]);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (parameterTypes != null) {</span>
+<span class="nc" id="L96">            return parameterTypes.toArray(new Class&lt;?&gt;[parameterTypes.size()]);</span>
         } else {
-<span class="nc" id="L99">            return null;</span>
+<span class="nc" id="L98">            return null;</span>
         }
     }
 
     private void pushType(int type) {
-<span class="nc" id="L104">        this.typeType = type;</span>
-<span class="nc" id="L105">    }</span>
+<span class="nc" id="L103">        this.typeType = type;</span>
+<span class="nc" id="L104">    }</span>
 
     private void popType() {
-<span class="nc bnc" id="L108" title="All 5 branches missed.">        switch (typeType) {</span>
-        case NO_TYPE:
-<span class="nc" id="L110">            break;</span>
-        case FIELD_TYPE:
-<span class="nc" id="L112">            fieldType = getType();</span>
-<span class="nc" id="L113">            break;</span>
-        case RETURN_TYPE:
-<span class="nc" id="L115">            returnType = getType();</span>
-<span class="nc" id="L116">            break;</span>
-        case PARAMETER_TYPE:
-<span class="nc" id="L118">            parameterTypes.add(getType());</span>
-<span class="nc" id="L119">            break;</span>
-        default:
-<span class="nc" id="L121">            throw new RuntimeException(&quot;Unknown type type: &quot; + typeType);</span>
+<span class="nc bnc" id="L107" title="All 5 branches missed.">        switch (typeType) {</span>
+            case NO_TYPE:
+<span class="nc" id="L109">                break;</span>
+            case FIELD_TYPE:
+<span class="nc" id="L111">                fieldType = getType();</span>
+<span class="nc" id="L112">                break;</span>
+            case RETURN_TYPE:
+<span class="nc" id="L114">                returnType = getType();</span>
+<span class="nc" id="L115">                break;</span>
+            case PARAMETER_TYPE:
+<span class="nc" id="L117">                parameterTypes.add(getType());</span>
+<span class="nc" id="L118">                break;</span>
+            default:
+<span class="nc" id="L120">                throw new RuntimeException(&quot;Unknown type type: &quot; + typeType);</span>
         }
 
-<span class="nc" id="L124">        typeType = NO_TYPE;</span>
-<span class="nc" id="L125">        type = null;</span>
-<span class="nc" id="L126">        arrayDimensions = 0;</span>
-<span class="nc" id="L127">    }</span>
+<span class="nc" id="L123">        typeType = NO_TYPE;</span>
+<span class="nc" id="L124">        type = null;</span>
+<span class="nc" id="L125">        arrayDimensions = 0;</span>
+<span class="nc" id="L126">    }</span>
 
     private Class&lt;?&gt; getType() {
-<span class="nc" id="L130">        Class&lt;?&gt; type = null;</span>
-<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (this.type != null) {</span>
-<span class="nc" id="L132">            type = this.type;</span>
-<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (int i = 0; i &lt; arrayDimensions; i++) {</span>
+<span class="nc" id="L129">        Class&lt;?&gt; type = null;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (this.type != null) {</span>
+<span class="nc" id="L131">            type = this.type;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            for (int i = 0; i &lt; arrayDimensions; i++) {</span>
                 // Is there another way to get Array Classes?
-<span class="nc" id="L135">                Object array = Array.newInstance(type, 0);</span>
-<span class="nc" id="L136">                type = array.getClass();</span>
+<span class="nc" id="L134">                Object array = Array.newInstance(type, 0);</span>
+<span class="nc" id="L135">                type = array.getClass();</span>
             }
         }
-<span class="nc" id="L139">        return type;</span>
+<span class="nc" id="L138">        return type;</span>
     }
 
     @Override
@@ -144,8 +143,8 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitArrayType:&quot;);
         }
-<span class="nc" id="L147">        arrayDimensions++;</span>
-<span class="nc" id="L148">        return this;</span>
+<span class="nc" id="L146">        arrayDimensions++;</span>
+<span class="nc" id="L147">        return this;</span>
     }
 
     @Override
@@ -154,45 +153,45 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitBaseType:&quot;);
             printlnIndent(&quot;descriptor: &quot; + descriptor);
         }
-<span class="nc bnc" id="L157" title="All 10 branches missed.">        switch (descriptor) {</span>
-        case 'B':
-<span class="nc" id="L159">            type = Byte.TYPE;</span>
-<span class="nc" id="L160">            break;</span>
-        case 'C':
-<span class="nc" id="L162">            type = Character.TYPE;</span>
-<span class="nc" id="L163">            break;</span>
-        case 'D':
-<span class="nc" id="L165">            type = Double.TYPE;</span>
-<span class="nc" id="L166">            break;</span>
-        case 'F':
-<span class="nc" id="L168">            type = Float.TYPE;</span>
-<span class="nc" id="L169">            break;</span>
-        case 'I':
-<span class="nc" id="L171">            type = Integer.TYPE;</span>
-<span class="nc" id="L172">            break;</span>
-        case 'J':
-<span class="nc" id="L174">            type = Long.TYPE;</span>
-<span class="nc" id="L175">            break;</span>
-        case 'S':
-<span class="nc" id="L177">            type = Short.TYPE;</span>
-<span class="nc" id="L178">            break;</span>
-        case 'Z':
-<span class="nc" id="L180">            type = Boolean.TYPE;</span>
-<span class="nc" id="L181">            break;</span>
-        case 'V':
-<span class="nc" id="L183">            type = Void.TYPE;</span>
-<span class="nc" id="L184">            break;</span>
-        default:
-<span class="nc" id="L186">            throw new RuntimeException(&quot;Unknown baseType descriptor: &quot; + descriptor);</span>
+<span class="nc bnc" id="L156" title="All 10 branches missed.">        switch (descriptor) {</span>
+            case 'B':
+<span class="nc" id="L158">                type = Byte.TYPE;</span>
+<span class="nc" id="L159">                break;</span>
+            case 'C':
+<span class="nc" id="L161">                type = Character.TYPE;</span>
+<span class="nc" id="L162">                break;</span>
+            case 'D':
+<span class="nc" id="L164">                type = Double.TYPE;</span>
+<span class="nc" id="L165">                break;</span>
+            case 'F':
+<span class="nc" id="L167">                type = Float.TYPE;</span>
+<span class="nc" id="L168">                break;</span>
+            case 'I':
+<span class="nc" id="L170">                type = Integer.TYPE;</span>
+<span class="nc" id="L171">                break;</span>
+            case 'J':
+<span class="nc" id="L173">                type = Long.TYPE;</span>
+<span class="nc" id="L174">                break;</span>
+            case 'S':
+<span class="nc" id="L176">                type = Short.TYPE;</span>
+<span class="nc" id="L177">                break;</span>
+            case 'Z':
+<span class="nc" id="L179">                type = Boolean.TYPE;</span>
+<span class="nc" id="L180">                break;</span>
+            case 'V':
+<span class="nc" id="L182">                type = Void.TYPE;</span>
+<span class="nc" id="L183">                break;</span>
+            default:
+<span class="nc" id="L185">                throw new RuntimeException(&quot;Unknown baseType descriptor: &quot; + descriptor);</span>
         }
-<span class="nc" id="L188">    }</span>
+<span class="nc" id="L187">    }</span>
 
     @Override
     public SignatureVisitor visitClassBound() {
         if (TRACE) {
             println(&quot;visitClassBound:&quot;);
         }
-<span class="nc" id="L195">        return this;</span>
+<span class="nc" id="L194">        return this;</span>
     }
 
     @Override
@@ -201,24 +200,24 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitClassType:&quot;);
             printlnIndent(&quot;name: &quot; + name);
         }
-<span class="nc" id="L204">        name = ClassLoaderUtil.fromInternalForm(name);</span>
-<span class="nc" id="L205">        this.type = ClassLoaderUtil.getClass(name);</span>
-<span class="nc" id="L206">    }</span>
+<span class="nc" id="L203">        name = ClassLoaderUtil.fromInternalForm(name);</span>
+<span class="nc" id="L204">        this.type = ClassLoaderUtil.getClass(name);</span>
+<span class="nc" id="L205">    }</span>
 
     @Override
     public void visitEnd() {
         if (TRACE) {
             println(&quot;visitEnd:&quot;);
         }
-<span class="nc" id="L213">        popType();</span>
-<span class="nc" id="L214">    }</span>
+<span class="nc" id="L212">        popType();</span>
+<span class="nc" id="L213">    }</span>
 
     @Override
     public SignatureVisitor visitExceptionType() {
         if (TRACE) {
             println(&quot;visitExceptionType:&quot;);
         }
-<span class="nc" id="L221">        return this;</span>
+<span class="nc" id="L220">        return this;</span>
     }
 
     @Override
@@ -227,7 +226,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitFormalTypeParameter:&quot;);
             printlnIndent(&quot;name: &quot; + name);
         }
-<span class="nc" id="L230">    }</span>
+<span class="nc" id="L229">    }</span>
 
     @Override
     public void visitInnerClassType(String name) {
@@ -235,14 +234,14 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitInnerClassType:&quot;);
             printlnIndent(&quot;name: &quot; + name);
         }
-<span class="nc" id="L238">    }</span>
+<span class="nc" id="L237">    }</span>
 
     @Override
     public SignatureVisitor visitInterface() {
         if (TRACE) {
             println(&quot;visitInterface:&quot;);
         }
-<span class="nc" id="L245">        return this;</span>
+<span class="nc" id="L244">        return this;</span>
     }
 
     @Override
@@ -250,7 +249,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitInterfaceBound:&quot;);
         }
-<span class="nc" id="L253">        return this;</span>
+<span class="nc" id="L252">        return this;</span>
     }
 
     @Override
@@ -258,9 +257,9 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitParameterType:&quot;);
         }
-<span class="nc" id="L261">        popType();</span>
-<span class="nc" id="L262">        pushType(PARAMETER_TYPE);</span>
-<span class="nc" id="L263">        return this;</span>
+<span class="nc" id="L260">        popType();</span>
+<span class="nc" id="L261">        pushType(PARAMETER_TYPE);</span>
+<span class="nc" id="L262">        return this;</span>
     }
 
     @Override
@@ -268,9 +267,9 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitReturnType:&quot;);
         }
-<span class="nc" id="L271">        popType();</span>
-<span class="nc" id="L272">        pushType(RETURN_TYPE);</span>
-<span class="nc" id="L273">        return this;</span>
+<span class="nc" id="L270">        popType();</span>
+<span class="nc" id="L271">        pushType(RETURN_TYPE);</span>
+<span class="nc" id="L272">        return this;</span>
     }
 
     @Override
@@ -278,7 +277,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitSuperclass:&quot;);
         }
-<span class="nc" id="L281">        return this;</span>
+<span class="nc" id="L280">        return this;</span>
     }
 
     @Override
@@ -286,7 +285,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
         if (TRACE) {
             println(&quot;visitTypeArgument:&quot;);
         }
-<span class="nc" id="L289">    }</span>
+<span class="nc" id="L288">    }</span>
 
     @Override
     public SignatureVisitor visitTypeArgument(char wildcard) {
@@ -294,7 +293,7 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitTypeArgument:&quot;);
             printlnIndent(&quot;wildcard: &quot; + wildcard);
         }
-<span class="nc" id="L297">        return this;</span>
+<span class="nc" id="L296">        return this;</span>
     }
 
     @Override
@@ -303,6 +302,6 @@ public class TypeSignatureVisitor extends SignatureVisitor {
             println(&quot;visitTypeVariable:&quot;);
             printlnIndent(&quot;name: &quot; + name);
         }
-<span class="nc" id="L306">    }</span>
+<span class="nc" id="L305">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

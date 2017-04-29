@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SignatureDeclareThrowsExceptionRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strictexception</a> &gt; <span class="el_source">SignatureDeclareThrowsExceptionRule.java</span></div><h1>SignatureDeclareThrowsExceptionRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.java.rule.strictexception;
 
 import java.util.Collections;
@@ -17,8 +16,9 @@ import net.sourceforge.pmd.lang.java.ast.ASTNameList;
 import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 
 /**
+ * &lt;p/&gt;
  *
- * @author &lt;a href=&quot;mailto:trondandersen@c2i.net&quot;&gt;Trond Andersen&lt;/a&gt;
+ * @author &lt;a mailto:trondandersen@c2i.net&gt;Trond Andersen&lt;/a&gt;
  * @version 1.0
  * @since 1.2
  */
@@ -43,25 +43,25 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
 
     @Override
     public Object visit(ASTMethodDeclaration methodDeclaration, Object o) {
-<span class="fc bfc" id="L46" title="All 6 branches covered.">        if ((methodDeclaration.getMethodName().equals(&quot;setUp&quot;) || methodDeclaration.getMethodName().equals(&quot;tearDown&quot;))</span>
-                &amp;&amp; junitImported) {
-<span class="fc" id="L48">            return super.visit(methodDeclaration, o);</span>
+<span class="fc bfc" id="L46" title="All 6 branches covered.">        if ((methodDeclaration.getMethodName().equals(&quot;setUp&quot;) || methodDeclaration.getMethodName().equals(&quot;tearDown&quot;)) &amp;&amp; junitImported) {</span>
+<span class="fc" id="L47">            return super.visit(methodDeclaration, o);</span>
         }
 
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (methodDeclaration.getMethodName().startsWith(&quot;test&quot;)) {</span>
-<span class="fc" id="L52">            return super.visit(methodDeclaration, o);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (methodDeclaration.getMethodName().startsWith(&quot;test&quot;)) {</span>
+<span class="fc" id="L51">            return super.visit(methodDeclaration, o);</span>
         }
 
-<span class="fc" id="L55">        List&lt;ASTName&gt; exceptionList = Collections.emptyList();</span>
-<span class="fc" id="L56">        ASTNameList nameList = methodDeclaration.getFirstChildOfType(ASTNameList.class);</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (nameList != null) {</span>
-<span class="fc" id="L58">            exceptionList = nameList.findDescendantsOfType(ASTName.class);</span>
+<span class="fc" id="L54">        List&lt;ASTName&gt; exceptionList = Collections.emptyList();</span>
+<span class="fc" id="L55">        ASTNameList nameList = methodDeclaration.getFirstChildOfType(ASTNameList.class);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (nameList != null) {</span>
+<span class="fc" id="L57">            exceptionList = nameList.findDescendantsOfType(ASTName.class);</span>
         }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
-<span class="fc" id="L61">            evaluateExceptions(exceptionList, o);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
+<span class="fc" id="L60">            evaluateExceptions(exceptionList, o);</span>
         }
-<span class="fc" id="L63">        return super.visit(methodDeclaration, o);</span>
+<span class="fc" id="L62">        return super.visit(methodDeclaration, o);</span>
     }
+
 
     @Override
     public Object visit(ASTConstructorDeclaration constructorDeclaration, Object o) {
@@ -73,44 +73,39 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
     }
 
     /**
-     * Checks all exceptions for possible violation on the exception
-     * declaration.
+     * Checks all exceptions for possible violation on the exception declaration.
      *
-     * @param exceptionList
-     *            containing all exception for declaration
+     * @param exceptionList containing all exception for declaration
      * @param context
      */
     private void evaluateExceptions(List&lt;ASTName&gt; exceptionList, Object context) {
-<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (ASTName exception : exceptionList) {</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (hasDeclaredExceptionInSignature(exception)) {</span>
-<span class="fc" id="L86">                addViolation(context, exception);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        for (ASTName exception: exceptionList) {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            if (hasDeclaredExceptionInSignature(exception)) {</span>
+<span class="fc" id="L84">                addViolation(context, exception);</span>
             }
-<span class="fc" id="L88">        }</span>
-<span class="fc" id="L89">    }</span>
+<span class="fc" id="L86">        }</span>
+<span class="fc" id="L87">    }</span>
 
     /**
-     * Checks if the given value is defined as &lt;code&gt;Exception&lt;/code&gt; and the
-     * parent is either a method or constructor declaration.
+     * Checks if the given value is defined as &lt;code&gt;Exception&lt;/code&gt; and the parent is either
+     * a method or constructor declaration.
      *
-     * @param exception
-     *            to evaluate
+     * @param exception to evaluate
      * @return true if &lt;code&gt;Exception&lt;/code&gt; is declared and has proper parents
      */
     private boolean hasDeclaredExceptionInSignature(ASTName exception) {
-<span class="pc bpc" id="L100" title="1 of 4 branches missed.">        return exception.hasImageEqualTo(&quot;Exception&quot;) &amp;&amp; isParentSignatureDeclaration(exception);</span>
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">        return exception.hasImageEqualTo(&quot;Exception&quot;) &amp;&amp; isParentSignatureDeclaration(exception);</span>
     }
 
     /**
      * Checks if the given exception is declared in the method or constructor
      * signature.
-     * 
-     * @param exception
-     *            to evaluate
+     * @param exception to evaluate
      * @return true if parent node is either a method or constructor declaration
      */
     private boolean isParentSignatureDeclaration(ASTName exception) {
-<span class="fc" id="L112">        Node parent = exception.jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        return parent instanceof ASTMethodDeclaration || parent instanceof ASTConstructorDeclaration;</span>
+<span class="fc" id="L107">        Node parent = exception.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L108" title="1 of 4 branches missed.">        return parent instanceof ASTMethodDeclaration || parent instanceof ASTConstructorDeclaration;</span>
     }
 
 }

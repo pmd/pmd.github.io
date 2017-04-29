@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexRuleChainVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule</a> &gt; <span class="el_source">ApexRuleChainVisitor.java</span></div><h1>ApexRuleChainVisitor.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.apex.rule;
 
 import java.util.Collections;
@@ -10,35 +9,35 @@ import java.util.Stack;
 
 import net.sourceforge.pmd.Rule;
 import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.apex.ast.ApexNode;
 import net.sourceforge.pmd.lang.apex.ast.ApexParserVisitor;
-import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.rule.AbstractRuleChainVisitor;
 import net.sourceforge.pmd.lang.rule.XPathRule;
 
-<span class="fc" id="L19">public class ApexRuleChainVisitor extends AbstractRuleChainVisitor {</span>
+<span class="fc" id="L18">public class ApexRuleChainVisitor extends AbstractRuleChainVisitor {</span>
 
-    protected void indexNodes(List&lt;Node&gt; nodes, RuleContext ctx) {
-<span class="fc" id="L22">        Stack&lt;Node&gt; stack = new Stack&lt;&gt;();</span>
-<span class="fc" id="L23">        stack.addAll(nodes);</span>
-<span class="fc" id="L24">        Collections.reverse(stack);</span>
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        while (!stack.isEmpty()) {</span>
-<span class="fc" id="L26">            Node node = stack.pop();</span>
-<span class="fc" id="L27">            indexNode(node);</span>
-<span class="fc bfc" id="L28" title="All 2 branches covered.">            if (node.jjtGetNumChildren() &gt; 0) {</span>
-<span class="fc bfc" id="L29" title="All 2 branches covered.">                for (int i = node.jjtGetNumChildren() - 1; i &gt;= 0; i--) {</span>
-<span class="fc" id="L30">                    stack.push(node.jjtGetChild(i));</span>
-                }
-            }
-<span class="fc" id="L33">        }</span>
-<span class="fc" id="L34">    }</span>
+	protected void indexNodes(List&lt;Node&gt; nodes, RuleContext ctx) {
+<span class="fc" id="L21">		Stack&lt;Node&gt; stack = new Stack&lt;&gt;();</span>
+<span class="fc" id="L22">		stack.addAll(nodes);</span>
+<span class="fc" id="L23">		Collections.reverse(stack);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">		while (!stack.isEmpty()) {</span>
+<span class="fc" id="L25">			Node node = stack.pop();</span>
+<span class="fc" id="L26">			indexNode(node);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">			if (node.jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">				for (int i = node.jjtGetNumChildren() - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L29">					stack.push(node.jjtGetChild(i));</span>
+				}
+			}
+<span class="fc" id="L32">		}</span>
+<span class="fc" id="L33">	}</span>
 
-    protected void visit(Rule rule, Node node, RuleContext ctx) {
-<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (rule instanceof XPathRule) {</span>
-<span class="fc" id="L38">            ((XPathRule) rule).evaluate(node, ctx);</span>
-        } else {
-<span class="fc" id="L40">            ((ApexNode&lt;?&gt;) node).jjtAccept((ApexParserVisitor) rule, ctx);</span>
-        }
-<span class="fc" id="L42">    }</span>
+	protected void visit(Rule rule, Node node, RuleContext ctx) {
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">		if (rule instanceof XPathRule) {</span>
+<span class="nc" id="L37">			((XPathRule) rule).evaluate(node, ctx);</span>
+		} else {
+<span class="fc" id="L39">			((ApexNode&lt;?&gt;) node).jjtAccept((ApexParserVisitor) rule, ctx);</span>
+		}
+<span class="fc" id="L41">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

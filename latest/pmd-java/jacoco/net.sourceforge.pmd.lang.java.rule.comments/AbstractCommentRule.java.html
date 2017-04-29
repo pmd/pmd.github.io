@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractCommentRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.comments</a> &gt; <span class="el_source">AbstractCommentRule.java</span></div><h1>AbstractCommentRule.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.java.rule.comments;
 
 import java.util.ArrayList;
@@ -34,198 +33,198 @@ import net.sourceforge.pmd.util.StringUtil;
  */
 public abstract class AbstractCommentRule extends AbstractJavaRule {
 
-<span class="fc" id="L37">    protected AbstractCommentRule() {</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L36">    protected AbstractCommentRule() {</span>
+<span class="fc" id="L37">    }</span>
 
     protected List&lt;Integer&gt; tagsIndicesIn(String comments) {
 
-<span class="nc" id="L42">        int atPos = comments.indexOf('@');</span>
-<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (atPos &lt; 0) {</span>
-<span class="nc" id="L44">            return Collections.emptyList();</span>
+<span class="nc" id="L41">        int atPos = comments.indexOf('@');</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (atPos &lt; 0) {</span>
+<span class="nc" id="L43">            return Collections.emptyList();</span>
         }
 
-<span class="nc" id="L47">        List&lt;Integer&gt; ints = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L48">        ints.add(atPos);</span>
+<span class="nc" id="L46">        List&lt;Integer&gt; ints = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L47">        ints.add(atPos);</span>
 
-<span class="nc" id="L50">        atPos = comments.indexOf('@', atPos + 1);</span>
-<span class="nc bnc" id="L51" title="All 2 branches missed.">        while (atPos &gt;= 0) {</span>
-<span class="nc" id="L52">            ints.add(atPos);</span>
-<span class="nc" id="L53">            atPos = comments.indexOf('@', atPos + 1);</span>
+<span class="nc" id="L49">        atPos = comments.indexOf('@', atPos + 1);</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        while (atPos &gt;= 0) {</span>
+<span class="nc" id="L51">            ints.add(atPos);</span>
+<span class="nc" id="L52">            atPos = comments.indexOf('@', atPos + 1);</span>
         }
 
-<span class="nc" id="L56">        return ints;</span>
+<span class="nc" id="L55">        return ints;</span>
     }
 
     protected String filteredCommentIn(Comment comment) {
 
-<span class="fc" id="L61">        String trimmed = comment.getImage().trim();</span>
+<span class="fc" id="L60">        String trimmed = comment.getImage().trim();</span>
 
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (comment instanceof SingleLineComment) {</span>
-<span class="fc" id="L64">            return singleLineIn(trimmed);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (comment instanceof SingleLineComment) {</span>
+<span class="fc" id="L63">            return singleLineIn(trimmed);</span>
         }
-<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (comment instanceof MultiLineComment) {</span>
-<span class="fc" id="L67">            return multiLinesIn(trimmed);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (comment instanceof MultiLineComment) {</span>
+<span class="fc" id="L66">            return multiLinesIn(trimmed);</span>
         }
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (comment instanceof FormalComment) {</span>
-<span class="fc" id="L70">            return formalLinesIn(trimmed);</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (comment instanceof FormalComment) {</span>
+<span class="fc" id="L69">            return formalLinesIn(trimmed);</span>
         }
 
-<span class="nc" id="L73">        return trimmed; // should never reach here</span>
+<span class="nc" id="L72">        return trimmed; // should never reach here</span>
     }
 
     private String singleLineIn(String comment) {
 
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (comment.startsWith(&quot;//&quot;)) {</span>
-<span class="fc" id="L79">            return comment.substring(2);</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (comment.startsWith(&quot;//&quot;)) {</span>
+<span class="fc" id="L78">            return comment.substring(2);</span>
         }
 
-<span class="nc" id="L82">        return comment;</span>
+<span class="nc" id="L81">        return comment;</span>
     }
 
     private static String asSingleString(List&lt;String&gt; lines) {
 
-<span class="fc" id="L87">        StringBuilder sb = new StringBuilder();</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (String line : lines) {</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (StringUtil.isEmpty(line)) {</span>
-<span class="fc" id="L90">                continue;</span>
+<span class="fc" id="L86">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (StringUtil.isEmpty(line)) {</span>
+<span class="fc" id="L89">                continue;</span>
             }
-<span class="fc" id="L92">            sb.append(line).append('\n');</span>
-<span class="fc" id="L93">        }</span>
+<span class="fc" id="L91">            sb.append(line).append('\n');</span>
+<span class="fc" id="L92">        }</span>
 
-<span class="fc" id="L95">        return sb.toString().trim();</span>
+<span class="fc" id="L94">        return sb.toString().trim();</span>
     }
 
     private static String multiLinesIn(String comment) {
 
-<span class="fc" id="L100">        String[] lines = comment.split(&quot;\n&quot;);</span>
-<span class="fc" id="L101">        List&lt;String&gt; filteredLines = new ArrayList&lt;&gt;(lines.length);</span>
+<span class="fc" id="L99">        String[] lines = comment.split(&quot;\n&quot;);</span>
+<span class="fc" id="L100">        List&lt;String&gt; filteredLines = new ArrayList&lt;&gt;(lines.length);</span>
 
-<span class="fc bfc" id="L103" title="All 2 branches covered.">        for (String rawLine : lines) {</span>
-<span class="fc" id="L104">            String line = rawLine.trim();</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (String rawLine : lines) {</span>
+<span class="fc" id="L103">            String line = rawLine.trim();</span>
 
-<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (line.endsWith(&quot;*/&quot;)) {</span>
-<span class="fc" id="L107">                int end = line.length() - 2;</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">                int start = line.startsWith(&quot;/*&quot;) ? 2 : 0;</span>
-<span class="fc" id="L109">                filteredLines.add(line.substring(start, end));</span>
-<span class="fc" id="L110">                continue;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (line.endsWith(&quot;*/&quot;)) {</span>
+<span class="fc" id="L106">                int end = line.length() - 2;</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                int start = line.startsWith(&quot;/*&quot;) ? 2 : 0;</span>
+<span class="fc" id="L108">                filteredLines.add(line.substring(start, end));</span>
+<span class="fc" id="L109">                continue;</span>
             }
 
-<span class="fc bfc" id="L113" title="All 4 branches covered.">            if (line.length() &gt; 0 &amp;&amp; line.charAt(0) == '*') {</span>
-<span class="fc" id="L114">                filteredLines.add(line.substring(1));</span>
-<span class="fc" id="L115">                continue;</span>
+<span class="fc bfc" id="L112" title="All 4 branches covered.">            if (line.length() &gt; 0 &amp;&amp; line.charAt(0) == '*') {</span>
+<span class="fc" id="L113">                filteredLines.add(line.substring(1));</span>
+<span class="fc" id="L114">                continue;</span>
             }
 
-<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (line.startsWith(&quot;/*&quot;)) {</span>
-<span class="fc" id="L119">                filteredLines.add(line.substring(2));</span>
-<span class="fc" id="L120">                continue;</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (line.startsWith(&quot;/*&quot;)) {</span>
+<span class="fc" id="L118">                filteredLines.add(line.substring(2));</span>
+<span class="fc" id="L119">                continue;</span>
             }
 
         }
 
-<span class="fc" id="L125">        return asSingleString(filteredLines);</span>
+<span class="fc" id="L124">        return asSingleString(filteredLines);</span>
     }
 
     private String formalLinesIn(String comment) {
 
-<span class="fc" id="L130">        String[] lines = comment.split(&quot;\n&quot;);</span>
-<span class="fc" id="L131">        List&lt;String&gt; filteredLines = new ArrayList&lt;&gt;(lines.length);</span>
+<span class="fc" id="L129">        String[] lines = comment.split(&quot;\n&quot;);</span>
+<span class="fc" id="L130">        List&lt;String&gt; filteredLines = new ArrayList&lt;&gt;(lines.length);</span>
 
-<span class="fc bfc" id="L133" title="All 2 branches covered.">        for (String origLine : lines) {</span>
-<span class="fc" id="L134">            String line = origLine.trim();</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        for (String line : lines) {</span>
+<span class="fc" id="L133">            line = line.trim();</span>
 
-<span class="fc bfc" id="L136" title="All 2 branches covered.">            if (line.endsWith(&quot;*/&quot;)) {</span>
-<span class="fc" id="L137">                filteredLines.add(line.substring(0, line.length() - 2));</span>
-<span class="fc" id="L138">                continue;</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            if (line.endsWith(&quot;*/&quot;)) {</span>
+<span class="fc" id="L136">                filteredLines.add(line.substring(0, line.length() - 2));</span>
+<span class="fc" id="L137">                continue;</span>
             }
 
-<span class="fc bfc" id="L141" title="All 4 branches covered.">            if (line.length() &gt; 0 &amp;&amp; line.charAt(0) == '*') {</span>
-<span class="fc" id="L142">                filteredLines.add(line.substring(1));</span>
-<span class="fc" id="L143">                continue;</span>
+<span class="fc bfc" id="L140" title="All 4 branches covered.">            if (line.length() &gt; 0 &amp;&amp; line.charAt(0) == '*') {</span>
+<span class="fc" id="L141">                filteredLines.add(line.substring(1));</span>
+<span class="fc" id="L142">                continue;</span>
             }
-<span class="fc bfc" id="L145" title="All 2 branches covered.">            if (line.startsWith(&quot;/**&quot;)) {</span>
-<span class="fc" id="L146">                filteredLines.add(line.substring(3));</span>
-<span class="fc" id="L147">                continue;</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            if (line.startsWith(&quot;/**&quot;)) {</span>
+<span class="fc" id="L145">                filteredLines.add(line.substring(3));</span>
+<span class="fc" id="L146">                continue;</span>
             }
 
         }
 
-<span class="fc" id="L152">        return asSingleString(filteredLines);</span>
+<span class="fc" id="L151">        return asSingleString(filteredLines);</span>
     }
 
     protected void assignCommentsToDeclarations(ASTCompilationUnit cUnit) {
 
-<span class="fc" id="L157">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = orderedCommentsAndDeclarations(cUnit);</span>
-<span class="fc" id="L158">        FormalComment lastComment = null;</span>
-<span class="fc" id="L159">        AbstractJavaAccessNode lastNode = null;</span>
+<span class="fc" id="L156">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = orderedCommentsAndDeclarations(cUnit);</span>
+<span class="fc" id="L157">        FormalComment lastComment = null;</span>
+<span class="fc" id="L158">        AbstractJavaAccessNode lastNode = null;</span>
 
-<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (Entry&lt;Integer, Node&gt; entry : itemsByLineNumber.entrySet()) {</span>
-<span class="fc" id="L162">            Node value = entry.getValue();</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (Entry&lt;Integer, Node&gt; entry : itemsByLineNumber.entrySet()) {</span>
+<span class="fc" id="L161">            Node value = entry.getValue();</span>
 
-<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (value instanceof AbstractJavaAccessNode) {</span>
-<span class="fc" id="L165">                AbstractJavaAccessNode node = (AbstractJavaAccessNode) value;</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            if (value instanceof AbstractJavaAccessNode) {</span>
+<span class="fc" id="L164">                AbstractJavaAccessNode node = (AbstractJavaAccessNode) value;</span>
 
                 // maybe the last comment is within the last node
-<span class="pc bpc" id="L168" title="1 of 6 branches missed.">                if (lastComment != null &amp;&amp; isCommentNotWithin(lastComment, lastNode, node)</span>
+<span class="pc bpc" id="L167" title="1 of 6 branches missed.">                if (lastComment != null &amp;&amp; isCommentNotWithin(lastComment, lastNode, node)</span>
                         &amp;&amp; isCommentBefore(lastComment, node)) {
-<span class="fc" id="L170">                    node.comment(lastComment);</span>
-<span class="fc" id="L171">                    lastComment = null;</span>
+<span class="fc" id="L169">                    node.comment(lastComment);</span>
+<span class="fc" id="L170">                    lastComment = null;</span>
                 }
-<span class="fc bfc" id="L173" title="All 2 branches covered.">                if (!(node instanceof AbstractJavaAccessTypeNode)) {</span>
-<span class="fc" id="L174">                    lastNode = node;</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">                if (!(node instanceof AbstractJavaAccessTypeNode)) {</span>
+<span class="fc" id="L173">                    lastNode = node;</span>
                 }
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            } else if (value instanceof FormalComment) {</span>
-<span class="fc" id="L177">                lastComment = (FormalComment) value;</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            } else if (value instanceof FormalComment) {</span>
+<span class="fc" id="L176">                lastComment = (FormalComment) value;</span>
             }
-<span class="fc" id="L179">        }</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L178">        }</span>
+<span class="fc" id="L179">    }</span>
 
     private boolean isCommentNotWithin(FormalComment n1, Node n2, Node node) {
-<span class="pc bpc" id="L183" title="2 of 6 branches missed.">        if (n1 == null || n2 == null || node == null) {</span>
-<span class="fc" id="L184">            return true;</span>
+<span class="pc bpc" id="L182" title="2 of 6 branches missed.">        if (n1 == null || n2 == null || node == null) {</span>
+<span class="fc" id="L183">            return true;</span>
         }
-<span class="pc bpc" id="L186" title="1 of 6 branches missed.">        boolean isNotWithinNode2 = !(n1.getEndLine() &lt; n2.getEndLine()</span>
-                || n1.getEndLine() == n2.getEndLine() &amp;&amp; n1.getEndColumn() &lt; n2.getEndColumn());
-<span class="fc bfc" id="L188" title="All 2 branches covered.">        boolean isNotSameClass = node.getFirstParentOfType(ASTClassOrInterfaceBody.class) != n2</span>
+<span class="pc bpc" id="L185" title="1 of 6 branches missed.">        boolean isNotWithinNode2 = !(n1.getEndLine() &lt; n2.getEndLine() || n1.getEndLine() == n2.getEndLine()</span>
+                &amp;&amp; n1.getEndColumn() &lt; n2.getEndColumn());
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        boolean isNotSameClass = node.getFirstParentOfType(ASTClassOrInterfaceBody.class) != n2</span>
                 .getFirstParentOfType(ASTClassOrInterfaceBody.class);
-<span class="pc bpc" id="L190" title="1 of 6 branches missed.">        boolean isNodeWithinNode2 = (node.getEndLine() &lt; n2.getEndLine()</span>
-                || node.getEndLine() == n2.getEndLine() &amp;&amp; node.getEndColumn() &lt; n2.getEndColumn());
-<span class="fc bfc" id="L192" title="All 6 branches covered.">        return isNotWithinNode2 || isNotSameClass || isNodeWithinNode2;</span>
+<span class="pc bpc" id="L189" title="1 of 6 branches missed.">        boolean isNodeWithinNode2 = (node.getEndLine() &lt; n2.getEndLine() || node.getEndLine() == n2.getEndLine()</span>
+                &amp;&amp; node.getEndColumn() &lt; n2.getEndColumn());
+<span class="fc bfc" id="L191" title="All 6 branches covered.">        return isNotWithinNode2 || isNotSameClass || isNodeWithinNode2;</span>
     }
 
     private boolean isCommentBefore(FormalComment n1, Node n2) {
-<span class="pc bpc" id="L196" title="2 of 6 branches missed.">        return n1.getEndLine() &lt; n2.getBeginLine()</span>
-                || n1.getEndLine() == n2.getBeginLine() &amp;&amp; n1.getEndColumn() &lt; n2.getBeginColumn();
+<span class="pc bpc" id="L195" title="2 of 6 branches missed.">        return n1.getEndLine() &lt; n2.getBeginLine() || n1.getEndLine() == n2.getBeginLine()</span>
+                &amp;&amp; n1.getEndColumn() &lt; n2.getBeginColumn();
     }
 
     protected SortedMap&lt;Integer, Node&gt; orderedCommentsAndDeclarations(ASTCompilationUnit cUnit) {
 
-<span class="fc" id="L202">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L201">        SortedMap&lt;Integer, Node&gt; itemsByLineNumber = new TreeMap&lt;&gt;();</span>
 
-<span class="fc" id="L204">        List&lt;ASTClassOrInterfaceDeclaration&gt; packageDecl = cUnit</span>
+<span class="fc" id="L203">        List&lt;ASTClassOrInterfaceDeclaration&gt; packageDecl = cUnit</span>
                 .findDescendantsOfType(ASTClassOrInterfaceDeclaration.class);
-<span class="fc" id="L206">        addDeclarations(itemsByLineNumber, packageDecl);</span>
+<span class="fc" id="L205">        addDeclarations(itemsByLineNumber, packageDecl);</span>
 
-<span class="fc" id="L208">        addDeclarations(itemsByLineNumber, cUnit.getComments());</span>
+<span class="fc" id="L207">        addDeclarations(itemsByLineNumber, cUnit.getComments());</span>
 
-<span class="fc" id="L210">        List&lt;ASTFieldDeclaration&gt; fields = cUnit.findDescendantsOfType(ASTFieldDeclaration.class);</span>
-<span class="fc" id="L211">        addDeclarations(itemsByLineNumber, fields);</span>
+<span class="fc" id="L209">        List&lt;ASTFieldDeclaration&gt; fields = cUnit.findDescendantsOfType(ASTFieldDeclaration.class);</span>
+<span class="fc" id="L210">        addDeclarations(itemsByLineNumber, fields);</span>
 
-<span class="fc" id="L213">        List&lt;ASTMethodDeclaration&gt; methods = cUnit.findDescendantsOfType(ASTMethodDeclaration.class);</span>
-<span class="fc" id="L214">        addDeclarations(itemsByLineNumber, methods);</span>
+<span class="fc" id="L212">        List&lt;ASTMethodDeclaration&gt; methods = cUnit.findDescendantsOfType(ASTMethodDeclaration.class);</span>
+<span class="fc" id="L213">        addDeclarations(itemsByLineNumber, methods);</span>
 
-<span class="fc" id="L216">        List&lt;ASTConstructorDeclaration&gt; constructors = cUnit.findDescendantsOfType(ASTConstructorDeclaration.class);</span>
-<span class="fc" id="L217">        addDeclarations(itemsByLineNumber, constructors);</span>
+<span class="fc" id="L215">        List&lt;ASTConstructorDeclaration&gt; constructors = cUnit.findDescendantsOfType(ASTConstructorDeclaration.class);</span>
+<span class="fc" id="L216">        addDeclarations(itemsByLineNumber, constructors);</span>
 
-<span class="fc" id="L219">        List&lt;ASTEnumDeclaration&gt; enumDecl = cUnit.findDescendantsOfType(ASTEnumDeclaration.class);</span>
-<span class="fc" id="L220">        addDeclarations(itemsByLineNumber, enumDecl);</span>
+<span class="fc" id="L218">        List&lt;ASTEnumDeclaration&gt; enumDecl = cUnit.findDescendantsOfType(ASTEnumDeclaration.class);</span>
+<span class="fc" id="L219">        addDeclarations(itemsByLineNumber, enumDecl);</span>
 
-<span class="fc" id="L222">        return itemsByLineNumber;</span>
+<span class="fc" id="L221">        return itemsByLineNumber;</span>
     }
 
     private void addDeclarations(SortedMap&lt;Integer, Node&gt; map, List&lt;? extends Node&gt; nodes) {
-<span class="fc bfc" id="L226" title="All 2 branches covered.">        for (Node node : nodes) {</span>
-<span class="fc" id="L227">            map.put((node.getBeginLine() &lt;&lt; 16) + node.getBeginColumn(), node);</span>
-<span class="fc" id="L228">        }</span>
-<span class="fc" id="L229">    }</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        for (Node node : nodes) {</span>
+<span class="fc" id="L226">            map.put((node.getBeginLine() &lt;&lt; 16) + node.getBeginColumn(), node);</span>
+<span class="fc" id="L227">        }</span>
+<span class="fc" id="L228">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

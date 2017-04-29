@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CreateXMLRulePanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util.designer</a> &gt; <span class="el_source">CreateXMLRulePanel.java</span></div><h1>CreateXMLRulePanel.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.util.designer;
 
 import java.awt.GridBagConstraints;
@@ -20,104 +19,105 @@ import net.sourceforge.pmd.PMD;
 import net.sourceforge.pmd.util.StringUtil;
 
 /**
- * This class is responsible for creating the contentpanel for the Create Rule
- * XML Frame.
+ * This class is responsible for creating the
+ * contentpanel for the Create Rule XML Frame.
  */
-public class CreateXMLRulePanel extends JPanel implements ActionListener {
+public class CreateXMLRulePanel extends JPanel implements ActionListener{
 
-<span class="nc" id="L28">    private JTextField rulenameField = new JTextField(30);</span>
-<span class="nc" id="L29">    private JTextField rulemsgField = new JTextField(30);</span>
-<span class="nc" id="L30">    private JTextArea ruledescField = new JTextArea(5, 30);</span>
-<span class="nc" id="L31">    private JTextArea ruleXMLArea = new JTextArea(30, 30);</span>
-<span class="nc" id="L32">    private JTextArea xpathQueryArea = new JTextArea();</span>
-<span class="nc" id="L33">    private CodeEditorTextPane codeEditorPane = new CodeEditorTextPane();</span>
+<span class="nc" id="L27">    private JTextField rulenameField = new JTextField(30);</span>
+<span class="nc" id="L28">    private JTextField rulemsgField = new JTextField(30);</span>
+<span class="nc" id="L29">    private JTextArea ruledescField = new JTextArea(5,30);</span>
+<span class="nc" id="L30">    private JTextArea ruleXMLArea = new JTextArea(30, 30);</span>
+<span class="nc" id="L31">    private JTextArea xpathQueryArea = new JTextArea();</span>
+<span class="nc" id="L32">    private CodeEditorTextPane codeEditorPane = new CodeEditorTextPane();</span>
+    
+    public CreateXMLRulePanel(JTextArea xpathQueryArea, CodeEditorTextPane codeEditorPane){
+<span class="nc" id="L35">    	super();</span>
+<span class="nc" id="L36">    	this.xpathQueryArea = xpathQueryArea;</span>
+<span class="nc" id="L37">    	this.codeEditorPane = codeEditorPane;</span>
+<span class="nc" id="L38">    	GridBagConstraints gbc = new GridBagConstraints();</span>
+    	// We use a gridbaglayout for a nice and sturdy look and feel
+<span class="nc" id="L40">    	GridBagLayout gbl = new GridBagLayout();</span>
+<span class="nc" id="L41">        setLayout(gbl);</span>
 
-    public CreateXMLRulePanel(JTextArea xpathQueryArea, CodeEditorTextPane codeEditorPane) {
-<span class="nc" id="L36">        super();</span>
-<span class="nc" id="L37">        this.xpathQueryArea = xpathQueryArea;</span>
-<span class="nc" id="L38">        this.codeEditorPane = codeEditorPane;</span>
-<span class="nc" id="L39">        GridBagConstraints gbc = new GridBagConstraints();</span>
-        // We use a gridbaglayout for a nice and sturdy look and feel
-<span class="nc" id="L41">        GridBagLayout gbl = new GridBagLayout();</span>
-<span class="nc" id="L42">        setLayout(gbl);</span>
+<span class="nc" id="L43">        gbc.gridx = 0;</span>
+<span class="nc" id="L44">        gbc.gridy = 0;</span>
+<span class="nc" id="L45">        gbc.fill = GridBagConstraints.NONE;</span>
+<span class="nc" id="L46">        gbc.anchor = GridBagConstraints.EAST;</span>
+<span class="nc" id="L47">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L48">        JLabel rulenameLabel = new JLabel(&quot;Rule name : &quot;);</span>
+<span class="nc" id="L49">        gbl.setConstraints(rulenameLabel, gbc);</span>
+<span class="nc" id="L50">        add(rulenameLabel);</span>
+<span class="nc" id="L51">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L52">        gbc.anchor = GridBagConstraints.WEST;</span>
+<span class="nc" id="L53">        gbc.gridx = 1;</span>
+<span class="nc" id="L54">        gbl.setConstraints(rulenameField, gbc);</span>
+<span class="nc" id="L55">        add(rulenameField);</span>
 
-<span class="nc" id="L44">        gbc.gridx = 0;</span>
-<span class="nc" id="L45">        gbc.gridy = 0;</span>
-<span class="nc" id="L46">        gbc.fill = GridBagConstraints.NONE;</span>
-<span class="nc" id="L47">        gbc.anchor = GridBagConstraints.EAST;</span>
-<span class="nc" id="L48">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L49">        JLabel rulenameLabel = new JLabel(&quot;Rule name : &quot;);</span>
-<span class="nc" id="L50">        gbl.setConstraints(rulenameLabel, gbc);</span>
-<span class="nc" id="L51">        add(rulenameLabel);</span>
-<span class="nc" id="L52">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L53">        gbc.anchor = GridBagConstraints.WEST;</span>
-<span class="nc" id="L54">        gbc.gridx = 1;</span>
-<span class="nc" id="L55">        gbl.setConstraints(rulenameField, gbc);</span>
-<span class="nc" id="L56">        add(rulenameField);</span>
+<span class="nc" id="L57">        gbc.gridx = 0;</span>
+<span class="nc" id="L58">        gbc.gridy = 1;</span>
+<span class="nc" id="L59">        gbc.anchor = GridBagConstraints.EAST;</span>
+<span class="nc" id="L60">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L61">        JLabel rulemsgLabel = new JLabel(&quot;Rule msg : &quot;);</span>
+<span class="nc" id="L62">        gbl.setConstraints(rulemsgLabel, gbc);</span>
+<span class="nc" id="L63">        add(rulemsgLabel);</span>
+<span class="nc" id="L64">        gbc.gridx = 1;</span>
+<span class="nc" id="L65">        gbc.anchor = GridBagConstraints.WEST;</span>
+<span class="nc" id="L66">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L67">        gbl.setConstraints(rulemsgField, gbc);</span>
+<span class="nc" id="L68">        add(rulemsgField);</span>
 
-<span class="nc" id="L58">        gbc.gridx = 0;</span>
-<span class="nc" id="L59">        gbc.gridy = 1;</span>
-<span class="nc" id="L60">        gbc.anchor = GridBagConstraints.EAST;</span>
-<span class="nc" id="L61">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L62">        JLabel rulemsgLabel = new JLabel(&quot;Rule msg : &quot;);</span>
-<span class="nc" id="L63">        gbl.setConstraints(rulemsgLabel, gbc);</span>
-<span class="nc" id="L64">        add(rulemsgLabel);</span>
-<span class="nc" id="L65">        gbc.gridx = 1;</span>
-<span class="nc" id="L66">        gbc.anchor = GridBagConstraints.WEST;</span>
-<span class="nc" id="L67">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L68">        gbl.setConstraints(rulemsgField, gbc);</span>
-<span class="nc" id="L69">        add(rulemsgField);</span>
+<span class="nc" id="L70">        gbc.gridx = 0;</span>
+<span class="nc" id="L71">        gbc.gridy = 2;</span>
+<span class="nc" id="L72">        gbc.anchor = GridBagConstraints.EAST;</span>
+<span class="nc" id="L73">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L74">        JLabel ruledescLabel = new JLabel(&quot;Rule desc : &quot;);</span>
+<span class="nc" id="L75">        gbl.setConstraints(ruledescLabel,gbc);</span>
+<span class="nc" id="L76">        add(ruledescLabel);</span>
+<span class="nc" id="L77">        gbc.gridx = 1;</span>
+<span class="nc" id="L78">        gbc.anchor = GridBagConstraints.WEST;</span>
+<span class="nc" id="L79">        gbc.weightx = 0.5;</span>
+<span class="nc" id="L80">        ruledescField.setLineWrap(true);</span>
+<span class="nc" id="L81">        gbl.setConstraints(ruledescField,gbc);</span>
+<span class="nc" id="L82">        add(ruledescField);</span>
 
-<span class="nc" id="L71">        gbc.gridx = 0;</span>
-<span class="nc" id="L72">        gbc.gridy = 2;</span>
-<span class="nc" id="L73">        gbc.anchor = GridBagConstraints.EAST;</span>
-<span class="nc" id="L74">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L75">        JLabel ruledescLabel = new JLabel(&quot;Rule desc : &quot;);</span>
-<span class="nc" id="L76">        gbl.setConstraints(ruledescLabel, gbc);</span>
-<span class="nc" id="L77">        add(ruledescLabel);</span>
-<span class="nc" id="L78">        gbc.gridx = 1;</span>
-<span class="nc" id="L79">        gbc.anchor = GridBagConstraints.WEST;</span>
-<span class="nc" id="L80">        gbc.weightx = 0.5;</span>
-<span class="nc" id="L81">        ruledescField.setLineWrap(true);</span>
-<span class="nc" id="L82">        gbl.setConstraints(ruledescField, gbc);</span>
-<span class="nc" id="L83">        add(ruledescField);</span>
+<span class="nc" id="L84">        gbc.gridx = 0;</span>
+<span class="nc" id="L85">        gbc.gridy = 3;</span>
+<span class="nc" id="L86">        gbc.gridwidth = 2;</span>
+<span class="nc" id="L87">        gbc.anchor = GridBagConstraints.NORTH;</span>
+<span class="nc" id="L88">        JButton createRuleBtn = new JButton(&quot;Create rule XML&quot;);</span>
+<span class="nc" id="L89">        createRuleBtn.addActionListener(this);</span>
+<span class="nc" id="L90">        gbl.setConstraints(createRuleBtn, gbc);</span>
+<span class="nc" id="L91">        add(createRuleBtn);</span>
 
-<span class="nc" id="L85">        gbc.gridx = 0;</span>
-<span class="nc" id="L86">        gbc.gridy = 3;</span>
-<span class="nc" id="L87">        gbc.gridwidth = 2;</span>
-<span class="nc" id="L88">        gbc.anchor = GridBagConstraints.NORTH;</span>
-<span class="nc" id="L89">        JButton createRuleBtn = new JButton(&quot;Create rule XML&quot;);</span>
-<span class="nc" id="L90">        createRuleBtn.addActionListener(this);</span>
-<span class="nc" id="L91">        gbl.setConstraints(createRuleBtn, gbc);</span>
-<span class="nc" id="L92">        add(createRuleBtn);</span>
+<span class="nc" id="L93">        gbc.gridx = 0;</span>
+<span class="nc" id="L94">        gbc.gridy = 4;</span>
+<span class="nc" id="L95">        gbc.anchor = GridBagConstraints.NORTH;</span>
+<span class="nc" id="L96">        gbc.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L97">        gbc.weightx = 1.0;</span>
+<span class="nc" id="L98">        gbc.weighty = 1.0;</span>
+<span class="nc" id="L99">        JScrollPane ruleXMLPane = new JScrollPane(ruleXMLArea);</span>
+<span class="nc" id="L100">        gbl.setConstraints(ruleXMLPane, gbc);</span>
+<span class="nc" id="L101">        add(ruleXMLPane);</span>
 
-<span class="nc" id="L94">        gbc.gridx = 0;</span>
-<span class="nc" id="L95">        gbc.gridy = 4;</span>
-<span class="nc" id="L96">        gbc.anchor = GridBagConstraints.NORTH;</span>
-<span class="nc" id="L97">        gbc.fill = GridBagConstraints.BOTH;</span>
-<span class="nc" id="L98">        gbc.weightx = 1.0;</span>
-<span class="nc" id="L99">        gbc.weighty = 1.0;</span>
-<span class="nc" id="L100">        JScrollPane ruleXMLPane = new JScrollPane(ruleXMLArea);</span>
-<span class="nc" id="L101">        gbl.setConstraints(ruleXMLPane, gbc);</span>
-<span class="nc" id="L102">        add(ruleXMLPane);</span>
-
-<span class="nc" id="L104">        repaint();</span>
-<span class="nc" id="L105">    }</span>
+<span class="nc" id="L103">        repaint();</span>
+<span class="nc" id="L104">    }</span>
 
     private static void appendLn(StringBuilder sb, String text) {
-<span class="nc" id="L108">        sb.append(text).append(PMD.EOL);</span>
-<span class="nc" id="L109">    }</span>
+<span class="nc" id="L107">        sb.append(text).append(PMD.EOL);</span>
+<span class="nc" id="L108">    }</span>
 
     /**
-     * We let our class implement the ActionListener interface and use it to
-     * generate the xml code when the user presses the &quot;Create rule XML&quot; button.
+     * We let our class implement the ActionListener interface
+     * and use it to generate the xml code when the user presses
+     * the &quot;Create rule XML&quot; button.
      *
      */
     @Override
     public void actionPerformed(ActionEvent exception) {
-
-<span class="nc" id="L119">        boolean hasXPathQuery = StringUtil.isNotEmpty(xpathQueryArea.getText());</span>
-
+    	
+<span class="nc" id="L119">    	boolean hasXPathQuery = StringUtil.isNotEmpty(xpathQueryArea.getText());</span>
+    	
 <span class="nc" id="L121">        StringBuilder buffer = new StringBuilder(200);</span>
 <span class="nc" id="L122">        appendLn(buffer, &quot;&lt;rule  name=\&quot;&quot; + rulenameField.getText() + '\&quot;');</span>
 <span class="nc" id="L123">        appendLn(buffer, &quot;  message=\&quot;&quot; + rulemsgField.getText() + '\&quot;');</span>
@@ -126,15 +126,15 @@ public class CreateXMLRulePanel extends JPanel implements ActionListener {
 <span class="nc" id="L126">        appendLn(buffer, &quot;  &quot; + ruledescField.getText());</span>
 <span class="nc" id="L127">        appendLn(buffer, &quot;  &lt;/description&gt;&quot;);</span>
 <span class="nc bnc" id="L128" title="All 2 branches missed.">        if (hasXPathQuery) {</span>
-<span class="nc" id="L129">            appendLn(buffer, &quot;  &lt;properties&gt;&quot;);</span>
-<span class="nc" id="L130">            appendLn(buffer, &quot;    &lt;property name=\&quot;xpath\&quot;&gt;&quot;);</span>
-<span class="nc" id="L131">            appendLn(buffer, &quot;    &lt;value&gt;&quot;);</span>
-<span class="nc" id="L132">            appendLn(buffer, &quot;&lt;![CDATA[&quot;);</span>
-<span class="nc" id="L133">            appendLn(buffer, xpathQueryArea.getText());</span>
-<span class="nc" id="L134">            appendLn(buffer, &quot;]]&gt;&quot;);</span>
-<span class="nc" id="L135">            appendLn(buffer, &quot;    &lt;/value&gt;&quot;);</span>
-<span class="nc" id="L136">            appendLn(buffer, &quot;    &lt;/property&gt;&quot;);</span>
-<span class="nc" id="L137">            appendLn(buffer, &quot;  &lt;/properties&gt;&quot;);</span>
+<span class="nc" id="L129">        	appendLn(buffer, &quot;  &lt;properties&gt;&quot;);</span>
+<span class="nc" id="L130">        	appendLn(buffer, &quot;    &lt;property name=\&quot;xpath\&quot;&gt;&quot;);</span>
+<span class="nc" id="L131">        	appendLn(buffer, &quot;    &lt;value&gt;&quot;);</span>
+<span class="nc" id="L132">        	appendLn(buffer, &quot;&lt;![CDATA[&quot;);</span>
+<span class="nc" id="L133">        	appendLn(buffer, xpathQueryArea.getText());</span>
+<span class="nc" id="L134">        	appendLn(buffer, &quot;]]&gt;&quot;);</span>
+<span class="nc" id="L135">        	appendLn(buffer, &quot;    &lt;/value&gt;&quot;);</span>
+<span class="nc" id="L136">        	appendLn(buffer, &quot;    &lt;/property&gt;&quot;);</span>
+<span class="nc" id="L137">        	appendLn(buffer, &quot;  &lt;/properties&gt;&quot;);</span>
         }
 <span class="nc" id="L139">        appendLn(buffer, &quot;  &lt;priority&gt;3&lt;/priority&gt;&quot;);</span>
 <span class="nc" id="L140">        appendLn(buffer, &quot;  &lt;example&gt;&quot;);</span>

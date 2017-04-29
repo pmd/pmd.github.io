@@ -57,10 +57,10 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Overview <b class="caret"></b></a>
         <ul class="dropdown-menu">
         
-                      <li>      <a href="https://sourceforge.net/projects/pmd/files/pmd/5.6.1/"  title="Download PMD 5.6.1">Download PMD 5.6.1</a>
+                      <li>      <a href="https://sourceforge.net/projects/pmd/files/pmd/5.5.7/"  title="Download PMD 5.5.7">Download PMD 5.5.7</a>
 </li>
                   
-                      <li>      <a href="../overview/changelog.html"  title="What's new in PMD 5.6.1">What's new in PMD 5.6.1</a>
+                      <li>      <a href="../overview/changelog.html"  title="What's new in PMD 5.5.7">What's new in PMD 5.5.7</a>
 </li>
                   
                       <li>      <a href="../overview/changelog-old.html"  title="Previous versions">Previous versions</a>
@@ -241,9 +241,6 @@
                       <li>      <a href="../pmd-test/index.html"  title="PMD Test Framework">PMD Test Framework</a>
 </li>
                   
-                      <li>      <a href="../pmd-visualforce/index.html"  title="PMD Visualforce">PMD Visualforce</a>
-</li>
-                  
                       <li>      <a href="../pmd-vm/index.html"  title="PMD Velocity">PMD Velocity</a>
 </li>
                   
@@ -365,7 +362,7 @@
                   <li id="publishDate">Last Published: 2017-04-29
                       <span class="divider">|</span>
                    </li>
-                  <li id="projectVersion">Version: 5.6.1
+                  <li id="projectVersion">Version: 5.5.7
                           <span class="divider">|</span>
                       </li>
                                       <li class="">
@@ -397,16 +394,16 @@
                               
       <li>
   
-                          <a href="https://sourceforge.net/projects/pmd/files/pmd/5.6.1/" class="externalLink" title="Download PMD 5.6.1">
+                          <a href="https://sourceforge.net/projects/pmd/files/pmd/5.5.7/" class="externalLink" title="Download PMD 5.5.7">
           <span class="none"></span>
-        Download PMD 5.6.1</a>
+        Download PMD 5.5.7</a>
             </li>
                 
       <li>
   
-                          <a href="../overview/changelog.html" title="What's new in PMD 5.6.1">
+                          <a href="../overview/changelog.html" title="What's new in PMD 5.5.7">
           <span class="none"></span>
-        What's new in PMD 5.6.1</a>
+        What's new in PMD 5.5.7</a>
             </li>
                 
       <li>
@@ -767,13 +764,6 @@
                           <a href="../pmd-test/index.html" title="PMD Test Framework">
           <span class="none"></span>
         PMD Test Framework</a>
-            </li>
-                
-      <li>
-  
-                          <a href="../pmd-visualforce/index.html" title="PMD Visualforce">
-          <span class="none"></span>
-        PMD Visualforce</a>
             </li>
                 
       <li>
@@ -1140,14 +1130,6 @@ public class CountRule extends AbstractJavaRule {
 <p><i> Note that the example logs a violation <b>without</b> a proper classname. This is not really a good idea. Indeed, a lot of aggregating tools that PMD (Such as <a class="externalLink" href="http://xradar.sourceforge.net">XRadar</a>, or <a class="externalLink" href="http://www.sonarsource.com/">Sonar</a>) probably uses this kind of meta data on their aggregation processes. So, when implements such a rule, always try to find a way to add classname to the violation report. </i></p></div>
 <div class="section">
 <h2><a name="I_need_some_kind_of_Type_Resolution_for_my_rule"></a>I need some kind of Type Resolution for my rule!</h2>
-<p>PMD supports determining the type of nodes on the AST. For this to work you need:</p>
-
-<ol style="list-style-type: decimal">
-  
-<li>Include the attribute <tt>typeResolution=&quot;true&quot;</tt> when defining the <tt>rule</tt> node on the ruleset XML.</li>
-  
-<li>The auxiliary classpath for PMD is setup correctly, so that PMD can actually find the (compiled) classes.</li>
-</ol>
 <div class="section">
 <h3><a name="Inside_an_XPath_query"></a>Inside an XPath query</h3>
 <p>PMD XPath syntax includes now a new function called <tt>typeof</tt> which determines if a node (ClassOrInterfaceType only right now) is of the provided type. It also scans the type&#x2019;s hierarchy, so if you extend a class it will also find this out.</p>
@@ -1182,7 +1164,8 @@ public Object visit(ASTClassOrInterfaceType type, Object ruleCtx) {
     return super.visit(type, ruleCtx);
 }
 </pre></div></div>
-<p>Notice <tt>getType()</tt> will return a <tt>Class</tt> object of the proper type, therefore the need to have access to compiled classes in the auxiliar classpath.</p></div></div>
+<p>Note, that this will only work, if the auxiliary classpath for PMD is setup correctly, so that PMD can actually find the (compiled) class &#x201c;com.forbidden.class&#x201d; and you get the actual Class instance by calling getType().</p>
+<p>Otherwise, you&#x2019;ll have to string-compare the image, e.g. <tt>&quot;com.forbidden.class&quot;.equals(node.getImage())</tt></p></div></div>
 <div class="section">
 <h2><a name="Thread_safety_concurrency_issues_and_reuse_of_rule_instances"></a>Thread safety, concurrency issues and reuse of rule instances</h2>
 <p>When executing the rule, PMD will instantiate a new instance of your rule. If PMD is executed in multiple threads, then each thread is using its own instance of the rule. This means, that the rule implementation <b>does not need to care about threading issues</b>, as PMD makes sure, that a single instance is not used concurrently by multiple threads.</p>

@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDConfiguration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">PMDConfiguration.java</span></div><h1>PMDConfiguration.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import net.sourceforge.pmd.cache.AnalysisCache;
-import net.sourceforge.pmd.cache.FileAnalysisCache;
-import net.sourceforge.pmd.cache.NoopAnalysisCache;
 import net.sourceforge.pmd.lang.LanguageRegistry;
 import net.sourceforge.pmd.lang.LanguageVersion;
 import net.sourceforge.pmd.lang.LanguageVersionDiscoverer;
@@ -22,99 +17,107 @@ import net.sourceforge.pmd.util.ClasspathClassLoader;
 import net.sourceforge.pmd.util.IOUtil;
 
 /**
- * This class contains the details for the runtime configuration of PMD. There
- * are several aspects to the configuration of PMD.
- *
- * &lt;p&gt;The aspects related to generic PMD behavior:&lt;/p&gt;
+ * This class contains the details for the runtime configuration of PMD.
+ * There are several aspects to the configuration of PMD.
+ * &lt;p&gt;
+ * The aspects related to generic PMD behavior:
  * &lt;ul&gt;
- * &lt;li&gt;Suppress marker is used in source files to suppress a RuleViolation,
- * defaults to {@link PMD#SUPPRESS_MARKER}. {@link #getSuppressMarker()}&lt;/li&gt;
- * &lt;li&gt;The number of threads to create when invoking on multiple files, defaults
- * one thread per available processor. {@link #getThreads()}&lt;/li&gt;
- * &lt;li&gt;A ClassLoader to use when loading classes during Rule processing (e.g.
- * during type resolution), defaults to ClassLoader of the Configuration class.
- * {@link #getClassLoader()}&lt;/li&gt;
- * &lt;li&gt;A means to configure a ClassLoader using a prepended classpath String,
- * instead of directly setting it programmatically.
- * {@link #prependClasspath(String)}&lt;/li&gt;
- * &lt;li&gt;A LanguageVersionDiscoverer instance, which defaults to using the default
- * LanguageVersion of each Language. Means are provided to change the
- * LanguageVersion for each Language.
- * {@link #getLanguageVersionDiscoverer()}&lt;/li&gt;
+ * 	&lt;li&gt;Suppress marker is used in source files to suppress a RuleViolation,
+ *	    defaults to {@link PMD#SUPPRESS_MARKER}.
+ *          {@link #getSuppressMarker()}&lt;/li&gt;
+ *  &lt;li&gt;The number of threads to create when invoking on multiple files,
+ *      defaults one thread per available processor.
+ *          {@link #getThreads()}&lt;/li&gt;
+ *  &lt;li&gt;A ClassLoader to use when loading classes during Rule processing
+ *      (e.g. during type resolution), defaults to ClassLoader of the
+ *      Configuration class.
+ *          {@link #getClassLoader()}&lt;/li&gt;
+ *  &lt;li&gt;A means to configure a ClassLoader using a prepended classpath
+ *     String, instead of directly setting it programmatically.
+ *          {@link #prependClasspath(String)}&lt;/li&gt;
+ *  &lt;li&gt;A LanguageVersionDiscoverer instance, which defaults to using the
+ *      default LanguageVersion of each Language.  Means are provided to
+ *      change the LanguageVersion for each Language.
+ *          {@link #getLanguageVersionDiscoverer()}&lt;/li&gt;
  * &lt;/ul&gt;
- *
- * &lt;p&gt;The aspects related to Rules and Source files are:&lt;/p&gt;
+ * &lt;p&gt;
+ * The aspects related to Rules and Source files are:
  * &lt;ul&gt;
- * &lt;li&gt;A comma separated list of RuleSets URIs. {@link #getRuleSets()}&lt;/li&gt;
- * &lt;li&gt;A minimum priority threshold when loading Rules from RuleSets, defaults
- * to {@link RulePriority#LOW}. {@link #getMinimumPriority()}&lt;/li&gt;
- * &lt;li&gt;The character encoding of source files, defaults to the system default as
- * returned by &lt;code&gt;System.getProperty(&quot;file.encoding&quot;)&lt;/code&gt;.
- * {@link #getSourceEncoding()}&lt;/li&gt;
- * &lt;li&gt;A comma separated list of input paths to process for source files. This
- * may include files, directories, archives (e.g. ZIP files), etc.
- * {@link #getInputPaths()}&lt;/li&gt;
- * &lt;li&gt;A flag which controls, whether {@link RuleSetFactoryCompatibility} filter
- * should be used or not: #isRuleSetFactoryCompatibilityEnabled;
+ *  &lt;li&gt;A comma separated list of RuleSets URIs.
+ *          {@link #getRuleSets()}&lt;/li&gt;
+ *  &lt;li&gt;A minimum priority threshold when loading Rules from RuleSets,
+ *      defaults to {@link RulePriority#LOW}.
+ *          {@link #getMinimumPriority()}&lt;/li&gt;
+ *  &lt;li&gt;The character encoding of source files, defaults to the system default
+ *      as returned by &lt;code&gt;System.getProperty(&quot;file.encoding&quot;)&lt;/code&gt;.
+ *          {@link #getSourceEncoding()}&lt;/li&gt;
+ *  &lt;li&gt;A comma separated list of input paths to process for source files.
+ *      This may include files, directories, archives (e.g. ZIP files), etc.
+ *          {@link #getInputPaths()}&lt;/li&gt;
+ *  &lt;li&gt;A flag which controls, whether {@link RuleSetFactoryCompatibility} filter
+ *      should be used or not: #isRuleSetFactoryCompatibilityEnabled;
  * &lt;/ul&gt;
- *
+ * &lt;p&gt;
  * &lt;ul&gt;
- * &lt;li&gt;The renderer format to use for Reports. {@link #getReportFormat()}&lt;/li&gt;
- * &lt;li&gt;The file to which the Report should render. {@link #getReportFile()}&lt;/li&gt;
- * &lt;li&gt;An indicator of whether to use File short names in Reports, defaults to
- * &lt;code&gt;false&lt;/code&gt;. {@link #isReportShortNames()}&lt;/li&gt;
- * &lt;li&gt;The initialization properties to use when creating a Renderer instance.
- * {@link #getReportProperties()}&lt;/li&gt;
- * &lt;li&gt;An indicator of whether to show suppressed Rule violations in Reports.
- * {@link #isShowSuppressedViolations()}&lt;/li&gt;
+ *  &lt;li&gt;The renderer format to use for Reports.
+ *          {@link #getReportFormat()}&lt;/li&gt;
+ *  &lt;li&gt;The file to which the Report should render.
+ *          {@link #getReportFile()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether to use File short names in Reports, defaults
+ *      to &lt;code&gt;false&lt;/code&gt;.
+ *          {@link #isReportShortNames()}&lt;/li&gt;
+ *  &lt;li&gt;The initialization properties to use when creating a Renderer instance.
+ *          {@link #getReportProperties()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether to show suppressed Rule violations in Reports.
+ *          {@link #isShowSuppressedViolations()}&lt;/li&gt;
  * &lt;/ul&gt;
- *
- * &lt;p&gt;The aspects related to special PMD behavior are:&lt;/p&gt;
+ * &lt;p&gt;
+ * The aspects related to special PMD behavior are:
  * &lt;ul&gt;
- * &lt;li&gt;An indicator of whether PMD should log debug information.
- * {@link #isDebug()}&lt;/li&gt;
- * &lt;li&gt;An indicator of whether PMD should perform stress testing behaviors, such
- * as randomizing the order of file processing. {@link #isStressTest()}&lt;/li&gt;
- * &lt;li&gt;An indicator of whether PMD should log benchmarking information.
- * {@link #isBenchmark()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether PMD should log debug information.
+ *          {@link #isDebug()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether PMD should perform stress testing behaviors,
+ *          such as randomizing the order of file processing.
+ *          {@link #isStressTest()}&lt;/li&gt;
+ *  &lt;li&gt;An indicator of whether PMD should log benchmarking information.
+ *          {@link #isBenchmark()}&lt;/li&gt;
  * &lt;/ul&gt;
  */
-<span class="fc" id="L82">public class PMDConfiguration extends AbstractConfiguration {</span>
+<span class="fc" id="L86">public class PMDConfiguration extends AbstractConfiguration {</span>
 
     // General behavior options
-<span class="fc" id="L85">    private String suppressMarker = PMD.SUPPRESS_MARKER;</span>
-<span class="fc" id="L86">    private int threads = Runtime.getRuntime().availableProcessors();</span>
-<span class="fc" id="L87">    private ClassLoader classLoader = getClass().getClassLoader();</span>
-<span class="fc" id="L88">    private LanguageVersionDiscoverer languageVersionDiscoverer = new LanguageVersionDiscoverer();</span>
+<span class="fc" id="L89">    private String suppressMarker = PMD.SUPPRESS_MARKER;</span>
+<span class="fc" id="L90">    private int threads = Runtime.getRuntime().availableProcessors();</span>
+<span class="fc" id="L91">    private ClassLoader classLoader = getClass().getClassLoader();</span>
+<span class="fc" id="L92">    private LanguageVersionDiscoverer languageVersionDiscoverer = new LanguageVersionDiscoverer();</span>
 
     // Rule and source file options
     private String ruleSets;
-<span class="fc" id="L92">    private RulePriority minimumPriority = RulePriority.LOW;</span>
+<span class="fc" id="L96">    private RulePriority minimumPriority = RulePriority.LOW;</span>
     private String inputPaths;
     private String inputUri;
     private String inputFilePath;
-<span class="fc" id="L96">    private boolean ruleSetFactoryCompatibilityEnabled = true;</span>
+<span class="fc" id="L100">    private boolean ruleSetFactoryCompatibilityEnabled = true;</span>
 
     // Reporting options
     private String reportFormat;
     private String reportFile;
-<span class="fc" id="L101">    private boolean reportShortNames = false;</span>
-<span class="fc" id="L102">    private Properties reportProperties = new Properties();</span>
-<span class="fc" id="L103">    private boolean showSuppressedViolations = false;</span>
-<span class="fc" id="L104">    private boolean failOnViolation = true;</span>
+<span class="fc" id="L105">    private boolean reportShortNames = false;</span>
+<span class="fc" id="L106">    private Properties reportProperties = new Properties();</span>
+<span class="fc" id="L107">    private boolean showSuppressedViolations = false;</span>
+<span class="fc" id="L108">    private boolean failOnViolation = true;</span>
 
     private boolean stressTest;
     private boolean benchmark;
-<span class="fc" id="L108">    private AnalysisCache analysisCache = new NoopAnalysisCache();</span>
 
     /**
-     * Get the suppress marker. This is the source level marker used to indicate
-     * a RuleViolation should be suppressed.
+     * Get the suppress marker. This is the source level marker used to indicate a
+     * RuleViolation should be suppressed.
      *
      * @return The suppress marker.
      */
     public String getSuppressMarker() {
-<span class="fc" id="L117">        return suppressMarker;</span>
+<span class="fc" id="L120">        return suppressMarker;</span>
     }
 
     /**
@@ -124,8 +127,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The suppress marker to use.
      */
     public void setSuppressMarker(String suppressMarker) {
-<span class="fc" id="L127">        this.suppressMarker = suppressMarker;</span>
-<span class="fc" id="L128">    }</span>
+<span class="fc" id="L130">        this.suppressMarker = suppressMarker;</span>
+<span class="fc" id="L131">    }</span>
 
     /**
      * Get the number of threads to use when processing Rules.
@@ -133,7 +136,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The number of threads.
      */
     public int getThreads() {
-<span class="fc" id="L136">        return threads;</span>
+<span class="fc" id="L139">        return threads;</span>
     }
 
     /**
@@ -143,8 +146,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The number of threads.
      */
     public void setThreads(int threads) {
-<span class="fc" id="L146">        this.threads = threads;</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L149">        this.threads = threads;</span>
+<span class="fc" id="L150">    }</span>
 
     /**
      * Get the ClassLoader being used by PMD when processing Rules.
@@ -152,7 +155,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The ClassLoader being used
      */
     public ClassLoader getClassLoader() {
-<span class="fc" id="L155">        return classLoader;</span>
+<span class="fc" id="L158">        return classLoader;</span>
     }
 
     /**
@@ -163,38 +166,36 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The ClassLoader to use
      */
     public void setClassLoader(ClassLoader classLoader) {
-<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (classLoader == null) {</span>
-<span class="fc" id="L167">            this.classLoader = getClass().getClassLoader();</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (classLoader == null) {</span>
+<span class="fc" id="L170">            this.classLoader = getClass().getClassLoader();</span>
         } else {
-<span class="fc" id="L169">            this.classLoader = classLoader;</span>
+<span class="fc" id="L172">            this.classLoader = classLoader;</span>
         }
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L174">    }</span>
 
     /**
      * Prepend the specified classpath like string to the current ClassLoader of
      * the configuration. If no ClassLoader is currently configured, the
      * ClassLoader used to load the {@link PMDConfiguration} class will be used
      * as the parent ClassLoader of the created ClassLoader.
-     *
-     * &lt;p&gt;If the classpath String looks like a URL to a file (i.e. starts with
+     * &lt;p&gt;
+     * If the classpath String looks like a URL to a file (i.e. starts with
      * &lt;code&gt;file://&lt;/code&gt;) the file will be read with each line representing
-     * an entry on the classpath.&lt;/p&gt;
+     * an entry on the classpath.
      *
-     * @param classpath
-     *            The prepended classpath.
-     * @throws IOException
-     *             if the given classpath is invalid (e.g. does not exist)
+     * @param classpath The prepended classpath.
+     * @throws IOException if the given classpath is invalid (e.g. does not exist)
      * @see PMDConfiguration#setClassLoader(ClassLoader)
      * @see ClasspathClassLoader
      */
     public void prependClasspath(String classpath) throws IOException {
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (classLoader == null) {</span>
-<span class="nc" id="L192">            classLoader = PMDConfiguration.class.getClassLoader();</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        if (classLoader == null) {</span>
+<span class="nc" id="L193">            classLoader = PMDConfiguration.class.getClassLoader();</span>
         }
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (classpath != null) {</span>
-<span class="fc" id="L195">            classLoader = new ClasspathClassLoader(classpath, classLoader);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if (classpath != null) {</span>
+<span class="fc" id="L196">            classLoader = new ClasspathClassLoader(classpath, classLoader);</span>
         }
-<span class="fc" id="L197">    }</span>
+<span class="fc" id="L198">    }</span>
 
     /**
      * Get the LanguageVersionDiscoverer, used to determine the LanguageVersion
@@ -203,7 +204,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The LanguageVersionDiscoverer.
      */
     public LanguageVersionDiscoverer getLanguageVersionDiscoverer() {
-<span class="nc" id="L206">        return languageVersionDiscoverer;</span>
+<span class="nc" id="L207">        return languageVersionDiscoverer;</span>
     }
 
     /**
@@ -213,8 +214,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            the LanguageVersion
      */
     public void setDefaultLanguageVersion(LanguageVersion languageVersion) {
-<span class="nc" id="L216">        setDefaultLanguageVersions(Arrays.asList(languageVersion));</span>
-<span class="nc" id="L217">    }</span>
+<span class="nc" id="L217">        setDefaultLanguageVersions(Arrays.asList(languageVersion));</span>
+<span class="nc" id="L218">    }</span>
 
     /**
      * Set the given LanguageVersions as the current default for their
@@ -224,18 +225,17 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The LanguageVersions.
      */
     public void setDefaultLanguageVersions(List&lt;LanguageVersion&gt; languageVersions) {
-<span class="nc bnc" id="L227" title="All 2 branches missed.">        for (LanguageVersion languageVersion : languageVersions) {</span>
-<span class="nc" id="L228">            languageVersionDiscoverer.setDefaultLanguageVersion(languageVersion);</span>
-<span class="nc" id="L229">        }</span>
-<span class="nc" id="L230">    }</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        for (LanguageVersion languageVersion : languageVersions) {</span>
+<span class="nc" id="L229">            languageVersionDiscoverer.setDefaultLanguageVersion(languageVersion);</span>
+<span class="nc" id="L230">        }</span>
+<span class="nc" id="L231">    }</span>
 
     /**
      * Get the LanguageVersion of the source file with given name. This depends
      * on the fileName extension, and the java version.
-     * &lt;p&gt;
+     * &lt;p/&gt;
      * For compatibility with older code that does not always pass in a correct
      * filename, unrecognized files are assumed to be java files.
-     * &lt;/p&gt;
      *
      * @param fileName
      *            Name of the file, can be absolute, or simple.
@@ -266,12 +266,11 @@ import net.sourceforge.pmd.util.IOUtil;
     /**
      * Set the comma separated list of RuleSet URIs.
      *
-     * @param ruleSets
-     *            the rulesets to set
+     * @param ruleSets the rulesets to set
      */
     public void setRuleSets(String ruleSets) {
-<span class="fc" id="L273">        this.ruleSets = ruleSets;</span>
-<span class="fc" id="L274">    }</span>
+<span class="fc" id="L272">        this.ruleSets = ruleSets;</span>
+<span class="fc" id="L273">    }</span>
 
     /**
      * Get the minimum priority threshold when loading Rules from RuleSets.
@@ -279,7 +278,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The minimum priority threshold.
      */
     public RulePriority getMinimumPriority() {
-<span class="fc" id="L282">        return minimumPriority;</span>
+<span class="fc" id="L281">        return minimumPriority;</span>
     }
 
     /**
@@ -289,8 +288,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The minimum priority.
      */
     public void setMinimumPriority(RulePriority minimumPriority) {
-<span class="fc" id="L292">        this.minimumPriority = minimumPriority;</span>
-<span class="fc" id="L293">    }</span>
+<span class="fc" id="L291">        this.minimumPriority = minimumPriority;</span>
+<span class="fc" id="L292">    }</span>
 
     /**
      * Get the comma separated list of input paths to process for source files.
@@ -298,7 +297,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return A comma separated list.
      */
     public String getInputPaths() {
-<span class="fc" id="L301">        return inputPaths;</span>
+<span class="fc" id="L300">        return inputPaths;</span>
     }
 
     /**
@@ -308,23 +307,22 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The comma separated list.
      */
     public void setInputPaths(String inputPaths) {
-<span class="fc" id="L311">        this.inputPaths = inputPaths;</span>
-<span class="fc" id="L312">    }</span>
+<span class="fc" id="L310">        this.inputPaths = inputPaths;</span>
+<span class="fc" id="L311">    }</span>
 
     public String getInputFilePath() {
-<span class="fc" id="L315">        return inputFilePath;</span>
+<span class="fc" id="L314">        return inputFilePath;</span>
     }
 
     /**
      * The input file path points to a single file, which contains a
      * comma-separated list of source file names to process.
      *
-     * @param inputFilePath
-     *            path to the file
+     * @param inputFilePath path to the file
      */
     public void setInputFilePath(String inputFilePath) {
-<span class="fc" id="L326">        this.inputFilePath = inputFilePath;</span>
-<span class="fc" id="L327">    }</span>
+<span class="fc" id="L324">        this.inputFilePath = inputFilePath;</span>
+<span class="fc" id="L325">    }</span>
 
     /**
      * Get the input URI to process for source code objects.
@@ -332,7 +330,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return URI
      */
     public String getInputUri() {
-<span class="fc" id="L335">        return inputUri;</span>
+<span class="fc" id="L333">        return inputUri;</span>
     }
 
     /**
@@ -342,8 +340,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            a single URI
      */
     public void setInputUri(String inputUri) {
-<span class="nc" id="L345">        this.inputUri = inputUri;</span>
-<span class="nc" id="L346">    }</span>
+<span class="nc" id="L343">        this.inputUri = inputUri;</span>
+<span class="nc" id="L344">    }</span>
 
     /**
      * Get whether to use File short names in Reports.
@@ -351,7 +349,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return &lt;code&gt;true&lt;/code&gt; when using short names in reports.
      */
     public boolean isReportShortNames() {
-<span class="fc" id="L354">        return reportShortNames;</span>
+<span class="fc" id="L352">        return reportShortNames;</span>
     }
 
     /**
@@ -361,8 +359,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            &lt;code&gt;true&lt;/code&gt; when using short names in reports.
      */
     public void setReportShortNames(boolean reportShortNames) {
-<span class="fc" id="L364">        this.reportShortNames = reportShortNames;</span>
-<span class="fc" id="L365">    }</span>
+<span class="fc" id="L362">        this.reportShortNames = reportShortNames;</span>
+<span class="fc" id="L363">    }</span>
 
     /**
      * Create a Renderer instance based upon the configured reporting options.
@@ -371,7 +369,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return renderer
      */
     public Renderer createRenderer() {
-<span class="fc" id="L374">        return createRenderer(false);</span>
+<span class="fc" id="L372">        return createRenderer(false);</span>
     }
 
     /**
@@ -379,17 +377,16 @@ import net.sourceforge.pmd.util.IOUtil;
      * If withReportWriter then we'll configure it with a writer for the
      * reportFile specified.
      *
-     * @param withReportWriter
-     *            whether to configure a writer or not
+     * @param withReportWriter whether to configure a writer or not
      * @return A Renderer instance.
      */
     public Renderer createRenderer(boolean withReportWriter) {
-<span class="fc" id="L387">        Renderer renderer = RendererFactory.createRenderer(reportFormat, reportProperties);</span>
-<span class="fc" id="L388">        renderer.setShowSuppressedViolations(showSuppressedViolations);</span>
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        if (withReportWriter) {</span>
-<span class="nc" id="L390">            renderer.setWriter(IOUtil.createWriter(reportFile));</span>
+<span class="fc" id="L384">        Renderer renderer = RendererFactory.createRenderer(reportFormat, reportProperties);</span>
+<span class="fc" id="L385">        renderer.setShowSuppressedViolations(showSuppressedViolations);</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        if (withReportWriter) {</span>
+<span class="nc" id="L387">            renderer.setWriter(IOUtil.createWriter(reportFile));</span>
         }
-<span class="fc" id="L392">        return renderer;</span>
+<span class="fc" id="L389">        return renderer;</span>
     }
 
     /**
@@ -398,7 +395,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The report format.
      */
     public String getReportFormat() {
-<span class="fc" id="L401">        return reportFormat;</span>
+<span class="fc" id="L398">        return reportFormat;</span>
     }
 
     /**
@@ -410,8 +407,8 @@ import net.sourceforge.pmd.util.IOUtil;
      * @see Renderer
      */
     public void setReportFormat(String reportFormat) {
-<span class="fc" id="L413">        this.reportFormat = reportFormat;</span>
-<span class="fc" id="L414">    }</span>
+<span class="fc" id="L410">        this.reportFormat = reportFormat;</span>
+<span class="fc" id="L411">    }</span>
 
     /**
      * Get the file to which the report should render.
@@ -419,18 +416,17 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The file to which to render.
      */
     public String getReportFile() {
-<span class="fc" id="L422">        return reportFile;</span>
+<span class="fc" id="L419">        return reportFile;</span>
     }
 
     /**
      * Set the file to which the report should render.
      *
-     * @param reportFile
-     *            the file to set
+     * @param reportFile the file to set
      */
     public void setReportFile(String reportFile) {
-<span class="fc" id="L432">        this.reportFile = reportFile;</span>
-<span class="fc" id="L433">    }</span>
+<span class="fc" id="L428">        this.reportFile = reportFile;</span>
+<span class="fc" id="L429">    }</span>
 
     /**
      * Get whether the report should show suppressed violations.
@@ -439,7 +435,7 @@ import net.sourceforge.pmd.util.IOUtil;
      *         &lt;code&gt;false&lt;/code&gt; otherwise.
      */
     public boolean isShowSuppressedViolations() {
-<span class="fc" id="L442">        return showSuppressedViolations;</span>
+<span class="fc" id="L438">        return showSuppressedViolations;</span>
     }
 
     /**
@@ -450,8 +446,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            &lt;code&gt;false&lt;/code&gt; otherwise.
      */
     public void setShowSuppressedViolations(boolean showSuppressedViolations) {
-<span class="fc" id="L453">        this.showSuppressedViolations = showSuppressedViolations;</span>
-<span class="fc" id="L454">    }</span>
+<span class="fc" id="L449">        this.showSuppressedViolations = showSuppressedViolations;</span>
+<span class="fc" id="L450">    }</span>
 
     /**
      * Get the Report properties. These are used to create the Renderer.
@@ -459,7 +455,7 @@ import net.sourceforge.pmd.util.IOUtil;
      * @return The report properties.
      */
     public Properties getReportProperties() {
-<span class="fc" id="L462">        return reportProperties;</span>
+<span class="fc" id="L458">        return reportProperties;</span>
     }
 
     /**
@@ -469,8 +465,8 @@ import net.sourceforge.pmd.util.IOUtil;
      *            The Report properties to set.
      */
     public void setReportProperties(Properties reportProperties) {
-<span class="fc" id="L472">        this.reportProperties = reportProperties;</span>
-<span class="fc" id="L473">    }</span>
+<span class="fc" id="L468">        this.reportProperties = reportProperties;</span>
+<span class="fc" id="L469">    }</span>
 
     /**
      * Return the stress test indicator. If this value is &lt;code&gt;true&lt;/code&gt; then
@@ -481,7 +477,7 @@ import net.sourceforge.pmd.util.IOUtil;
      *         otherwise.
      */
     public boolean isStressTest() {
-<span class="fc" id="L484">        return stressTest;</span>
+<span class="fc" id="L480">        return stressTest;</span>
     }
 
     /**
@@ -492,8 +488,8 @@ import net.sourceforge.pmd.util.IOUtil;
      * @see #isStressTest()
      */
     public void setStressTest(boolean stressTest) {
-<span class="fc" id="L495">        this.stressTest = stressTest;</span>
-<span class="fc" id="L496">    }</span>
+<span class="fc" id="L491">        this.stressTest = stressTest;</span>
+<span class="fc" id="L492">    }</span>
 
     /**
      * Return the benchmark indicator. If this value is &lt;code&gt;true&lt;/code&gt; then
@@ -503,7 +499,7 @@ import net.sourceforge.pmd.util.IOUtil;
      *         &lt;code&gt;false&lt;/code&gt; otherwise.
      */
     public boolean isBenchmark() {
-<span class="fc" id="L506">        return benchmark;</span>
+<span class="fc" id="L502">        return benchmark;</span>
     }
 
     /**
@@ -514,29 +510,26 @@ import net.sourceforge.pmd.util.IOUtil;
      * @see #isBenchmark()
      */
     public void setBenchmark(boolean benchmark) {
-<span class="fc" id="L517">        this.benchmark = benchmark;</span>
-<span class="fc" id="L518">    }</span>
+<span class="fc" id="L513">        this.benchmark = benchmark;</span>
+<span class="fc" id="L514">    }</span>
 
     /**
-     * Whether PMD should exit with status 4 (the default behavior, true) if
-     * violations are found or just with 0 (to not break the build, e.g.).
-     *
+     * Whether PMD should exit with status 4 (the default behavior, true) if violations
+     * are found or just with 0 (to not break the build, e.g.).
      * @return failOnViolation
      */
     public boolean isFailOnViolation() {
-<span class="nc" id="L527">        return failOnViolation;</span>
+<span class="nc" id="L522">        return failOnViolation;</span>
     }
 
     /**
-     * Sets whether PMD should exit with status 4 (the default behavior, true)
-     * if violations are found or just with 0 (to not break the build, e.g.).
-     *
-     * @param failOnViolation
-     *            failOnViolation
+     * Sets whether PMD should exit with status 4 (the default behavior, true) if violations
+     * are found or just with 0 (to not break the build, e.g.).
+     * @param failOnViolation failOnViolation
      */
     public void setFailOnViolation(boolean failOnViolation) {
-<span class="nc" id="L538">        this.failOnViolation = failOnViolation;</span>
-<span class="nc" id="L539">    }</span>
+<span class="nc" id="L531">        this.failOnViolation = failOnViolation;</span>
+<span class="nc" id="L532">    }</span>
 
     /**
      * Checks if the rule set factory compatibility feature is enabled.
@@ -546,56 +539,18 @@ import net.sourceforge.pmd.util.IOUtil;
      * @see RuleSetFactoryCompatibility
      */
     public boolean isRuleSetFactoryCompatibilityEnabled() {
-<span class="fc" id="L549">        return ruleSetFactoryCompatibilityEnabled;</span>
+<span class="fc" id="L542">        return ruleSetFactoryCompatibilityEnabled;</span>
     }
 
     /**
      * Sets the rule set factory compatibility feature enabled/disabled.
      *
-     * @param ruleSetFactoryCompatibilityEnabled
-     *            &lt;code&gt;true&lt;/code&gt; if the feature should be enabled
+     * @param ruleSetFactoryCompatibilityEnabled &lt;code&gt;true&lt;/code&gt; if the feature should be enabled
      *
      * @see RuleSetFactoryCompatibility
      */
     public void setRuleSetFactoryCompatibilityEnabled(boolean ruleSetFactoryCompatibilityEnabled) {
-<span class="fc" id="L561">        this.ruleSetFactoryCompatibilityEnabled = ruleSetFactoryCompatibilityEnabled;</span>
-<span class="fc" id="L562">    }</span>
-
-    /**
-     * Retrieves the currently used analysis cache. Will never be null.
-     * 
-     * @return The currently used analysis cache. Never null.
-     */
-    public AnalysisCache getAnalysisCache() {
-<span class="fc" id="L570">        return analysisCache;</span>
-    }
-    
-    /**
-     * Sets the analysis cache to be used. Setting a
-     * value of &lt;code&gt;null&lt;/code&gt; will cause a Noop AnalysisCache to be used.
-     * 
-     * @param cache The analysis cache to be used.
-     */
-    public void setAnalysisCache(final AnalysisCache cache) {
-<span class="fc bfc" id="L580" title="All 2 branches covered.">        if (cache == null) {</span>
-<span class="fc" id="L581">            analysisCache = new NoopAnalysisCache();</span>
-        } else {
-<span class="fc" id="L583">            analysisCache = cache;</span>
-        }
-<span class="fc" id="L585">    }</span>
-
-    /**
-     * Sets the location of the analysis cache to be used. This will automatically configure
-     * and appropriate AnalysisCache implementation.
-     * 
-     * @param cacheLocation The location of the analysis cache to be used.
-     */
-    public void setAnalysisCacheLocation(final String cacheLocation) {
-<span class="fc bfc" id="L594" title="All 2 branches covered.">        if (cacheLocation == null) {</span>
-<span class="fc" id="L595">            setAnalysisCache(new NoopAnalysisCache());</span>
-        } else {
-<span class="fc" id="L597">            setAnalysisCache(new FileAnalysisCache(new File(cacheLocation)));</span>
-        }
-<span class="fc" id="L599">    }</span>
+<span class="fc" id="L553">        this.ruleSetFactoryCompatibilityEnabled = ruleSetFactoryCompatibilityEnabled;</span>
+<span class="fc" id="L554">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

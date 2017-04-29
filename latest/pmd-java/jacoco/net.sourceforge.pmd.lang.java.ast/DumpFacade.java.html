@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DumpFacade.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.ast</a> &gt; <span class="el_source">DumpFacade.java</span></div><h1>DumpFacade.java</h1><pre class="source lang-java linenums">/**
  * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
  */
-
 package net.sourceforge.pmd.lang.java.ast;
 
 import java.io.IOException;
@@ -10,247 +9,247 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-<span class="nc" id="L13">public class DumpFacade extends JavaParserVisitorAdapter {</span>
+<span class="nc" id="L12">public class DumpFacade extends JavaParserVisitorAdapter {</span>
 
-    private PrintWriter writer;
-    private boolean recurse;
+	private PrintWriter writer;
+	private boolean recurse;
 
-    public void initializeWith(Writer writer, String prefix, boolean recurse, JavaNode node) {
-<span class="nc bnc" id="L19" title="All 2 branches missed.">        this.writer = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer);</span>
-<span class="nc" id="L20">        this.recurse = recurse;</span>
-<span class="nc" id="L21">        this.visit(node, prefix);</span>
-        try {
-<span class="nc" id="L23">            writer.flush();</span>
-<span class="nc" id="L24">        } catch (IOException e) {</span>
-<span class="nc" id="L25">            throw new RuntimeException(&quot;Problem flushing PrintWriter.&quot;, e);</span>
-<span class="nc" id="L26">        }</span>
-<span class="nc" id="L27">    }</span>
+	public void initializeWith(Writer writer, String prefix, boolean recurse, JavaNode node) {
+<span class="nc bnc" id="L18" title="All 2 branches missed.">		this.writer = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer);</span>
+<span class="nc" id="L19">		this.recurse = recurse;</span>
+<span class="nc" id="L20">		this.visit(node, prefix);</span>
+		try {
+<span class="nc" id="L22">			writer.flush();</span>
+<span class="nc" id="L23">		} catch (IOException e) {</span>
+<span class="nc" id="L24">			throw new RuntimeException(&quot;Problem flushing PrintWriter.&quot;, e);</span>
+<span class="nc" id="L25">		}</span>
+<span class="nc" id="L26">	}</span>
 
-    @Override
-    public Object visit(JavaNode node, Object data) {
-<span class="nc" id="L31">        dump(node, (String) data);</span>
-<span class="nc bnc" id="L32" title="All 2 branches missed.">        if (recurse) {</span>
-<span class="nc" id="L33">            return super.visit(node, data + &quot; &quot;);</span>
-        } else {
-<span class="nc" id="L35">            return data;</span>
-        }
-    }
+	@Override
+	public Object visit(JavaNode node, Object data) {
+<span class="nc" id="L30">		dump(node, (String) data);</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">		if (recurse) {</span>
+<span class="nc" id="L32">			return super.visit(node, data + &quot; &quot;);</span>
+		} else {
+<span class="nc" id="L34">			return data;</span>
+		}
+	}
 
-    private void dump(JavaNode node, String prefix) {
-        //
-        // Dump format is generally composed of the following items...
-        //
+	private void dump(JavaNode node, String prefix) {
+		//
+		// Dump format is generally composed of the following items...
+		//
 
-        // 1) Dump prefix
-<span class="nc" id="L45">        writer.print(prefix);</span>
+		// 1) Dump prefix
+<span class="nc" id="L44">		writer.print(prefix);</span>
 
-        // 2) JJT Name of the Node
-<span class="nc" id="L48">        writer.print(node.toString());</span>
+		// 2) JJT Name of the Node
+<span class="nc" id="L47">		writer.print(node.toString());</span>
 
-        //
-        // If there are any additional details, then:
-        // 1) A colon
-        // 2) The Node.getImage() if it is non-empty
-        // 3) Extras in parentheses
-        //
+		//
+		// If there are any additional details, then:
+		// 1) A colon
+		// 2) The Node.getImage() if it is non-empty
+		// 3) Extras in parentheses
+		//
 
-        // Standard image handling
-<span class="nc" id="L58">        String image = node.getImage();</span>
+		// Standard image handling
+<span class="nc" id="L57">		String image = node.getImage();</span>
 
-        // Special image handling (e.g. Nodes with normally null images)
-<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (node instanceof ASTBooleanLiteral) {</span>
-<span class="nc" id="L62">            image = String.valueOf(((ASTBooleanLiteral) node).isTrue());</span>
-<span class="nc bnc" id="L63" title="All 2 branches missed.">        } else if (node instanceof ASTPrimaryPrefix) {</span>
-<span class="nc" id="L64">            ASTPrimaryPrefix primaryPrefix = (ASTPrimaryPrefix) node;</span>
-<span class="nc" id="L65">            String result = null;</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (primaryPrefix.usesSuperModifier()) {</span>
-<span class="nc" id="L67">                result = &quot;super&quot;;</span>
-<span class="nc bnc" id="L68" title="All 2 branches missed.">            } else if (primaryPrefix.usesThisModifier()) {</span>
-<span class="nc" id="L69">                result = &quot;this&quot;;</span>
-            }
-<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (image != null) {</span>
-<span class="nc" id="L72">                result += &quot;.&quot; + image;</span>
-            }
-<span class="nc" id="L74">            image = result;</span>
-<span class="nc bnc" id="L75" title="All 2 branches missed.">        } else if (node instanceof ASTPrimarySuffix) {</span>
-<span class="nc" id="L76">            ASTPrimarySuffix primarySuffix = (ASTPrimarySuffix) node;</span>
-<span class="nc bnc" id="L77" title="All 2 branches missed.">            if (primarySuffix.isArrayDereference()) {</span>
-<span class="nc bnc" id="L78" title="All 2 branches missed.">                if (image == null) {</span>
-<span class="nc" id="L79">                    image = &quot;[&quot;;</span>
-                } else {
-<span class="nc" id="L81">                    image = &quot;[&quot; + image;</span>
-                }
-            }
-        }
+		// Special image handling (e.g. Nodes with normally null images)
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (node instanceof ASTBooleanLiteral) {</span>
+<span class="nc" id="L61">			image = String.valueOf(((ASTBooleanLiteral) node).isTrue());</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		} else if (node instanceof ASTPrimaryPrefix) {</span>
+<span class="nc" id="L63">			ASTPrimaryPrefix primaryPrefix = (ASTPrimaryPrefix) node;</span>
+<span class="nc" id="L64">			String result = null;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (primaryPrefix.usesSuperModifier()) {</span>
+<span class="nc" id="L66">				result = &quot;super&quot;;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			} else if (primaryPrefix.usesThisModifier()) {</span>
+<span class="nc" id="L68">				result = &quot;this&quot;;</span>
+			}
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (image != null) {</span>
+<span class="nc" id="L71">				result += &quot;.&quot; + image;</span>
+			}
+<span class="nc" id="L73">			image = result;</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		} else if (node instanceof ASTPrimarySuffix) {</span>
+<span class="nc" id="L75">			ASTPrimarySuffix primarySuffix = (ASTPrimarySuffix) node;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (primarySuffix.isArrayDereference()) {</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				if (image == null) {</span>
+<span class="nc" id="L78">					image = &quot;[&quot;;</span>
+				} else {
+<span class="nc" id="L80">					image = &quot;[&quot; + image;</span>
+				}
+			}
+		}
 
-        // Extras
-<span class="nc" id="L87">        List&lt;String&gt; extras = new ArrayList&lt;&gt;();</span>
+		// Extras
+<span class="nc" id="L86">		List&lt;String&gt; extras = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L89">        collectModifiers(node, extras);</span>
+<span class="nc" id="L88">		collectModifiers(node, extras);</span>
 
-        // Standard Dimensionable extras
-<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (node instanceof Dimensionable) {</span>
-<span class="nc" id="L93">            Dimensionable dimensionable = (Dimensionable) node;</span>
-<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (dimensionable.isArray()) {</span>
-<span class="nc" id="L95">                StringBuilder extra = new StringBuilder(&quot;array&quot;);</span>
-<span class="nc bnc" id="L96" title="All 2 branches missed.">                for (int i = 0; i &lt; dimensionable.getArrayDepth(); i++) {</span>
-<span class="nc" id="L97">                    extra.append('[');</span>
-                }
-<span class="nc" id="L99">                extras.add(extra.toString());</span>
-            }
-        }
+		// Standard Dimensionable extras
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (node instanceof Dimensionable) {</span>
+<span class="nc" id="L92">			Dimensionable dimensionable = (Dimensionable) node;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (dimensionable.isArray()) {</span>
+<span class="nc" id="L94">				StringBuilder extra = new StringBuilder(&quot;array&quot;);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				for (int i = 0; i &lt; dimensionable.getArrayDepth(); i++) {</span>
+<span class="nc" id="L96">					extra.append('[');</span>
+				}
+<span class="nc" id="L98">				extras.add(extra.toString());</span>
+			}
+		}
 
-        // Other extras
-<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (node instanceof ASTArguments) {</span>
-<span class="nc" id="L105">            extras.add(String.valueOf(((ASTArguments) node).getArgumentCount()));</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">        } else if (node instanceof ASTAssignmentOperator) {</span>
-<span class="nc bnc" id="L107" title="All 2 branches missed.">            extras.add(((ASTAssignmentOperator) node).isCompound() ? &quot;compound&quot; : &quot;simple&quot;);</span>
-<span class="nc bnc" id="L108" title="All 2 branches missed.">        } else if (node instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
-<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (((ASTClassOrInterfaceBodyDeclaration) node).isAnonymousInnerClass()) {</span>
-<span class="nc" id="L110">                extras.add(&quot;anonymous inner class&quot;);</span>
-            }
-<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (((ASTClassOrInterfaceBodyDeclaration) node).isEnumChild()) {</span>
-<span class="nc" id="L113">                extras.add(&quot;enum child&quot;);</span>
-            }
-<span class="nc bnc" id="L115" title="All 2 branches missed.">        } else if (node instanceof ASTBlock) {</span>
-<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (((ASTBlock) node).containsComment()) {</span>
-<span class="nc" id="L117">                extras.add(&quot;contains comment&quot;);</span>
-            }
-<span class="nc bnc" id="L119" title="All 2 branches missed.">        } else if (node instanceof ASTClassOrInterfaceDeclaration) {</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">            extras.add(((ASTClassOrInterfaceDeclaration) node).isInterface() ? &quot;interface&quot; : &quot;class&quot;);</span>
-<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (((ASTClassOrInterfaceDeclaration) node).isNested()) {</span>
-<span class="nc" id="L122">                extras.add(&quot;nested&quot;);</span>
-            }
-<span class="nc bnc" id="L124" title="All 2 branches missed.">        } else if (node instanceof ASTConditionalExpression) {</span>
-<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (((ASTConditionalExpression) node).isTernary()) {</span>
-<span class="nc" id="L126">                extras.add(&quot;ternary&quot;);</span>
-            }
-<span class="nc bnc" id="L128" title="All 2 branches missed.">        } else if (node instanceof ASTConstructorDeclaration) {</span>
-<span class="nc" id="L129">            extras.add(String.valueOf(((ASTConstructorDeclaration) node).getParameterCount()));</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">            if (((ASTConstructorDeclaration) node).containsComment()) {</span>
-<span class="nc" id="L131">                extras.add(&quot;contains comment&quot;);</span>
-            }
-<span class="nc bnc" id="L133" title="All 2 branches missed.">        } else if (node instanceof ASTExplicitConstructorInvocation) {</span>
-<span class="nc" id="L134">            extras.add(String.valueOf(((ASTExplicitConstructorInvocation) node).getArgumentCount()));</span>
-<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (((ASTExplicitConstructorInvocation) node).isThis()) {</span>
-<span class="nc" id="L136">                extras.add(&quot;this&quot;);</span>
-            }
-<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (((ASTExplicitConstructorInvocation) node).isSuper()) {</span>
-<span class="nc" id="L139">                extras.add(&quot;super&quot;);</span>
-            }
-<span class="nc bnc" id="L141" title="All 2 branches missed.">        } else if (node instanceof ASTFormalParameter) {</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (((ASTFormalParameter) node).isVarargs()) {</span>
-<span class="nc" id="L143">                extras.add(&quot;varargs&quot;);</span>
-            }
-<span class="nc bnc" id="L145" title="All 2 branches missed.">        } else if (node instanceof ASTFormalParameters) {</span>
-<span class="nc" id="L146">            extras.add(String.valueOf(((ASTFormalParameters) node).getParameterCount()));</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">        } else if (node instanceof ASTIfStatement) {</span>
-<span class="nc bnc" id="L148" title="All 2 branches missed.">            if (((ASTIfStatement) node).hasElse()) {</span>
-<span class="nc" id="L149">                extras.add(&quot;has else&quot;);</span>
-            }
-<span class="nc bnc" id="L151" title="All 2 branches missed.">        } else if (node instanceof ASTImportDeclaration) {</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (((ASTImportDeclaration) node).isImportOnDemand()) {</span>
-<span class="nc" id="L153">                extras.add(&quot;on demand&quot;);</span>
-            }
-<span class="nc bnc" id="L155" title="All 2 branches missed.">            if (((ASTImportDeclaration) node).isStatic()) {</span>
-<span class="nc" id="L156">                extras.add(&quot;static&quot;);</span>
-            }
-<span class="nc bnc" id="L158" title="All 2 branches missed.">        } else if (node instanceof ASTInitializer) {</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">            extras.add(((ASTInitializer) node).isStatic() ? &quot;static&quot; : &quot;nonstatic&quot;);</span>
-<span class="nc bnc" id="L160" title="All 2 branches missed.">        } else if (node instanceof ASTLiteral) {</span>
-<span class="nc" id="L161">            ASTLiteral literal = (ASTLiteral) node;</span>
-<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (literal.isCharLiteral()) {</span>
-<span class="nc" id="L163">                extras.add(&quot;char style&quot;);</span>
-            }
-<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (literal.isIntLiteral()) {</span>
-<span class="nc" id="L166">                extras.add(&quot;int style&quot;);</span>
-            }
-<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (literal.isFloatLiteral()) {</span>
-<span class="nc" id="L169">                extras.add(&quot;float style&quot;);</span>
-            }
-<span class="nc bnc" id="L171" title="All 2 branches missed.">            if (literal.isStringLiteral()) {</span>
-<span class="nc" id="L172">                extras.add(&quot;String style&quot;);</span>
-            }
-<span class="nc bnc" id="L174" title="All 2 branches missed.">            if (literal.isDoubleLiteral()) {</span>
-<span class="nc" id="L175">                extras.add(&quot;double style&quot;);</span>
-            }
-<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (literal.isLongLiteral()) {</span>
-<span class="nc" id="L178">                extras.add(&quot;long style&quot;);</span>
-            }
-<span class="nc bnc" id="L180" title="All 2 branches missed.">        } else if (node instanceof ASTResultType) {</span>
-<span class="nc bnc" id="L181" title="All 2 branches missed.">            if (((ASTResultType) node).isVoid()) {</span>
-<span class="nc" id="L182">                extras.add(&quot;void&quot;);</span>
-            }
-<span class="nc bnc" id="L184" title="All 2 branches missed.">            if (((ASTResultType) node).returnsArray()) {</span>
-<span class="nc" id="L185">                extras.add(&quot;returns array&quot;);</span>
-            }
-<span class="nc bnc" id="L187" title="All 2 branches missed.">        } else if (node instanceof ASTSwitchLabel) {</span>
-<span class="nc bnc" id="L188" title="All 2 branches missed.">            if (((ASTSwitchLabel) node).isDefault()) {</span>
-<span class="nc" id="L189">                extras.add(&quot;default&quot;);</span>
-            }
-<span class="nc bnc" id="L191" title="All 2 branches missed.">        } else if (node instanceof ASTTryStatement) {</span>
-<span class="nc bnc" id="L192" title="All 2 branches missed.">            if (((ASTTryStatement) node).hasFinally()) {</span>
-<span class="nc" id="L193">                extras.add(&quot;has finally&quot;);</span>
-            }
-        }
+		// Other extras
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (node instanceof ASTArguments) {</span>
+<span class="nc" id="L104">			extras.add(String.valueOf(((ASTArguments) node).getArgumentCount()));</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		} else if (node instanceof ASTAssignmentOperator) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			extras.add(((ASTAssignmentOperator) node).isCompound() ? &quot;compound&quot; : &quot;simple&quot;);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		} else if (node instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (((ASTClassOrInterfaceBodyDeclaration) node).isAnonymousInnerClass()) {</span>
+<span class="nc" id="L109">				extras.add(&quot;anonymous inner class&quot;);</span>
+			}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (((ASTClassOrInterfaceBodyDeclaration) node).isEnumChild()) {</span>
+<span class="nc" id="L112">				extras.add(&quot;enum child&quot;);</span>
+			}
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		} else if (node instanceof ASTBlock) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			if (((ASTBlock) node).containsComment()) {</span>
+<span class="nc" id="L116">				extras.add(&quot;contains comment&quot;);</span>
+			}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		} else if (node instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			extras.add(((ASTClassOrInterfaceDeclaration) node).isInterface() ? &quot;interface&quot; : &quot;class&quot;);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (((ASTClassOrInterfaceDeclaration) node).isNested()) {</span>
+<span class="nc" id="L121">				extras.add(&quot;nested&quot;);</span>
+			}
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		} else if (node instanceof ASTConditionalExpression) {</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (((ASTConditionalExpression) node).isTernary()) {</span>
+<span class="nc" id="L125">				extras.add(&quot;ternary&quot;);</span>
+			}
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		} else if (node instanceof ASTConstructorDeclaration) {</span>
+<span class="nc" id="L128">			extras.add(String.valueOf(((ASTConstructorDeclaration) node).getParameterCount()));</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			if (((ASTConstructorDeclaration) node).containsComment()) {</span>
+<span class="nc" id="L130">				extras.add(&quot;contains comment&quot;);</span>
+			}
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		} else if (node instanceof ASTExplicitConstructorInvocation) {</span>
+<span class="nc" id="L133">			extras.add(String.valueOf(((ASTExplicitConstructorInvocation) node).getArgumentCount()));</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (((ASTExplicitConstructorInvocation) node).isThis()) {</span>
+<span class="nc" id="L135">				extras.add(&quot;this&quot;);</span>
+			}
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (((ASTExplicitConstructorInvocation) node).isSuper()) {</span>
+<span class="nc" id="L138">				extras.add(&quot;super&quot;);</span>
+			}
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		} else if (node instanceof ASTFormalParameter) {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (((ASTFormalParameter) node).isVarargs()) {</span>
+<span class="nc" id="L142">				extras.add(&quot;varargs&quot;);</span>
+			}
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		} else if (node instanceof ASTFormalParameters) {</span>
+<span class="nc" id="L145">			extras.add(String.valueOf(((ASTFormalParameters) node).getParameterCount()));</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		} else if (node instanceof ASTIfStatement) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (((ASTIfStatement) node).hasElse()) {</span>
+<span class="nc" id="L148">				extras.add(&quot;has else&quot;);</span>
+			}
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		} else if (node instanceof ASTImportDeclaration) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (((ASTImportDeclaration) node).isImportOnDemand()) {</span>
+<span class="nc" id="L152">				extras.add(&quot;on demand&quot;);</span>
+			}
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (((ASTImportDeclaration) node).isStatic()) {</span>
+<span class="nc" id="L155">				extras.add(&quot;static&quot;);</span>
+			}
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		} else if (node instanceof ASTInitializer) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			extras.add(((ASTInitializer) node).isStatic() ? &quot;static&quot; : &quot;nonstatic&quot;);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		} else if (node instanceof ASTLiteral) {</span>
+<span class="nc" id="L160">		    ASTLiteral literal = (ASTLiteral)node;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (literal.isCharLiteral()) {</span>
+<span class="nc" id="L162">				extras.add(&quot;char style&quot;);</span>
+			}
+<span class="nc bnc" id="L164" title="All 2 branches missed.">			if (literal.isIntLiteral()) {</span>
+<span class="nc" id="L165">				extras.add(&quot;int style&quot;);</span>
+			}
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			if (literal.isFloatLiteral()) {</span>
+<span class="nc" id="L168">				extras.add(&quot;float style&quot;);</span>
+			}
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (literal.isStringLiteral()) {</span>
+<span class="nc" id="L171">				extras.add(&quot;String style&quot;);</span>
+			}
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (literal.isDoubleLiteral()) {</span>
+<span class="nc" id="L174">			    extras.add(&quot;double style&quot;);</span>
+			}
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (literal.isLongLiteral()) {</span>
+<span class="nc" id="L177">			    extras.add(&quot;long style&quot;);</span>
+			}
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		} else if (node instanceof ASTResultType) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (((ASTResultType) node).isVoid()) {</span>
+<span class="nc" id="L181">				extras.add(&quot;void&quot;);</span>
+			}
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (((ASTResultType) node).returnsArray()) {</span>
+<span class="nc" id="L184">				extras.add(&quot;returns array&quot;);</span>
+			}
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		} else if (node instanceof ASTSwitchLabel) {</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (((ASTSwitchLabel) node).isDefault()) {</span>
+<span class="nc" id="L188">				extras.add(&quot;default&quot;);</span>
+			}
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		} else if (node instanceof ASTTryStatement) {</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (((ASTTryStatement) node).hasFinally()) {</span>
+<span class="nc" id="L192">				extras.add(&quot;has finally&quot;);</span>
+			}
+		}
 
-        // Output image and extras
-<span class="nc bnc" id="L198" title="All 4 branches missed.">        if (image != null || !extras.isEmpty()) {</span>
-<span class="nc" id="L199">            writer.print(':');</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (image != null) {</span>
-<span class="nc" id="L201">                writer.print(image);</span>
-            }
-<span class="nc bnc" id="L203" title="All 2 branches missed.">            for (String extra : extras) {</span>
-<span class="nc" id="L204">                writer.print('(');</span>
-<span class="nc" id="L205">                writer.print(extra);</span>
-<span class="nc" id="L206">                writer.print(')');</span>
-<span class="nc" id="L207">            }</span>
-        }
+		// Output image and extras
+<span class="nc bnc" id="L197" title="All 4 branches missed.">		if (image != null || !extras.isEmpty()) {</span>
+<span class="nc" id="L198">			writer.print(':');</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">			if (image != null) {</span>
+<span class="nc" id="L200">				writer.print(image);</span>
+			}
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			for (String extra : extras) {</span>
+<span class="nc" id="L203">				writer.print('(');</span>
+<span class="nc" id="L204">				writer.print(extra);</span>
+<span class="nc" id="L205">				writer.print(')');</span>
+<span class="nc" id="L206">			}</span>
+		}
 
-<span class="nc" id="L210">        writer.println();</span>
-<span class="nc" id="L211">    }</span>
+<span class="nc" id="L209">		writer.println();</span>
+<span class="nc" id="L210">	}</span>
 
-    private void collectModifiers(JavaNode node, List&lt;String&gt; extras) {
-        // Standard AccessNode extras
-<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (node instanceof AccessNode) {</span>
-<span class="nc" id="L216">            AccessNode accessNode = (AccessNode) node;</span>
-<span class="nc bnc" id="L217" title="All 2 branches missed.">            if (accessNode.isPackagePrivate()) {</span>
-<span class="nc" id="L218">                extras.add(&quot;package private&quot;);</span>
-            }
-<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (accessNode.isPrivate()) {</span>
-<span class="nc" id="L221">                extras.add(&quot;private&quot;);</span>
-            }
-<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (accessNode.isPublic()) {</span>
-<span class="nc" id="L224">                extras.add(&quot;public&quot;);</span>
-            }
-<span class="nc bnc" id="L226" title="All 2 branches missed.">            if (accessNode.isProtected()) {</span>
-<span class="nc" id="L227">                extras.add(&quot;protected&quot;);</span>
-            }
-<span class="nc bnc" id="L229" title="All 2 branches missed.">            if (accessNode.isAbstract()) {</span>
-<span class="nc" id="L230">                extras.add(&quot;abstract&quot;);</span>
-            }
-<span class="nc bnc" id="L232" title="All 2 branches missed.">            if (accessNode.isStatic()) {</span>
-<span class="nc" id="L233">                extras.add(&quot;static&quot;);</span>
-            }
-<span class="nc bnc" id="L235" title="All 2 branches missed.">            if (accessNode.isFinal()) {</span>
-<span class="nc" id="L236">                extras.add(&quot;final&quot;);</span>
-            }
-<span class="nc bnc" id="L238" title="All 2 branches missed.">            if (accessNode.isSynchronized()) {</span>
-<span class="nc" id="L239">                extras.add(&quot;synchronized&quot;);</span>
-            }
-<span class="nc bnc" id="L241" title="All 2 branches missed.">            if (accessNode.isNative()) {</span>
-<span class="nc" id="L242">                extras.add(&quot;native&quot;);</span>
-            }
-<span class="nc bnc" id="L244" title="All 2 branches missed.">            if (accessNode.isStrictfp()) {</span>
-<span class="nc" id="L245">                extras.add(&quot;strict&quot;);</span>
-            }
-<span class="nc bnc" id="L247" title="All 2 branches missed.">            if (accessNode.isTransient()) {</span>
-<span class="nc" id="L248">                extras.add(&quot;transient&quot;);</span>
-            }
-<span class="nc bnc" id="L250" title="All 2 branches missed.">            if (accessNode.isDefault()) {</span>
-<span class="nc" id="L251">                extras.add(&quot;default&quot;);</span>
-            }
-        }
-<span class="nc" id="L254">    }</span>
+	private void collectModifiers(JavaNode node, List&lt;String&gt; extras) {
+		// Standard AccessNode extras
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (node instanceof AccessNode) {</span>
+<span class="nc" id="L215">			AccessNode accessNode = (AccessNode) node;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">			if (accessNode.isPackagePrivate()) {</span>
+<span class="nc" id="L217">				extras.add(&quot;package private&quot;);</span>
+			}
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			if (accessNode.isPrivate()) {</span>
+<span class="nc" id="L220">				extras.add(&quot;private&quot;);</span>
+			}
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			if (accessNode.isPublic()) {</span>
+<span class="nc" id="L223">				extras.add(&quot;public&quot;);</span>
+			}
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (accessNode.isProtected()) {</span>
+<span class="nc" id="L226">				extras.add(&quot;protected&quot;);</span>
+			}
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			if (accessNode.isAbstract()) {</span>
+<span class="nc" id="L229">				extras.add(&quot;abstract&quot;);</span>
+			}
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (accessNode.isStatic()) {</span>
+<span class="nc" id="L232">				extras.add(&quot;static&quot;);</span>
+			}
+<span class="nc bnc" id="L234" title="All 2 branches missed.">			if (accessNode.isFinal()) {</span>
+<span class="nc" id="L235">				extras.add(&quot;final&quot;);</span>
+			}
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if (accessNode.isSynchronized()) {</span>
+<span class="nc" id="L238">				extras.add(&quot;synchronized&quot;);</span>
+			}
+<span class="nc bnc" id="L240" title="All 2 branches missed.">			if (accessNode.isNative()) {</span>
+<span class="nc" id="L241">				extras.add(&quot;native&quot;);</span>
+			}
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (accessNode.isStrictfp()) {</span>
+<span class="nc" id="L244">				extras.add(&quot;strict&quot;);</span>
+			}
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (accessNode.isTransient()) {</span>
+<span class="nc" id="L247">				extras.add(&quot;transient&quot;);</span>
+			}
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (accessNode.isDefault()) {</span>
+<span class="nc" id="L250">			    extras.add(&quot;default&quot;);</span>
+			}
+		}
+<span class="nc" id="L253">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
