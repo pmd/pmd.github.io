@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexSuggestUsingNamedCredRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexSuggestUsingNamedCredRule.java</span></div><h1>ApexSuggestUsingNamedCredRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTBinaryExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTField;
+import net.sourceforge.pmd.lang.apex.ast.ASTLiteralExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
+import net.sourceforge.pmd.lang.apex.ast.AbstractApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+/**
+ * Flags usage of http request.setHeader('Authorization',..) and suggests using
+ * named credentials which helps store credentials for the callout in a safe
+ * place.
+ * 
+ * @author sergey.gorbaty
+ *
+ */
+public class ApexSuggestUsingNamedCredRule extends AbstractApexRule {
+    private static final String SET_HEADER = &quot;setHeader&quot;;
+    private static final String AUTHORIZATION = &quot;Authorization&quot;;
+
+<span class="fc" id="L33">    private final Set&lt;String&gt; listOfAuthorizationVariables = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L35">    public ApexSuggestUsingNamedCredRule() {</span>
+<span class="fc" id="L36">        super.addRuleChainVisit(ASTUserClass.class);</span>
+<span class="fc" id="L37">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L38">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L39">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public Object visit(ASTUserClass node, Object data) {
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (Helper.isTestMethodOrClass(node)) {</span>
+<span class="nc" id="L45">            return data;</span>
+        }
+
+<span class="fc" id="L48">        List&lt;ASTVariableDeclaration&gt; variableDecls = node.findDescendantsOfType(ASTVariableDeclaration.class);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        for (ASTVariableDeclaration varDecl : variableDecls) {</span>
+<span class="fc" id="L50">            findAuthLiterals(varDecl);</span>
+<span class="fc" id="L51">        }</span>
+
+<span class="fc" id="L53">        List&lt;ASTField&gt; fieldDecl = node.findDescendantsOfType(ASTField.class);</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (ASTField fDecl : fieldDecl) {</span>
+<span class="fc" id="L55">            findFieldLiterals(fDecl);</span>
+<span class="fc" id="L56">        }</span>
+
+<span class="fc" id="L58">        List&lt;ASTMethodCallExpression&gt; methodCalls = node.findDescendantsOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (ASTMethodCallExpression method : methodCalls) {</span>
+<span class="fc" id="L60">            flagAuthorizationHeaders(method, data);</span>
+<span class="fc" id="L61">        }</span>
+
+<span class="fc" id="L63">        listOfAuthorizationVariables.clear();</span>
+
+<span class="fc" id="L65">        return data;</span>
+    }
+
+    private void findFieldLiterals(final ASTField fDecl) {
+<span class="fc" id="L69">        Object f = fDecl.getNode().getFieldInfo().getValue();</span>
+<span class="pc bpc" id="L70" title="2 of 4 branches missed.">        if (f != null &amp;&amp; f instanceof String) {</span>
+<span class="fc" id="L71">            final String fieldValue = (String) f;</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">            if (AUTHORIZATION.equalsIgnoreCase(fieldValue)) {</span>
+<span class="fc" id="L73">                listOfAuthorizationVariables.add(Helper.getFQVariableName(fDecl));</span>
+            }
+        }
+<span class="fc" id="L76">    }</span>
+
+    private void flagAuthorizationHeaders(final ASTMethodCallExpression node, Object data) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (!Helper.isMethodName(node, SET_HEADER)) {</span>
+<span class="fc" id="L80">            return;</span>
+        }
+
+<span class="fc" id="L83">        final ASTBinaryExpression binaryNode = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (binaryNode != null) {</span>
+<span class="nc" id="L85">            runChecks(binaryNode, data);</span>
+        }
+
+<span class="fc" id="L88">        runChecks(node, data);</span>
+
+<span class="fc" id="L90">    }</span>
+
+    private void findAuthLiterals(final AbstractApexNode&lt;?&gt; node) {
+<span class="fc" id="L93">        ASTLiteralExpression literal = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (literal != null) {</span>
+<span class="nc" id="L95">            ASTVariableExpression variable = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">            if (variable != null) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">                if (isAuthorizationLiteral(literal)) {</span>
+<span class="nc" id="L98">                    listOfAuthorizationVariables.add(Helper.getFQVariableName(variable));</span>
+                }
+            }
+        }
+<span class="fc" id="L102">    }</span>
+
+    private void runChecks(final AbstractApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L105">        ASTLiteralExpression literalNode = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (literalNode != null) {</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (isAuthorizationLiteral(literalNode)) {</span>
+<span class="fc" id="L108">                addViolation(data, literalNode);</span>
+            }
+        }
+
+<span class="fc" id="L112">        final ASTVariableExpression varNode = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (varNode != null) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (listOfAuthorizationVariables.contains(Helper.getFQVariableName(varNode))) {</span>
+<span class="fc" id="L115">                addViolation(data, varNode);</span>
+            }
+        }
+<span class="fc" id="L118">    }</span>
+
+    private boolean isAuthorizationLiteral(final ASTLiteralExpression literal) {
+<span class="fc" id="L121">        Object o = literal.getNode().getLiteral();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (o instanceof String) {</span>
+<span class="fc" id="L123">            String lit = (String) o;</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (lit.equalsIgnoreCase(AUTHORIZATION)) {</span>
+<span class="fc" id="L125">                return true;</span>
+            }
+        }
+
+<span class="nc" id="L129">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

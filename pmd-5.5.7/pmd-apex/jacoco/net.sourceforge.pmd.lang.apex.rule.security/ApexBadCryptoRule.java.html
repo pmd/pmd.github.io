@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexBadCryptoRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexBadCryptoRule.java</span></div><h1>ApexBadCryptoRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
+import net.sourceforge.pmd.lang.apex.ast.AbstractApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+/**
+ * Finds encryption schemes using hardcoded IV, hardcoded key
+ * 
+ * @author sergey.gorbaty
+ *
+ */
+public class ApexBadCryptoRule extends AbstractApexRule {
+    private static final String VALUE_OF = &quot;valueOf&quot;;
+    private static final String BLOB = &quot;Blob&quot;;
+    private static final String ENCRYPT = &quot;encrypt&quot;;
+    private static final String DECRYPT = &quot;decrypt&quot;;
+    private static final String CRYPTO = &quot;Crypto&quot;;
+    private static final String ENCRYPT_WITH_MANAGED_IV = &quot;encryptWithManagedIV&quot;;
+    private static final String DECRYPT_WITH_MANAGED_IV = &quot;decryptWithManagedIV&quot;;
+
+<span class="fc" id="L33">    private final Set&lt;String&gt; potentiallyStaticBlob = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L35">    public ApexBadCryptoRule() {</span>
+<span class="fc" id="L36">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L37">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L38">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L39">    }</span>
+
+    @Override
+    public Object visit(ASTUserClass node, Object data) {
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        if (Helper.isTestMethodOrClass(node)) {</span>
+<span class="nc" id="L44">            return data;</span>
+        }
+
+<span class="fc" id="L47">        List&lt;ASTFieldDeclaration&gt; fieldDecl = node.findDescendantsOfType(ASTFieldDeclaration.class);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        for (ASTFieldDeclaration var : fieldDecl) {</span>
+<span class="nc" id="L49">            findSafeVariables(var);</span>
+<span class="nc" id="L50">        }</span>
+
+<span class="fc" id="L52">        List&lt;ASTVariableDeclaration&gt; variableDecl = node.findDescendantsOfType(ASTVariableDeclaration.class);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (ASTVariableDeclaration var : variableDecl) {</span>
+<span class="fc" id="L54">            findSafeVariables(var);</span>
+<span class="fc" id="L55">        }</span>
+
+<span class="fc" id="L57">        List&lt;ASTMethodCallExpression&gt; methodCalls = node.findDescendantsOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        for (ASTMethodCallExpression methodCall : methodCalls) {</span>
+<span class="pc bpc" id="L59" title="1 of 4 branches missed.">            if (Helper.isMethodName(methodCall, CRYPTO, ENCRYPT) || Helper.isMethodName(methodCall, CRYPTO, DECRYPT)</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                    || Helper.isMethodName(methodCall, CRYPTO, ENCRYPT_WITH_MANAGED_IV)</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">                    || Helper.isMethodName(methodCall, CRYPTO, DECRYPT_WITH_MANAGED_IV)) {</span>
+
+<span class="fc" id="L63">                validateStaticIVorKey(methodCall, data);</span>
+            }
+<span class="fc" id="L65">        }</span>
+        
+<span class="fc" id="L67">        potentiallyStaticBlob.clear();</span>
+        
+<span class="fc" id="L69">        return data;</span>
+    }
+
+    private void findSafeVariables(AbstractApexNode&lt;?&gt; var) {
+<span class="fc" id="L73">        ASTMethodCallExpression methodCall = var.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">        if (methodCall != null &amp;&amp; Helper.isMethodName(methodCall, BLOB, VALUE_OF)) {</span>
+<span class="fc" id="L75">            ASTVariableExpression variable = var.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">            if (variable != null) {</span>
+<span class="fc" id="L77">                potentiallyStaticBlob.add(Helper.getFQVariableName(variable));</span>
+            }
+        }
+<span class="fc" id="L80">    }</span>
+
+    private void validateStaticIVorKey(ASTMethodCallExpression methodCall, Object data) {
+        // .encrypt('AES128', key, exampleIv, data);
+<span class="fc" id="L84">        int numberOfChildren = methodCall.jjtGetNumChildren();</span>
+<span class="pc bpc" id="L85" title="1 of 3 branches missed.">        switch (numberOfChildren) {</span>
+        // matching signature to encrypt(
+        case 5:
+<span class="fc" id="L88">            Object potentialIV = methodCall.jjtGetChild(3);</span>
+<span class="fc" id="L89">            reportIfHardCoded(data, potentialIV);</span>
+<span class="fc" id="L90">            Object potentialKey = methodCall.jjtGetChild(2);</span>
+<span class="fc" id="L91">            reportIfHardCoded(data, potentialKey);</span>
+<span class="fc" id="L92">            break;</span>
+
+        // matching signature to encryptWithManagedIV(
+        case 4:
+<span class="fc" id="L96">            Object key = methodCall.jjtGetChild(2);</span>
+<span class="fc" id="L97">            reportIfHardCoded(data, key);</span>
+<span class="fc" id="L98">            break;</span>
+
+        default:
+            break;
+        }
+
+<span class="fc" id="L104">    }</span>
+
+    private void reportIfHardCoded(Object data, Object potentialIV) {
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (potentialIV instanceof ASTVariableExpression) {</span>
+<span class="fc" id="L108">            ASTVariableExpression variable = (ASTVariableExpression) potentialIV;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (potentiallyStaticBlob.contains(Helper.getFQVariableName(variable))) {</span>
+<span class="fc" id="L110">                addViolation(data, variable);</span>
+            }
+        }
+<span class="fc" id="L113">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

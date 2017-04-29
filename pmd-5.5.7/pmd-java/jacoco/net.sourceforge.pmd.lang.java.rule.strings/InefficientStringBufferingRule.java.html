@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>InefficientStringBufferingRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strings</a> &gt; <span class="el_source">InefficientStringBufferingRule.java</span></div><h1>InefficientStringBufferingRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.java.rule.strings;
+
+import java.util.Iterator;
+import java.util.List;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAdditiveExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
+import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTLocalVariableDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTType;
+import net.sourceforge.pmd.lang.java.ast.AccessNode;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.TypedNameDeclaration;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
+
+/**
+ * How this rule works:
+ * find additive expressions: +
+ * check that the addition is between anything other than two literals
+ * if true and also the parent is StringBuffer constructor or append,
+ * report a violation.
+ *
+ * @author mgriffa
+ */
+<span class="fc" id="L37">public class InefficientStringBufferingRule extends AbstractJavaRule {</span>
+
+    @Override
+    public Object visit(ASTAdditiveExpression node, Object data) {
+<span class="fc" id="L41">        ASTBlockStatement bs = node.getFirstParentOfType(ASTBlockStatement.class);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (bs == null) {</span>
+<span class="fc" id="L43">            return data;</span>
+        }
+
+<span class="fc" id="L46">        int immediateLiterals = 0;</span>
+<span class="fc" id="L47">        int immediateStringLiterals = 0;</span>
+<span class="fc" id="L48">        List&lt;ASTLiteral&gt; nodes = node.findDescendantsOfType(ASTLiteral.class);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        for (ASTLiteral literal: nodes) {</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (literal.getNthParent(3) instanceof ASTAdditiveExpression) {</span>
+<span class="fc" id="L51">                immediateLiterals++;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                if (literal.isStringLiteral()) {</span>
+<span class="fc" id="L53">                	immediateStringLiterals++;</span>
+                }
+            }
+<span class="pc bpc" id="L56" title="2 of 8 branches missed.">            if (literal.isIntLiteral() || literal.isFloatLiteral() || literal.isDoubleLiteral() || literal.isLongLiteral()) {</span>
+<span class="fc" id="L57">        	return data;</span>
+            }
+<span class="fc" id="L59">        }</span>
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (immediateLiterals &gt; 1) {</span>
+<span class="fc" id="L62">            return data;</span>
+        }
+
+        // if literal + public static final, return
+<span class="fc" id="L66">        List&lt;ASTName&gt; nameNodes = node.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (ASTName name: nameNodes) {</span>
+<span class="fc bfc" id="L68" title="All 4 branches covered.">            if (name.getNameDeclaration() != null &amp;&amp; name.getNameDeclaration() instanceof VariableNameDeclaration) {</span>
+<span class="fc" id="L69">                VariableNameDeclaration vnd = (VariableNameDeclaration)name.getNameDeclaration();</span>
+<span class="fc" id="L70">                AccessNode accessNodeParent = vnd.getAccessNodeParent();</span>
+<span class="fc bfc" id="L71" title="All 4 branches covered.">                if (accessNodeParent.isFinal() &amp;&amp; accessNodeParent.isStatic()) {</span>
+<span class="fc" id="L72">                    return data;</span>
+                }
+            }
+<span class="fc" id="L75">        }</span>
+        
+        // if literal primitive type and not strings variables, then return
+<span class="fc" id="L78">        boolean stringFound = false;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (ASTName name: nameNodes) {</span>
+<span class="fc bfc" id="L80" title="All 4 branches covered.">        	if (!isPrimitiveType(name) &amp;&amp; isStringType(name)) {</span>
+<span class="fc" id="L81">        		stringFound = true;</span>
+<span class="fc" id="L82">        		break;</span>
+        	}
+<span class="fc" id="L84">        }</span>
+<span class="fc bfc" id="L85" title="All 4 branches covered.">        if (!stringFound &amp;&amp; immediateStringLiterals == 0) {</span>
+<span class="fc" id="L86">        	return data;</span>
+        }
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (bs.isAllocation()) {</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">            for (Iterator&lt;ASTName&gt; iterator = nameNodes.iterator(); iterator.hasNext();) {</span>
+<span class="fc" id="L91">            	ASTName name = iterator.next();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">    			if (!name.getImage().endsWith(&quot;length&quot;)) {</span>
+<span class="fc" id="L93">    				break;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">    			} else if (!iterator.hasNext()) {</span>
+<span class="fc" id="L95">    				return data;	//All names end with length</span>
+    			}
+<span class="fc" id="L97">    		}</span>
+
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (isAllocatedStringBuffer(node)) {</span>
+<span class="fc" id="L100">                addViolation(data, node);</span>
+            }
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        } else if (isInStringBufferOperation(node, 6, &quot;append&quot;)) {</span>
+<span class="fc" id="L103">            addViolation(data, node);</span>
+        }
+<span class="fc" id="L105">        return data;</span>
+    }
+
+    private boolean isStringType(ASTName name) {
+<span class="fc" id="L109">    	ASTType type = getTypeNode(name);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">    	if (type != null) {</span>
+<span class="fc" id="L111">    		List&lt;ASTClassOrInterfaceType&gt; types = type.findDescendantsOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">    		if (!types.isEmpty()) {</span>
+<span class="fc" id="L113">    			ASTClassOrInterfaceType typeDeclaration = types.get(0);</span>
+<span class="pc bpc" id="L114" title="1 of 4 branches missed.">    			if (String.class == typeDeclaration.getType() || &quot;String&quot;.equals(typeDeclaration.getImage())) {</span>
+<span class="fc" id="L115">    				return true;</span>
+    			}
+    		}
+    	}
+<span class="fc" id="L119">		return false;</span>
+	}
+
+	private boolean isPrimitiveType(ASTName name) {
+<span class="fc" id="L123">		ASTType type = getTypeNode(name);</span>
+<span class="fc bfc" id="L124" title="All 4 branches covered.">		if (type != null &amp;&amp; !type.findChildrenOfType(ASTPrimitiveType.class).isEmpty()) {</span>
+<span class="fc" id="L125">			return true;</span>
+		}
+<span class="fc" id="L127">		return false;</span>
+	}
+	
+	private ASTType getTypeNode(ASTName name) {
+<span class="fc bfc" id="L131" title="All 2 branches covered.">    	if (name.getNameDeclaration() instanceof VariableNameDeclaration) {</span>
+<span class="fc" id="L132">    	    VariableNameDeclaration vnd = (VariableNameDeclaration) name.getNameDeclaration();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">    		if (vnd.getAccessNodeParent() instanceof ASTLocalVariableDeclaration) {</span>
+<span class="fc" id="L134">    			ASTLocalVariableDeclaration l = (ASTLocalVariableDeclaration)vnd.getAccessNodeParent();</span>
+<span class="fc" id="L135">    			return l.getTypeNode();</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">    		} else if (vnd.getAccessNodeParent() instanceof ASTFormalParameter) {</span>
+<span class="fc" id="L137">    			ASTFormalParameter p = (ASTFormalParameter) vnd.getAccessNodeParent();</span>
+<span class="fc" id="L138">    			return p.getTypeNode();</span>
+    		}
+    	}
+<span class="fc" id="L141">		return null;</span>
+	}
+
+	protected static boolean isInStringBufferOperation(Node node, int length, String methodName) {
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (!(node.getNthParent(length) instanceof ASTStatementExpression)) {</span>
+<span class="fc" id="L146">            return false;</span>
+        }
+<span class="fc" id="L148">        ASTStatementExpression s = node.getFirstParentOfType(ASTStatementExpression.class);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        if (s == null) {</span>
+<span class="nc" id="L150">            return false;</span>
+        }
+<span class="fc" id="L152">        ASTName n = s.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L153" title="2 of 6 branches missed.">        if (n == null || n.getImage().indexOf(methodName) == -1 || !(n.getNameDeclaration() instanceof TypedNameDeclaration)) {</span>
+<span class="fc" id="L154">            return false;</span>
+        }
+
+        // TODO having to hand-code this kind of dredging around is ridiculous
+        // we need something to support this in the framework
+        // but, &quot;for now&quot; (tm):
+        // if more than one arg to append(), skip it
+<span class="fc" id="L161">        ASTArgumentList argList = s.getFirstDescendantOfType(ASTArgumentList.class);</span>
+<span class="pc bpc" id="L162" title="1 of 4 branches missed.">        if (argList == null || argList.jjtGetNumChildren() &gt; 1) {</span>
+<span class="fc" id="L163">            return false;</span>
+        }
+<span class="fc" id="L165">        return TypeHelper.isEither((TypedNameDeclaration)n.getNameDeclaration(), StringBuffer.class, StringBuilder.class);</span>
+    }
+
+    private boolean isAllocatedStringBuffer(ASTAdditiveExpression node) {
+<span class="fc" id="L169">        ASTAllocationExpression ao = node.getFirstParentOfType(ASTAllocationExpression.class);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if (ao == null) {</span>
+<span class="nc" id="L171">            return false;</span>
+        }
+        // note that the child can be an ArrayDimsAndInits, for example, from java.lang.FloatingDecimal:  t = new int[ nWords+wordcount+1 ];
+<span class="fc" id="L174">        ASTClassOrInterfaceType an = ao.getFirstChildOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L175" title="1 of 4 branches missed.">        return an != null &amp;&amp; TypeHelper.isEither(an, StringBuffer.class, StringBuilder.class);</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

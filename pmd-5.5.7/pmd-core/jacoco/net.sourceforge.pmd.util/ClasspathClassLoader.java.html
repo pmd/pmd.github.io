@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClasspathClassLoader.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util</a> &gt; <span class="el_source">ClasspathClassLoader.java</span></div><h1>ClasspathClassLoader.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.util;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * Create a ClassLoader which loads classes using a CLASSPATH like String.
+ * If the String looks like a URL to a file (e.g. starts with &lt;code&gt;file://&lt;/code&gt;)
+ * the file will be read with each line representing an path on the classpath.
+ *
+ * @author Edwin Chan
+ */
+public class ClasspathClassLoader extends URLClassLoader {
+
+<span class="fc" id="L30">    private static final Logger LOG = Logger.getLogger(ClasspathClassLoader.class.getName());</span>
+
+    static {
+<span class="fc" id="L33">        registerAsParallelCapable();</span>
+<span class="fc" id="L34">    }</span>
+
+    public ClasspathClassLoader(String classpath, ClassLoader parent) throws IOException {
+<span class="fc" id="L37">        super(initURLs(classpath), parent);</span>
+<span class="fc" id="L38">    }</span>
+
+    private static URL[] initURLs(String classpath) throws IOException {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (classpath == null) {</span>
+<span class="nc" id="L42">            throw new IllegalArgumentException(&quot;classpath argument cannot be null&quot;);</span>
+        }
+<span class="fc" id="L44">        final List&lt;URL&gt; urls = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">        if (classpath.startsWith(&quot;file://&quot;)) {</span>
+            // Treat as file URL
+<span class="nc" id="L47">            addFileURLs(urls, new URL(classpath));</span>
+        } else {
+            // Treat as classpath
+<span class="fc" id="L50">            addClasspathURLs(urls, classpath);</span>
+        }
+<span class="fc" id="L52">        return urls.toArray(new URL[urls.size()]);</span>
+    }
+
+    private static void addClasspathURLs(final List&lt;URL&gt; urls, final String classpath) throws MalformedURLException {
+<span class="fc" id="L56">        StringTokenizer toker = new StringTokenizer(classpath, File.pathSeparator);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        while (toker.hasMoreTokens()) {</span>
+<span class="fc" id="L58">            String token = toker.nextToken();</span>
+<span class="fc" id="L59">            LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, token);</span>
+<span class="fc" id="L60">            urls.add(createURLFromPath(token));</span>
+<span class="fc" id="L61">        }</span>
+<span class="fc" id="L62">    }</span>
+
+    private static void addFileURLs(List&lt;URL&gt; urls, URL fileURL) throws IOException {
+<span class="nc" id="L65">        BufferedReader in = null;</span>
+        try {
+<span class="nc" id="L67">            in = new BufferedReader(new InputStreamReader(fileURL.openStream()));</span>
+            String line;
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            while ((line = in.readLine()) != null) {</span>
+<span class="nc" id="L70">                LOG.log(Level.FINE, &quot;Read classpath entry line: &lt;{0}&gt;&quot;, line);</span>
+<span class="nc" id="L71">                line = line.trim();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                if (line.length() &gt; 0) {</span>
+<span class="nc" id="L73">                    LOG.log(Level.FINE, &quot;Adding classpath entry: &lt;{0}&gt;&quot;, line);</span>
+<span class="nc" id="L74">                    urls.add(createURLFromPath(line));</span>
+                }
+            }
+        } finally {
+<span class="nc" id="L78">            IOUtils.closeQuietly(in);</span>
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">    }</span>
+
+    private static URL createURLFromPath(String path) throws MalformedURLException {
+<span class="fc" id="L83">        File file = new File(path);</span>
+<span class="fc" id="L84">        return file.getAbsoluteFile().toURI().toURL();</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+<span class="nc" id="L92">        StringBuilder sb = new StringBuilder(getClass().getSimpleName());</span>
+<span class="nc" id="L93">        sb.append(&quot;[[&quot;);</span>
+<span class="nc" id="L94">        StringUtil.asStringOn(sb, getURLs(), &quot;:&quot;);</span>
+<span class="nc" id="L95">        sb.append(&quot;] parent: &quot;)</span>
+          .append(getParent())
+          .append(']');
+
+<span class="nc" id="L99">        return sb.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

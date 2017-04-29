@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ReportHTMLPrintVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa.report</a> &gt; <span class="el_source">ReportHTMLPrintVisitor.java</span></div><h1>ReportHTMLPrintVisitor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.dfa.report;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import net.sourceforge.pmd.PMD;
+import net.sourceforge.pmd.RuleViolation;
+import net.sourceforge.pmd.util.StringUtil;
+
+import org.apache.commons.io.IOUtils;
+
+/**
+ * @author raik
+ *         &lt;p/&gt;
+ *         * Uses the generated result tree instead of the result list. The visitor
+ *         * traverses the tree and creates several html files. The &quot;package view&quot; file
+ *         * (index.html) displays an overview of packages, classes and the number of
+ *         * rule violations they contain. All the other html files represent a class
+ *         * and show detailed information about the violations.
+ */
+public class ReportHTMLPrintVisitor extends ReportVisitor {
+
+<span class="fc" id="L28">    @SuppressWarnings(&quot;PMD.AvoidStringBufferField&quot;)</span>
+    private StringBuilder packageBuf = new StringBuilder(30);
+<span class="fc" id="L30">    @SuppressWarnings(&quot;PMD.AvoidStringBufferField&quot;)</span>
+    private StringBuilder classBuf = new StringBuilder(60);
+    private int length;
+    private String baseDir;
+
+<span class="fc" id="L35">    private static final String FILE_SEPARATOR = System.getProperty(&quot;file.separator&quot;);</span>
+
+<span class="fc" id="L37">    public ReportHTMLPrintVisitor(String baseDir) {</span>
+<span class="fc" id="L38">        this.baseDir = baseDir;</span>
+<span class="fc" id="L39">    }</span>
+
+    /**
+     * Writes the buffer to file.
+     */
+    private void write(String filename, StringBuilder buf) throws IOException {
+<span class="fc" id="L45">        BufferedWriter bw = new BufferedWriter(new FileWriter(new File(baseDir + FILE_SEPARATOR + filename)));</span>
+<span class="fc" id="L46">        bw.write(buf.toString(), 0, buf.length());</span>
+<span class="fc" id="L47">        IOUtils.closeQuietly(bw);</span>
+<span class="fc" id="L48">    }</span>
+    
+    /**
+     * Generates a html table with violation information.
+     */
+    private String displayRuleViolation(RuleViolation vio) {
+ 
+<span class="fc" id="L55">    	StringBuilder sb = new StringBuilder(200);</span>
+<span class="fc" id="L56">        sb.append(&quot;&lt;table border=\&quot;0\&quot;&gt;&quot;);</span>
+<span class="fc" id="L57">        renderViolationRow(sb, &quot;Rule:&quot;, vio.getRule().getName());</span>
+<span class="fc" id="L58">        renderViolationRow(sb, &quot;Description:&quot;, vio.getDescription());</span>
+
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (StringUtil.isNotEmpty(vio.getVariableName())) {</span>
+<span class="nc" id="L61">        	renderViolationRow(sb, &quot;Variable:&quot;, vio.getVariableName());</span>
+        }
+
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (vio.getEndLine() &gt; 0) {</span>
+<span class="fc" id="L65">        	renderViolationRow(sb, &quot;Line:&quot;, vio.getEndLine() + &quot; and &quot; + vio.getBeginLine());</span>
+        } else {
+<span class="nc" id="L67">        	renderViolationRow(sb, &quot;Line:&quot;, Integer.toString(vio.getBeginLine()));</span>
+        }
+
+<span class="fc" id="L70">        sb.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="fc" id="L71">        return sb.toString();</span>
+    }
+
+    // TODO - join the 21st century, include CSS attributes :)
+    private void renderViolationRow(StringBuilder sb, String fieldName, String fieldData) {
+<span class="fc" id="L76">    	sb.append(&quot;&lt;tr&gt;&lt;td&gt;&lt;b&gt;&quot;).append(fieldName).append(&quot;&lt;/b&gt;&lt;/td&gt;&lt;td&gt;&quot;).append(fieldData).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
+<span class="fc" id="L77">    }</span>
+    
+    /**
+     * The visit method (Visitor Pattern). There are 3 types of ReportNodes:
+     * RuleViolation - contains a RuleViolation, Class - represents a class and
+     * contains the name of the class, Package - represents a package and
+     * contains the name(s) of the package.
+     */
+    public void visit(AbstractReportNode node) {
+
+        /*
+         * The first node of result tree.
+         */
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (node.getParent() == null) {</span>
+<span class="fc" id="L91">            packageBuf.insert(0,</span>
+                    &quot;&lt;html&gt;&quot; +
+                    &quot; &lt;head&gt;&quot; +
+                    &quot;   &lt;title&gt;PMD&lt;/title&gt;&quot; +
+                    &quot; &lt;/head&gt;&quot; +
+                    &quot; &lt;body&gt;&quot; + PMD.EOL + 
+                    &quot;&lt;h2&gt;Package View&lt;/h2&gt;&quot; +
+                    &quot;&lt;table border=\&quot;1\&quot; align=\&quot;center\&quot; cellspacing=\&quot;0\&quot; cellpadding=\&quot;3\&quot;&gt;&quot; +
+                    &quot; &lt;tr&gt;&quot; + PMD.EOL + 
+                    &quot;&lt;th&gt;Package&lt;/th&gt;&quot; +
+                    &quot;&lt;th&gt;Class&lt;/th&gt;&quot; +
+                    &quot;&lt;th&gt;#&lt;/th&gt;&quot; +
+                    &quot; &lt;/tr&gt;&quot; + PMD.EOL);
+
+<span class="fc" id="L105">            length = packageBuf.length();</span>
+        }
+
+<span class="fc" id="L108">        super.visit(node);</span>
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (node instanceof ViolationNode) {</span>
+<span class="fc" id="L111">            renderViolation((ViolationNode)node);</span>
+        }
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (node instanceof ClassNode) {</span>
+<span class="fc" id="L114">            renderClass((ClassNode)node);</span>
+        }
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (node instanceof PackageNode) {</span>
+<span class="fc" id="L117">            renderPackage((PackageNode)node);</span>
+        }
+        
+        // The first node of result tree.
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        if (node.getParent() == null) {</span>
+<span class="fc" id="L122">            packageBuf.append(&quot;&lt;/table&gt; &lt;/body&gt;&lt;/html&gt;&quot;);</span>
+            try {
+<span class="fc" id="L124">                write(&quot;index.html&quot;, packageBuf);</span>
+<span class="nc" id="L125">            } catch (Exception e) {</span>
+<span class="nc" id="L126">                throw new RuntimeException(&quot;Error while writing HTML report: &quot; + e.getMessage());</span>
+<span class="fc" id="L127">            }</span>
+        }
+<span class="fc" id="L129">    }</span>
+
+	private void renderViolation(ViolationNode vnode) {
+
+<span class="fc" id="L133">		vnode.getParent().addNumberOfViolation(1);</span>
+<span class="fc" id="L134">		RuleViolation vio = vnode.getRuleViolation();</span>
+<span class="fc" id="L135">		classBuf.append(&quot;&lt;tr&gt;&quot; +</span>
+		        &quot; &lt;td&gt;&quot; + vio.getMethodName() + &quot;&lt;/td&gt;&quot; +
+		        &quot; &lt;td&gt;&quot; + this.displayRuleViolation(vio) + &quot;&lt;/td&gt;&quot; +
+		        &quot;&lt;/tr&gt;&quot;);
+<span class="fc" id="L139">	}</span>
+
+	private void renderPackage(PackageNode pnode) {
+
+		String str;
+
+		// rootNode
+<span class="fc bfc" id="L146" title="All 2 branches covered.">		if (pnode.getParent() == null) {</span>
+<span class="fc" id="L147">		    str = &quot;Aggregate&quot;;</span>
+		} else {           // all the other nodes
+<span class="fc" id="L149">		    str = pnode.getPackageName();</span>
+<span class="fc" id="L150">		    pnode.getParent().addNumberOfViolation(pnode.getNumberOfViolations());</span>
+		}
+
+<span class="fc" id="L153">		packageBuf.insert(length,</span>
+		        &quot;&lt;tr&gt;&lt;td&gt;&lt;b&gt;&quot; + str + &quot;&lt;/b&gt;&lt;/td&gt;&quot; +
+		        &quot; &lt;td&gt;-&lt;/td&gt;&quot; +
+		        &quot; &lt;td&gt;&quot; + pnode.getNumberOfViolations() + &quot;&lt;/td&gt;&quot; +
+		        &quot;&lt;/tr&gt;&quot; + PMD.EOL);
+<span class="fc" id="L158">	}</span>
+
+	private void renderClass(ClassNode cnode) {
+
+<span class="fc" id="L162">		String str = cnode.getClassName();</span>
+
+<span class="fc" id="L164">		classBuf.insert(0,</span>
+		        &quot;&lt;html&gt;&lt;head&gt;&lt;title&gt;PMD - &quot; + str + &quot;&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&quot; + PMD.EOL + 
+		        &quot;&lt;h2&gt;Class View&lt;/h2&gt;&quot; +
+		        &quot;&lt;h3 align=\&quot;center\&quot;&gt;Class: &quot; + str + &quot;&lt;/h3&gt;&quot; +
+		        &quot;&lt;table border=\&quot;\&quot; align=\&quot;center\&quot; cellspacing=\&quot;0\&quot; cellpadding=\&quot;3\&quot;&gt;&quot; +
+		        &quot; &lt;tr&gt;&quot; + PMD.EOL + 
+		        &quot;&lt;th&gt;Method&lt;/th&gt;&quot; +
+		        &quot;&lt;th&gt;Violation&lt;/th&gt;&quot; +
+		        &quot; &lt;/tr&gt;&quot; + PMD.EOL);
+
+<span class="fc" id="L174">		classBuf.append(&quot;&lt;/table&gt;&quot; +</span>
+		        &quot; &lt;/body&gt;&quot; +
+		        &quot;&lt;/html&gt;&quot;);
+
+
+		try {
+<span class="fc" id="L180">		    write(str + &quot;.html&quot;, classBuf);</span>
+<span class="nc" id="L181">		} catch (Exception e) {</span>
+<span class="nc" id="L182">		    throw new RuntimeException(&quot;Error while writing HTML report: &quot; + e.getMessage());</span>
+<span class="fc" id="L183">		}</span>
+<span class="fc" id="L184">		classBuf = new StringBuilder();</span>
+
+<span class="fc" id="L186">		packageBuf.insert(this.length,</span>
+		        &quot;&lt;tr&gt;&quot; +
+		        &quot; &lt;td&gt;-&lt;/td&gt;&quot; +
+		        &quot; &lt;td&gt;&lt;a href=\&quot;&quot; + str + &quot;.html\&quot;&gt;&quot; + str + &quot;&lt;/a&gt;&lt;/td&gt;&quot; +
+		        &quot; &lt;td&gt;&quot; + cnode.getNumberOfViolations() + &quot;&lt;/td&gt;&quot; +
+		        &quot;&lt;/tr&gt;&quot; + PMD.EOL);
+<span class="fc" id="L192">		cnode.getParent().addNumberOfViolation(cnode.getNumberOfViolations());</span>
+<span class="fc" id="L193">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

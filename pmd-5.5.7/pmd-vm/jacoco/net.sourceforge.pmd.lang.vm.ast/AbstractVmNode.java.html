@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractVmNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Velocity</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.vm.ast</a> &gt; <span class="el_source">AbstractVmNode.java</span></div><h1>AbstractVmNode.java</h1><pre class="source lang-java linenums">package net.sourceforge.pmd.lang.vm.ast;
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * &quot;License&quot;); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.    
+ */
+
+import java.io.PrintWriter;
+import java.io.Writer;
+
+import net.sourceforge.pmd.lang.ast.AbstractNode;
+
+import org.apache.commons.lang3.text.StrBuilder;
+
+/**
+ *
+ */
+public class AbstractVmNode extends AbstractNode implements VmNode {
+
+    /** */
+    // TODO - It seems that this field is only valid when parsing, and should not be kept around.
+    protected VmParser parser;
+
+    /** */
+    protected int info; // added
+
+    /** */
+    public boolean state;
+
+    /** */
+<span class="fc" id="L45">    protected boolean invalid = false;</span>
+
+    /** */
+    protected Token first;
+
+    /** */
+    protected Token last;
+
+    protected String templateName;
+
+    /**
+     * @param i
+     */
+    public AbstractVmNode(final int i) {
+<span class="fc" id="L59">        super(i);</span>
+<span class="fc" id="L60">    }</span>
+
+    /**
+     * @param p
+     * @param i
+     */
+    public AbstractVmNode(final VmParser p, final int i) {
+<span class="fc" id="L67">        this(i);</span>
+<span class="fc" id="L68">        parser = p;</span>
+<span class="fc" id="L69">        templateName = parser.currentTemplateName;</span>
+<span class="fc" id="L70">    }</span>
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#jjtOpen()
+     */
+    @Override
+    public void jjtOpen() {
+<span class="fc" id="L77">        first = parser.getToken(1); // added</span>
+<span class="pc bpc" id="L78" title="2 of 4 branches missed.">        if (beginLine == -1 &amp;&amp; parser.token.next != null) {</span>
+<span class="fc" id="L79">            beginLine = parser.token.next.beginLine;</span>
+<span class="fc" id="L80">            beginColumn = parser.token.next.beginColumn;</span>
+        }
+<span class="fc" id="L82">    }</span>
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#jjtClose()
+     */
+    @Override
+    public void jjtClose() {
+<span class="fc" id="L89">        last = parser.getToken(0); // added</span>
+<span class="pc bpc" id="L90" title="5 of 6 branches missed.">        if (beginLine == -1 &amp;&amp; (children == null || children.length == 0)) {</span>
+<span class="nc" id="L91">            beginColumn = parser.token.beginColumn;</span>
+        }
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (beginLine == -1) {</span>
+<span class="nc" id="L94">            beginLine = parser.token.beginLine;</span>
+        }
+<span class="fc" id="L96">        endLine = parser.token.endLine;</span>
+<span class="fc" id="L97">        endColumn = parser.token.endColumn;</span>
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * @param t
+     */
+    public void setFirstToken(final Token t) {
+<span class="nc" id="L104">        this.first = t;</span>
+<span class="nc" id="L105">    }</span>
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getFirstToken()
+     */
+    public Token getFirstToken() {
+<span class="fc" id="L111">        return first;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getLastToken()
+     */
+    public Token getLastToken() {
+<span class="nc" id="L118">        return last;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#jjtAccept(org.apache.velocity.runtime.parser.node.VmParserVisitor,
+     *      java.lang.Object)
+     */
+    public Object jjtAccept(final VmParserVisitor visitor, final Object data) {
+<span class="nc" id="L126">        return visitor.visit(this, data);</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#childrenAccept(org.apache.velocity.runtime.parser.node.VmParserVisitor,
+     *      java.lang.Object)
+     */
+    public Object childrenAccept(final VmParserVisitor visitor, final Object data) {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (children != null) {</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            for (int i = 0; i &lt; children.length; ++i) {</span>
+<span class="fc" id="L136">                ((VmNode) children[i]).jjtAccept(visitor, data);</span>
+            }
+        }
+<span class="fc" id="L139">        return data;</span>
+    }
+
+    /*
+     * You can override these two methods in subclasses of SimpleNode to customize the way the node appears when the
+     * tree is dumped. If your output uses more than one line you should override toString(String), otherwise overriding
+     * toString() is probably all you need to do.
+     */
+
+     public String toString() {
+<span class="fc" id="L149">         return VmParserTreeConstants.jjtNodeName[id];</span>
+     }
+    /**
+     * @param prefix
+     * @return String representation of this node.
+     */
+    public String toString(final String prefix) {
+<span class="nc" id="L156">        return prefix + toString();</span>
+    }
+
+    /**
+     * Override this method if you want to customize how the node dumps out its children.
+     * 
+     * @param prefix
+     */
+    public void dump(final String prefix, final boolean recurse, final Writer writer) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        final PrintWriter printWriter = writer instanceof PrintWriter ? (PrintWriter) writer</span>
+                : new PrintWriter(writer);
+<span class="nc" id="L167">        printWriter.println(toString(prefix));</span>
+<span class="nc bnc" id="L168" title="All 4 branches missed.">        if (children != null &amp;&amp; recurse) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            for (int i = 0; i &lt; children.length; ++i) {</span>
+<span class="nc" id="L170">                final AbstractVmNode n = (AbstractVmNode) children[i];</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                if (n != null) {</span>
+<span class="nc" id="L172">                    n.dump(prefix + &quot; &quot;, recurse, printWriter);</span>
+                }
+            }
+        }
+<span class="nc" id="L176">    }</span>
+
+    // All additional methods
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#literal()
+     */
+    public String literal() {
+        // if we have only one string, just return it and avoid
+        // buffer allocation. VELOCITY-606
+<span class="pc bpc" id="L186" title="1 of 4 branches missed.">        if (first != null &amp;&amp; first.equals(last)) {</span>
+<span class="fc" id="L187">            return NodeUtils.tokenLiteral(first);</span>
+        }
+
+<span class="fc" id="L190">        Token t = first;</span>
+<span class="fc" id="L191">        final StrBuilder sb = new StrBuilder(NodeUtils.tokenLiteral(t));</span>
+<span class="pc bpc" id="L192" title="1 of 4 branches missed.">        while (t != null &amp;&amp; !t.equals(last)) {</span>
+<span class="fc" id="L193">            t = t.next;</span>
+<span class="fc" id="L194">            sb.append(NodeUtils.tokenLiteral(t));</span>
+        }
+<span class="fc" id="L196">        return sb.toString();</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getType()
+     */
+    public int getType() {
+<span class="nc" id="L203">        return id;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#setInfo(int)
+     */
+    public void setInfo(final int info) {
+<span class="nc" id="L210">        this.info = info;</span>
+<span class="nc" id="L211">    }</span>
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getInfo()
+     */
+    public int getInfo() {
+<span class="nc" id="L217">        return info;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#setInvalid()
+     */
+    public void setInvalid() {
+<span class="nc" id="L224">        invalid = true;</span>
+<span class="nc" id="L225">    }</span>
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#isInvalid()
+     */
+    public boolean isInvalid() {
+<span class="nc" id="L231">        return invalid;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getLine()
+     */
+    public int getLine() {
+<span class="nc" id="L238">        return first.beginLine;</span>
+    }
+
+    /**
+     * @see org.apache.velocity.runtime.parser.node.Node#getColumn()
+     */
+    public int getColumn() {
+<span class="nc" id="L245">        return first.beginColumn;</span>
+    }
+
+    public String getTemplateName() {
+<span class="nc" id="L249">        return templateName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

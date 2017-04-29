@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TooManyFieldsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.rule.codesize</a> &gt; <span class="el_source">TooManyFieldsRule.java</span></div><h1>TooManyFieldsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.plsql.rule.codesize;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.plsql.ast.ASTInput;
+import net.sourceforge.pmd.lang.plsql.ast.ASTPackageSpecification;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTypeSpecification;
+import net.sourceforge.pmd.lang.plsql.ast.ASTVariableOrConstantDeclaration;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
+import net.sourceforge.pmd.lang.plsql.rule.AbstractPLSQLRule;
+import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
+import net.sourceforge.pmd.util.NumericConstants;
+
+public class TooManyFieldsRule extends AbstractPLSQLRule {
+
+    private static final int DEFAULT_MAXFIELDS = 15;
+
+    private Map&lt;String, Integer&gt; stats;
+    private Map&lt;String, PLSQLNode&gt; nodes;
+
+<span class="fc" id="L27">    private static final IntegerProperty MAX_FIELDS_DESCRIPTOR = new IntegerProperty(&quot;maxfields&quot;,</span>
+            &quot;Max allowable fields&quot;, 1, 300, DEFAULT_MAXFIELDS, 1.0f);
+
+<span class="fc" id="L30">    public TooManyFieldsRule() {</span>
+<span class="fc" id="L31">        definePropertyDescriptor(MAX_FIELDS_DESCRIPTOR);</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public Object visit(ASTInput node, Object data) {
+
+<span class="fc" id="L37">        stats = new HashMap&lt;&gt;(5);</span>
+<span class="fc" id="L38">        nodes = new HashMap&lt;&gt;(5);</span>
+
+<span class="fc" id="L40">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTPackageSpecification node, Object data) {
+
+<span class="fc" id="L46">        int maxFields = getProperty(MAX_FIELDS_DESCRIPTOR);</span>
+
+<span class="fc" id="L48">        List&lt;ASTVariableOrConstantDeclaration&gt; l = node.findDescendantsOfType(ASTVariableOrConstantDeclaration.class);</span>
+
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (ASTVariableOrConstantDeclaration fd : l) {</span>
+<span class="fc" id="L51">            bumpCounterFor(fd);</span>
+<span class="fc" id="L52">        }</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (String k : stats.keySet()) {</span>
+<span class="fc" id="L54">            int val = stats.get(k);</span>
+<span class="fc" id="L55">            Node n = nodes.get(k);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">            if (val &gt; maxFields) {</span>
+<span class="fc" id="L57">                addViolation(data, n);</span>
+            }
+<span class="fc" id="L59">        }</span>
+<span class="fc" id="L60">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTTypeSpecification node, Object data) {
+
+<span class="nc" id="L66">        int maxFields = getProperty(MAX_FIELDS_DESCRIPTOR);</span>
+
+<span class="nc" id="L68">        List&lt;ASTVariableOrConstantDeclaration&gt; l = node.findDescendantsOfType(ASTVariableOrConstantDeclaration.class);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        for (ASTVariableOrConstantDeclaration fd : l) {</span>
+<span class="nc" id="L71">            bumpCounterFor(fd);</span>
+<span class="nc" id="L72">        }</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        for (String k : stats.keySet()) {</span>
+<span class="nc" id="L74">            int val = stats.get(k);</span>
+<span class="nc" id="L75">            Node n = nodes.get(k);</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            if (val &gt; maxFields) {</span>
+<span class="nc" id="L77">                addViolation(data, n);</span>
+            }
+<span class="nc" id="L79">        }</span>
+<span class="nc" id="L80">        return data;</span>
+    }
+
+    private void bumpCounterFor(PLSQLNode clazz) {
+<span class="fc" id="L84">        String key = clazz.getImage();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!stats.containsKey(key)) {</span>
+<span class="fc" id="L86">            stats.put(key, NumericConstants.ZERO);</span>
+<span class="fc" id="L87">            nodes.put(key, clazz);</span>
+        }
+<span class="fc" id="L89">        Integer i = Integer.valueOf(stats.get(key) + 1);</span>
+<span class="fc" id="L90">        stats.put(key, i);</span>
+<span class="fc" id="L91">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MethodNamingConventionsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.style</a> &gt; <span class="el_source">MethodNamingConventionsRule.java</span></div><h1>MethodNamingConventionsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.style;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
+import net.sourceforge.pmd.lang.apex.ast.ASTProperty;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+import static apex.jorje.semantic.symbol.type.ModifierTypeInfos.OVERRIDE;
+
+public class MethodNamingConventionsRule extends AbstractApexRule {
+	
+<span class="fc" id="L14">	public MethodNamingConventionsRule() {</span>
+<span class="fc" id="L15">		setProperty(CODECLIMATE_CATEGORIES, new String[]{ &quot;Style&quot; });</span>
+		// Note: x10 as Apex has not automatic refactoring
+<span class="fc" id="L17">		setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 1);</span>
+<span class="fc" id="L18">		setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L19">	}</span>
+
+	public Object visit(ASTUserClass node, Object data) {
+<span class="fc" id="L22">		return super.visit(node, data);</span>
+	}
+
+	public Object visit(ASTMethod node, Object data) {
+<span class="fc bfc" id="L26" title="All 6 branches covered.">		if (isOverriddenMethod(node) || isPropertyAccessor(node) || isConstructor(node)) {</span>
+<span class="fc" id="L27">			return data;</span>
+		}
+
+<span class="fc" id="L30">		String methodName = node.getImage();</span>
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">		if (Character.isUpperCase(methodName.charAt(0))) {</span>
+<span class="fc" id="L33">			addViolationWithMessage(data, node, &quot;Method names should not start with capital letters&quot;);</span>
+		}
+<span class="fc bfc" id="L35" title="All 2 branches covered.">		if (methodName.indexOf('_') &gt;= 0) {</span>
+<span class="fc" id="L36">			addViolationWithMessage(data, node, &quot;Method names should not contain underscores&quot;);</span>
+		}
+<span class="fc" id="L38">		return data;</span>
+	}
+
+	private boolean isOverriddenMethod(ASTMethod node) {
+<span class="fc" id="L42">		return node.getNode().getModifiers().has(OVERRIDE);</span>
+	}
+
+	private boolean isPropertyAccessor(ASTMethod node) {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">		return (node.getParentsOfType(ASTProperty.class).size() &gt; 0);</span>
+	}
+
+	private boolean isConstructor(ASTMethod node) {
+<span class="fc" id="L50">		return (node.getNode().getMethodInfo().isConstructor());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

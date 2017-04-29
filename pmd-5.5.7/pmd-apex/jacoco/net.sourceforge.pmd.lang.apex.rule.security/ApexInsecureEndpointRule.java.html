@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexInsecureEndpointRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexInsecureEndpointRule.java</span></div><h1>ApexInsecureEndpointRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTAssignmentExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTBinaryExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTLiteralExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
+import net.sourceforge.pmd.lang.apex.ast.AbstractApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+/**
+ * Insecure HTTP endpoints passed to (req.setEndpoint)
+ * req.setHeader('Authorization') should use named credentials
+ * 
+ * @author sergey.gorbaty
+ *
+ */
+public class ApexInsecureEndpointRule extends AbstractApexRule {
+    private static final String SET_ENDPOINT = &quot;setEndpoint&quot;;
+<span class="fc" id="L29">    private static final Pattern PATTERN = Pattern.compile(&quot;^http://.+?$&quot;, Pattern.CASE_INSENSITIVE);</span>
+
+<span class="fc" id="L31">    private final Set&lt;String&gt; httpEndpointStrings = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L33">    public ApexInsecureEndpointRule() {</span>
+<span class="fc" id="L34">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L35">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 100);</span>
+<span class="fc" id="L36">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L37">    }</span>
+
+    @Override
+    public Object visit(ASTAssignmentExpression node, Object data) {
+<span class="fc" id="L41">        findInsecureEndpoints(node, data);</span>
+<span class="fc" id="L42">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTVariableDeclaration node, Object data) {
+<span class="fc" id="L47">        findInsecureEndpoints(node, data);</span>
+<span class="fc" id="L48">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="fc" id="L53">        findInsecureEndpoints(node, data);</span>
+<span class="fc" id="L54">        return data;</span>
+    }
+
+    private void findInsecureEndpoints(AbstractApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L58">        ASTVariableExpression variableNode = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc" id="L59">        findInnerInsecureEndpoints(node, variableNode);</span>
+
+<span class="fc" id="L61">        ASTBinaryExpression binaryNode = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (binaryNode != null) {</span>
+<span class="fc" id="L63">            findInnerInsecureEndpoints(binaryNode, variableNode);</span>
+        }
+
+<span class="fc" id="L66">    }</span>
+
+    private void findInnerInsecureEndpoints(AbstractApexNode&lt;?&gt; node, ASTVariableExpression variableNode) {
+<span class="fc" id="L69">        ASTLiteralExpression literalNode = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+
+<span class="pc bpc" id="L71" title="1 of 4 branches missed.">        if (literalNode != null &amp;&amp; variableNode != null) {</span>
+<span class="fc" id="L72">            Object o = literalNode.getNode().getLiteral();</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (o instanceof String) {</span>
+<span class="fc" id="L74">                String literal = (String) o;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                if (PATTERN.matcher(literal).matches()) {</span>
+<span class="fc" id="L76">                    httpEndpointStrings.add(Helper.getFQVariableName(variableNode));</span>
+                }
+            }
+        }
+<span class="fc" id="L80">    }</span>
+
+    @Override
+    public Object visit(ASTMethodCallExpression node, Object data) {
+<span class="fc" id="L84">        processInsecureEndpoint(node, data);</span>
+<span class="fc" id="L85">        return data;</span>
+    }
+
+    private void processInsecureEndpoint(ASTMethodCallExpression node, Object data) {
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (!Helper.isMethodName(node, SET_ENDPOINT)) {</span>
+<span class="nc" id="L90">            return;</span>
+        }
+
+<span class="fc" id="L93">        ASTBinaryExpression binaryNode = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (binaryNode != null) {</span>
+<span class="fc" id="L95">            runChecks(binaryNode, data);</span>
+        }
+
+<span class="fc" id="L98">        runChecks(node, data);</span>
+
+<span class="fc" id="L100">    }</span>
+
+    private void runChecks(AbstractApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L103">        ASTLiteralExpression literalNode = node.getFirstChildOfType(ASTLiteralExpression.class);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (literalNode != null) {</span>
+<span class="fc" id="L105">            Object o = literalNode.getNode().getLiteral();</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if (o instanceof String) {</span>
+<span class="fc" id="L107">                String literal = (String) o;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                if (PATTERN.matcher(literal).matches()) {</span>
+<span class="fc" id="L109">                    addViolation(data, literalNode);</span>
+                }
+            }
+        }
+
+<span class="fc" id="L114">        ASTVariableExpression variableNode = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (variableNode != null) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (httpEndpointStrings.contains(Helper.getFQVariableName(variableNode))) {</span>
+<span class="fc" id="L117">                addViolation(data, variableNode);</span>
+            }
+
+        }
+<span class="fc" id="L121">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
