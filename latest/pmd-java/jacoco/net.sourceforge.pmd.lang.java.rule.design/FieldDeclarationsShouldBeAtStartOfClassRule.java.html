@@ -40,44 +40,56 @@ public class FieldDeclarationsShouldBeAtStartOfClassRule extends AbstractJavaRul
             &quot;Ignore Enum Declarations that precede fields.&quot;, true, 1.0f);
 <span class="fc" id="L41">    private BooleanProperty ignoreAnonymousClassDeclarations = new BooleanProperty(&quot;ignoreAnonymousClassDeclarations&quot;,</span>
             &quot;Ignore Field Declarations, that are initialized with anonymous class declarations&quot;, true, 2.0f);
+<span class="fc" id="L43">    private BooleanProperty ignoreInterfaceDeclarations = new BooleanProperty(&quot;ignoreInterfaceDeclarations&quot;,</span>
+            &quot;Ignore Interface Declarations that precede fields.&quot;, false, 3.0f);
 
     /**
      * Initializes the rule {@link FieldDeclarationsShouldBeAtStartOfClassRule}.
      */
-<span class="fc" id="L47">    public FieldDeclarationsShouldBeAtStartOfClassRule() {</span>
-<span class="fc" id="L48">        definePropertyDescriptor(ignoreEnumDeclarations);</span>
-<span class="fc" id="L49">        definePropertyDescriptor(ignoreAnonymousClassDeclarations);</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L49">    public FieldDeclarationsShouldBeAtStartOfClassRule() {</span>
+<span class="fc" id="L50">        definePropertyDescriptor(ignoreEnumDeclarations);</span>
+<span class="fc" id="L51">        definePropertyDescriptor(ignoreAnonymousClassDeclarations);</span>
+<span class="fc" id="L52">        definePropertyDescriptor(ignoreInterfaceDeclarations);</span>
+<span class="fc" id="L53">    }</span>
 
     @Override
     public Object visit(ASTFieldDeclaration node, Object data) {
-<span class="fc" id="L54">        Node parent = node.jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L56">            Node child = parent.jjtGetChild(i);</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (child.jjtGetNumChildren() &gt; 0) {</span>
-<span class="fc" id="L58">                child = skipAnnotations(child);</span>
+<span class="fc" id="L57">        Node parent = node.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L59">            Node child = parent.jjtGetChild(i);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (child.jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc" id="L61">                child = skipAnnotations(child);</span>
             }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (child.equals(node)) {</span>
-<span class="fc" id="L61">                break;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (child.equals(node)) {</span>
+<span class="fc" id="L64">                break;</span>
             }
-<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (child instanceof ASTFieldDeclaration) {</span>
-<span class="fc" id="L64">                continue;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (child instanceof ASTFieldDeclaration) {</span>
+<span class="fc" id="L67">                continue;</span>
             }
-<span class="fc bfc" id="L66" title="All 4 branches covered.">            if (node.hasDescendantOfType(ASTClassOrInterfaceBodyDeclaration.class)</span>
+<span class="fc bfc" id="L69" title="All 4 branches covered.">            if (node.hasDescendantOfType(ASTClassOrInterfaceBodyDeclaration.class)</span>
                     &amp;&amp; getProperty(ignoreAnonymousClassDeclarations).booleanValue()) {
-<span class="fc" id="L68">                continue;</span>
+<span class="fc" id="L71">                continue;</span>
             }
-<span class="pc bpc" id="L70" title="1 of 8 branches missed.">            if (child instanceof ASTClassOrInterfaceDeclaration || child instanceof ASTMethodDeclaration</span>
-                    || child instanceof ASTConstructorDeclaration || child instanceof ASTAnnotationTypeDeclaration) {
-<span class="fc" id="L72">                addViolation(data, node);</span>
-<span class="fc" id="L73">                break;</span>
+<span class="pc bpc" id="L73" title="1 of 6 branches missed.">            if (child instanceof ASTMethodDeclaration || child instanceof ASTConstructorDeclaration</span>
+                    || child instanceof ASTAnnotationTypeDeclaration) {
+<span class="fc" id="L75">                addViolation(data, node);</span>
+<span class="fc" id="L76">                break;</span>
             }
-<span class="fc bfc" id="L75" title="All 4 branches covered.">            if (child instanceof ASTEnumDeclaration &amp;&amp; !getProperty(ignoreEnumDeclarations).booleanValue()) {</span>
-<span class="fc" id="L76">                addViolation(data, node);</span>
-<span class="fc" id="L77">                break;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (child instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="fc" id="L79">                ASTClassOrInterfaceDeclaration declaration = (ASTClassOrInterfaceDeclaration) child;</span>
+<span class="fc bfc" id="L80" title="All 4 branches covered.">                if (declaration.isInterface() &amp;&amp; getProperty(ignoreInterfaceDeclarations).booleanValue()) {</span>
+<span class="fc" id="L81">                    continue;</span>
+                } else {
+<span class="fc" id="L83">                    addViolation(data, node);</span>
+<span class="fc" id="L84">                    break;</span>
+                }
+            }
+<span class="fc bfc" id="L87" title="All 4 branches covered.">            if (child instanceof ASTEnumDeclaration &amp;&amp; !getProperty(ignoreEnumDeclarations).booleanValue()) {</span>
+<span class="fc" id="L88">                addViolation(data, node);</span>
+<span class="fc" id="L89">                break;</span>
             }
         }
-<span class="fc" id="L80">        return data;</span>
+<span class="fc" id="L92">        return data;</span>
     }
 
     /**
@@ -89,14 +101,14 @@ public class FieldDeclarationsShouldBeAtStartOfClassRule extends AbstractJavaRul
      * @return the first child or the first child after annotations
      */
     private Node skipAnnotations(Node child) {
-<span class="fc" id="L92">        Node nextChild = child.jjtGetChild(0);</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        for (int j = 0; j &lt; child.jjtGetNumChildren(); j++) {</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (!(child.jjtGetChild(j) instanceof ASTAnnotation)) {</span>
-<span class="fc" id="L95">                nextChild = child.jjtGetChild(j);</span>
-<span class="fc" id="L96">                break;</span>
+<span class="fc" id="L104">        Node nextChild = child.jjtGetChild(0);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        for (int j = 0; j &lt; child.jjtGetNumChildren(); j++) {</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (!(child.jjtGetChild(j) instanceof ASTAnnotation)) {</span>
+<span class="fc" id="L107">                nextChild = child.jjtGetChild(j);</span>
+<span class="fc" id="L108">                break;</span>
             }
         }
-<span class="fc" id="L99">        return nextChild;</span>
+<span class="fc" id="L111">        return nextChild;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

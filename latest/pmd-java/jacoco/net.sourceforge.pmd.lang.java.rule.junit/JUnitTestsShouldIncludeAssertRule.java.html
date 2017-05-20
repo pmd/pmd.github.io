@@ -51,19 +51,20 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
 
     private boolean containsExpectOrAssert(Node n, Map&lt;String, List&lt;NameOccurrence&gt;&gt; expectables) {
 <span class="fc bfc" id="L53" title="All 2 branches covered.">        if (n instanceof ASTStatementExpression) {</span>
-<span class="fc bfc" id="L54" title="All 4 branches covered.">            if (isExpectStatement((ASTStatementExpression) n, expectables)</span>
-                    || isAssertOrFailStatement((ASTStatementExpression) n)) {
-<span class="fc" id="L56">                return true;</span>
+<span class="fc bfc" id="L54" title="All 6 branches covered.">            if (isExpectStatement((ASTStatementExpression) n, expectables)</span>
+                    || isAssertOrFailStatement((ASTStatementExpression) n)
+                    || isVerifyStatement((ASTStatementExpression) n)) {
+<span class="fc" id="L57">                return true;</span>
             }
         } else {
-<span class="fc bfc" id="L59" title="All 2 branches covered.">            for (int i = 0; i &lt; n.jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L60">                Node c = n.jjtGetChild(i);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">                if (containsExpectOrAssert(c, expectables)) {</span>
-<span class="fc" id="L62">                    return true;</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            for (int i = 0; i &lt; n.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L61">                Node c = n.jjtGetChild(i);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                if (containsExpectOrAssert(c, expectables)) {</span>
+<span class="fc" id="L63">                    return true;</span>
                 }
             }
         }
-<span class="fc" id="L66">        return false;</span>
+<span class="fc" id="L67">        return false;</span>
     }
     
     /**
@@ -75,99 +76,118 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
      * @return See description
      */
     private Map&lt;String, List&lt;NameOccurrence&gt;&gt; getRuleAnnotatedExpectedExceptions(Scope classScope) {
-<span class="fc" id="L78">        Map&lt;String, List&lt;NameOccurrence&gt;&gt; result = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L79">        Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; decls = classScope.getDeclarations();</span>
+<span class="fc" id="L79">        Map&lt;String, List&lt;NameOccurrence&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L80">        Map&lt;NameDeclaration, List&lt;NameOccurrence&gt;&gt; decls = classScope.getDeclarations();</span>
 
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (NameDeclaration decl : decls.keySet()) {</span>
-<span class="fc" id="L82">            Node parent = decl.getNode().jjtGetParent().jjtGetParent().jjtGetParent();</span>
-<span class="fc bfc" id="L83" title="All 4 branches covered.">            if (parent.hasDescendantOfType(ASTAnnotation.class)</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        for (NameDeclaration decl : decls.keySet()) {</span>
+<span class="fc" id="L83">            Node parent = decl.getNode().jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="fc bfc" id="L84" title="All 4 branches covered.">            if (parent.hasDescendantOfType(ASTAnnotation.class)</span>
                     &amp;&amp; parent.getFirstChildOfType(ASTFieldDeclaration.class) != null) {
-<span class="fc" id="L85">                String annot = parent.getFirstDescendantOfType(ASTMarkerAnnotation.class).jjtGetChild(0).getImage();</span>
-<span class="pc bpc" id="L86" title="1 of 4 branches missed.">                if (!&quot;Rule&quot;.equals(annot) &amp;&amp; !&quot;org.junit.Rule&quot;.equals(annot)) {</span>
-<span class="nc" id="L87">                    continue;</span>
+<span class="fc" id="L86">                String annot = parent.getFirstDescendantOfType(ASTMarkerAnnotation.class).jjtGetChild(0).getImage();</span>
+<span class="fc bfc" id="L87" title="All 4 branches covered.">                if (!&quot;Rule&quot;.equals(annot) &amp;&amp; !&quot;org.junit.Rule&quot;.equals(annot)) {</span>
+<span class="fc" id="L88">                    continue;</span>
                 }
 
-<span class="fc" id="L90">                Node type = parent.getFirstDescendantOfType(ASTReferenceType.class);</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">                if (!&quot;ExpectedException&quot;.equals(type.jjtGetChild(0).getImage())) {</span>
-<span class="fc" id="L92">                    continue;</span>
+<span class="fc" id="L91">                Node type = parent.getFirstDescendantOfType(ASTReferenceType.class);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">                if (!&quot;ExpectedException&quot;.equals(type.jjtGetChild(0).getImage())) {</span>
+<span class="fc" id="L93">                    continue;</span>
                 }
-<span class="fc" id="L94">                result.put(decl.getName(), decls.get(decl));</span>
+<span class="fc" id="L95">                result.put(decl.getName(), decls.get(decl));</span>
             }
-<span class="fc" id="L96">        }</span>
-<span class="fc" id="L97">        return result;</span>
+<span class="fc" id="L97">        }</span>
+<span class="fc" id="L98">        return result;</span>
     }
     
     /**
      * Tells if the node contains a Test annotation with an expected exception.
      */
     private boolean isExpectAnnotated(Node methodParent) {
-<span class="fc" id="L104">        List&lt;ASTNormalAnnotation&gt; annotations = methodParent.findDescendantsOfType(ASTNormalAnnotation.class);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (ASTNormalAnnotation annotation : annotations) {</span>
-<span class="fc" id="L106">            ASTName name = annotation.getFirstChildOfType(ASTName.class);</span>
-<span class="pc bpc" id="L107" title="6 of 8 branches missed.">            if (name != null &amp;&amp; (&quot;Test&quot;.equals(name.getImage())</span>
+<span class="fc" id="L105">        List&lt;ASTNormalAnnotation&gt; annotations = methodParent.findDescendantsOfType(ASTNormalAnnotation.class);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        for (ASTNormalAnnotation annotation : annotations) {</span>
+<span class="fc" id="L107">            ASTName name = annotation.getFirstChildOfType(ASTName.class);</span>
+<span class="pc bpc" id="L108" title="6 of 8 branches missed.">            if (name != null &amp;&amp; (&quot;Test&quot;.equals(name.getImage())</span>
                     || name.getType() != null &amp;&amp; name.getType().equals(JUNIT4_CLASS))) {
-<span class="fc" id="L109">                List&lt;ASTMemberValuePair&gt; memberValues = annotation.findDescendantsOfType(ASTMemberValuePair.class);</span>
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                for (ASTMemberValuePair pair : memberValues) {</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                    if (&quot;expected&quot;.equals(pair.getImage())) {</span>
-<span class="fc" id="L112">                        return true;</span>
+<span class="fc" id="L110">                List&lt;ASTMemberValuePair&gt; memberValues = annotation.findDescendantsOfType(ASTMemberValuePair.class);</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">                for (ASTMemberValuePair pair : memberValues) {</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                    if (&quot;expected&quot;.equals(pair.getImage())) {</span>
+<span class="fc" id="L113">                        return true;</span>
                     }
-<span class="nc" id="L114">                }</span>
+<span class="nc" id="L115">                }</span>
             }
-<span class="nc" id="L116">        }</span>
-<span class="fc" id="L117">        return false;</span>
+<span class="nc" id="L117">        }</span>
+<span class="fc" id="L118">        return false;</span>
     }
 
     /**
      * Tells if the expression is an assert statement or not.
      */
     private boolean isAssertOrFailStatement(ASTStatementExpression expression) {
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (expression != null) {</span>
-<span class="fc" id="L125">            ASTPrimaryExpression pe = expression.getFirstChildOfType(ASTPrimaryExpression.class);</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">            if (pe != null) {</span>
-<span class="fc" id="L127">                Node name = pe.getFirstDescendantOfType(ASTName.class);</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">                if (name != null) {</span>
-<span class="fc" id="L129">                    String img = name.getImage();</span>
-<span class="pc bpc" id="L130" title="2 of 10 branches missed.">                    if (img != null &amp;&amp; (img.startsWith(&quot;assert&quot;) || img.startsWith(&quot;fail&quot;)</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (expression != null) {</span>
+<span class="fc" id="L126">            ASTPrimaryExpression pe = expression.getFirstChildOfType(ASTPrimaryExpression.class);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">            if (pe != null) {</span>
+<span class="fc" id="L128">                Node name = pe.getFirstDescendantOfType(ASTName.class);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">                if (name != null) {</span>
+<span class="fc" id="L130">                    String img = name.getImage();</span>
+<span class="pc bpc" id="L131" title="2 of 10 branches missed.">                    if (img != null &amp;&amp; (img.startsWith(&quot;assert&quot;) || img.startsWith(&quot;fail&quot;)</span>
                             || img.startsWith(&quot;Assert.assert&quot;) || img.startsWith(&quot;Assert.fail&quot;))) {
-<span class="fc" id="L132">                        return true;</span>
+<span class="fc" id="L133">                        return true;</span>
                     }
                 }
             }
         }
-<span class="fc" id="L137">        return false;</span>
+<span class="fc" id="L138">        return false;</span>
+    }
+
+    /**
+     * Tells if the expression is verify statement or not
+     */
+    private boolean isVerifyStatement(ASTStatementExpression expression) {
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (expression != null) {</span>
+<span class="fc" id="L146">            ASTPrimaryExpression pe = expression.getFirstChildOfType(ASTPrimaryExpression.class);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            if (pe != null) {</span>
+<span class="fc" id="L148">                Node name = pe.getFirstDescendantOfType(ASTName.class);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (name != null) {</span>
+<span class="fc" id="L150">                    String img = name.getImage();</span>
+<span class="pc bpc" id="L151" title="1 of 6 branches missed.">                    if (img != null &amp;&amp; (img.startsWith(&quot;verify&quot;) || img.startsWith(&quot;Mockito.verify&quot;))) {</span>
+<span class="fc" id="L152">                        return true;</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L157">        return false;</span>
     }
 
     private boolean isExpectStatement(ASTStatementExpression expression,
             Map&lt;String, List&lt;NameOccurrence&gt;&gt; expectables) {
         
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">        if (expression != null) {</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (expression != null) {</span>
             
-<span class="fc" id="L145">            ASTPrimaryExpression pe = expression.getFirstChildOfType(ASTPrimaryExpression.class);</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (pe != null) {</span>
-<span class="fc" id="L147">                Node name = pe.getFirstDescendantOfType(ASTName.class);</span>
+<span class="fc" id="L165">            ASTPrimaryExpression pe = expression.getFirstChildOfType(ASTPrimaryExpression.class);</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">            if (pe != null) {</span>
+<span class="fc" id="L167">                Node name = pe.getFirstDescendantOfType(ASTName.class);</span>
                 // case of an AllocationExpression
-<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (name == null) {</span>
-<span class="fc" id="L150">                    return false;</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                if (name == null) {</span>
+<span class="fc" id="L170">                    return false;</span>
                 }
                 
-<span class="fc" id="L153">                String img = name.getImage();</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">                if (img.indexOf(&quot;.&quot;) == -1) {</span>
-<span class="fc" id="L155">                    return false;</span>
+<span class="fc" id="L173">                String img = name.getImage();</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">                if (img.indexOf(&quot;.&quot;) == -1) {</span>
+<span class="fc" id="L175">                    return false;</span>
                 }
-<span class="fc" id="L157">                String varname = img.split(&quot;\\.&quot;)[0];</span>
+<span class="fc" id="L177">                String varname = img.split(&quot;\\.&quot;)[0];</span>
 
-<span class="fc bfc" id="L159" title="All 2 branches covered.">                if (!expectables.containsKey(varname)) {</span>
-<span class="fc" id="L160">                    return false;</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                if (!expectables.containsKey(varname)) {</span>
+<span class="fc" id="L180">                    return false;</span>
                 }
 
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">                for (NameOccurrence occ : expectables.get(varname)) {</span>
-<span class="pc bpc" id="L164" title="2 of 4 branches missed.">                    if (occ.getLocation() == name &amp;&amp; img.startsWith(varname + &quot;.expect&quot;)) {</span>
-<span class="fc" id="L165">                        return true;</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                for (NameOccurrence occ : expectables.get(varname)) {</span>
+<span class="pc bpc" id="L184" title="2 of 4 branches missed.">                    if (occ.getLocation() == name &amp;&amp; img.startsWith(varname + &quot;.expect&quot;)) {</span>
+<span class="fc" id="L185">                        return true;</span>
                     }
-<span class="nc" id="L167">                }</span>
+<span class="nc" id="L187">                }</span>
             }
         }
-<span class="fc" id="L170">        return false;</span>
+<span class="fc" id="L190">        return false;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

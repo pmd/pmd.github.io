@@ -231,11 +231,14 @@ public final class StringUtil {
      * @param string
      *            String
      * @return String
+     *
+     * @deprecated Use StringEscapeUtils#escapeHtml4 instead
      */
+    @Deprecated
     public static String htmlEncode(String string) {
-<span class="fc" id="L236">        String encoded = replaceString(string, '&amp;', &quot;&amp;amp;&quot;);</span>
-<span class="fc" id="L237">        encoded = replaceString(encoded, '&lt;', &quot;&amp;lt;&quot;);</span>
-<span class="fc" id="L238">        return replaceString(encoded, '&gt;', &quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L239">        String encoded = replaceString(string, '&amp;', &quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L240">        encoded = replaceString(encoded, '&lt;', &quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L241">        return replaceString(encoded, '&gt;', &quot;&amp;gt;&quot;);</span>
     }
 
     /**
@@ -247,43 +250,38 @@ public final class StringUtil {
      *            should be replaced with entities ( &lt;code&gt;false&lt;/code&gt;) or
      *            should be included as is ( &lt;code&gt;true&lt;/code&gt;).
      * @see #appendXmlEscaped(StringBuilder, String)
-     *
-     *      TODO - unify the method above with the one below
-     *
-     *      public to support unit testing - make this package private, once the
-     *      unit test classes are in the same package.
      */
     public static void appendXmlEscaped(StringBuilder buf, String src, boolean supportUTF8) {
         char c;
-<span class="fc" id="L258">        int i = 0;</span>
-<span class="fc bfc" id="L259" title="All 2 branches covered.">        while (i &lt; src.length()) {</span>
-<span class="fc" id="L260">            c = src.charAt(i++);</span>
-<span class="fc bfc" id="L261" title="All 2 branches covered.">            if (c &gt; '~') {</span>
+<span class="fc" id="L256">        int i = 0;</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        while (i &lt; src.length()) {</span>
+<span class="fc" id="L258">            c = src.charAt(i++);</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">            if (c &gt; '~') {</span>
                 // 126
-<span class="fc bfc" id="L263" title="All 2 branches covered.">                if (!supportUTF8) {</span>
-<span class="fc" id="L264">                    int codepoint = c;</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">                if (!supportUTF8) {</span>
+<span class="fc" id="L262">                    int codepoint = c;</span>
                     // surrogate characters are not allowed in XML
-<span class="fc bfc" id="L266" title="All 2 branches covered.">                    if (Character.isHighSurrogate(c)) {</span>
-<span class="fc" id="L267">                        char low = src.charAt(i++);</span>
-<span class="fc" id="L268">                        codepoint = Character.toCodePoint(c, low);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">                    if (Character.isHighSurrogate(c)) {</span>
+<span class="fc" id="L265">                        char low = src.charAt(i++);</span>
+<span class="fc" id="L266">                        codepoint = Character.toCodePoint(c, low);</span>
                     }
-<span class="fc" id="L270">                    buf.append(&quot;&amp;#x&quot;).append(Integer.toHexString(codepoint)).append(';');</span>
-<span class="fc" id="L271">                } else {</span>
-<span class="fc" id="L272">                    buf.append(c);</span>
+<span class="fc" id="L268">                    buf.append(&quot;&amp;#x&quot;).append(Integer.toHexString(codepoint)).append(';');</span>
+<span class="fc" id="L269">                } else {</span>
+<span class="fc" id="L270">                    buf.append(c);</span>
                 }
-<span class="pc bpc" id="L274" title="1 of 2 branches missed.">            } else if (c == '&amp;') {</span>
-<span class="nc" id="L275">                buf.append(&quot;&amp;amp;&quot;);</span>
-<span class="fc bfc" id="L276" title="All 2 branches covered.">            } else if (c == '&quot;') {</span>
-<span class="fc" id="L277">                buf.append(&quot;&amp;quot;&quot;);</span>
-<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            } else if (c == '&lt;') {</span>
-<span class="nc" id="L279">                buf.append(&quot;&amp;lt;&quot;);</span>
-<span class="pc bpc" id="L280" title="1 of 2 branches missed.">            } else if (c == '&gt;') {</span>
-<span class="nc" id="L281">                buf.append(&quot;&amp;gt;&quot;);</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">            } else if (c == '&amp;') {</span>
+<span class="nc" id="L273">                buf.append(&quot;&amp;amp;&quot;);</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            } else if (c == '&quot;') {</span>
+<span class="fc" id="L275">                buf.append(&quot;&amp;quot;&quot;);</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">            } else if (c == '&lt;') {</span>
+<span class="nc" id="L277">                buf.append(&quot;&amp;lt;&quot;);</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            } else if (c == '&gt;') {</span>
+<span class="nc" id="L279">                buf.append(&quot;&amp;gt;&quot;);</span>
             } else {
-<span class="fc" id="L283">                buf.append(c);</span>
+<span class="fc" id="L281">                buf.append(c);</span>
             }
         }
-<span class="fc" id="L286">    }</span>
+<span class="fc" id="L284">    }</span>
 
     /**
      * Parses the input source using the delimiter specified. This method is
@@ -301,39 +299,39 @@ public final class StringUtil {
      */
     public static String[] substringsOf(String source, char delimiter) {
 
-<span class="pc bpc" id="L304" title="1 of 4 branches missed.">        if (source == null || source.length() == 0) {</span>
-<span class="fc" id="L305">            return EMPTY_STRINGS;</span>
+<span class="pc bpc" id="L302" title="1 of 4 branches missed.">        if (source == null || source.length() == 0) {</span>
+<span class="fc" id="L303">            return EMPTY_STRINGS;</span>
         }
 
-<span class="fc" id="L308">        int delimiterCount = 0;</span>
-<span class="fc" id="L309">        int length = source.length();</span>
-<span class="fc" id="L310">        char[] chars = source.toCharArray();</span>
+<span class="fc" id="L306">        int delimiterCount = 0;</span>
+<span class="fc" id="L307">        int length = source.length();</span>
+<span class="fc" id="L308">        char[] chars = source.toCharArray();</span>
 
-<span class="fc bfc" id="L312" title="All 2 branches covered.">        for (int i = 0; i &lt; length; i++) {</span>
-<span class="fc bfc" id="L313" title="All 2 branches covered.">            if (chars[i] == delimiter) {</span>
-<span class="fc" id="L314">                delimiterCount++;</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">        for (int i = 0; i &lt; length; i++) {</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">            if (chars[i] == delimiter) {</span>
+<span class="fc" id="L312">                delimiterCount++;</span>
             }
         }
 
-<span class="fc bfc" id="L318" title="All 2 branches covered.">        if (delimiterCount == 0) {</span>
-<span class="fc" id="L319">            return new String[] { source };</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if (delimiterCount == 0) {</span>
+<span class="fc" id="L317">            return new String[] { source };</span>
         }
 
-<span class="fc" id="L322">        String[] results = new String[delimiterCount + 1];</span>
+<span class="fc" id="L320">        String[] results = new String[delimiterCount + 1];</span>
 
-<span class="fc" id="L324">        int i = 0;</span>
-<span class="fc" id="L325">        int offset = 0;</span>
+<span class="fc" id="L322">        int i = 0;</span>
+<span class="fc" id="L323">        int offset = 0;</span>
 
-<span class="fc bfc" id="L327" title="All 2 branches covered.">        while (offset &lt;= length) {</span>
-<span class="fc" id="L328">            int pos = source.indexOf(delimiter, offset);</span>
-<span class="fc bfc" id="L329" title="All 2 branches covered.">            if (pos &lt; 0) {</span>
-<span class="fc" id="L330">                pos = length;</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        while (offset &lt;= length) {</span>
+<span class="fc" id="L326">            int pos = source.indexOf(delimiter, offset);</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">            if (pos &lt; 0) {</span>
+<span class="fc" id="L328">                pos = length;</span>
             }
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">            results[i++] = pos == offset ? &quot;&quot; : source.substring(offset, pos);</span>
-<span class="fc" id="L333">            offset = pos + 1;</span>
-<span class="fc" id="L334">        }</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">            results[i++] = pos == offset ? &quot;&quot; : source.substring(offset, pos);</span>
+<span class="fc" id="L331">            offset = pos + 1;</span>
+<span class="fc" id="L332">        }</span>
 
-<span class="fc" id="L336">        return results;</span>
+<span class="fc" id="L334">        return results;</span>
     }
 
     /**
@@ -347,25 +345,25 @@ public final class StringUtil {
      */
     public static String[] substringsOf(String str, String separator) {
 
-<span class="nc bnc" id="L350" title="All 4 branches missed.">        if (str == null || str.length() == 0) {</span>
-<span class="nc" id="L351">            return EMPTY_STRINGS;</span>
+<span class="nc bnc" id="L348" title="All 4 branches missed.">        if (str == null || str.length() == 0) {</span>
+<span class="nc" id="L349">            return EMPTY_STRINGS;</span>
         }
 
-<span class="nc" id="L354">        int index = str.indexOf(separator);</span>
-<span class="nc bnc" id="L355" title="All 2 branches missed.">        if (index == -1) {</span>
-<span class="nc" id="L356">            return new String[] { str };</span>
+<span class="nc" id="L352">        int index = str.indexOf(separator);</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">        if (index == -1) {</span>
+<span class="nc" id="L354">            return new String[] { str };</span>
         }
 
-<span class="nc" id="L359">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L360">        int currPos = 0;</span>
-<span class="nc" id="L361">        int len = separator.length();</span>
-<span class="nc bnc" id="L362" title="All 2 branches missed.">        while (index != -1) {</span>
-<span class="nc" id="L363">            list.add(str.substring(currPos, index));</span>
-<span class="nc" id="L364">            currPos = index + len;</span>
-<span class="nc" id="L365">            index = str.indexOf(separator, currPos);</span>
+<span class="nc" id="L357">        List&lt;String&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L358">        int currPos = 0;</span>
+<span class="nc" id="L359">        int len = separator.length();</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">        while (index != -1) {</span>
+<span class="nc" id="L361">            list.add(str.substring(currPos, index));</span>
+<span class="nc" id="L362">            currPos = index + len;</span>
+<span class="nc" id="L363">            index = str.indexOf(separator, currPos);</span>
         }
-<span class="nc" id="L367">        list.add(str.substring(currPos));</span>
-<span class="nc" id="L368">        return list.toArray(new String[list.size()]);</span>
+<span class="nc" id="L365">        list.add(str.substring(currPos));</span>
+<span class="nc" id="L366">        return list.toArray(new String[list.size()]);</span>
     }
 
     /**
@@ -381,17 +379,17 @@ public final class StringUtil {
      */
     public static void asStringOn(StringBuffer sb, Iterator&lt;?&gt; iter, String separator) {
 
-<span class="nc bnc" id="L384" title="All 2 branches missed.">        if (!iter.hasNext()) {</span>
-<span class="nc" id="L385">            return;</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">        if (!iter.hasNext()) {</span>
+<span class="nc" id="L383">            return;</span>
         }
 
-<span class="nc" id="L388">        sb.append(iter.next());</span>
+<span class="nc" id="L386">        sb.append(iter.next());</span>
 
-<span class="nc bnc" id="L390" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
-<span class="nc" id="L391">            sb.append(separator);</span>
-<span class="nc" id="L392">            sb.append(iter.next());</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        while (iter.hasNext()) {</span>
+<span class="nc" id="L389">            sb.append(separator);</span>
+<span class="nc" id="L390">            sb.append(iter.next());</span>
         }
-<span class="nc" id="L394">    }</span>
+<span class="nc" id="L392">    }</span>
 
     /**
      * Copies the array items onto the string builder each delimited by the
@@ -406,17 +404,17 @@ public final class StringUtil {
      */
     public static void asStringOn(StringBuilder sb, Object[] items, String separator) {
 
-<span class="nc bnc" id="L409" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
-<span class="nc" id="L410">            return;</span>
+<span class="nc bnc" id="L407" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
+<span class="nc" id="L408">            return;</span>
         }
 
-<span class="nc" id="L413">        sb.append(items[0]);</span>
+<span class="nc" id="L411">        sb.append(items[0]);</span>
 
-<span class="nc bnc" id="L415" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
-<span class="nc" id="L416">            sb.append(separator);</span>
-<span class="nc" id="L417">            sb.append(items[i]);</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
+<span class="nc" id="L414">            sb.append(separator);</span>
+<span class="nc" id="L415">            sb.append(items[i]);</span>
         }
-<span class="nc" id="L419">    }</span>
+<span class="nc" id="L417">    }</span>
 
     /**
      * Return the length of the shortest string in the array. If the collection
@@ -428,20 +426,20 @@ public final class StringUtil {
      */
     public static int lengthOfShortestIn(String[] strings) {
 
-<span class="nc bnc" id="L431" title="All 2 branches missed.">        if (CollectionUtil.isEmpty(strings)) {</span>
-<span class="nc" id="L432">            return 0;</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">        if (CollectionUtil.isEmpty(strings)) {</span>
+<span class="nc" id="L430">            return 0;</span>
         }
 
-<span class="nc" id="L435">        int minLength = Integer.MAX_VALUE;</span>
+<span class="nc" id="L433">        int minLength = Integer.MAX_VALUE;</span>
 
-<span class="nc bnc" id="L437" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
-<span class="nc bnc" id="L438" title="All 2 branches missed.">            if (strings[i] == null) {</span>
-<span class="nc" id="L439">                return 0;</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">            if (strings[i] == null) {</span>
+<span class="nc" id="L437">                return 0;</span>
             }
-<span class="nc" id="L441">            minLength = Math.min(minLength, strings[i].length());</span>
+<span class="nc" id="L439">            minLength = Math.min(minLength, strings[i].length());</span>
         }
 
-<span class="nc" id="L444">        return minLength;</span>
+<span class="nc" id="L442">        return minLength;</span>
     }
 
     /**
@@ -456,28 +454,28 @@ public final class StringUtil {
      */
     public static int maxCommonLeadingWhitespaceForAll(String[] strings) {
 
-<span class="nc" id="L459">        int shortest = lengthOfShortestIn(strings);</span>
-<span class="nc bnc" id="L460" title="All 2 branches missed.">        if (shortest == 0) {</span>
-<span class="nc" id="L461">            return 0;</span>
+<span class="nc" id="L457">        int shortest = lengthOfShortestIn(strings);</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">        if (shortest == 0) {</span>
+<span class="nc" id="L459">            return 0;</span>
         }
 
-<span class="nc" id="L464">        char[] matches = new char[shortest];</span>
+<span class="nc" id="L462">        char[] matches = new char[shortest];</span>
 
         String str;
-<span class="nc bnc" id="L467" title="All 2 branches missed.">        for (int m = 0; m &lt; matches.length; m++) {</span>
-<span class="nc" id="L468">            matches[m] = strings[0].charAt(m);</span>
-<span class="nc bnc" id="L469" title="All 2 branches missed.">            if (!Character.isWhitespace(matches[m])) {</span>
-<span class="nc" id="L470">                return m;</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">        for (int m = 0; m &lt; matches.length; m++) {</span>
+<span class="nc" id="L466">            matches[m] = strings[0].charAt(m);</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">            if (!Character.isWhitespace(matches[m])) {</span>
+<span class="nc" id="L468">                return m;</span>
             }
-<span class="nc bnc" id="L472" title="All 2 branches missed.">            for (int i = 0; i &lt; strings.length; i++) {</span>
-<span class="nc" id="L473">                str = strings[i];</span>
-<span class="nc bnc" id="L474" title="All 2 branches missed.">                if (str.charAt(m) != matches[m]) {</span>
-<span class="nc" id="L475">                    return m;</span>
+<span class="nc bnc" id="L470" title="All 2 branches missed.">            for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L471">                str = strings[i];</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">                if (str.charAt(m) != matches[m]) {</span>
+<span class="nc" id="L473">                    return m;</span>
                 }
             }
         }
 
-<span class="nc" id="L480">        return shortest;</span>
+<span class="nc" id="L478">        return shortest;</span>
     }
 
     /**
@@ -490,15 +488,15 @@ public final class StringUtil {
      */
     public static String[] trimStartOn(String[] strings, int trimDepth) {
 
-<span class="nc bnc" id="L493" title="All 2 branches missed.">        if (trimDepth == 0) {</span>
-<span class="nc" id="L494">            return strings;</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">        if (trimDepth == 0) {</span>
+<span class="nc" id="L492">            return strings;</span>
         }
 
-<span class="nc" id="L497">        String[] results = new String[strings.length];</span>
-<span class="nc bnc" id="L498" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
-<span class="nc" id="L499">            results[i] = strings[i].substring(trimDepth);</span>
+<span class="nc" id="L495">        String[] results = new String[strings.length];</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">        for (int i = 0; i &lt; strings.length; i++) {</span>
+<span class="nc" id="L497">            results[i] = strings[i].substring(trimDepth);</span>
         }
-<span class="nc" id="L501">        return results;</span>
+<span class="nc" id="L499">        return results;</span>
     }
 
     /**
@@ -511,13 +509,13 @@ public final class StringUtil {
      * @return The resulting left padded String
      */
     public static String lpad(String s, int length) {
-<span class="nc" id="L514">        String res = s;</span>
-<span class="nc bnc" id="L515" title="All 2 branches missed.">        if (length - s.length() &gt; 0) {</span>
-<span class="nc" id="L516">            char[] arr = new char[length - s.length()];</span>
-<span class="nc" id="L517">            java.util.Arrays.fill(arr, ' ');</span>
-<span class="nc" id="L518">            res = new StringBuilder(length).append(arr).append(s).toString();</span>
+<span class="nc" id="L512">        String res = s;</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">        if (length - s.length() &gt; 0) {</span>
+<span class="nc" id="L514">            char[] arr = new char[length - s.length()];</span>
+<span class="nc" id="L515">            java.util.Arrays.fill(arr, ' ');</span>
+<span class="nc" id="L516">            res = new StringBuilder(length).append(arr).append(s).toString();</span>
         }
-<span class="nc" id="L520">        return res;</span>
+<span class="nc" id="L518">        return res;</span>
     }
 
     /**
@@ -543,22 +541,22 @@ public final class StringUtil {
      */
     public static boolean isSame(String s1, String s2, boolean trim, boolean ignoreCase,
             boolean standardizeWhitespace) {
-<span class="pc bpc" id="L546" title="3 of 4 branches missed.">        if (s1 == null &amp;&amp; s2 == null) {</span>
-<span class="nc" id="L547">            return true;</span>
-<span class="pc bpc" id="L548" title="2 of 4 branches missed.">        } else if (s1 == null || s2 == null) {</span>
-<span class="nc" id="L549">            return false;</span>
+<span class="pc bpc" id="L544" title="3 of 4 branches missed.">        if (s1 == null &amp;&amp; s2 == null) {</span>
+<span class="nc" id="L545">            return true;</span>
+<span class="pc bpc" id="L546" title="2 of 4 branches missed.">        } else if (s1 == null || s2 == null) {</span>
+<span class="nc" id="L547">            return false;</span>
         } else {
-<span class="pc bpc" id="L551" title="1 of 2 branches missed.">            if (trim) {</span>
-<span class="fc" id="L552">                s1 = s1.trim();</span>
-<span class="fc" id="L553">                s2 = s2.trim();</span>
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">            if (trim) {</span>
+<span class="fc" id="L550">                s1 = s1.trim();</span>
+<span class="fc" id="L551">                s2 = s2.trim();</span>
             }
-<span class="pc bpc" id="L555" title="1 of 2 branches missed.">            if (standardizeWhitespace) {</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">            if (standardizeWhitespace) {</span>
                 // Replace all whitespace with a standard single space
                 // character.
-<span class="fc" id="L558">                s1 = s1.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
-<span class="fc" id="L559">                s2 = s2.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="fc" id="L556">                s1 = s1.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+<span class="fc" id="L557">                s2 = s2.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
             }
-<span class="pc bpc" id="L561" title="1 of 2 branches missed.">            return ignoreCase ? s1.equalsIgnoreCase(s2) : s1.equals(s2);</span>
+<span class="pc bpc" id="L559" title="1 of 2 branches missed.">            return ignoreCase ? s1.equalsIgnoreCase(s2) : s1.equals(s2);</span>
         }
     }
 
@@ -574,19 +572,19 @@ public final class StringUtil {
      */
     public static String asString(Object[] items, String separator) {
 
-<span class="nc bnc" id="L577" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
-<span class="nc" id="L578">            return &quot;&quot;;</span>
+<span class="nc bnc" id="L575" title="All 4 branches missed.">        if (items == null || items.length == 0) {</span>
+<span class="nc" id="L576">            return &quot;&quot;;</span>
         }
-<span class="nc bnc" id="L580" title="All 2 branches missed.">        if (items.length == 1) {</span>
-<span class="nc" id="L581">            return items[0].toString();</span>
-        }
-
-<span class="nc" id="L584">        StringBuilder sb = new StringBuilder(items[0].toString());</span>
-<span class="nc bnc" id="L585" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
-<span class="nc" id="L586">            sb.append(separator).append(items[i]);</span>
+<span class="nc bnc" id="L578" title="All 2 branches missed.">        if (items.length == 1) {</span>
+<span class="nc" id="L579">            return items[0].toString();</span>
         }
 
-<span class="nc" id="L589">        return sb.toString();</span>
+<span class="nc" id="L582">        StringBuilder sb = new StringBuilder(items[0].toString());</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">        for (int i = 1; i &lt; items.length; i++) {</span>
+<span class="nc" id="L584">            sb.append(separator).append(items[i]);</span>
+        }
+
+<span class="nc" id="L587">        return sb.toString();</span>
     }
 
     /**
@@ -595,7 +593,7 @@ public final class StringUtil {
      * @return String
      */
     public static String[] getEmptyStrings() {
-<span class="nc" id="L598">        return EMPTY_STRINGS;</span>
+<span class="nc" id="L596">        return EMPTY_STRINGS;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

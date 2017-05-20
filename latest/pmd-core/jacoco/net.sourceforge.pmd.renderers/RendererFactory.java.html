@@ -42,10 +42,11 @@ public class RendererFactory {
 <span class="fc" id="L42">        map.put(YAHTMLRenderer.NAME, YAHTMLRenderer.class);</span>
 <span class="fc" id="L43">        map.put(SummaryHTMLRenderer.NAME, SummaryHTMLRenderer.class);</span>
 <span class="fc" id="L44">        map.put(VBHTMLRenderer.NAME, VBHTMLRenderer.class);</span>
-<span class="fc" id="L45">        REPORT_FORMAT_TO_RENDERER = Collections.unmodifiableMap(map);</span>
-<span class="fc" id="L46">    }</span>
+<span class="fc" id="L45">        map.put(EmptyRenderer.NAME, EmptyRenderer.class);</span>
+<span class="fc" id="L46">        REPORT_FORMAT_TO_RENDERER = Collections.unmodifiableMap(map);</span>
+<span class="fc" id="L47">    }</span>
 
-<span class="nc" id="L48">    private RendererFactory() { }</span>
+<span class="nc" id="L49">    private RendererFactory() { }</span>
 
     /**
      * Construct an instance of a Renderer based on report format name.
@@ -57,97 +58,97 @@ public class RendererFactory {
      * @return A Renderer instance.
      */
     public static Renderer createRenderer(String reportFormat, Properties properties) {
-<span class="fc" id="L60">        Class&lt;? extends Renderer&gt; rendererClass = getRendererClass(reportFormat);</span>
-<span class="fc" id="L61">        Constructor&lt;? extends Renderer&gt; constructor = getRendererConstructor(rendererClass);</span>
+<span class="fc" id="L61">        Class&lt;? extends Renderer&gt; rendererClass = getRendererClass(reportFormat);</span>
+<span class="fc" id="L62">        Constructor&lt;? extends Renderer&gt; constructor = getRendererConstructor(rendererClass);</span>
 
         Renderer renderer;
         try {
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (constructor.getParameterTypes().length &gt; 0) {</span>
-<span class="nc" id="L66">                LOG.warning(</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">            if (constructor.getParameterTypes().length &gt; 0) {</span>
+<span class="nc" id="L67">                LOG.warning(</span>
                         &quot;The renderer uses a deprecated mechanism to use the properties. Please define the needed properties with this.definePropertyDescriptor(..).&quot;);
-<span class="nc" id="L68">                renderer = constructor.newInstance(properties);</span>
+<span class="nc" id="L69">                renderer = constructor.newInstance(properties);</span>
             } else {
-<span class="fc" id="L70">                renderer = constructor.newInstance();</span>
+<span class="fc" id="L71">                renderer = constructor.newInstance();</span>
 
-<span class="fc bfc" id="L72" title="All 2 branches covered.">                for (PropertyDescriptor&lt;?&gt; prop : renderer.getPropertyDescriptors()) {</span>
-<span class="fc" id="L73">                    String value = properties.getProperty(prop.name());</span>
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                    if (value != null) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                for (PropertyDescriptor&lt;?&gt; prop : renderer.getPropertyDescriptors()) {</span>
+<span class="fc" id="L74">                    String value = properties.getProperty(prop.name());</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                    if (value != null) {</span>
                         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L76">                        PropertyDescriptor&lt;Object&gt; prop2 = (PropertyDescriptor&lt;Object&gt;) prop;</span>
-<span class="nc" id="L77">                        Object valueFrom = prop2.valueFrom(value);</span>
-<span class="nc" id="L78">                        renderer.setProperty(prop2, valueFrom);</span>
+<span class="nc" id="L77">                        PropertyDescriptor&lt;Object&gt; prop2 = (PropertyDescriptor&lt;Object&gt;) prop;</span>
+<span class="nc" id="L78">                        Object valueFrom = prop2.valueFrom(value);</span>
+<span class="nc" id="L79">                        renderer.setProperty(prop2, valueFrom);</span>
                     }
-<span class="fc" id="L80">                }</span>
+<span class="fc" id="L81">                }</span>
             }
-<span class="nc" id="L82">        } catch (InstantiationException e) {</span>
-<span class="nc" id="L83">            throw new IllegalArgumentException(&quot;Unable to construct report renderer class: &quot; + e.getLocalizedMessage());</span>
-<span class="nc" id="L84">        } catch (IllegalAccessException e) {</span>
-<span class="nc" id="L85">            throw new IllegalArgumentException(&quot;Unable to construct report renderer class: &quot; + e.getLocalizedMessage());</span>
-<span class="nc" id="L86">        } catch (InvocationTargetException e) {</span>
-<span class="nc" id="L87">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L83">        } catch (InstantiationException e) {</span>
+<span class="nc" id="L84">            throw new IllegalArgumentException(&quot;Unable to construct report renderer class: &quot; + e.getLocalizedMessage());</span>
+<span class="nc" id="L85">        } catch (IllegalAccessException e) {</span>
+<span class="nc" id="L86">            throw new IllegalArgumentException(&quot;Unable to construct report renderer class: &quot; + e.getLocalizedMessage());</span>
+<span class="nc" id="L87">        } catch (InvocationTargetException e) {</span>
+<span class="nc" id="L88">            throw new IllegalArgumentException(</span>
                     &quot;Unable to construct report renderer class: &quot; + e.getTargetException().getLocalizedMessage());
-<span class="fc" id="L89">        }</span>
+<span class="fc" id="L90">        }</span>
         // Warn about legacy report format usages
-<span class="pc bpc" id="L91" title="2 of 4 branches missed.">        if (REPORT_FORMAT_TO_RENDERER.containsKey(reportFormat) &amp;&amp; !reportFormat.equals(renderer.getName())) {</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (LOG.isLoggable(Level.WARNING)) {</span>
-<span class="nc" id="L93">                LOG.warning(&quot;Report format '&quot; + reportFormat + &quot;' is deprecated, and has been replaced with '&quot;</span>
+<span class="pc bpc" id="L92" title="2 of 4 branches missed.">        if (REPORT_FORMAT_TO_RENDERER.containsKey(reportFormat) &amp;&amp; !reportFormat.equals(renderer.getName())) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="nc" id="L94">                LOG.warning(&quot;Report format '&quot; + reportFormat + &quot;' is deprecated, and has been replaced with '&quot;</span>
                         + renderer.getName()
                         + &quot;'. Future versions of PMD will remove support for this deprecated Report format usage.&quot;);
             }
         }
-<span class="fc" id="L98">        return renderer;</span>
+<span class="fc" id="L99">        return renderer;</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
     private static Class&lt;? extends Renderer&gt; getRendererClass(String reportFormat) {
-<span class="fc" id="L103">        Class&lt;? extends Renderer&gt; rendererClass = REPORT_FORMAT_TO_RENDERER.get(reportFormat);</span>
+<span class="fc" id="L104">        Class&lt;? extends Renderer&gt; rendererClass = REPORT_FORMAT_TO_RENDERER.get(reportFormat);</span>
 
         // Look up a custom renderer class
-<span class="pc bpc" id="L106" title="1 of 4 branches missed.">        if (rendererClass == null &amp;&amp; !&quot;&quot;.equals(reportFormat)) {</span>
+<span class="pc bpc" id="L107" title="1 of 4 branches missed.">        if (rendererClass == null &amp;&amp; !&quot;&quot;.equals(reportFormat)) {</span>
             try {
-<span class="nc" id="L108">                Class&lt;?&gt; clazz = Class.forName(reportFormat);</span>
-<span class="nc bnc" id="L109" title="All 2 branches missed.">                if (!Renderer.class.isAssignableFrom(clazz)) {</span>
-<span class="nc" id="L110">                    throw new IllegalArgumentException(&quot;Custom report renderer class does not implement the &quot;</span>
+<span class="nc" id="L109">                Class&lt;?&gt; clazz = Class.forName(reportFormat);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (!Renderer.class.isAssignableFrom(clazz)) {</span>
+<span class="nc" id="L111">                    throw new IllegalArgumentException(&quot;Custom report renderer class does not implement the &quot;</span>
                             + Renderer.class.getName() + &quot; interface.&quot;);
                 } else {
-<span class="nc" id="L113">                    rendererClass = (Class&lt;? extends Renderer&gt;) clazz;</span>
+<span class="nc" id="L114">                    rendererClass = (Class&lt;? extends Renderer&gt;) clazz;</span>
                 }
-<span class="fc" id="L115">            } catch (ClassNotFoundException e) {</span>
-<span class="fc" id="L116">                throw new IllegalArgumentException(&quot;Can't find the custom format &quot; + reportFormat + &quot;: &quot; + e);</span>
-<span class="nc" id="L117">            }</span>
+<span class="fc" id="L116">            } catch (ClassNotFoundException e) {</span>
+<span class="fc" id="L117">                throw new IllegalArgumentException(&quot;Can't find the custom format &quot; + reportFormat + &quot;: &quot; + e);</span>
+<span class="nc" id="L118">            }</span>
         }
-<span class="fc" id="L119">        return rendererClass;</span>
+<span class="fc" id="L120">        return rendererClass;</span>
     }
 
     private static Constructor&lt;? extends Renderer&gt; getRendererConstructor(Class&lt;? extends Renderer&gt; rendererClass) {
-<span class="fc" id="L123">        Constructor&lt;? extends Renderer&gt; constructor = null;</span>
+<span class="fc" id="L124">        Constructor&lt;? extends Renderer&gt; constructor = null;</span>
 
         // 1) Properties constructor? - deprecated
         try {
-<span class="nc" id="L127">            constructor = rendererClass.getConstructor(Properties.class);</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (!Modifier.isPublic(constructor.getModifiers())) {</span>
-<span class="nc" id="L129">                constructor = null;</span>
+<span class="nc" id="L128">            constructor = rendererClass.getConstructor(Properties.class);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if (!Modifier.isPublic(constructor.getModifiers())) {</span>
+<span class="nc" id="L130">                constructor = null;</span>
             }
-<span class="fc" id="L131">        } catch (NoSuchMethodException e) {</span>
+<span class="fc" id="L132">        } catch (NoSuchMethodException e) {</span>
             // Ok
-<span class="nc" id="L133">        }</span>
+<span class="nc" id="L134">        }</span>
 
         // 2) No-arg constructor?
         try {
-<span class="fc" id="L137">            constructor = rendererClass.getConstructor();</span>
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">            if (!Modifier.isPublic(constructor.getModifiers())) {</span>
-<span class="nc" id="L139">                constructor = null;</span>
+<span class="fc" id="L138">            constructor = rendererClass.getConstructor();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            if (!Modifier.isPublic(constructor.getModifiers())) {</span>
+<span class="nc" id="L140">                constructor = null;</span>
             }
-<span class="nc" id="L141">        } catch (NoSuchMethodException e2) {</span>
+<span class="nc" id="L142">        } catch (NoSuchMethodException e2) {</span>
             // Ok
-<span class="fc" id="L143">        }</span>
+<span class="fc" id="L144">        }</span>
 
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (constructor == null) {</span>
-<span class="nc" id="L146">            throw new IllegalArgumentException(</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (constructor == null) {</span>
+<span class="nc" id="L147">            throw new IllegalArgumentException(</span>
                     &quot;Unable to find either a public java.util.Properties or no-arg constructors for Renderer class: &quot;
                             + rendererClass.getName());
         }
-<span class="fc" id="L150">        return constructor;</span>
+<span class="fc" id="L151">        return constructor;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
