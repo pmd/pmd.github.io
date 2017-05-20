@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ApexXSSFromURLParamRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Apex</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.apex.rule.security</a> &gt; <span class="el_source">ApexXSSFromURLParamRule.java</span></div><h1>ApexXSSFromURLParamRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.apex.rule.security;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.apex.ast.ASTAssignmentExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTBinaryExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethod;
+import net.sourceforge.pmd.lang.apex.ast.ASTMethodCallExpression;
+import net.sourceforge.pmd.lang.apex.ast.ASTReturnStatement;
+import net.sourceforge.pmd.lang.apex.ast.ASTUserClass;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableDeclaration;
+import net.sourceforge.pmd.lang.apex.ast.ASTVariableExpression;
+import net.sourceforge.pmd.lang.apex.ast.AbstractApexNode;
+import net.sourceforge.pmd.lang.apex.ast.ApexNode;
+import net.sourceforge.pmd.lang.apex.rule.AbstractApexRule;
+
+/**
+ * Detects potential XSS when controller extracts a variable from URL query and
+ * uses it without escaping first
+ * 
+ * @author sergey.gorbaty
+ *
+ */
+public class ApexXSSFromURLParamRule extends AbstractApexRule {
+<span class="fc" id="L32">    private static final String[] URL_PARAMETER_METHOD = new String[] { &quot;ApexPages&quot;, &quot;currentPage&quot;, &quot;getParameters&quot;,</span>
+        &quot;get&quot;, };
+<span class="fc" id="L34">    private static final String[] HTML_ESCAPING = new String[] { &quot;ESAPI&quot;, &quot;encoder&quot;, &quot;SFDC_HTMLENCODE&quot; };</span>
+<span class="fc" id="L35">    private static final String[] JS_ESCAPING = new String[] { &quot;ESAPI&quot;, &quot;encoder&quot;, &quot;SFDC_JSENCODE&quot; };</span>
+<span class="fc" id="L36">    private static final String[] JSINHTML_ESCAPING = new String[] { &quot;ESAPI&quot;, &quot;encoder&quot;, &quot;SFDC_JSINHTMLENCODE&quot; };</span>
+<span class="fc" id="L37">    private static final String[] URL_ESCAPING = new String[] { &quot;ESAPI&quot;, &quot;encoder&quot;, &quot;SFDC_URLENCODE&quot; };</span>
+<span class="fc" id="L38">    private static final String[] STRING_HTML3 = new String[] { &quot;String&quot;, &quot;escapeHtml3&quot; };</span>
+<span class="fc" id="L39">    private static final String[] STRING_HTML4 = new String[] { &quot;String&quot;, &quot;escapeHtml4&quot; };</span>
+<span class="fc" id="L40">    private static final String[] STRING_XML = new String[] { &quot;String&quot;, &quot;escapeXml&quot; };</span>
+<span class="fc" id="L41">    private static final String[] STRING_ECMASCRIPT = new String[] { &quot;String&quot;, &quot;escapeEcmaScript&quot; };</span>
+<span class="fc" id="L42">    private static final String[] INTEGER_VALUEOF = new String[] { &quot;Integer&quot;, &quot;valueOf&quot; };</span>
+<span class="fc" id="L43">    private static final String[] ID_VALUEOF = new String[] { &quot;ID&quot;, &quot;valueOf&quot; };</span>
+<span class="fc" id="L44">    private static final String[] DOUBLE_VALUEOF = new String[] { &quot;Double&quot;, &quot;valueOf&quot; };</span>
+<span class="fc" id="L45">    private static final String[] BOOLEAN_VALUEOF = new String[] { &quot;Boolean&quot;, &quot;valueOf&quot; };</span>
+<span class="fc" id="L46">    private static final String[] STRING_ISEMPTY = new String[] { &quot;String&quot;, &quot;isEmpty&quot; };</span>
+<span class="fc" id="L47">    private static final String[] STRING_ISBLANK = new String[] { &quot;String&quot;, &quot;isBlank&quot; };</span>
+<span class="fc" id="L48">    private static final String[] STRING_ISNOTBLANK = new String[] { &quot;String&quot;, &quot;isNotBlank&quot; };</span>
+
+<span class="fc" id="L50">    private final Set&lt;String&gt; urlParameterStrings = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L52">    public ApexXSSFromURLParamRule() {</span>
+<span class="fc" id="L53">        setProperty(CODECLIMATE_CATEGORIES, new String[] { &quot;Security&quot; });</span>
+<span class="fc" id="L54">        setProperty(CODECLIMATE_REMEDIATION_MULTIPLIER, 50);</span>
+<span class="fc" id="L55">        setProperty(CODECLIMATE_BLOCK_HIGHLIGHTING, false);</span>
+<span class="fc" id="L56">    }</span>
+
+    @Override
+    public Object visit(ASTUserClass node, Object data) {
+<span class="pc bpc" id="L60" title="2 of 4 branches missed.">        if (Helper.isTestMethodOrClass(node) || Helper.isSystemLevelClass(node)) {</span>
+<span class="nc" id="L61">            return data; // stops all the rules</span>
+        }
+
+<span class="fc" id="L64">        return visit((ApexNode&lt;?&gt;) node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTAssignmentExpression node, Object data) {
+<span class="fc" id="L69">        findTaintedVariables(node, data);</span>
+<span class="fc" id="L70">        processVariableAssignments(node, data, false);</span>
+<span class="fc" id="L71">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTVariableDeclaration node, Object data) {
+<span class="fc" id="L76">        findTaintedVariables(node, data);</span>
+<span class="fc" id="L77">        processVariableAssignments(node, data, true);</span>
+<span class="fc" id="L78">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="nc" id="L83">        findTaintedVariables(node, data);</span>
+<span class="nc" id="L84">        processVariableAssignments(node, data, true);</span>
+<span class="nc" id="L85">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTMethodCallExpression node, Object data) {
+<span class="fc" id="L90">        processEscapingMethodCalls(node, data);</span>
+<span class="fc" id="L91">        processInlineMethodCalls(node, data, false);</span>
+<span class="fc" id="L92">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTReturnStatement node, Object data) {
+<span class="fc" id="L97">        ASTBinaryExpression binaryExpression = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (binaryExpression != null) {</span>
+<span class="fc" id="L99">            processBinaryExpression(binaryExpression, data);</span>
+        }
+
+<span class="fc" id="L102">        ASTMethodCallExpression methodCall = node.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (methodCall != null) {</span>
+<span class="fc" id="L104">            String retType = getReturnType(node);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (&quot;string&quot;.equalsIgnoreCase(retType)) {</span>
+<span class="fc" id="L106">                processInlineMethodCalls(methodCall, data, true);</span>
+            }
+        }
+
+<span class="fc" id="L110">        List&lt;ASTVariableExpression&gt; nodes = node.findChildrenOfType(ASTVariableExpression.class);</span>
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (ASTVariableExpression varExpression : nodes) {</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (urlParameterStrings.contains(Helper.getFQVariableName(varExpression))) {</span>
+<span class="fc" id="L114">                addViolation(data, nodes.get(0));</span>
+            }
+<span class="fc" id="L116">        }</span>
+
+<span class="fc" id="L118">        return data;</span>
+    }
+
+    private String getReturnType(ASTReturnStatement node) {
+<span class="fc" id="L122">        ASTMethod method = node.getFirstParentOfType(ASTMethod.class);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (method != null) {</span>
+<span class="fc" id="L124">            return method.getNode().getMethodInfo().getReturnType().getApexName();</span>
+        }
+
+<span class="nc" id="L127">        return &quot;&quot;;</span>
+    }
+
+    private boolean isEscapingMethod(ASTMethodCallExpression methodNode) {
+        // escaping methods
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">        return Helper.isMethodCallChain(methodNode, HTML_ESCAPING) || Helper.isMethodCallChain(methodNode, JS_ESCAPING)</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, JSINHTML_ESCAPING)</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, URL_ESCAPING)</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, STRING_HTML3)</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, STRING_HTML4)</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, STRING_XML)</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, STRING_ECMASCRIPT)</span>
+                // safe casts that eliminate injection
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, INTEGER_VALUEOF)</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, DOUBLE_VALUEOF)</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, BOOLEAN_VALUEOF)</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, ID_VALUEOF)</span>
+                // safe boolean methods
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, STRING_ISEMPTY)</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">                || Helper.isMethodCallChain(methodNode, STRING_ISBLANK)</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                || Helper.isMethodCallChain(methodNode, STRING_ISNOTBLANK);</span>
+    }
+
+    private void processInlineMethodCalls(ASTMethodCallExpression methodNode, Object data, final boolean isNested) {
+<span class="fc" id="L151">        ASTMethodCallExpression nestedCall = methodNode.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (nestedCall != null) {</span>
+
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (!isEscapingMethod(methodNode)) {</span>
+<span class="fc" id="L155">                processInlineMethodCalls(nestedCall, data, true);</span>
+            }
+        }
+
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (Helper.isMethodCallChain(methodNode, URL_PARAMETER_METHOD)) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (isNested) {</span>
+<span class="fc" id="L161">                addViolation(data, methodNode);</span>
+            }
+        }
+
+<span class="fc" id="L165">    }</span>
+
+    private void findTaintedVariables(AbstractApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L168">        final ASTMethodCallExpression right = node.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+        // Looks for: (String) foo =
+        // ApexPages.currentPage().getParameters().get(..)
+
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (right != null) {</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">            if (Helper.isMethodCallChain(right, URL_PARAMETER_METHOD)) {</span>
+<span class="fc" id="L174">                ASTVariableExpression left = node.getFirstChildOfType(ASTVariableExpression.class);</span>
+
+<span class="fc" id="L176">                String varType = null;</span>
+
+<span class="fc bfc" id="L178" title="All 2 branches covered.">                if (node instanceof ASTVariableDeclaration) {</span>
+<span class="fc" id="L179">                    varType = ((ASTVariableDeclaration) node).getNode().getLocalInfo().getType().getApexName();</span>
+
+                }
+
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                if (left != null) {</span>
+<span class="fc bfc" id="L184" title="All 4 branches covered.">                    if (varType == null || !&quot;id&quot;.equalsIgnoreCase(varType)) {</span>
+<span class="fc" id="L185">                        urlParameterStrings.add(Helper.getFQVariableName(left));</span>
+                    }
+                }
+            }
+
+<span class="fc" id="L190">            processEscapingMethodCalls(right, data);</span>
+        }
+<span class="fc" id="L192">    }</span>
+
+    private void processEscapingMethodCalls(ASTMethodCallExpression methodNode, Object data) {
+<span class="fc" id="L195">        ASTMethodCallExpression nestedCall = methodNode.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (nestedCall != null) {</span>
+<span class="fc" id="L197">            processEscapingMethodCalls(nestedCall, data);</span>
+        }
+
+<span class="fc" id="L200">        final ASTVariableExpression variable = methodNode.getFirstChildOfType(ASTVariableExpression.class);</span>
+
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        if (variable != null) {</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">            if (urlParameterStrings.contains(Helper.getFQVariableName(variable))) {</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                if (!isEscapingMethod(methodNode)) {</span>
+<span class="fc" id="L205">                    addViolation(data, variable);</span>
+                }
+            }
+        }
+
+<span class="fc" id="L210">    }</span>
+
+    private void processVariableAssignments(AbstractApexNode&lt;?&gt; node, Object data, final boolean reverseOrder) {
+<span class="fc" id="L213">        ASTMethodCallExpression methodCallAssignment = node.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (methodCallAssignment != null) {</span>
+
+<span class="fc" id="L216">            String varType = null;</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">            if (node instanceof ASTVariableDeclaration) {</span>
+<span class="fc" id="L218">                varType = ((ASTVariableDeclaration) node).getNode().getLocalInfo().getType().getApexName();</span>
+            }
+
+<span class="fc bfc" id="L221" title="All 4 branches covered.">            if (varType == null || !&quot;id&quot;.equalsIgnoreCase(varType)) {</span>
+<span class="fc" id="L222">                processInlineMethodCalls(methodCallAssignment, data, false);</span>
+            }
+        }
+
+<span class="fc" id="L226">        List&lt;ASTVariableExpression&gt; nodes = node.findChildrenOfType(ASTVariableExpression.class);</span>
+
+<span class="pc bpc" id="L228" title="1 of 3 branches missed.">        switch (nodes.size()) {</span>
+        case 1: {
+            // Look for: foo + bar
+<span class="fc" id="L231">            final List&lt;ASTBinaryExpression&gt; ops = node.findChildrenOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">            if (!ops.isEmpty()) {</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                for (ASTBinaryExpression o : ops) {</span>
+<span class="fc" id="L234">                    processBinaryExpression(o, data);</span>
+<span class="fc" id="L235">                }</span>
+            }
+
+        }
+<span class="fc" id="L239">            break;</span>
+        case 2: {
+            // Look for: foo = bar;
+<span class="fc bfc" id="L242" title="All 2 branches covered.">            final ASTVariableExpression right = reverseOrder ? nodes.get(0) : nodes.get(1);</span>
+
+<span class="fc bfc" id="L244" title="All 2 branches covered.">            if (urlParameterStrings.contains(Helper.getFQVariableName(right))) {</span>
+<span class="fc" id="L245">                addViolation(data, right);</span>
+            }
+        }
+<span class="fc" id="L248">            break;</span>
+        default:
+            break;
+        }
+
+<span class="fc" id="L253">    }</span>
+
+    private void processBinaryExpression(AbstractApexNode&lt;?&gt; node, Object data) {
+<span class="fc" id="L256">        ASTBinaryExpression nestedBinaryExpression = node.getFirstChildOfType(ASTBinaryExpression.class);</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (nestedBinaryExpression != null) {</span>
+<span class="fc" id="L258">            processBinaryExpression(nestedBinaryExpression, data);</span>
+        }
+
+<span class="fc" id="L261">        ASTMethodCallExpression methodCallAssignment = node.getFirstChildOfType(ASTMethodCallExpression.class);</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">        if (methodCallAssignment != null) {</span>
+<span class="fc" id="L263">            processInlineMethodCalls(methodCallAssignment, data, true);</span>
+        }
+
+<span class="fc" id="L266">        final List&lt;ASTVariableExpression&gt; nodes = node.findChildrenOfType(ASTVariableExpression.class);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        for (ASTVariableExpression n : nodes) {</span>
+
+<span class="fc bfc" id="L269" title="All 2 branches covered.">            if (urlParameterStrings.contains(Helper.getFQVariableName(n))) {</span>
+<span class="fc" id="L270">                addViolation(data, n);</span>
+            }
+<span class="fc" id="L272">        }</span>
+<span class="fc" id="L273">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

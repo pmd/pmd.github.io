@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>TokenEntry.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">TokenEntry.java</span></div><h1>TokenEntry.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cpd;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class TokenEntry implements Comparable&lt;TokenEntry&gt; {
+
+<span class="fc" id="L15">    public static final TokenEntry EOF = new TokenEntry();</span>
+
+    private String tokenSrcID;
+    private int beginLine;
+    private int index;
+    private int identifier;
+    private int hashCode;
+
+<span class="fc" id="L23">    private static final ThreadLocal&lt;Map&lt;String, Integer&gt;&gt; TOKENS = new ThreadLocal&lt;Map&lt;String, Integer&gt;&gt;() {</span>
+        @Override
+        protected Map&lt;String, Integer&gt; initialValue() {
+<span class="fc" id="L26">            return new HashMap&lt;&gt;();</span>
+        }
+    };
+<span class="fc" id="L29">    private static final ThreadLocal&lt;AtomicInteger&gt; TOKEN_COUNT = new ThreadLocal&lt;AtomicInteger&gt;() {</span>
+        @Override
+        protected AtomicInteger initialValue() {
+<span class="fc" id="L32">            return new AtomicInteger(0);</span>
+        }
+    };
+
+<span class="fc" id="L36">    private TokenEntry() {</span>
+<span class="fc" id="L37">        this.identifier = 0;</span>
+<span class="fc" id="L38">        this.tokenSrcID = &quot;EOFMarker&quot;;</span>
+<span class="fc" id="L39">    }</span>
+
+<span class="fc" id="L41">    public TokenEntry(String image, String tokenSrcID, int beginLine) {</span>
+<span class="fc" id="L42">        setImage(image);</span>
+<span class="fc" id="L43">        this.tokenSrcID = tokenSrcID;</span>
+<span class="fc" id="L44">        this.beginLine = beginLine;</span>
+<span class="fc" id="L45">        this.index = TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L46">    }</span>
+
+    public static TokenEntry getEOF() {
+<span class="fc" id="L49">        TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L50">        return EOF;</span>
+    }
+
+    public static void clearImages() {
+<span class="fc" id="L54">        TOKENS.get().clear();</span>
+<span class="fc" id="L55">        TOKENS.remove();</span>
+<span class="fc" id="L56">        TOKEN_COUNT.remove();</span>
+<span class="fc" id="L57">    }</span>
+
+    /**
+     * Helper class to preserve and restore the current state of the token
+     * entries.
+     */
+    public static class State {
+        private int tokenCount;
+        private Map&lt;String, Integer&gt; tokens;
+        private List&lt;TokenEntry&gt; entries;
+
+<span class="nc" id="L68">        public State(List&lt;TokenEntry&gt; entries) {</span>
+<span class="nc" id="L69">            this.tokenCount = TokenEntry.TOKEN_COUNT.get().intValue();</span>
+<span class="nc" id="L70">            this.tokens = new HashMap&lt;&gt;(TokenEntry.TOKENS.get());</span>
+<span class="nc" id="L71">            this.entries = new ArrayList&lt;&gt;(entries);</span>
+<span class="nc" id="L72">        }</span>
+
+        public List&lt;TokenEntry&gt; restore() {
+<span class="nc" id="L75">            TokenEntry.TOKEN_COUNT.get().set(tokenCount);</span>
+<span class="nc" id="L76">            TOKENS.get().clear();</span>
+<span class="nc" id="L77">            TOKENS.get().putAll(tokens);</span>
+<span class="nc" id="L78">            return entries;</span>
+        }
+    }
+
+    public String getTokenSrcID() {
+<span class="fc" id="L83">        return tokenSrcID;</span>
+    }
+
+    public int getBeginLine() {
+<span class="fc" id="L87">        return beginLine;</span>
+    }
+
+    public int getIdentifier() {
+<span class="fc" id="L91">        return this.identifier;</span>
+    }
+
+    public int getIndex() {
+<span class="fc" id="L95">        return this.index;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L100">        return hashCode;</span>
+    }
+
+    public void setHashCode(int hashCode) {
+<span class="fc" id="L104">        this.hashCode = hashCode;</span>
+<span class="fc" id="L105">    }</span>
+
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (!(o instanceof TokenEntry)) {</span>
+<span class="nc" id="L110">            return false;</span>
+        }
+<span class="fc" id="L112">        TokenEntry other = (TokenEntry) o;</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        return other.hashCode == hashCode;</span>
+    }
+
+    @Override
+    public int compareTo(TokenEntry other) {
+<span class="fc" id="L118">        return getIndex() - other.getIndex();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (this == EOF) {</span>
+<span class="nc" id="L124">            return &quot;EOF&quot;;</span>
+        }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        for (Map.Entry&lt;String, Integer&gt; e : TOKENS.get().entrySet()) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (e.getValue().intValue() == identifier) {</span>
+<span class="nc" id="L128">                return e.getKey();</span>
+            }
+<span class="nc" id="L130">        }</span>
+<span class="nc" id="L131">        return &quot;--unkown--&quot;;</span>
+    }
+
+    final void setImage(String image) {
+<span class="fc" id="L135">        Integer i = TOKENS.get().get(image);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (i == null) {</span>
+<span class="fc" id="L137">            i = TOKENS.get().size() + 1;</span>
+<span class="fc" id="L138">            TOKENS.get().put(image, i);</span>
+        }
+<span class="fc" id="L140">        this.identifier = i.intValue();</span>
+<span class="fc" id="L141">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

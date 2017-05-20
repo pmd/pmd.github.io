@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AvoidDuplicateLiteralsRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strings</a> &gt; <span class="el_source">AvoidDuplicateLiteralsRule.java</span></div><h1>AvoidDuplicateLiteralsRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.strings;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
+
+import net.sourceforge.pmd.PropertySource;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+import net.sourceforge.pmd.lang.rule.properties.CharacterProperty;
+import net.sourceforge.pmd.lang.rule.properties.FileProperty;
+import net.sourceforge.pmd.lang.rule.properties.IntegerProperty;
+import net.sourceforge.pmd.lang.rule.properties.StringProperty;
+import net.sourceforge.pmd.util.StringUtil;
+
+public class AvoidDuplicateLiteralsRule extends AbstractJavaRule {
+
+<span class="fc" id="L36">    public static final IntegerProperty THRESHOLD_DESCRIPTOR = new IntegerProperty(&quot;maxDuplicateLiterals&quot;,</span>
+            &quot;Max duplicate literals&quot;, 1, 20, 4, 1.0f);
+
+<span class="fc" id="L39">    public static final IntegerProperty MINIMUM_LENGTH_DESCRIPTOR = new IntegerProperty(&quot;minimumLength&quot;,</span>
+            &quot;Minimum string length to check&quot;, 1, Integer.MAX_VALUE, 3, 1.5f);
+
+<span class="fc" id="L42">    public static final BooleanProperty SKIP_ANNOTATIONS_DESCRIPTOR = new BooleanProperty(&quot;skipAnnotations&quot;,</span>
+            &quot;Skip literals within annotations&quot;, false, 2.0f);
+
+<span class="fc" id="L45">    public static final StringProperty EXCEPTION_LIST_DESCRIPTOR = new StringProperty(&quot;exceptionList&quot;,</span>
+            &quot;Strings to ignore&quot;, null, 3.0f);
+
+<span class="fc" id="L48">    public static final CharacterProperty SEPARATOR_DESCRIPTOR = new CharacterProperty(&quot;separator&quot;,</span>
+            &quot;Ignore list separator&quot;, ',', 4.0f);
+
+<span class="fc" id="L51">    public static final FileProperty EXCEPTION_FILE_DESCRIPTOR = new FileProperty(&quot;exceptionfile&quot;,</span>
+            &quot;File containing strings to skip (one string per line), only used if ignore list is not set&quot;, null, 5.0f);
+
+    public static class ExceptionParser {
+
+        private static final char ESCAPE_CHAR = '\\';
+        private char delimiter;
+
+<span class="fc" id="L59">        public ExceptionParser(char delimiter) {</span>
+<span class="fc" id="L60">            this.delimiter = delimiter;</span>
+<span class="fc" id="L61">        }</span>
+
+        public Set&lt;String&gt; parse(String s) {
+<span class="fc" id="L64">            Set&lt;String&gt; result = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L65">            StringBuilder currentToken = new StringBuilder();</span>
+<span class="fc" id="L66">            boolean inEscapeMode = false;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            for (int i = 0; i &lt; s.length(); i++) {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                if (inEscapeMode) {</span>
+<span class="fc" id="L69">                    inEscapeMode = false;</span>
+<span class="fc" id="L70">                    currentToken.append(s.charAt(i));</span>
+<span class="fc" id="L71">                    continue;</span>
+                }
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                if (s.charAt(i) == ESCAPE_CHAR) {</span>
+<span class="fc" id="L74">                    inEscapeMode = true;</span>
+<span class="fc" id="L75">                    continue;</span>
+                }
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (s.charAt(i) == delimiter) {</span>
+<span class="fc" id="L78">                    result.add(currentToken.toString());</span>
+<span class="fc" id="L79">                    currentToken = new StringBuilder();</span>
+                } else {
+<span class="fc" id="L81">                    currentToken.append(s.charAt(i));</span>
+                }
+            }
+<span class="fc bfc" id="L84" title="All 2 branches covered.">            if (currentToken.length() &gt; 0) {</span>
+<span class="fc" id="L85">                result.add(currentToken.toString());</span>
+            }
+<span class="fc" id="L87">            return result;</span>
+        }
+    }
+
+<span class="fc" id="L91">    private Map&lt;String, List&lt;ASTLiteral&gt;&gt; literals = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L92">    private Set&lt;String&gt; exceptions = new HashSet&lt;&gt;();</span>
+    private int minLength;
+
+<span class="fc" id="L95">    public AvoidDuplicateLiteralsRule() {</span>
+<span class="fc" id="L96">        definePropertyDescriptor(THRESHOLD_DESCRIPTOR);</span>
+<span class="fc" id="L97">        definePropertyDescriptor(MINIMUM_LENGTH_DESCRIPTOR);</span>
+<span class="fc" id="L98">        definePropertyDescriptor(SKIP_ANNOTATIONS_DESCRIPTOR);</span>
+<span class="fc" id="L99">        definePropertyDescriptor(EXCEPTION_LIST_DESCRIPTOR);</span>
+<span class="fc" id="L100">        definePropertyDescriptor(SEPARATOR_DESCRIPTOR);</span>
+<span class="fc" id="L101">        definePropertyDescriptor(EXCEPTION_FILE_DESCRIPTOR);</span>
+<span class="fc" id="L102">    }</span>
+
+    private LineNumberReader getLineReader() throws FileNotFoundException {
+<span class="nc" id="L105">        return new LineNumberReader(new BufferedReader(new FileReader(getProperty(EXCEPTION_FILE_DESCRIPTOR))));</span>
+    }
+
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L110">        literals.clear();</span>
+
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (getProperty(EXCEPTION_LIST_DESCRIPTOR) != null) {</span>
+<span class="fc" id="L113">            ExceptionParser p = new ExceptionParser(getProperty(SEPARATOR_DESCRIPTOR));</span>
+<span class="fc" id="L114">            exceptions = p.parse(getProperty(EXCEPTION_LIST_DESCRIPTOR));</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        } else if (getProperty(EXCEPTION_FILE_DESCRIPTOR) != null) {</span>
+<span class="nc" id="L116">            exceptions = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L117">            LineNumberReader reader = null;</span>
+            try {
+<span class="nc" id="L119">                reader = getLineReader();</span>
+                String line;
+<span class="nc bnc" id="L121" title="All 2 branches missed.">                while ((line = reader.readLine()) != null) {</span>
+<span class="nc" id="L122">                    exceptions.add(line);</span>
+                }
+<span class="nc" id="L124">            } catch (IOException ioe) {</span>
+<span class="nc" id="L125">                ioe.printStackTrace();</span>
+            } finally {
+<span class="nc" id="L127">                IOUtils.closeQuietly(reader);</span>
+<span class="nc" id="L128">            }</span>
+        }
+
+<span class="fc" id="L131">        minLength = 2 + getProperty(MINIMUM_LENGTH_DESCRIPTOR);</span>
+
+<span class="fc" id="L133">        super.visit(node, data);</span>
+
+<span class="fc" id="L135">        processResults(data);</span>
+
+<span class="fc" id="L137">        return data;</span>
+    }
+
+    private void processResults(Object data) {
+
+<span class="fc" id="L142">        int threshold = getProperty(THRESHOLD_DESCRIPTOR);</span>
+
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (Map.Entry&lt;String, List&lt;ASTLiteral&gt;&gt; entry : literals.entrySet()) {</span>
+<span class="fc" id="L145">            List&lt;ASTLiteral&gt; occurrences = entry.getValue();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (occurrences.size() &gt;= threshold) {</span>
+<span class="fc" id="L147">                ASTLiteral first = occurrences.get(0);</span>
+<span class="fc" id="L148">                String rawImage = first.getEscapedStringLiteral();</span>
+<span class="fc" id="L149">                Object[] args = new Object[] { rawImage, Integer.valueOf(occurrences.size()),</span>
+                    Integer.valueOf(first.getBeginLine()), };
+<span class="fc" id="L151">                addViolation(data, first, args);</span>
+            }
+<span class="fc" id="L153">        }</span>
+<span class="fc" id="L154">    }</span>
+
+    @Override
+    public Object visit(ASTLiteral node, Object data) {
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        if (!node.isStringLiteral()) {</span>
+<span class="fc" id="L159">            return data;</span>
+        }
+<span class="fc" id="L161">        String image = node.getImage();</span>
+
+        // just catching strings of 'minLength' chars or more (including the
+        // enclosing quotes)
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (image.length() &lt; minLength) {</span>
+<span class="fc" id="L166">            return data;</span>
+        }
+
+        // skip any exceptions
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        if (exceptions.contains(image.substring(1, image.length() - 1))) {</span>
+<span class="fc" id="L171">            return data;</span>
+        }
+
+        // Skip literals in annotations
+<span class="pc bpc" id="L175" title="1 of 4 branches missed.">        if (getProperty(SKIP_ANNOTATIONS_DESCRIPTOR) &amp;&amp; node.getFirstParentOfType(ASTAnnotation.class) != null) {</span>
+<span class="fc" id="L176">            return data;</span>
+        }
+
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (literals.containsKey(image)) {</span>
+<span class="fc" id="L180">            List&lt;ASTLiteral&gt; occurrences = literals.get(image);</span>
+<span class="fc" id="L181">            occurrences.add(node);</span>
+<span class="fc" id="L182">        } else {</span>
+<span class="fc" id="L183">            List&lt;ASTLiteral&gt; occurrences = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L184">            occurrences.add(node);</span>
+<span class="fc" id="L185">            literals.put(image, occurrences);</span>
+        }
+
+<span class="fc" id="L188">        return data;</span>
+    }
+
+    private static String checkFile(File file) {
+
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L194">            return &quot;File '&quot; + file.getName() + &quot;' does not exist&quot;;</span>
+        }
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (!file.canRead()) {</span>
+<span class="nc" id="L197">            return &quot;File '&quot; + file.getName() + &quot;' cannot be read&quot;;</span>
+        }
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (file.length() == 0) {</span>
+<span class="nc" id="L200">            return &quot;File '&quot; + file.getName() + &quot;' is empty&quot;;</span>
+        }
+
+<span class="nc" id="L203">        return null;</span>
+    }
+
+    /**
+     * @see PropertySource#dysfunctionReason()
+     */
+    @Override
+    public String dysfunctionReason() {
+
+<span class="fc" id="L212">        File file = getProperty(EXCEPTION_FILE_DESCRIPTOR);</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (file != null) {</span>
+<span class="nc" id="L214">            String issue = checkFile(file);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">            if (issue != null) {</span>
+<span class="nc" id="L216">                return issue;</span>
+            }
+
+<span class="nc" id="L219">            String ignores = getProperty(EXCEPTION_LIST_DESCRIPTOR);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            if (StringUtil.isNotEmpty(ignores)) {</span>
+<span class="nc" id="L221">                return &quot;Cannot reference external file AND local values&quot;;</span>
+            }
+        }
+
+<span class="fc" id="L225">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>EmptyForeachStmtRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Velocity</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.vm.rule.basic</a> &gt; <span class="el_source">EmptyForeachStmtRule.java</span></div><h1>EmptyForeachStmtRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.vm.rule.basic;
+
+import org.apache.commons.lang3.StringUtils;
+
+import net.sourceforge.pmd.lang.vm.ast.ASTBlock;
+import net.sourceforge.pmd.lang.vm.ast.ASTForeachStatement;
+import net.sourceforge.pmd.lang.vm.ast.ASTText;
+import net.sourceforge.pmd.lang.vm.ast.AbstractVmNode;
+import net.sourceforge.pmd.lang.vm.rule.AbstractVmRule;
+
+<span class="fc" id="L15">public class EmptyForeachStmtRule extends AbstractVmRule {</span>
+
+    @Override
+    public Object visit(final ASTForeachStatement node, final Object data) {
+<span class="fc" id="L19">        final ASTBlock block = node.getFirstChildOfType(ASTBlock.class);</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        if (block.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L21">            addViolation(data, node);</span>
+<span class="pc bpc" id="L22" title="2 of 6 branches missed.">        } else if (block.jjtGetNumChildren() == 1 &amp;&amp; block.jjtGetChild(0) instanceof ASTText</span>
+                &amp;&amp; StringUtils.isBlank(((AbstractVmNode) block.jjtGetChild(0)).getFirstToken().toString())) {
+<span class="fc" id="L24">            addViolation(data, node);</span>
+        }
+<span class="fc" id="L26">        return super.visit(node, data);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

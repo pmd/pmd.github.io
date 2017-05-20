@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MemberNode.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd.graph</a> &gt; <span class="el_source">MemberNode.java</span></div><h1>MemberNode.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.dcd.graph;
+
+import java.lang.reflect.Member;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Represents a Class Member in a UsageGraph.
+ */
+public abstract class MemberNode&lt;S extends MemberNode&lt;S, T&gt;, T extends Member&gt;
+    implements NodeVisitorAcceptor, Comparable&lt;S&gt; {
+    protected final ClassNode classNode;
+
+    protected final String name;
+
+    protected final String desc;
+
+    private List&lt;MemberNode&gt; uses;
+
+    private List&lt;MemberNode&gt; users;
+
+    private Object decoration;
+
+<span class="nc" id="L29">    public MemberNode(ClassNode classNode, String name, String desc) {</span>
+<span class="nc" id="L30">        this.classNode = classNode;</span>
+<span class="nc" id="L31">        this.name = name;</span>
+<span class="nc" id="L32">        this.desc = desc;</span>
+<span class="nc" id="L33">    }</span>
+
+    @Override
+    public Object accept(NodeVisitor visitor, Object data) {
+<span class="nc" id="L37">        visitor.visitUses(this, data);</span>
+<span class="nc" id="L38">        visitor.visitUsers(this, data);</span>
+<span class="nc" id="L39">        return data;</span>
+    }
+
+    public ClassNode getClassNode() {
+<span class="nc" id="L43">        return classNode;</span>
+    }
+
+    public String getName() {
+<span class="nc" id="L47">        return name;</span>
+    }
+
+    public String getDesc() {
+<span class="nc" id="L51">        return desc;</span>
+    }
+
+    public abstract T getMember();
+
+    public void addUse(MemberNode use) {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (uses == null) {</span>
+<span class="nc" id="L58">            uses = new ArrayList&lt;&gt;(1);</span>
+        }
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (!uses.contains(use)) {</span>
+<span class="nc" id="L61">            uses.add(use);</span>
+        }
+<span class="nc" id="L63">    }</span>
+
+    public List&lt;MemberNode&gt; getUses() {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        return uses != null ? uses : Collections.&lt;MemberNode&gt;emptyList();</span>
+    }
+
+    public void addUser(MemberNode user) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (users == null) {</span>
+<span class="nc" id="L71">            users = new ArrayList&lt;&gt;(1);</span>
+        }
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (!users.contains(user)) {</span>
+<span class="nc" id="L74">            users.add(user);</span>
+        }
+<span class="nc" id="L76">    }</span>
+
+    public List&lt;MemberNode&gt; getUsers() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        return users != null ? users : Collections.&lt;MemberNode&gt;emptyList();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L84">        return name + &quot; &quot; + desc;</span>
+    }
+
+    public String toStringLong() {
+<span class="nc" id="L88">        return getMember().toString();</span>
+    }
+
+    @SuppressWarnings(&quot;PMD.SuspiciousEqualsMethodName&quot;)
+    public boolean equals(S that) {
+<span class="nc" id="L93">        return equals(that.name, that.desc);</span>
+    }
+
+    public boolean equals(String name, String desc) {
+<span class="nc bnc" id="L97" title="All 4 branches missed.">        return this.name.equals(name) &amp;&amp; this.desc.equals(desc);</span>
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+<span class="nc" id="L105">        final int prime = 31;</span>
+<span class="nc" id="L106">        int result = 1;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        result = prime * result + ((desc == null) ? 0 : desc.hashCode());</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        result = prime * result + ((name == null) ? 0 : name.hashCode());</span>
+<span class="nc" id="L109">        return result;</span>
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (this == obj) {</span>
+<span class="nc" id="L118">            return true;</span>
+        }
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L121">            return false;</span>
+        }
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L124">            return false;</span>
+        }
+<span class="nc" id="L126">        MemberNode other = (MemberNode) obj;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (desc == null) {</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            if (other.desc != null) {</span>
+<span class="nc" id="L129">                return false;</span>
+            }
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        } else if (!desc.equals(other.desc)) {</span>
+<span class="nc" id="L132">            return false;</span>
+        }
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (name == null) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (other.name != null) {</span>
+<span class="nc" id="L136">                return false;</span>
+            }
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        } else if (!name.equals(other.name)) {</span>
+<span class="nc" id="L139">            return false;</span>
+        }
+<span class="nc" id="L141">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

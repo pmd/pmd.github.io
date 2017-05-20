@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ReportTree.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa.report</a> &gt; <span class="el_source">ReportTree.java</span></div><h1>ReportTree.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.dfa.report;
+
+import java.util.Iterator;
+
+import net.sourceforge.pmd.RuleViolation;
+
+<span class="fc" id="L11">public class ReportTree implements Iterable&lt;RuleViolation&gt; {</span>
+
+<span class="fc" id="L13">    private PackageNode rootNode = new PackageNode(&quot;&quot;);</span>
+    private AbstractReportNode level;
+
+<span class="fc" id="L16">    private class TreeIterator implements Iterator&lt;RuleViolation&gt; {</span>
+
+<span class="fc" id="L18">        private AbstractReportNode iterNode = rootNode;</span>
+        private boolean hasNextFlag;
+
+        @Override
+        public void remove() {
+<span class="nc" id="L23">            throw new UnsupportedOperationException();</span>
+        }
+
+        @Override
+        public boolean hasNext() {
+<span class="fc" id="L28">            hasNextFlag = true;</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">            return getNext() != null;</span>
+        }
+
+        @Override
+        public RuleViolation next() {
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (!hasNextFlag) {</span>
+<span class="fc" id="L35">                getNext();</span>
+            } else {
+<span class="fc" id="L37">                hasNextFlag = false;</span>
+            }
+
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">            if (iterNode instanceof ViolationNode) {</span>
+<span class="fc" id="L41">                return ((ViolationNode) iterNode).getRuleViolation();</span>
+            }
+<span class="nc" id="L43">            return null;</span>
+        }
+
+        /**
+         * It's some kind of left-right-middle search (postorder). It always
+         * returns only leafs. The first node he returns is the most left handed
+         * leaf he can found. Now he's looking for siblings and if there are
+         * any, he starts searching for the next most left handed leaf. If there
+         * are no siblings he goes up to his parent and starts looking for
+         * siblings. If there are any he starts searching for the next most left
+         * handed leaf again. And so on ... until he wants to get the parent of
+         * the root node. Because there is no one, the search stops.
+         */
+
+        private AbstractReportNode getNext() {
+            AbstractReportNode node;
+
+            while (true) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">                if (iterNode.isLeaf()) {</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                    while ((node = iterNode.getNextSibling()) == null) {</span>
+
+<span class="fc" id="L65">                        node = iterNode.getParent();</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">                        if (node == null) {</span>
+<span class="fc" id="L67">                            return null;</span>
+                        } else {
+<span class="fc" id="L69">                            iterNode = node;</span>
+                        }
+                    }
+
+<span class="fc" id="L73">                    iterNode = node;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                    if (iterNode.isLeaf()) {</span>
+<span class="fc" id="L75">                        return iterNode;</span>
+                    } else {
+                        continue;
+                    }
+                } else {
+<span class="fc" id="L80">                    iterNode = iterNode.getFirstChild();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">                    if (iterNode.isLeaf()) {</span>
+<span class="fc" id="L82">                        return iterNode;</span>
+                    } else {
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public Iterator&lt;RuleViolation&gt; iterator() {
+<span class="fc" id="L93">        return new TreeIterator();</span>
+    }
+
+    public int size() {
+<span class="nc" id="L97">        int count = 0;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        for (Iterator&lt;RuleViolation&gt; i = iterator(); i.hasNext();) {</span>
+<span class="nc" id="L99">            i.next();</span>
+<span class="nc" id="L100">            count++;</span>
+        }
+<span class="nc" id="L102">        return count;</span>
+    }
+
+    public AbstractReportNode getRootNode() {
+<span class="fc" id="L106">        return rootNode;</span>
+    }
+
+    /**
+     * Adds the RuleViolation to the tree. Splits the package name. Each
+     * package, class and violation gets there own tree node.
+     */
+    public void addRuleViolation(RuleViolation violation) {
+<span class="fc" id="L114">        String packageName = violation.getPackageName();</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (packageName == null) {</span>
+<span class="nc" id="L116">            packageName = &quot;&quot;;</span>
+        }
+
+<span class="fc" id="L119">        level = rootNode;</span>
+
+<span class="fc" id="L121">        int endIndex = packageName.indexOf('.');</span>
+        while (true) {
+            String parentPackage;
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (endIndex &lt; 0) {</span>
+<span class="fc" id="L125">                parentPackage = packageName;</span>
+            } else {
+<span class="nc" id="L127">                parentPackage = packageName.substring(0, endIndex);</span>
+            }
+
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            if (!isStringInLevel(parentPackage)) {</span>
+<span class="fc" id="L131">                PackageNode node = new PackageNode(parentPackage);</span>
+<span class="fc" id="L132">                level.addFirst(node);</span>
+                // gotoLevel
+<span class="fc" id="L134">                level = node;</span>
+            }
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">            if (endIndex &lt; 0) {</span>
+<span class="fc" id="L138">                break;</span>
+            }
+<span class="nc" id="L140">            endIndex = packageName.indexOf('.', endIndex + 1);</span>
+<span class="nc" id="L141">        }</span>
+
+<span class="fc" id="L143">        String cl = violation.getClassName();</span>
+
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        if (!isStringInLevel(cl)) {</span>
+<span class="fc" id="L146">            ClassNode node = new ClassNode(cl);</span>
+<span class="fc" id="L147">            level.addFirst(node);</span>
+            // gotoLevel
+<span class="fc" id="L149">            level = node;</span>
+        }
+
+        /*
+         * Filters duplicated rule violations. Like the comparator in
+         * RuleViolation if he already exists.
+         */
+<span class="fc" id="L156">        ViolationNode tmp = new ViolationNode(violation);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        if (!equalsNodeInLevel(level, tmp)) {</span>
+<span class="fc" id="L158">            level.add(tmp);</span>
+        }
+<span class="fc" id="L160">    }</span>
+
+    /**
+     * Checks if node is a child of the level node.
+     */
+    private boolean equalsNodeInLevel(AbstractReportNode level, AbstractReportNode node) {
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        for (int i = 0; i &lt; level.getChildCount(); i++) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if (level.getChildAt(i).equalsNode(node)) {</span>
+<span class="fc" id="L168">                return true;</span>
+            }
+        }
+<span class="fc" id="L171">        return false;</span>
+    }
+
+    /**
+     * Checks if the packageName or the className is a child of the current
+     * (this.level) node. If it's true, the current node changes to the child
+     * node.
+     */
+    private boolean isStringInLevel(String str) {
+
+<span class="pc bfc" id="L181" title="All 2 branches covered.">        for (int i = 0; i &lt; level.getChildCount(); i++) {</span>
+<span class="fc" id="L182">            final AbstractReportNode child = level.getChildAt(i);</span>
+            final String tmp;
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            if (child instanceof PackageNode) {</span>
+<span class="fc" id="L185">                tmp = ((PackageNode) child).getPackageName();</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            } else if (child instanceof ClassNode) {</span>
+<span class="fc" id="L187">                tmp = ((ClassNode) child).getClassName();</span>
+            } else {
+<span class="nc" id="L189">                return false;</span>
+            }
+
+<span class="pc bpc" id="L192" title="2 of 4 branches missed.">            if (tmp != null &amp;&amp; tmp.equals(str)) {</span>
+                // goto level
+<span class="fc" id="L194">                level = child;</span>
+<span class="fc" id="L195">                return true;</span>
+            }
+        }
+<span class="fc" id="L198">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
