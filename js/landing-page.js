@@ -3,8 +3,9 @@ $(function() {
     $('a.page-scroll').bind('click', function(event) {
         var $anchor = $(this);
         $('html, body').stop().animate({
-            scrollTop: $($anchor.attr('href')).offset().top
+            scrollTop: $($anchor[0].hash).offset().top
         }, 1500, 'easeInOutExpo');
+        location.hash = $anchor[0].hash;
         event.preventDefault();
     });
 });
