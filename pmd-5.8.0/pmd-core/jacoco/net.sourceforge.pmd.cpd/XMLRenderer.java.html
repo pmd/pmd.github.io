@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>XMLRenderer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">XMLRenderer.java</span></div><h1>XMLRenderer.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cpd;
+
+import java.io.StringWriter;
+import java.util.Iterator;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+/**
+ * @author Philippe T'Seyen - original implementation
+ * @author Romain Pelisse - javax.xml implementation
+ *
+ */
+public final class XMLRenderer implements Renderer {
+
+    private String encoding;
+
+    /**
+     * Creates a XML Renderer with the default (platform dependent) encoding.
+     */
+    public XMLRenderer() {
+<span class="fc" id="L36">        this(null);</span>
+<span class="fc" id="L37">    }</span>
+
+    /**
+     * Creates a XML Renderer with a specific output encoding.
+     *
+     * @param encoding
+     *            the encoding to use or null. If null, default (platform
+     *            dependent) encoding is used.
+     */
+<span class="fc" id="L46">    public XMLRenderer(String encoding) {</span>
+<span class="fc" id="L47">        setEncoding(encoding);</span>
+<span class="fc" id="L48">    }</span>
+
+    public void setEncoding(String encoding) {
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (encoding != null) {</span>
+<span class="fc" id="L52">            this.encoding = encoding;</span>
+        } else {
+<span class="fc" id="L54">            this.encoding = System.getProperty(&quot;file.encoding&quot;);</span>
+        }
+<span class="fc" id="L56">    }</span>
+
+    public String getEncoding() {
+<span class="nc" id="L59">        return this.encoding;</span>
+    }
+
+    private Document createDocument() {
+        try {
+<span class="fc" id="L64">            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L65">            DocumentBuilder parser = factory.newDocumentBuilder();</span>
+<span class="fc" id="L66">            return parser.newDocument();</span>
+<span class="nc" id="L67">        } catch (ParserConfigurationException e) {</span>
+<span class="nc" id="L68">            throw new IllegalStateException(e);</span>
+        }
+    }
+
+    private String xmlDocToString(Document doc) {
+        try {
+<span class="fc" id="L74">            TransformerFactory tf = TransformerFactory.newInstance();</span>
+<span class="fc" id="L75">            Transformer transformer = tf.newTransformer();</span>
+<span class="fc" id="L76">            transformer.setOutputProperty(OutputKeys.METHOD, &quot;xml&quot;);</span>
+<span class="fc" id="L77">            transformer.setOutputProperty(OutputKeys.ENCODING, encoding);</span>
+<span class="fc" id="L78">            transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="fc" id="L79">            transformer.setOutputProperty(OutputKeys.CDATA_SECTION_ELEMENTS, &quot;codefragment&quot;);</span>
+<span class="fc" id="L80">            StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L81">            transformer.transform(new DOMSource(doc), new StreamResult(writer));</span>
+<span class="fc" id="L82">            return writer.toString();</span>
+<span class="nc" id="L83">        } catch (TransformerException e) {</span>
+<span class="nc" id="L84">            throw new IllegalStateException(e);</span>
+        }
+    }
+
+    @Override
+    public String render(Iterator&lt;Match&gt; matches) {
+<span class="fc" id="L90">        Document doc = createDocument();</span>
+<span class="fc" id="L91">        Element root = doc.createElement(&quot;pmd-cpd&quot;);</span>
+<span class="fc" id="L92">        doc.appendChild(root);</span>
+
+        Match match;
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        while (matches.hasNext()) {</span>
+<span class="fc" id="L96">            match = matches.next();</span>
+<span class="fc" id="L97">            root.appendChild(addCodeSnippet(doc,</span>
+                    addFilesToDuplicationElement(doc, createDuplicationElement(doc, match), match), match));
+        }
+<span class="fc" id="L100">        return xmlDocToString(doc);</span>
+    }
+
+    private Element addFilesToDuplicationElement(Document doc, Element duplication, Match match) {
+        Mark mark;
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (Iterator&lt;Mark&gt; iterator = match.iterator(); iterator.hasNext();) {</span>
+<span class="fc" id="L106">            mark = iterator.next();</span>
+<span class="fc" id="L107">            Element file = doc.createElement(&quot;file&quot;);</span>
+<span class="fc" id="L108">            file.setAttribute(&quot;line&quot;, String.valueOf(mark.getBeginLine()));</span>
+<span class="fc" id="L109">            file.setAttribute(&quot;path&quot;, mark.getFilename());</span>
+<span class="fc" id="L110">            duplication.appendChild(file);</span>
+<span class="fc" id="L111">        }</span>
+<span class="fc" id="L112">        return duplication;</span>
+    }
+
+    private Element addCodeSnippet(Document doc, Element duplication, Match match) {
+<span class="fc" id="L116">        String codeSnipet = match.getSourceCodeSlice();</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (codeSnipet != null) {</span>
+<span class="fc" id="L118">            Element codefragment = doc.createElement(&quot;codefragment&quot;);</span>
+<span class="fc" id="L119">            codefragment.appendChild(doc.createCDATASection(codeSnipet));</span>
+<span class="fc" id="L120">            duplication.appendChild(codefragment);</span>
+        }
+<span class="fc" id="L122">        return duplication;</span>
+    }
+
+    private Element createDuplicationElement(Document doc, Match match) {
+<span class="fc" id="L126">        Element duplication = doc.createElement(&quot;duplication&quot;);</span>
+<span class="fc" id="L127">        duplication.setAttribute(&quot;lines&quot;, String.valueOf(match.getLineCount()));</span>
+<span class="fc" id="L128">        duplication.setAttribute(&quot;tokens&quot;, String.valueOf(match.getTokenCount()));</span>
+<span class="fc" id="L129">        return duplication;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

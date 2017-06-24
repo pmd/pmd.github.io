@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>StatementAndBraceFinder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.dfa</a> &gt; <span class="el_source">StatementAndBraceFinder.java</span></div><h1>StatementAndBraceFinder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.dfa;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.DataFlowHandler;
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.dfa.Linker;
+import net.sourceforge.pmd.lang.dfa.LinkerException;
+import net.sourceforge.pmd.lang.dfa.NodeType;
+import net.sourceforge.pmd.lang.dfa.SequenceException;
+import net.sourceforge.pmd.lang.dfa.Structure;
+import net.sourceforge.pmd.lang.java.ast.ASTBreakStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTContinueStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTDoStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTForInit;
+import net.sourceforge.pmd.lang.java.ast.ASTForStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTForUpdate;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLabeledStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTReturnStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTStatementExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchLabel;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTThrowStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTWhileStatement;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.ast.JavaParserVisitorAdapter;
+
+/**
+ * Sublayer of DataFlowFacade. Finds all data flow nodes and stores the
+ * type information (@see StackObject). At last it uses this information
+ * to link the nodes.
+ *
+ * @author raik
+ */
+public class StatementAndBraceFinder extends JavaParserVisitorAdapter {
+<span class="fc" id="L47">    private static final Logger LOGGER = Logger.getLogger(StatementAndBraceFinder.class.getName());</span>
+
+    private final DataFlowHandler dataFlowHandler;
+    private Structure dataFlow;
+
+<span class="fc" id="L52">    public StatementAndBraceFinder(DataFlowHandler dataFlowHandler) {</span>
+<span class="fc" id="L53">        this.dataFlowHandler = dataFlowHandler;</span>
+<span class="fc" id="L54">    }</span>
+
+    public void buildDataFlowFor(JavaNode node) {
+<span class="fc bfc" id="L57" title="All 4 branches covered.">        if (!(node instanceof ASTMethodDeclaration) &amp;&amp; !(node instanceof ASTConstructorDeclaration)) {</span>
+<span class="fc" id="L58">            throw new RuntimeException(&quot;Can't build a data flow for anything other than a method or a constructor&quot;);</span>
+        }
+
+<span class="fc" id="L61">        this.dataFlow = new Structure(dataFlowHandler);</span>
+<span class="fc" id="L62">        this.dataFlow.createStartNode(node.getBeginLine());</span>
+<span class="fc" id="L63">        this.dataFlow.createNewNode(node);</span>
+
+<span class="fc" id="L65">        node.jjtAccept(this, dataFlow);</span>
+
+<span class="fc" id="L67">        this.dataFlow.createEndNode(node.getEndLine());</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+            // TODO SRT Remove after development
+<span class="nc" id="L70">            LOGGER.fine(&quot;DataFlow is &quot; + this.dataFlow.dump());</span>
+        }
+<span class="fc" id="L72">        Linker linker = new Linker(dataFlowHandler, dataFlow.getBraceStack(), dataFlow.getContinueBreakReturnStack());</span>
+        try {
+<span class="fc" id="L74">            linker.computePaths();</span>
+<span class="nc" id="L75">        } catch (LinkerException e) {</span>
+<span class="nc" id="L76">            e.printStackTrace();</span>
+<span class="nc" id="L77">        } catch (SequenceException e) {</span>
+<span class="nc" id="L78">            e.printStackTrace();</span>
+<span class="pc" id="L79">        }</span>
+<span class="fc" id="L80">    }</span>
+
+    @Override
+    public Object visit(ASTStatementExpression node, Object data) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L85">            return data;</span>
+        }
+<span class="fc" id="L87">        Structure dataFlow = (Structure) data;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L89">            LOGGER.finest(&quot;createNewNode ASTStatementExpression: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L90">                    + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L92">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L93">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTVariableDeclarator node, Object data) {
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L99">            return data;</span>
+        }
+<span class="fc" id="L101">        Structure dataFlow = (Structure) data;</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L103">            LOGGER.finest(&quot;createNewNode ASTVariableDeclarator: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L104">                    + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L106">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L107">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTExpression node, Object data) {
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L113">            return data;</span>
+        }
+<span class="fc" id="L115">        Structure dataFlow = (Structure) data;</span>
+
+        // TODO what about throw stmts?
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (node.jjtGetParent() instanceof ASTIfStatement) {</span>
+<span class="fc" id="L119">            dataFlow.createNewNode(node); // START IF</span>
+<span class="fc" id="L120">            dataFlow.pushOnStack(NodeType.IF_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L122">                LOGGER.finest(&quot;pushOnStack parent IF_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L123">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTWhileStatement) {</span>
+<span class="fc" id="L126">            dataFlow.createNewNode(node); // START WHILE</span>
+<span class="fc" id="L127">            dataFlow.pushOnStack(NodeType.WHILE_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L129">                LOGGER.finest(&quot;pushOnStack parent WHILE_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L130">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTSwitchStatement) {</span>
+<span class="fc" id="L133">            dataFlow.createNewNode(node); // START SWITCH</span>
+<span class="fc" id="L134">            dataFlow.pushOnStack(NodeType.SWITCH_START, dataFlow.getLast());</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L136">                LOGGER.finest(&quot;pushOnStack parent SWITCH_START: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L137">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTForStatement) {</span>
+<span class="fc" id="L140">            dataFlow.createNewNode(node); // FOR EXPR</span>
+<span class="fc" id="L141">            dataFlow.pushOnStack(NodeType.FOR_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L143">                LOGGER.finest(&quot;pushOnStack parent FOR_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L144">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTDoStatement) {</span>
+<span class="fc" id="L147">            dataFlow.createNewNode(node); // DO EXPR</span>
+<span class="fc" id="L148">            dataFlow.pushOnStack(NodeType.DO_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L150">                LOGGER.finest(&quot;pushOnStack parent DO_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L151">                        + node.getBeginColumn());</span>
+            }
+        }
+
+<span class="fc" id="L155">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTForInit node, Object data) {
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L161">            return data;</span>
+        }
+<span class="fc" id="L163">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L164">        super.visit(node, data);</span>
+<span class="fc" id="L165">        dataFlow.pushOnStack(NodeType.FOR_INIT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L167">            LOGGER.finest(&quot;pushOnStack FOR_INIT: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L169">        this.addForExpressionNode(node, dataFlow);</span>
+<span class="fc" id="L170">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTLabeledStatement node, Object data) {
+<span class="fc" id="L175">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L176">        dataFlow.pushOnStack(NodeType.LABEL_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L178">            LOGGER.finest(</span>
+<span class="nc" id="L179">                    &quot;pushOnStack LABEL_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L181">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTForUpdate node, Object data) {
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L187">            return data;</span>
+        }
+<span class="fc" id="L189">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L190">        this.addForExpressionNode(node, dataFlow);</span>
+<span class="fc" id="L191">        super.visit(node, data);</span>
+<span class="fc" id="L192">        dataFlow.pushOnStack(NodeType.FOR_UPDATE, dataFlow.getLast());</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L194">            LOGGER.finest(&quot;pushOnStack FOR_UPDATE: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L196">        return data;</span>
+    }
+
+    // ----------------------------------------------------------------------------
+    // BRANCH OUT
+
+    @Override
+    public Object visit(ASTStatement node, Object data) {
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L205">            return data;</span>
+        }
+<span class="fc" id="L207">        Structure dataFlow = (Structure) data;</span>
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if (node.jjtGetParent() instanceof ASTForStatement) {</span>
+<span class="fc" id="L210">            this.addForExpressionNode(node, dataFlow);</span>
+<span class="fc" id="L211">            dataFlow.pushOnStack(NodeType.FOR_BEFORE_FIRST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L213">                LOGGER.finest(&quot;pushOnStack FOR_BEFORE_FIRST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L214">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTDoStatement) {</span>
+<span class="fc" id="L217">            dataFlow.pushOnStack(NodeType.DO_BEFORE_FIRST_STATEMENT, dataFlow.getLast());</span>
+<span class="fc" id="L218">            dataFlow.createNewNode(node.jjtGetParent());</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L220">                LOGGER.finest(&quot;pushOnStack DO_BEFORE_FIRST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L221">                        + node.getBeginColumn());</span>
+            }
+        }
+
+<span class="fc" id="L225">        super.visit(node, data);</span>
+
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (node.jjtGetParent() instanceof ASTIfStatement) {</span>
+<span class="fc" id="L228">            ASTIfStatement st = (ASTIfStatement) node.jjtGetParent();</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (!st.hasElse()) {</span>
+<span class="fc" id="L230">                dataFlow.pushOnStack(NodeType.IF_LAST_STATEMENT_WITHOUT_ELSE, dataFlow.getLast());</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L232">                    LOGGER.finest(&quot;pushOnStack IF_LAST_STATEMENT_WITHOUT_ELSE: line &quot; + node.getBeginLine()</span>
+<span class="nc" id="L233">                            + &quot;, column &quot; + node.getBeginColumn());</span>
+                }
+<span class="pc bpc" id="L235" title="1 of 4 branches missed.">            } else if (st.hasElse() &amp;&amp; !st.jjtGetChild(1).equals(node)) {</span>
+<span class="fc" id="L236">                dataFlow.pushOnStack(NodeType.ELSE_LAST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L238">                    LOGGER.finest(&quot;pushOnStack ELSE_LAST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L239">                            + node.getBeginColumn());</span>
+                }
+            } else {
+<span class="fc" id="L242">                dataFlow.pushOnStack(NodeType.IF_LAST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L244">                    LOGGER.finest(&quot;pushOnStack IF_LAST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L245">                            + node.getBeginColumn());</span>
+                }
+            }
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTWhileStatement) {</span>
+<span class="fc" id="L249">            dataFlow.pushOnStack(NodeType.WHILE_LAST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L251">                LOGGER.finest(&quot;pushOnStack WHILE_LAST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L252">                        + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTForStatement) {</span>
+<span class="fc" id="L255">            dataFlow.pushOnStack(NodeType.FOR_END, dataFlow.getLast());</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L257">                LOGGER.finest(&quot;pushOnStack FOR_END: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+            }
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        } else if (node.jjtGetParent() instanceof ASTLabeledStatement) {</span>
+<span class="fc" id="L260">            dataFlow.pushOnStack(NodeType.LABEL_LAST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L262">                LOGGER.finest(&quot;pushOnStack LABEL_LAST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L263">                        + node.getBeginColumn());</span>
+            }
+        }
+<span class="fc" id="L266">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTSwitchStatement node, Object data) {
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L272">            return data;</span>
+        }
+<span class="fc" id="L274">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L275">        super.visit(node, data);</span>
+<span class="fc" id="L276">        dataFlow.pushOnStack(NodeType.SWITCH_END, dataFlow.getLast());</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L278">            LOGGER.finest(&quot;pushOnStack SWITCH_END: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L280">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTSwitchLabel node, Object data) {
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L286">            return data;</span>
+        }
+<span class="fc" id="L288">        Structure dataFlow = (Structure) data;</span>
+        // super.visit(node, data);
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L291">            dataFlow.pushOnStack(NodeType.SWITCH_LAST_DEFAULT_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L293">                LOGGER.finest(&quot;pushOnStack SWITCH_LAST_DEFAULT_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L294">                        + node.getBeginColumn());</span>
+            }
+        } else {
+<span class="fc" id="L297">            dataFlow.pushOnStack(NodeType.CASE_LAST_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L299">                LOGGER.finest(&quot;pushOnStack CASE_LAST_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L300">                        + node.getBeginColumn());</span>
+            }
+        }
+<span class="fc" id="L303">        return data;</span>
+    }
+
+    @Override
+    public Object visit(ASTBreakStatement node, Object data) {
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L309">            return data;</span>
+        }
+<span class="fc" id="L311">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L312">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L313">        dataFlow.pushOnStack(NodeType.BREAK_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L315">            LOGGER.finest(</span>
+<span class="nc" id="L316">                    &quot;pushOnStack BREAK_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L318">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTContinueStatement node, Object data) {
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L324">            return data;</span>
+        }
+<span class="fc" id="L326">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L327">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L328">        dataFlow.pushOnStack(NodeType.CONTINUE_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L330">            LOGGER.finest(&quot;pushOnStack CONTINUE_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L331">                    + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L333">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTReturnStatement node, Object data) {
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L339">            return data;</span>
+        }
+<span class="fc" id="L341">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L342">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L343">        dataFlow.pushOnStack(NodeType.RETURN_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L345">            LOGGER.finest(</span>
+<span class="nc" id="L346">                    &quot;pushOnStack RETURN_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L348">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTThrowStatement node, Object data) {
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">        if (!(data instanceof Structure)) {</span>
+<span class="nc" id="L354">            return data;</span>
+        }
+<span class="fc" id="L356">        Structure dataFlow = (Structure) data;</span>
+<span class="fc" id="L357">        dataFlow.createNewNode(node);</span>
+<span class="fc" id="L358">        dataFlow.pushOnStack(NodeType.THROW_STATEMENT, dataFlow.getLast());</span>
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">        if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L360">            LOGGER.finest(</span>
+<span class="nc" id="L361">                    &quot;pushOnStack THROW_STATEMENT: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+        }
+<span class="fc" id="L363">        return super.visit(node, data);</span>
+    }
+
+    /*
+     * The method handles the special &quot;for&quot; loop. It creates always an
+     * expression node even if the loop looks like for(;;).
+     */
+    private void addForExpressionNode(Node node, Structure dataFlow) {
+<span class="fc" id="L371">        ASTForStatement parent = (ASTForStatement) node.jjtGetParent();</span>
+<span class="fc" id="L372">        boolean hasExpressionChild = false;</span>
+<span class="fc" id="L373">        boolean hasForInitNode = false;</span>
+<span class="fc" id="L374">        boolean hasForUpdateNode = false;</span>
+
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">            if (parent.jjtGetChild(i) instanceof ASTExpression) {</span>
+<span class="fc" id="L378">                hasExpressionChild = true;</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">            } else if (parent.jjtGetChild(i) instanceof ASTForUpdate) {</span>
+<span class="fc" id="L380">                hasForUpdateNode = true;</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">            } else if (parent.jjtGetChild(i) instanceof ASTForInit) {</span>
+<span class="fc" id="L382">                hasForInitNode = true;</span>
+            }
+        }
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if (!hasExpressionChild) {</span>
+<span class="fc bfc" id="L386" title="All 2 branches covered.">            if (node instanceof ASTForInit) {</span>
+<span class="fc" id="L387">                dataFlow.createNewNode(node);</span>
+<span class="fc" id="L388">                dataFlow.pushOnStack(NodeType.FOR_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L390">                    LOGGER.finest(</span>
+<span class="nc" id="L391">                            &quot;pushOnStack FOR_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot; + node.getBeginColumn());</span>
+                }
+<span class="fc bfc" id="L393" title="All 2 branches covered.">            } else if (node instanceof ASTForUpdate) {</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">                if (!hasForInitNode) {</span>
+<span class="fc" id="L395">                    dataFlow.createNewNode(node);</span>
+<span class="fc" id="L396">                    dataFlow.pushOnStack(NodeType.FOR_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">                    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L398">                        LOGGER.finest(&quot;pushOnStack FOR_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L399">                                + node.getBeginColumn());</span>
+                    }
+                }
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">            } else if (node instanceof ASTStatement) {</span>
+<span class="fc bfc" id="L403" title="All 4 branches covered.">                if (!hasForInitNode &amp;&amp; !hasForUpdateNode) {</span>
+<span class="fc" id="L404">                    dataFlow.createNewNode(node);</span>
+<span class="fc" id="L405">                    dataFlow.pushOnStack(NodeType.FOR_EXPR, dataFlow.getLast());</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">                    if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L407">                        LOGGER.finest(&quot;pushOnStack FOR_EXPR: line &quot; + node.getBeginLine() + &quot;, column &quot;</span>
+<span class="nc" id="L408">                                + node.getBeginColumn());</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L413">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

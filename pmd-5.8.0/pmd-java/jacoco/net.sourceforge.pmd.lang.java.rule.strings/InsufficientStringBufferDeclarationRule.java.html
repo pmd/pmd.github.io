@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>InsufficientStringBufferDeclarationRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.strings</a> &gt; <span class="el_source">InsufficientStringBufferDeclarationRule.java</span></div><h1>InsufficientStringBufferDeclarationRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.strings;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAdditiveExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTBlockStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTIfStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMultiplicativeExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchLabel;
+import net.sourceforge.pmd.lang.java.ast.ASTSwitchStatement;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableInitializer;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
+import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * This rule finds StringBuffers which may have been pre-sized incorrectly.
+ *
+ * @author Allan Caplan
+ * @see &lt;a href=&quot;https://sourceforge.net/p/pmd/discussion/188194/thread/aba9dae7/&quot;&gt;Check StringBuffer sizes against usage &lt;/a&gt;
+ */
+<span class="fc" id="L43">public class InsufficientStringBufferDeclarationRule extends AbstractJavaRule {</span>
+
+    private static final Set&lt;Class&lt;? extends Node&gt;&gt; BLOCK_PARENTS;
+
+    static {
+<span class="fc" id="L48">        BLOCK_PARENTS = new HashSet&lt;&gt;(2);</span>
+<span class="fc" id="L49">        BLOCK_PARENTS.add(ASTIfStatement.class);</span>
+<span class="fc" id="L50">        BLOCK_PARENTS.add(ASTSwitchStatement.class);</span>
+<span class="fc" id="L51">    }</span>
+
+    // as specified in StringBuffer and StringBuilder
+    public static final int DEFAULT_BUFFER_SIZE = 16;
+
+    @Override
+    public Object visit(ASTVariableDeclaratorId node, Object data) {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (!TypeHelper.isEither(node.getNameDeclaration(), StringBuffer.class, StringBuilder.class)) {</span>
+<span class="fc" id="L59">            return data;</span>
+        }
+<span class="fc" id="L61">        Node rootNode = node;</span>
+<span class="fc" id="L62">        int anticipatedLength = 0;</span>
+<span class="fc" id="L63">        int constructorLength = DEFAULT_BUFFER_SIZE;</span>
+
+<span class="fc" id="L65">        constructorLength = getConstructorLength(node, constructorLength);</span>
+<span class="fc" id="L66">        anticipatedLength = getInitialLength(node);</span>
+
+<span class="fc" id="L68">        anticipatedLength += getConstructorAppendsLength(node);</span>
+
+<span class="fc" id="L70">        List&lt;NameOccurrence&gt; usage = node.getUsages();</span>
+<span class="fc" id="L71">        Map&lt;Node, Map&lt;Node, Integer&gt;&gt; blocks = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        for (NameOccurrence no : usage) {</span>
+<span class="fc" id="L73">            JavaNameOccurrence jno = (JavaNameOccurrence) no;</span>
+<span class="fc" id="L74">            Node n = jno.getLocation();</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (!InefficientStringBufferingRule.isInStringBufferOperation(n, 3, &quot;append&quot;)) {</span>
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                if (!jno.isOnLeftHandSide()</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                        &amp;&amp; !InefficientStringBufferingRule.isInStringBufferOperation(n, 3, &quot;setLength&quot;)) {</span>
+<span class="fc" id="L79">                    continue;</span>
+                }
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">                if (constructorLength != -1 &amp;&amp; anticipatedLength &gt; constructorLength) {</span>
+<span class="fc" id="L82">                    anticipatedLength += processBlocks(blocks);</span>
+<span class="fc" id="L83">                    String[] param = { String.valueOf(constructorLength), String.valueOf(anticipatedLength) };</span>
+<span class="fc" id="L84">                    addViolation(data, rootNode, param);</span>
+                }
+<span class="fc" id="L86">                constructorLength = getConstructorLength(n, constructorLength);</span>
+<span class="fc" id="L87">                rootNode = n;</span>
+<span class="fc" id="L88">                anticipatedLength = getInitialLength(node);</span>
+            }
+<span class="fc" id="L90">            ASTPrimaryExpression s = n.getFirstParentOfType(ASTPrimaryExpression.class);</span>
+<span class="fc" id="L91">            int numChildren = s.jjtGetNumChildren();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            for (int jx = 0; jx &lt; numChildren; jx++) {</span>
+<span class="fc" id="L93">                Node sn = s.jjtGetChild(jx);</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">                if (!(sn instanceof ASTPrimarySuffix) || sn.getImage() != null) {</span>
+<span class="fc" id="L95">                    continue;</span>
+                }
+<span class="fc" id="L97">                int thisSize = 0;</span>
+<span class="fc" id="L98">                Node block = getFirstParentBlock(sn);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                if (isAdditive(sn)) {</span>
+<span class="fc" id="L100">                    thisSize = processAdditive(sn);</span>
+                } else {
+<span class="fc" id="L102">                    thisSize = processNode(sn);</span>
+                }
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                if (block != null) {</span>
+<span class="fc" id="L105">                    storeBlockStatistics(blocks, thisSize, block);</span>
+                } else {
+<span class="fc" id="L107">                    anticipatedLength += thisSize;</span>
+                }
+            }
+<span class="fc" id="L110">        }</span>
+<span class="fc" id="L111">        anticipatedLength += processBlocks(blocks);</span>
+<span class="fc bfc" id="L112" title="All 4 branches covered.">        if (constructorLength != -1 &amp;&amp; anticipatedLength &gt; constructorLength) {</span>
+<span class="fc" id="L113">            String[] param = { String.valueOf(constructorLength), String.valueOf(anticipatedLength) };</span>
+<span class="fc" id="L114">            addViolation(data, rootNode, param);</span>
+        }
+<span class="fc" id="L116">        return data;</span>
+    }
+
+    /**
+     * This rule is concerned with IF and Switch blocks. Process the block into
+     * a local Map, from which we can later determine which is the longest block
+     * inside
+     *
+     * @param blocks
+     *            The map of blocks in the method being investigated
+     * @param thisSize
+     *            The size of the current block
+     * @param block
+     *            The block in question
+     */
+    private void storeBlockStatistics(Map&lt;Node, Map&lt;Node, Integer&gt;&gt; blocks, int thisSize, Node block) {
+<span class="fc" id="L132">        Node statement = block.jjtGetParent();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (block.jjtGetParent() instanceof ASTIfStatement) {</span>
+            // Else Ifs are their own subnode in AST. So we have to
+            // look a little farther up the tree to find the IF statement
+<span class="fc" id="L136">            Node possibleStatement = statement.getFirstParentOfType(ASTIfStatement.class);</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            while (possibleStatement instanceof ASTIfStatement) {</span>
+<span class="fc" id="L138">                statement = possibleStatement;</span>
+<span class="fc" id="L139">                possibleStatement = possibleStatement.getFirstParentOfType(ASTIfStatement.class);</span>
+            }
+        }
+<span class="fc" id="L142">        Map&lt;Node, Integer&gt; thisBranch = blocks.get(statement);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (thisBranch == null) {</span>
+<span class="fc" id="L144">            thisBranch = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L145">            blocks.put(statement, thisBranch);</span>
+        }
+<span class="fc" id="L147">        Integer x = thisBranch.get(block);</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if (x != null) {</span>
+<span class="nc" id="L149">            thisSize += x;</span>
+        }
+<span class="fc" id="L151">        thisBranch.put(statement, thisSize);</span>
+<span class="fc" id="L152">    }</span>
+
+    private int processBlocks(Map&lt;Node, Map&lt;Node, Integer&gt;&gt; blocks) {
+<span class="fc" id="L155">        int anticipatedLength = 0;</span>
+<span class="fc" id="L156">        int ifLength = 0;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">        for (Map.Entry&lt;Node, Map&lt;Node, Integer&gt;&gt; entry : blocks.entrySet()) {</span>
+<span class="fc" id="L158">            ifLength = 0;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">            for (Map.Entry&lt;Node, Integer&gt; entry2 : entry.getValue().entrySet()) {</span>
+<span class="fc" id="L160">                Integer value = entry2.getValue();</span>
+<span class="fc" id="L161">                ifLength = Math.max(ifLength, value.intValue());</span>
+<span class="fc" id="L162">            }</span>
+<span class="fc" id="L163">            anticipatedLength += ifLength;</span>
+<span class="fc" id="L164">        }</span>
+<span class="fc" id="L165">        return anticipatedLength;</span>
+    }
+
+    private int processAdditive(Node sn) {
+<span class="fc" id="L169">        ASTAdditiveExpression additive = sn.getFirstDescendantOfType(ASTAdditiveExpression.class);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if (additive == null) {</span>
+<span class="nc" id="L171">            return 0;</span>
+        }
+<span class="fc" id="L173">        int anticipatedLength = 0;</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        for (int ix = 0; ix &lt; additive.jjtGetNumChildren(); ix++) {</span>
+<span class="fc" id="L175">            Node childNode = additive.jjtGetChild(ix);</span>
+<span class="fc" id="L176">            ASTLiteral literal = childNode.getFirstDescendantOfType(ASTLiteral.class);</span>
+<span class="pc bpc" id="L177" title="1 of 4 branches missed.">            if (literal != null &amp;&amp; literal.getImage() != null) {</span>
+<span class="fc" id="L178">                anticipatedLength += literal.getImage().length() - 2;</span>
+            }
+        }
+
+<span class="fc" id="L182">        return anticipatedLength;</span>
+    }
+
+    private static boolean isStringOrCharLiteral(ASTLiteral literal) {
+<span class="pc bpc" id="L186" title="1 of 4 branches missed.">        return literal.isStringLiteral() || literal.isCharLiteral();</span>
+    }
+
+    private int processNode(Node sn) {
+<span class="fc" id="L190">        int anticipatedLength = 0;</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (sn != null) {</span>
+<span class="fc" id="L192">            ASTPrimaryPrefix xn = sn.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (xn != null) {</span>
+<span class="pc bpc" id="L194" title="1 of 4 branches missed.">                if (xn.jjtGetNumChildren() != 0 &amp;&amp; xn.jjtGetChild(0) instanceof ASTLiteral) {</span>
+<span class="fc" id="L195">                    ASTLiteral literal = (ASTLiteral) xn.jjtGetChild(0);</span>
+<span class="fc" id="L196">                    String str = xn.jjtGetChild(0).getImage();</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                    if (str != null) {</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">                        if (literal.isStringLiteral()) {</span>
+<span class="fc" id="L199">                            anticipatedLength += str.length() - 2;</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">                        } else if (literal.isCharLiteral()) {</span>
+<span class="fc" id="L201">                            anticipatedLength += 1;</span>
+<span class="pc bpc" id="L202" title="1 of 4 branches missed.">                        } else if (literal.isIntLiteral() &amp;&amp; str.startsWith(&quot;0x&quot;)) {</span>
+                            // but only if we are not inside a cast expression
+<span class="fc" id="L204">                            Node parentNode = literal.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                            if (parentNode instanceof ASTCastExpression</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">                                    &amp;&amp; ((ASTCastExpression) parentNode).getType() == char.class) {</span>
+<span class="fc" id="L207">                                anticipatedLength += 1;</span>
+                            } else {
+                                // e.g. 0xdeadbeef -&gt; will be converted to a
+                                // base 10 integer string: 3735928559
+<span class="fc" id="L211">                                anticipatedLength += String.valueOf(Long.parseLong(str.substring(2), 16)).length();</span>
+                            }
+<span class="fc" id="L213">                        } else {</span>
+<span class="fc" id="L214">                            anticipatedLength += str.length();</span>
+                        }
+                    }
+                }
+            }
+        }
+<span class="fc" id="L220">        return anticipatedLength;</span>
+    }
+
+    private int getConstructorLength(Node node, int constructorLength) {
+<span class="fc" id="L224">        int iConstructorLength = constructorLength;</span>
+<span class="fc" id="L225">        Node block = node.getFirstParentOfType(ASTBlockStatement.class);</span>
+
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (block == null) {</span>
+<span class="fc" id="L228">            block = node.getFirstParentOfType(ASTFieldDeclaration.class);</span>
+        }
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        if (block == null) {</span>
+<span class="fc" id="L231">            block = node.getFirstParentOfType(ASTFormalParameter.class);</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">            if (block != null) {</span>
+<span class="fc" id="L233">                iConstructorLength = -1;</span>
+            } else {
+<span class="nc" id="L235">                return DEFAULT_BUFFER_SIZE;</span>
+            }
+        }
+
+        // if there is any addition/subtraction going on then just use the
+        // default.
+<span class="fc" id="L241">        ASTAdditiveExpression exp = block.getFirstDescendantOfType(ASTAdditiveExpression.class);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (exp != null) {</span>
+<span class="fc" id="L243">            return DEFAULT_BUFFER_SIZE;</span>
+        }
+<span class="fc" id="L245">        ASTMultiplicativeExpression mult = block.getFirstDescendantOfType(ASTMultiplicativeExpression.class);</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (mult != null) {</span>
+<span class="fc" id="L247">            return DEFAULT_BUFFER_SIZE;</span>
+        }
+
+        List&lt;ASTLiteral&gt; literals;
+<span class="fc" id="L251">        ASTAllocationExpression constructorCall = block.getFirstDescendantOfType(ASTAllocationExpression.class);</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        if (constructorCall != null) {</span>
+            // if this is a constructor call, only consider the literals within
+            // it.
+<span class="fc" id="L255">            literals = constructorCall.findDescendantsOfType(ASTLiteral.class);</span>
+        } else {
+            // otherwise it might be a setLength call...
+<span class="fc" id="L258">            literals = block.findDescendantsOfType(ASTLiteral.class);</span>
+        }
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if (literals.isEmpty()) {</span>
+<span class="fc" id="L261">            List&lt;ASTName&gt; name = block.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">            if (!name.isEmpty()) {</span>
+<span class="fc" id="L263">                iConstructorLength = -1;</span>
+            }
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        } else if (literals.size() == 1) {</span>
+<span class="fc" id="L266">            ASTLiteral literal = literals.get(0);</span>
+<span class="fc" id="L267">            String str = literal.getImage();</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">            if (str == null) {</span>
+<span class="fc" id="L269">                iConstructorLength = 0;</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">            } else if (isStringOrCharLiteral(literal)) {</span>
+                // since it's not taken into account
+                // anywhere. only count the extra 16
+                // characters
+                // don't add the constructor's length
+<span class="fc" id="L275">                iConstructorLength = 14 + str.length();</span>
+<span class="pc bpc" id="L276" title="1 of 4 branches missed.">            } else if (literal.isIntLiteral() &amp;&amp; str.startsWith(&quot;0x&quot;)) {</span>
+                // bug 3516101 - the string could be a hex number
+<span class="fc" id="L278">                iConstructorLength = Integer.parseInt(str.substring(2), 16);</span>
+            } else {
+<span class="fc" id="L280">                iConstructorLength = Integer.parseInt(str);</span>
+            }
+<span class="fc" id="L282">        } else {</span>
+<span class="fc" id="L283">            iConstructorLength = -1;</span>
+        }
+
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        if (iConstructorLength == 0) {</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">            if (constructorLength == -1) {</span>
+<span class="nc" id="L288">                iConstructorLength = DEFAULT_BUFFER_SIZE;</span>
+            } else {
+<span class="fc" id="L290">                iConstructorLength = constructorLength;</span>
+            }
+        }
+
+<span class="fc" id="L294">        return iConstructorLength;</span>
+    }
+
+    private int getInitialLength(Node node) {
+
+<span class="fc" id="L299">        Node block = node.getFirstParentOfType(ASTBlockStatement.class);</span>
+
+<span class="fc bfc" id="L301" title="All 2 branches covered.">        if (block == null) {</span>
+<span class="fc" id="L302">            block = node.getFirstParentOfType(ASTFieldDeclaration.class);</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            if (block == null) {</span>
+<span class="fc" id="L304">                block = node.getFirstParentOfType(ASTFormalParameter.class);</span>
+            }
+        }
+<span class="fc" id="L307">        List&lt;ASTLiteral&gt; literals = block.findDescendantsOfType(ASTLiteral.class);</span>
+<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (literals.size() == 1) {</span>
+<span class="fc" id="L309">            ASTLiteral literal = literals.get(0);</span>
+<span class="fc" id="L310">            String str = literal.getImage();</span>
+<span class="fc bfc" id="L311" title="All 4 branches covered.">            if (str != null &amp;&amp; isStringOrCharLiteral(literal)) {</span>
+<span class="fc" id="L312">                return str.length() - 2; // take off the quotes</span>
+            }
+        }
+
+<span class="fc" id="L316">        return 0;</span>
+    }
+
+    private int getConstructorAppendsLength(final Node node) {
+<span class="fc" id="L320">        final Node parent = node.getFirstParentOfType(ASTVariableDeclarator.class);</span>
+<span class="fc" id="L321">        int size = 0;</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (parent != null) {</span>
+<span class="fc" id="L323">            final Node initializer = parent.getFirstChildOfType(ASTVariableInitializer.class);</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">            if (initializer != null) {</span>
+<span class="fc" id="L325">                final Node primExp = initializer.getFirstDescendantOfType(ASTPrimaryExpression.class);</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">                if (primExp != null) {</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                    for (int i = 0; i &lt; primExp.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L328">                        final Node sn = primExp.jjtGetChild(i);</span>
+<span class="fc bfc" id="L329" title="All 4 branches covered.">                        if (!(sn instanceof ASTPrimarySuffix) || sn.getImage() != null) {</span>
+<span class="fc" id="L330">                            continue;</span>
+                        }
+<span class="fc" id="L332">                        size += processNode(sn);</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L337">        return size;</span>
+    }
+
+    private boolean isAdditive(Node n) {
+<span class="fc" id="L341">        ASTAdditiveExpression add = n.getFirstDescendantOfType(ASTAdditiveExpression.class);</span>
+        // if the first descendant additive expression is deeper than 4 levels,
+        // it belongs to a nested method call and not anymore to the append
+        // argument.
+<span class="fc bfc" id="L345" title="All 4 branches covered.">        return add != null &amp;&amp; add.getNthParent(4) == n;</span>
+    }
+
+    /**
+     * Locate the block that the given node is in, if any
+     *
+     * @param node
+     *            The node we're looking for a parent of
+     * @return Node - The node that corresponds to any block that may be a
+     *         parent of this object
+     */
+    private Node getFirstParentBlock(Node node) {
+<span class="fc" id="L357">        Node parentNode = node.jjtGetParent();</span>
+
+<span class="fc" id="L359">        Node lastNode = node;</span>
+<span class="fc bfc" id="L360" title="All 4 branches covered.">        while (parentNode != null &amp;&amp; !BLOCK_PARENTS.contains(parentNode.getClass())) {</span>
+<span class="fc" id="L361">            lastNode = parentNode;</span>
+<span class="fc" id="L362">            parentNode = parentNode.jjtGetParent();</span>
+        }
+<span class="fc bfc" id="L364" title="All 2 branches covered.">        if (parentNode instanceof ASTIfStatement) {</span>
+<span class="fc" id="L365">            parentNode = lastNode;</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        } else if (parentNode instanceof ASTSwitchStatement) {</span>
+<span class="fc" id="L367">            parentNode = getSwitchParent(parentNode, lastNode);</span>
+        }
+<span class="fc" id="L369">        return parentNode;</span>
+    }
+
+    /**
+     * Determine which SwitchLabel we belong to inside a switch
+     *
+     * @param parentNode
+     *            The parent node we're looking at
+     * @param lastNode
+     *            The last node processed
+     * @return The parent node for the switch statement
+     */
+    private static Node getSwitchParent(Node parentNode, Node lastNode) {
+<span class="fc" id="L382">        int allChildren = parentNode.jjtGetNumChildren();</span>
+<span class="fc" id="L383">        ASTSwitchLabel label = null;</span>
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">        for (int ix = 0; ix &lt; allChildren; ix++) {</span>
+<span class="fc" id="L385">            Node n = parentNode.jjtGetChild(ix);</span>
+<span class="fc bfc" id="L386" title="All 2 branches covered.">            if (n instanceof ASTSwitchLabel) {</span>
+<span class="fc" id="L387">                label = (ASTSwitchLabel) n;</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">            } else if (n.equals(lastNode)) {</span>
+<span class="fc" id="L389">                parentNode = label;</span>
+<span class="fc" id="L390">                break;</span>
+            }
+        }
+<span class="fc" id="L393">        return parentNode;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

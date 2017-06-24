@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MethodScope.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">MethodScope.java</span></div><h1>MethodScope.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.symboltable.Applier;
+import net.sourceforge.pmd.lang.symboltable.ImageFinderFunction;
+import net.sourceforge.pmd.lang.symboltable.NameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * A Method Scope can have variable declarations and class declarations within
+ * it.
+ */
+public class MethodScope extends AbstractJavaScope {
+
+    private Node node;
+
+<span class="fc" id="L28">    public MethodScope(Node node) {</span>
+<span class="fc" id="L29">        this.node = node;</span>
+<span class="fc" id="L30">    }</span>
+
+    public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
+<span class="fc" id="L33">        return getDeclarations(VariableNameDeclaration.class);</span>
+    }
+
+    public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occurrence) {
+<span class="fc" id="L37">        JavaNameOccurrence javaOccurrence = (JavaNameOccurrence) occurrence;</span>
+<span class="fc" id="L38">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(javaOccurrence);</span>
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">        if (!declarations.isEmpty() &amp;&amp; !javaOccurrence.isThisOrSuper()) {</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
+<span class="fc" id="L41">                getVariableDeclarations().get(decl).add(javaOccurrence);</span>
+<span class="fc" id="L42">                Node n = javaOccurrence.getLocation();</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">                if (n instanceof ASTName) {</span>
+<span class="fc" id="L44">                    ((ASTName) n).setNameDeclaration(decl);</span>
+                } // TODO what to do with PrimarySuffix case?
+<span class="fc" id="L46">            }</span>
+        }
+<span class="fc" id="L48">        return declarations;</span>
+    }
+
+    public void addDeclaration(NameDeclaration variableDecl) {
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">        if (!(variableDecl instanceof VariableNameDeclaration || variableDecl instanceof ClassNameDeclaration)) {</span>
+<span class="nc" id="L53">            throw new IllegalArgumentException(</span>
+                    &quot;A MethodScope can contain only VariableNameDeclarations or ClassNameDeclarations&quot;);
+        }
+<span class="fc" id="L56">        super.addDeclaration(variableDecl);</span>
+<span class="fc" id="L57">    }</span>
+
+    public Set&lt;NameDeclaration&gt; findVariableHere(JavaNameOccurrence occurrence) {
+<span class="fc bfc" id="L60" title="All 4 branches covered.">        if (occurrence.isThisOrSuper() || occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="fc" id="L61">            return Collections.emptySet();</span>
+        }
+<span class="fc" id="L63">        ImageFinderFunction finder = new ImageFinderFunction(occurrence.getImage());</span>
+<span class="fc" id="L64">        Applier.apply(finder, getVariableDeclarations().keySet().iterator());</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
+<span class="fc" id="L66">            return Collections.singleton(finder.getDecl());</span>
+        }
+<span class="fc" id="L68">        return Collections.emptySet();</span>
+    }
+
+    public String getName() {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (node instanceof ASTConstructorDeclaration) {</span>
+<span class="fc" id="L73">            return this.getEnclosingScope(ClassScope.class).getClassName();</span>
+        }
+<span class="fc" id="L75">        return node.jjtGetChild(1).getImage();</span>
+    }
+
+    public String toString() {
+<span class="nc" id="L79">        return &quot;MethodScope:&quot; + glomNames(getVariableDeclarations().keySet());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

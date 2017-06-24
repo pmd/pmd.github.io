@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DCD.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd</a> &gt; <span class="el_source">DCD.java</span></div><h1>DCD.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.dcd;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import net.sourceforge.pmd.dcd.graph.UsageGraph;
+import net.sourceforge.pmd.dcd.graph.UsageGraphBuilder;
+import net.sourceforge.pmd.util.FileFinder;
+import net.sourceforge.pmd.util.filter.Filter;
+import net.sourceforge.pmd.util.filter.Filters;
+
+/**
+ * The Dead Code Detector is used to find dead code. What is dead code? Dead
+ * code is code which is not used by other code? It exists, but it not used.
+ * Unused code is clutter, which can generally be a candidate for removal.
+ *
+ * &lt;p&gt;When performing dead code detection, there are various sets of files/classes
+ * which must be identified. An analogy of the dead code analysis as a &lt;em&gt;foot
+ * race&lt;/em&gt; is used to help clarify each of these sets:&lt;/p&gt;
+ *
+ * &lt;ol&gt;
+ * &lt;li&gt;The &lt;em&gt;direct users&lt;/em&gt; is the set of Classes which will always be
+ * parsed to determine what code they use. This set is the starting point of the
+ * race.&lt;/li&gt;
+ * &lt;li&gt;The &lt;em&gt;indirect users&lt;/em&gt; is the set of Classes which will only be
+ * parsed if they are accessed by code in the &lt;em&gt;direct users&lt;/em&gt; set, or in
+ * the &lt;em&gt;indirect users&lt;/em&gt; set. This set is the course of the race.&lt;/li&gt;
+ * &lt;li&gt;The &lt;em&gt;dead code candidates&lt;/em&gt; are the set of Classes which are the
+ * focus of the dead code detection. This set is the finish line of the
+ * race.&lt;/li&gt;
+ * &lt;/ol&gt;
+ *
+ * &lt;p&gt;Typically there is intersection between the set of &lt;em&gt;direct users&lt;/em&gt;,
+ * &lt;em&gt;indirect users&lt;/em&gt; and &lt;em&gt;dead code candidates&lt;/em&gt;, although it is not
+ * required. If the sets are defined too tightly, there the potential for a lot
+ * of code to be considered as dead code. You may need to expand the &lt;em&gt;direct
+ * users&lt;/em&gt; or &lt;em&gt;indirect users&lt;/em&gt; sets, or explore using different
+ * options.&lt;/p&gt;
+ *
+ * @author Ryan Gustafson &amp;lt;ryan.gustafson@gmail.com&amp;gt;
+ */
+<span class="nc bnc" id="L49" title="All 2 branches missed.">public class DCD {</span>
+    //
+    // TODO Implement the direct users, indirect users, and dead code
+    // candidate sets. Use the pmd.util.filter.Filter APIs. Need to come up
+    // with something like Ant's capabilities for &lt;fileset&gt;, it's a decent way
+    // to describe a collection of files in a directory structure. That or we
+    // just adopt Ant, and screw command line/external configuration?
+    //
+    // TODO Better yet, is there a way to enumerate all available classes using
+    // ClassLoaders instead of having to specify Java file names as surrogates
+    // for the Classes we truly desire?
+    //
+    // TODO Methods defined on classes/interfaces not within the scope of
+    // analysis which are implemented/overridden, are not usage violations.
+    //
+    // TODO Static final String and primitive types are often inlined by the
+    // compiler, so there may actually be no explicit usages.
+    //
+    // TODO Ignore &quot;public static void main(String[])&quot;
+    //
+    // TODO Check for method which is always overridden, and never called
+    // directly.
+    //
+    // TODO For methods, record which classes/interfaces methods they are
+    // overriding/implementing.
+    //
+    // TODO Allow recognition of indirect method patterns, like those used by
+    // EJB Home and Remote interfaces with corresponding implementation classes.
+    //
+    // TODO
+    // 1) For each class/member, a set of other class/members which reference.
+    // 2) For every class/member which is part of an interface or super-class,
+    // allocate those references to the interface/super-class.
+    //
+
+<span class="nc" id="L84">    private DCD() { }</span>
+
+    public static void dump(UsageGraph usageGraph, boolean verbose) {
+<span class="nc" id="L87">        usageGraph.accept(new DumpNodeVisitor(), Boolean.valueOf(verbose));</span>
+<span class="nc" id="L88">    }</span>
+
+    public static void report(UsageGraph usageGraph, boolean verbose) {
+<span class="nc" id="L91">        usageGraph.accept(new UsageNodeVisitor(), Boolean.valueOf(verbose));</span>
+<span class="nc" id="L92">    }</span>
+
+    public static void main(String[] args) throws Exception {
+        // 1) Directories
+<span class="nc" id="L96">        List&lt;File&gt; directories = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L97">        directories.add(new File(&quot;C:/pmd/workspace/pmd-trunk/src&quot;));</span>
+
+        // Basic filter
+<span class="nc" id="L100">        FilenameFilter javaFilter = new FilenameFilter() {</span>
+            @Override
+            public boolean accept(File dir, String name) {
+                // Recurse on directories
+<span class="nc bnc" id="L104" title="All 2 branches missed.">                if (new File(dir, name).isDirectory()) {</span>
+<span class="nc" id="L105">                    return true;</span>
+                } else {
+<span class="nc" id="L107">                    return name.endsWith(&quot;.java&quot;);</span>
+                }
+            }
+        };
+
+        // 2) Filename filters
+<span class="nc" id="L113">        List&lt;FilenameFilter&gt; filters = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L114">        filters.add(javaFilter);</span>
+
+<span class="nc bnc" id="L116" title="All 4 branches missed.">        assert directories.size() == filters.size();</span>
+
+        // Find all files, convert to class names
+<span class="nc" id="L119">        List&lt;String&gt; classes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        for (int i = 0; i &lt; directories.size(); i++) {</span>
+<span class="nc" id="L121">            File directory = directories.get(i);</span>
+<span class="nc" id="L122">            FilenameFilter filter = filters.get(i);</span>
+<span class="nc" id="L123">            List&lt;File&gt; files = new FileFinder().findFilesFrom(directory, filter, true);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            for (File file : files) {</span>
+<span class="nc" id="L125">                String name = file.getPath();</span>
+
+                // Chop off directory
+<span class="nc" id="L128">                name = name.substring(directory.getPath().length() + 1);</span>
+
+                // Drop extension
+<span class="nc" id="L131">                name = name.replaceAll(&quot;\\.java$&quot;, &quot;&quot;);</span>
+
+                // Trim path separators
+<span class="nc" id="L134">                name = name.replace('\\', '.');</span>
+<span class="nc" id="L135">                name = name.replace('/', '.');</span>
+
+<span class="nc" id="L137">                classes.add(name);</span>
+<span class="nc" id="L138">            }</span>
+        }
+
+<span class="nc" id="L141">        long start = System.currentTimeMillis();</span>
+
+        // Define filter for &quot;indirect users&quot; and &quot;dead code candidates&quot;.
+        // TODO Need to support these are different concepts.
+<span class="nc" id="L145">        List&lt;String&gt; includeRegexes = Arrays.asList(new String[] { &quot;net\\.sourceforge\\.pmd\\.dcd.*&quot;, &quot;us\\..*&quot; });</span>
+<span class="nc" id="L146">        List&lt;String&gt; excludeRegexes = Arrays.asList(new String[] { &quot;java\\..*&quot;, &quot;javax\\..*&quot;, &quot;.*\\.twa\\..*&quot; });</span>
+<span class="nc" id="L147">        Filter&lt;String&gt; classFilter = Filters.buildRegexFilterExcludeOverInclude(includeRegexes, excludeRegexes);</span>
+<span class="nc" id="L148">        System.out.println(&quot;Class filter: &quot; + classFilter);</span>
+
+        // Index each of the &quot;direct users&quot;
+<span class="nc" id="L151">        UsageGraphBuilder builder = new UsageGraphBuilder(classFilter);</span>
+<span class="nc" id="L152">        int total = 0;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        for (String clazz : classes) {</span>
+<span class="nc" id="L154">            System.out.println(&quot;indexing class: &quot; + clazz);</span>
+<span class="nc" id="L155">            builder.index(clazz);</span>
+<span class="nc" id="L156">            total++;</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            if (total % 20 == 0) {</span>
+<span class="nc" id="L158">                System.out.println(total + &quot; : &quot; + total / ((System.currentTimeMillis() - start) / 1000.0));</span>
+            }
+<span class="nc" id="L160">        }</span>
+
+        // Reporting
+<span class="nc" id="L163">        boolean dump = true;</span>
+<span class="nc" id="L164">        boolean deadCode = true;</span>
+<span class="nc" id="L165">        UsageGraph usageGraph = builder.getUsageGraph();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (dump) {</span>
+<span class="nc" id="L167">            System.out.println(&quot;--- Dump ---&quot;);</span>
+<span class="nc" id="L168">            dump(usageGraph, true);</span>
+        }
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        if (deadCode) {</span>
+<span class="nc" id="L171">            System.out.println(&quot;--- Dead Code ---&quot;);</span>
+<span class="nc" id="L172">            report(usageGraph, true);</span>
+        }
+<span class="nc" id="L174">        long end = System.currentTimeMillis();</span>
+<span class="nc" id="L175">        System.out.println(&quot;Time: &quot; + (end - start) / 1000.0);</span>
+<span class="nc" id="L176">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AvoidFieldNameMatchingMethodNameRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.naming</a> &gt; <span class="el_source">AvoidFieldNameMatchingMethodNameRule.java</span></div><h1>AvoidFieldNameMatchingMethodNameRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.naming;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBody;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+<span class="fc" id="L19">public class AvoidFieldNameMatchingMethodNameRule extends AbstractJavaRule {</span>
+
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        if (node.isInterface()) {</span>
+<span class="fc" id="L24">            return data;</span>
+        }
+<span class="fc" id="L26">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTClassOrInterfaceBody node, Object data) {
+<span class="fc" id="L31">        int n = node.jjtGetNumChildren();</span>
+<span class="fc" id="L32">        List&lt;ASTFieldDeclaration&gt; fields = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L33">        Set&lt;String&gt; methodNames = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        for (int i = 0; i &lt; n; i++) {</span>
+<span class="fc" id="L35">            Node child = node.jjtGetChild(i);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (child.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L37">                continue;</span>
+            }
+<span class="fc" id="L39">            child = child.jjtGetChild(child.jjtGetNumChildren() - 1);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">            if (child instanceof ASTFieldDeclaration) {</span>
+<span class="fc" id="L41">                fields.add((ASTFieldDeclaration) child);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            } else if (child instanceof ASTMethodDeclaration) {</span>
+<span class="fc" id="L43">                methodNames.add(((ASTMethodDeclaration) child).getMethodName().toLowerCase());</span>
+            }
+        }
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for (ASTFieldDeclaration field : fields) {</span>
+<span class="fc" id="L47">            String varName = field.getVariableName().toLowerCase();</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (methodNames.contains(varName)) {</span>
+<span class="fc" id="L49">                addViolation(data, field, field.getVariableName());</span>
+            }
+<span class="fc" id="L51">        }</span>
+<span class="fc" id="L52">        return super.visit(node, data);</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

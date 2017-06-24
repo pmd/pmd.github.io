@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CPD.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">CPD.java</span></div><h1>CPD.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cpd;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.io.FilenameUtils;
+
+import net.sourceforge.pmd.lang.ast.TokenMgrError;
+import net.sourceforge.pmd.util.FileFinder;
+import net.sourceforge.pmd.util.database.DBMSMetadata;
+import net.sourceforge.pmd.util.database.DBURI;
+import net.sourceforge.pmd.util.database.SourceObject;
+
+public class CPD {
+<span class="fc" id="L29">    private static final Logger LOGGER = Logger.getLogger(CPD.class.getName());</span>
+
+    private CPDConfiguration configuration;
+
+<span class="fc" id="L33">    private Map&lt;String, SourceCode&gt; source = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L34">    private CPDListener listener = new CPDNullListener();</span>
+<span class="fc" id="L35">    private Tokens tokens = new Tokens();</span>
+    private MatchAlgorithm matchAlgorithm;
+<span class="fc" id="L37">    private Set&lt;String&gt; current = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L39">    public CPD(CPDConfiguration theConfiguration) {</span>
+<span class="fc" id="L40">        configuration = theConfiguration;</span>
+        // before we start any tokenizing (add(File...)), we need to reset the
+        // static TokenEntry status
+<span class="fc" id="L43">        TokenEntry.clearImages();</span>
+<span class="fc" id="L44">    }</span>
+
+    public void setCpdListener(CPDListener cpdListener) {
+<span class="fc" id="L47">        this.listener = cpdListener;</span>
+<span class="fc" id="L48">    }</span>
+
+    public void go() {
+<span class="fc" id="L51">        matchAlgorithm = new MatchAlgorithm(source, tokens, configuration.getMinimumTileSize(), listener);</span>
+<span class="fc" id="L52">        matchAlgorithm.findMatches();</span>
+<span class="fc" id="L53">    }</span>
+
+    public Iterator&lt;Match&gt; getMatches() {
+<span class="fc" id="L56">        return matchAlgorithm.matches();</span>
+    }
+
+    public void addAllInDirectory(File dir) throws IOException {
+<span class="nc" id="L60">        addDirectory(dir, false);</span>
+<span class="nc" id="L61">    }</span>
+
+    public void addRecursively(File dir) throws IOException {
+<span class="fc" id="L64">        addDirectory(dir, true);</span>
+<span class="fc" id="L65">    }</span>
+
+    public void add(List&lt;File&gt; files) throws IOException {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        for (File f : files) {</span>
+<span class="fc" id="L69">            add(f);</span>
+<span class="fc" id="L70">        }</span>
+<span class="fc" id="L71">    }</span>
+
+    private void addDirectory(File dir, boolean recurse) throws IOException {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (!dir.exists()) {</span>
+<span class="nc" id="L75">            throw new FileNotFoundException(&quot;Couldn't find directory &quot; + dir);</span>
+        }
+<span class="fc" id="L77">        FileFinder finder = new FileFinder();</span>
+        // TODO - could use SourceFileSelector here
+<span class="fc" id="L79">        add(finder.findFilesFrom(dir, configuration.filenameFilter(), recurse));</span>
+<span class="fc" id="L80">    }</span>
+
+    public void add(File file) throws IOException {
+
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (configuration.isSkipDuplicates()) {</span>
+            // TODO refactor this thing into a separate class
+<span class="nc" id="L86">            String signature = file.getName() + '_' + file.length();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            if (current.contains(signature)) {</span>
+<span class="nc" id="L88">                System.err.println(&quot;Skipping &quot; + file.getAbsolutePath()</span>
+                        + &quot; since it appears to be a duplicate file and --skip-duplicate-files is set&quot;);
+<span class="nc" id="L90">                return;</span>
+            }
+<span class="nc" id="L92">            current.add(signature);</span>
+        }
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (!FilenameUtils.equalsNormalizedOnSystem(file.getAbsoluteFile().getCanonicalPath(),</span>
+                file.getAbsolutePath())) {
+<span class="fc" id="L97">            System.err.println(&quot;Skipping &quot; + file + &quot; since it appears to be a symlink&quot;);</span>
+<span class="fc" id="L98">            return;</span>
+        }
+
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (!file.exists()) {</span>
+<span class="fc" id="L102">            System.err.println(&quot;Skipping &quot; + file + &quot; since it doesn't exist (broken symlink?)&quot;);</span>
+<span class="fc" id="L103">            return;</span>
+        }
+
+<span class="fc" id="L106">        SourceCode sourceCode = configuration.sourceCodeFor(file);</span>
+<span class="fc" id="L107">        add(sourceCode);</span>
+<span class="fc" id="L108">    }</span>
+
+    public void add(DBURI dburi) throws IOException {
+
+        try {
+<span class="nc" id="L113">            DBMSMetadata dbmsmetadata = new DBMSMetadata(dburi);</span>
+
+<span class="nc" id="L115">            List&lt;SourceObject&gt; sourceObjectList = dbmsmetadata.getSourceObjectList();</span>
+<span class="nc" id="L116">            LOGGER.log(Level.FINER, &quot;Located {0} database source objects&quot;, sourceObjectList.size());</span>
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            for (SourceObject sourceObject : sourceObjectList) {</span>
+                // Add DBURI as a faux-file
+<span class="nc" id="L120">                String falseFilePath = sourceObject.getPseudoFileName();</span>
+<span class="nc" id="L121">                LOGGER.log(Level.FINEST, &quot;Adding database source object {0}&quot;, falseFilePath);</span>
+
+<span class="nc" id="L123">                SourceCode sourceCode = configuration.sourceCodeFor(dbmsmetadata.getSourceCode(sourceObject),</span>
+                        falseFilePath);
+<span class="nc" id="L125">                add(sourceCode);</span>
+<span class="nc" id="L126">            }</span>
+<span class="nc" id="L127">        } catch (Exception sqlException) {</span>
+<span class="nc" id="L128">            LOGGER.log(Level.SEVERE, &quot;Problem with Input URI&quot;, sqlException);</span>
+<span class="nc" id="L129">            throw new RuntimeException(&quot;Problem with DBURI: &quot; + dburi, sqlException);</span>
+<span class="nc" id="L130">        }</span>
+<span class="nc" id="L131">    }</span>
+
+    private void add(SourceCode sourceCode) throws IOException {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (configuration.isSkipLexicalErrors()) {</span>
+<span class="nc" id="L135">            addAndSkipLexicalErrors(sourceCode);</span>
+        } else {
+<span class="fc" id="L137">            addAndThrowLexicalError(sourceCode);</span>
+        }
+<span class="fc" id="L139">    }</span>
+
+    private void addAndThrowLexicalError(SourceCode sourceCode) throws IOException {
+<span class="fc" id="L142">        configuration.tokenizer().tokenize(sourceCode, tokens);</span>
+<span class="fc" id="L143">        listener.addedFile(1, new File(sourceCode.getFileName()));</span>
+<span class="fc" id="L144">        source.put(sourceCode.getFileName(), sourceCode);</span>
+<span class="fc" id="L145">    }</span>
+
+    private void addAndSkipLexicalErrors(SourceCode sourceCode) throws IOException {
+<span class="nc" id="L148">        TokenEntry.State savedTokenEntry = new TokenEntry.State(tokens.getTokens());</span>
+        try {
+<span class="nc" id="L150">            addAndThrowLexicalError(sourceCode);</span>
+<span class="nc" id="L151">        } catch (TokenMgrError e) {</span>
+<span class="nc" id="L152">            System.err.println(&quot;Skipping &quot; + sourceCode.getFileName() + &quot;. Reason: &quot; + e.getMessage());</span>
+<span class="nc" id="L153">            tokens.getTokens().clear();</span>
+<span class="nc" id="L154">            tokens.getTokens().addAll(savedTokenEntry.restore());</span>
+<span class="nc" id="L155">        }</span>
+<span class="nc" id="L156">    }</span>
+
+    /**
+     * List names/paths of each source to be processed.
+     *
+     * @return names of sources to be processed
+     */
+    public List&lt;String&gt; getSourcePaths() {
+<span class="fc" id="L164">        return new ArrayList&lt;&gt;(source.keySet());</span>
+    }
+
+    /**
+     * Get each Source to be processed.
+     *
+     * @return all Sources to be processed
+     */
+    public List&lt;SourceCode&gt; getSources() {
+<span class="nc" id="L173">        return new ArrayList&lt;&gt;(source.values());</span>
+    }
+
+    public static void main(String[] args) {
+<span class="nc" id="L177">        CPDCommandLineInterface.main(args);</span>
+<span class="nc" id="L178">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

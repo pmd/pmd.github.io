@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DAAPathFinder.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa.pathfinder</a> &gt; <span class="el_source">DAAPathFinder.java</span></div><h1>DAAPathFinder.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.dfa.pathfinder;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import net.sourceforge.pmd.lang.dfa.DataFlowNode;
+import net.sourceforge.pmd.lang.dfa.NodeType;
+
+/**
+ * Finds all paths of a data flow. Each loop will be 0 or 2 times traversed -&amp;gt; 2
+ * paths. This is special to the data flow anomaly analysis.
+ *
+ * @author raik
+ * @since Created on 09.08.2004
+ */
+public class DAAPathFinder {
+    private static final int MAX_PATHS = 5000;
+
+    /**
+     * Maximum loops to prevent hanging of PMD. See
+     * https://sourceforge.net/p/pmd/bugs/1393/
+     */
+    private static final int MAX_LOOPS = 100;
+
+    private DataFlowNode rootNode;
+    private Executable shim;
+<span class="nc" id="L30">    private CurrentPath currentPath = new CurrentPath();</span>
+<span class="nc" id="L31">    private DefaultMutableTreeNode stack = new DefaultMutableTreeNode();</span>
+    private int maxPaths;
+
+<span class="nc" id="L34">    public DAAPathFinder(DataFlowNode rootNode, Executable shim) {</span>
+<span class="nc" id="L35">        this.rootNode = rootNode;</span>
+<span class="nc" id="L36">        this.shim = shim;</span>
+<span class="nc" id="L37">        this.maxPaths = MAX_PATHS;</span>
+<span class="nc" id="L38">    }</span>
+
+<span class="nc" id="L40">    public DAAPathFinder(DataFlowNode rootNode, Executable shim, int maxPaths) {</span>
+<span class="nc" id="L41">        this.rootNode = rootNode;</span>
+<span class="nc" id="L42">        this.shim = shim;</span>
+<span class="nc" id="L43">        this.maxPaths = maxPaths;</span>
+<span class="nc" id="L44">    }</span>
+
+    public void run() {
+<span class="nc" id="L47">        phase1();</span>
+<span class="nc" id="L48">    }</span>
+
+    /*
+     * Initialise the path search. Starts the searching.
+     */
+    private void phase1() {
+<span class="nc" id="L54">        currentPath.addLast(rootNode);</span>
+<span class="nc" id="L55">        int i = 0;</span>
+<span class="nc" id="L56">        boolean flag = true;</span>
+        do {
+<span class="nc" id="L58">            i++;</span>
+            // System.out.println(&quot;Building path from &quot; +
+            // currentPath.getLast());
+<span class="nc" id="L61">            phase2(flag);</span>
+<span class="nc" id="L62">            shim.execute(currentPath);</span>
+<span class="nc" id="L63">            flag = false;</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">        } while (i &lt; maxPaths &amp;&amp; phase3());</span>
+<span class="nc" id="L65">    }</span>
+
+    /*
+     * Builds up the path.
+     */
+    private void phase2(boolean flag) {
+<span class="nc" id="L71">        int i = 0;</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">        while (!currentPath.isEndNode() &amp;&amp; i &lt; MAX_LOOPS) {</span>
+<span class="nc" id="L73">            i++;</span>
+<span class="nc bnc" id="L74" title="All 4 branches missed.">            if (currentPath.isBranch() || currentPath.isFirstDoStatement()) {</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                if (flag) {</span>
+<span class="nc" id="L76">                    addNodeToTree();</span>
+                }
+<span class="nc" id="L78">                flag = true;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (countLoops() &lt;= 2) {</span>
+<span class="nc" id="L80">                    addCurrentChild();</span>
+<span class="nc" id="L81">                    continue;</span>
+                } else {
+                    // jump out of that loop
+<span class="nc" id="L84">                    addLastChild();</span>
+<span class="nc" id="L85">                    continue;</span>
+                }
+            } else {
+<span class="nc" id="L88">                addCurrentChild();</span>
+            }
+        }
+<span class="nc" id="L91">    }</span>
+
+    /*
+     * Decompose the path until it finds a node which branches are not all
+     * traversed.
+     */
+    private boolean phase3() {
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        while (!currentPath.isEmpty()) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if (currentPath.isBranch()) {</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                if (this.countLoops() == 1) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                    if (this.hasMoreChildren()) {</span>
+<span class="nc" id="L102">                        this.incChild();</span>
+<span class="nc" id="L103">                        return true;</span>
+                    } else {
+<span class="nc" id="L105">                        this.removeFromTree();</span>
+<span class="nc" id="L106">                        currentPath.removeLast();</span>
+                    }
+                } else {
+<span class="nc" id="L109">                    this.removeFromTree();</span>
+<span class="nc" id="L110">                    currentPath.removeLast();</span>
+                }
+            } else {
+<span class="nc" id="L113">                currentPath.removeLast();</span>
+            }
+        }
+<span class="nc" id="L116">        return false;</span>
+    }
+
+    private boolean hasMoreChildren() {
+<span class="nc" id="L120">        PathElement e = (PathElement) stack.getLastLeaf().getUserObject();</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        return e.currentChild + 1 &lt; e.node.getChildren().size();</span>
+    }
+
+    private void addLastChild() {
+<span class="nc" id="L125">        PathElement e = (PathElement) stack.getLastLeaf().getUserObject();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        for (int i = e.node.getChildren().size() - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (i != e.currentChild) {</span>
+<span class="nc" id="L128">                currentPath.addLast(e.node.getChildren().get(i));</span>
+<span class="nc" id="L129">                break;</span>
+            }
+        }
+<span class="nc" id="L132">    }</span>
+
+    private void addCurrentChild() {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (currentPath.isBranch()) { // TODO WHY????</span>
+<span class="nc" id="L136">            PathElement last = (PathElement) stack.getLastLeaf().getUserObject();</span>
+<span class="nc" id="L137">            DataFlowNode inode = currentPath.getLast();</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (inode.getChildren().size() &gt; last.currentChild) {</span>
+                // for some unknown reasons last.currentChild might not be a
+                // children of inode, see bug 1597987
+                // see https://sourceforge.net/p/pmd/bugs/606/
+<span class="nc" id="L142">                DataFlowNode child = inode.getChildren().get(last.currentChild);</span>
+<span class="nc" id="L143">                this.currentPath.addLast(child);</span>
+            }
+<span class="nc" id="L145">        } else {</span>
+<span class="nc" id="L146">            DataFlowNode inode = currentPath.getLast();</span>
+            // TODO ???? IMPORTANT - ERROR?
+<span class="nc" id="L148">            DataFlowNode child = inode.getChildren().get(0);</span>
+<span class="nc" id="L149">            this.currentPath.addLast(child);</span>
+        }
+<span class="nc" id="L151">    }</span>
+
+    // ----------------------------------------------------------------------------
+    // TREE FUNCTIONS
+
+    /*
+     * Adds a PathElement to a Tree, which contains information about loops and
+     * &quot;local scopes - encapsulation&quot;.
+     */
+    private void addNodeToTree() {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (currentPath.isFirstDoStatement()) {</span>
+<span class="nc" id="L162">            DefaultMutableTreeNode level = stack;</span>
+<span class="nc" id="L163">            DataFlowNode doBranch = currentPath.getDoBranchNodeFromFirstDoStatement();</span>
+
+            while (true) {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                if (level.getChildCount() != 0) {</span>
+<span class="nc" id="L167">                    PathElement ref = this.isNodeInLevel(level);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                    if (ref != null) {</span>
+<span class="nc" id="L169">                        this.addRefPseudoPathElement(level, ref);</span>
+<span class="nc" id="L170">                        break;</span>
+                    } else {
+<span class="nc" id="L172">                        level = this.getLastChildNode(level);</span>
+<span class="nc" id="L173">                        continue;</span>
+                    }
+                } else {
+<span class="nc" id="L176">                    this.addNewPseudoPathElement(level, doBranch);</span>
+<span class="nc" id="L177">                    break;</span>
+                }
+            }
+        }
+
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (currentPath.isBranch()) {</span>
+<span class="nc" id="L183">            DefaultMutableTreeNode level = stack;</span>
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (currentPath.isDoBranchNode()) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                while (!this.equalsPseudoPathElementWithDoBranchNodeInLevel(level)) {</span>
+<span class="nc" id="L187">                    level = this.getLastChildNode(level);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                    if (level.getChildCount() == 0) {</span>
+<span class="nc" id="L189">                        break;</span>
+                    }
+                }
+<span class="nc" id="L192">                PathElement ref = this.getDoBranchNodeInLevel(level);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                if (ref != null) {</span>
+<span class="nc" id="L194">                    addNode(level, ref);</span>
+                } else {
+<span class="nc" id="L196">                    this.addNewPathElement(level);</span>
+                }
+
+<span class="nc" id="L199">            } else {</span>
+                while (true) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">                    if (level.getChildCount() != 0) {</span>
+<span class="nc" id="L202">                        PathElement ref = this.isNodeInLevel(level);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">                        if (ref != null) {</span>
+<span class="nc" id="L204">                            addNode(level, ref);</span>
+<span class="nc" id="L205">                            break;</span>
+                        } else {
+<span class="nc" id="L207">                            level = this.getLastChildNode(level);</span>
+<span class="nc" id="L208">                            continue;</span>
+                        }
+                    } else {
+<span class="nc" id="L211">                        this.addNewPathElement(level);</span>
+<span class="nc" id="L212">                        break;</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L217">    }</span>
+
+    private void removeFromTree() {
+<span class="nc" id="L220">        DefaultMutableTreeNode last = stack.getLastLeaf();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">        if (last == null) {</span>
+<span class="nc" id="L222">            System.out.println(&quot;removeFromTree - last == null&quot;);</span>
+<span class="nc" id="L223">            return;</span>
+        }
+<span class="nc" id="L225">        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) last.getParent();</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        if (parent != null) {</span>
+            // for some unknown reasons parent might be null, see bug 1597987
+<span class="nc" id="L228">            parent.remove(last);</span>
+        }
+<span class="nc" id="L230">        last = stack.getLastLeaf();</span>
+<span class="nc bnc" id="L231" title="All 4 branches missed.">        if (last == null || last.getUserObject() == null) {</span>
+<span class="nc" id="L232">            return;</span>
+        }
+
+<span class="nc" id="L235">        PathElement e = (PathElement) last.getUserObject();</span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">        if (e != null &amp;&amp; e.isPseudoPathElement()) {</span>
+<span class="nc" id="L237">            this.removeFromTree();</span>
+        }
+<span class="nc" id="L239">    }</span>
+
+    private void addNewPathElement(DefaultMutableTreeNode level) {
+<span class="nc" id="L242">        addNode(level, new PathElement(currentPath.getLast()));</span>
+<span class="nc" id="L243">    }</span>
+
+    /*
+     * Needed for do loops
+     */
+    private void addNewPseudoPathElement(DefaultMutableTreeNode level, DataFlowNode ref) {
+<span class="nc" id="L249">        addNode(level, new PathElement(currentPath.getLast(), ref));</span>
+<span class="nc" id="L250">    }</span>
+
+    /*
+     * Needed for do loops
+     */
+    private void addRefPseudoPathElement(DefaultMutableTreeNode level, PathElement ref) {
+<span class="nc" id="L256">        addNode(level, ref);</span>
+<span class="nc" id="L257">    }</span>
+
+    private boolean equalsPseudoPathElementWithDoBranchNodeInLevel(DefaultMutableTreeNode level) {
+<span class="nc" id="L260">        DataFlowNode inode = currentPath.getLast();</span>
+
+<span class="nc bnc" id="L262" title="All 2 branches missed.">        if (!inode.isType(NodeType.DO_EXPR)) {</span>
+<span class="nc" id="L263">            return false;</span>
+        }
+
+<span class="nc" id="L266">        int childCount = level.getChildCount();</span>
+        DefaultMutableTreeNode child;
+
+<span class="nc bnc" id="L269" title="All 2 branches missed.">        for (int i = 0; i &lt; childCount; i++) {</span>
+<span class="nc" id="L270">            child = (DefaultMutableTreeNode) level.getChildAt(i);</span>
+<span class="nc" id="L271">            PathElement pe = (PathElement) child.getUserObject();</span>
+<span class="nc bnc" id="L272" title="All 6 branches missed.">            if (pe != null &amp;&amp; pe.isPseudoPathElement() &amp;&amp; pe.pseudoRef.equals(inode)) {</span>
+<span class="nc" id="L273">                return true;</span>
+            }
+        }
+<span class="nc" id="L276">        return false;</span>
+    }
+
+    private PathElement getDoBranchNodeInLevel(DefaultMutableTreeNode level) {
+<span class="nc" id="L280">        DataFlowNode inode = currentPath.getLast();</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">        if (!inode.isType(NodeType.DO_EXPR)) {</span>
+<span class="nc" id="L282">            return null;</span>
+        }
+
+<span class="nc" id="L285">        int childCount = level.getChildCount();</span>
+        DefaultMutableTreeNode child;
+
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        for (int i = 0; i &lt; childCount; i++) {</span>
+<span class="nc" id="L289">            child = (DefaultMutableTreeNode) level.getChildAt(i);</span>
+<span class="nc" id="L290">            PathElement pe = (PathElement) child.getUserObject();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">            if (inode.equals(pe.node)) {</span>
+<span class="nc" id="L292">                return pe;</span>
+            }
+        }
+<span class="nc" id="L295">        return null;</span>
+    }
+
+    private void addNode(DefaultMutableTreeNode level, PathElement element) {
+<span class="nc" id="L299">        DefaultMutableTreeNode node = new DefaultMutableTreeNode();</span>
+<span class="nc" id="L300">        node.setUserObject(element);</span>
+<span class="nc" id="L301">        level.add(node);</span>
+<span class="nc" id="L302">    }</span>
+
+    private PathElement isNodeInLevel(DefaultMutableTreeNode level) {
+<span class="nc" id="L305">        DataFlowNode inode = currentPath.getLast();</span>
+<span class="nc" id="L306">        DefaultMutableTreeNode child = (DefaultMutableTreeNode) level.getFirstChild();</span>
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if (child != null) {</span>
+<span class="nc" id="L309">            PathElement levelElement = (PathElement) child.getUserObject();</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">            if (inode.equals(levelElement.node)) {</span>
+<span class="nc" id="L311">                return levelElement;</span>
+            }
+        }
+<span class="nc" id="L314">        return null;</span>
+    }
+
+    private DefaultMutableTreeNode getLastChildNode(DefaultMutableTreeNode node) {
+<span class="nc bnc" id="L318" title="All 2 branches missed.">        if (node.getChildCount() != 0) {</span>
+<span class="nc" id="L319">            return (DefaultMutableTreeNode) node.getLastChild();</span>
+        }
+<span class="nc" id="L321">        return node;</span>
+    }
+
+    private int countLoops() {
+<span class="nc" id="L325">        DefaultMutableTreeNode treeNode = stack.getLastLeaf();</span>
+<span class="nc" id="L326">        int counter = 0;</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (treeNode.getParent() != null) {</span>
+            // for some unknown reasons the parent of treeNode might be null,
+            // see bug 1597987
+            // see https://sourceforge.net/p/pmd/bugs/606/
+<span class="nc" id="L331">            int childCount = treeNode.getParent().getChildCount();</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">            for (int i = 0; i &lt; childCount; i++) {</span>
+<span class="nc" id="L333">                DefaultMutableTreeNode tNode = (DefaultMutableTreeNode) treeNode.getParent().getChildAt(i);</span>
+<span class="nc" id="L334">                PathElement e = (PathElement) tNode.getUserObject();</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">                if (e != null &amp;&amp; !e.isPseudoPathElement()) {</span>
+<span class="nc" id="L336">                    counter++;</span>
+                }
+            }
+        }
+<span class="nc" id="L340">        return counter;</span>
+    }
+
+    private void incChild() {
+<span class="nc" id="L344">        ((PathElement) stack.getLastLeaf().getUserObject()).currentChild++;</span>
+<span class="nc" id="L345">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

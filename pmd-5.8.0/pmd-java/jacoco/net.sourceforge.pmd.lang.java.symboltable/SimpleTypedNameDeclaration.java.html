@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SimpleTypedNameDeclaration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">SimpleTypedNameDeclaration.java</span></div><h1>SimpleTypedNameDeclaration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * Just stores a type image and a actual type. And makes it easy to compare
+ * these.
+ */
+public class SimpleTypedNameDeclaration implements TypedNameDeclaration {
+
+    private final String typeImage;
+    private final Class&lt;?&gt; type;
+    private SimpleTypedNameDeclaration next;
+
+<span class="fc" id="L20">    private static Set&lt;String&gt; primitiveTypes = new HashSet&lt;&gt;();</span>
+
+    static {
+<span class="fc" id="L23">        primitiveTypes.add(&quot;float&quot;);</span>
+<span class="fc" id="L24">        primitiveTypes.add(&quot;double&quot;);</span>
+<span class="fc" id="L25">        primitiveTypes.add(&quot;int&quot;);</span>
+<span class="fc" id="L26">        primitiveTypes.add(&quot;integer&quot;);</span>
+<span class="fc" id="L27">        primitiveTypes.add(&quot;long&quot;);</span>
+<span class="fc" id="L28">        primitiveTypes.add(&quot;byte&quot;);</span>
+<span class="fc" id="L29">        primitiveTypes.add(&quot;short&quot;);</span>
+<span class="fc" id="L30">        primitiveTypes.add(&quot;boolean&quot;);</span>
+<span class="fc" id="L31">        primitiveTypes.add(&quot;char&quot;);</span>
+<span class="fc" id="L32">        primitiveTypes.add(&quot;character&quot;);</span>
+<span class="fc" id="L33">    }</span>
+
+    /**
+     * Creates a new {@link SimpleTypedNameDeclaration} with the given type
+     * 
+     * @param typeImage
+     *            the type image
+     * @param type
+     *            the actual type
+     */
+<span class="fc" id="L43">    public SimpleTypedNameDeclaration(String typeImage, Class&lt;?&gt; type) {</span>
+<span class="fc" id="L44">        this.typeImage = typeImage;</span>
+<span class="fc" id="L45">        this.type = type;</span>
+<span class="fc" id="L46">    }</span>
+
+<span class="fc" id="L48">    public SimpleTypedNameDeclaration(String typeImage, Class&lt;?&gt; type, SimpleTypedNameDeclaration next) {</span>
+<span class="fc" id="L49">        this.typeImage = typeImage;</span>
+<span class="fc" id="L50">        this.type = type;</span>
+<span class="fc" id="L51">        this.next = next;</span>
+<span class="fc" id="L52">    }</span>
+
+    public void addNext(SimpleTypedNameDeclaration next) {
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (next == null) {</span>
+<span class="nc" id="L56">            return;</span>
+        }
+
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (this.next == null) {</span>
+<span class="fc" id="L60">            this.next = next;</span>
+        } else {
+<span class="nc" id="L62">            this.next.addNext(next);</span>
+        }
+<span class="fc" id="L64">    }</span>
+
+    @Override
+    public String getTypeImage() {
+<span class="fc" id="L68">        return typeImage;</span>
+    }
+
+    @Override
+    public Class&lt;?&gt; getType() {
+<span class="fc" id="L73">        return type;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        String nextString = next != null ? &quot;(next: &quot; + next + &quot;)&quot; : &quot;&quot;;</span>
+<span class="nc" id="L79">        return &quot;SimpleType:&quot; + type + &quot;/&quot; + typeImage + nextString;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L84">        final int prime = 31;</span>
+<span class="nc" id="L85">        int result = 1;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        result = prime * result + ((type == null) ? 0 : type.hashCode());</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        result = prime * result + ((typeImage == null) ? 0 : typeImage.hashCode());</span>
+<span class="nc" id="L88">        return result;</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Additionally - two {@link SimpleTypedNameDeclaration} are equal, if they
+     * contain types, that can be cast into each other.
+     * &lt;/p&gt;
+     */
+    @Override
+    public boolean equals(Object obj) {
+<span class="fc bfc" id="L100" title="All 4 branches covered.">        return internalEquals(obj) || internalEqualsNext(obj);</span>
+    }
+
+    private boolean internalEqualsNext(Object obj) {
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (next != null) {</span>
+<span class="fc" id="L105">            return next.equals(obj);</span>
+        }
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (obj instanceof SimpleTypedNameDeclaration) {</span>
+<span class="fc" id="L108">            SimpleTypedNameDeclaration otherNext = ((SimpleTypedNameDeclaration) obj).next;</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (otherNext != null) {</span>
+<span class="fc" id="L110">                return otherNext.equals(this);</span>
+            }
+        }
+<span class="fc" id="L113">        return false;</span>
+    }
+
+    private boolean internalEquals(Object obj) {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (this == obj) {</span>
+<span class="fc" id="L118">            return true;</span>
+        }
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (obj == null) {</span>
+<span class="nc" id="L121">            return false;</span>
+        }
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (getClass() != obj.getClass()) {</span>
+<span class="nc" id="L124">            return false;</span>
+        }
+<span class="fc" id="L126">        SimpleTypedNameDeclaration other = (SimpleTypedNameDeclaration) obj;</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (type == null) {</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">            if (other.type == Object.class) {</span>
+<span class="nc" id="L129">                return true;</span>
+            }
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">            if (other.type != null) {</span>
+<span class="nc" id="L132">                return false;</span>
+            }
+        }
+<span class="fc bfc" id="L135" title="All 6 branches covered.">        if (type != null &amp;&amp; (type.equals(other.type) || type == Object.class)) {</span>
+<span class="fc" id="L136">            return true;</span>
+        }
+
+        // if the type is given, only compare the type and don't care about the
+        // type image
+<span class="fc bfc" id="L141" title="All 4 branches covered.">        if (type != null &amp;&amp; other.type != null</span>
+<span class="fc bfc" id="L142" title="All 4 branches covered.">                &amp;&amp; (type.isAssignableFrom(other.type) || other.type.isAssignableFrom(type))) {</span>
+<span class="fc" id="L143">            return true;</span>
+        }
+
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (typeImage == null) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (other.typeImage != null) {</span>
+<span class="nc" id="L148">                return false;</span>
+            }
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        } else if (!typeImage.equals(other.typeImage)) {</span>
+            // consider auto-boxing
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">            if (other.typeImage != null) {</span>
+<span class="fc" id="L153">                String lcType = typeImage.toLowerCase();</span>
+<span class="fc" id="L154">                String otherLcType = other.typeImage.toLowerCase();</span>
+<span class="fc bfc" id="L155" title="All 4 branches covered.">                if (primitiveTypes.contains(lcType) &amp;&amp; primitiveTypes.contains(otherLcType)) {</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                    if (lcType.equals(otherLcType)) {</span>
+<span class="fc" id="L157">                        return true;</span>
+<span class="fc bfc" id="L158" title="All 4 branches covered.">                    } else if ((&quot;char&quot;.equals(lcType) || &quot;character&quot;.equals(lcType))</span>
+<span class="pc bpc" id="L159" title="1 of 4 branches missed.">                            &amp;&amp; (&quot;char&quot;.equals(otherLcType) || &quot;character&quot;.equals(otherLcType))) {</span>
+<span class="fc" id="L160">                        return true;</span>
+<span class="fc bfc" id="L161" title="All 4 branches covered.">                    } else if ((&quot;int&quot;.equals(lcType) || &quot;integer&quot;.equals(lcType))</span>
+<span class="fc bfc" id="L162" title="All 4 branches covered.">                            &amp;&amp; (&quot;int&quot;.equals(otherLcType) || &quot;integer&quot;.equals(otherLcType)</span>
+<span class="fc bfc" id="L163" title="All 4 branches covered.">                                    || &quot;short&quot;.equals(otherLcType) || &quot;char&quot;.equals(otherLcType)</span>
+<span class="fc bfc" id="L164" title="All 4 branches covered.">                                    || &quot;character&quot;.equals(otherLcType) || &quot;byte&quot;.equals(otherLcType))) {</span>
+<span class="fc" id="L165">                        return true;</span>
+<span class="fc bfc" id="L166" title="All 6 branches covered.">                    } else if (&quot;double&quot;.equals(lcType) &amp;&amp; (&quot;float&quot;.equals(otherLcType) || &quot;int&quot;.equals(otherLcType)</span>
+<span class="pc bpc" id="L167" title="1 of 4 branches missed.">                            || &quot;integer&quot;.equals(otherLcType) || &quot;long&quot;.equals(otherLcType))) {</span>
+<span class="fc" id="L168">                        return true;</span>
+<span class="fc bfc" id="L169" title="All 6 branches covered.">                    } else if (&quot;float&quot;.equals(lcType) &amp;&amp; (&quot;int&quot;.equals(otherLcType) || &quot;integer&quot;.equals(otherLcType)</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                            || &quot;long&quot;.equals(otherLcType))) {</span>
+<span class="fc" id="L171">                        return true;</span>
+<span class="fc bfc" id="L172" title="All 6 branches covered.">                    } else if (&quot;long&quot;.equals(lcType) &amp;&amp; (&quot;int&quot;.equals(otherLcType) || &quot;integer&quot;.equals(otherLcType)</span>
+<span class="pc bpc" id="L173" title="1 of 4 branches missed.">                            || &quot;char&quot;.equals(otherLcType) || &quot;character&quot;.equals(otherLcType))) {</span>
+<span class="fc" id="L174">                        return true;</span>
+                    }
+                }
+            }
+<span class="fc" id="L178">            return false;</span>
+        }
+<span class="fc" id="L180">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

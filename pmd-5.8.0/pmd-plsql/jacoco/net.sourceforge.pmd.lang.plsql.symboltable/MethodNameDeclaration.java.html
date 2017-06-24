@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MethodNameDeclaration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">MethodNameDeclaration.java</span></div><h1>MethodNameDeclaration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.plsql.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.plsql.ast.ASTFormalParameters;
+import net.sourceforge.pmd.lang.plsql.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.plsql.ast.ASTTriggerTimingPointSection;
+import net.sourceforge.pmd.lang.plsql.ast.AbstractPLSQLNode;
+import net.sourceforge.pmd.lang.symboltable.AbstractNameDeclaration;
+
+public class MethodNameDeclaration extends AbstractNameDeclaration {
+<span class="fc" id="L19">    private static final Logger LOGGER = Logger.getLogger(MethodNameDeclaration.class.getName());</span>
+
+    public MethodNameDeclaration(ASTMethodDeclarator node) {
+<span class="fc" id="L22">        super(node);</span>
+<span class="fc" id="L23">    }</span>
+
+    /**
+     * Treat a TimingPointSection within a Compound Trigger like a packaged
+     * FUNCTION or PROCEDURE. SRT
+     * 
+     * @param node
+     */
+    public MethodNameDeclaration(ASTTriggerTimingPointSection node) {
+<span class="nc" id="L32">        super(node);</span>
+<span class="nc" id="L33">    }</span>
+
+    public int getParameterCount() {
+<span class="nc" id="L36">        return ((ASTMethodDeclarator) node).getParameterCount();</span>
+    }
+
+    /**
+     * PL/SQL does not currently allow varargs outside the STANDARD package.
+     * 
+     * @return false
+     */
+    public boolean isVarargs() {
+<span class="nc" id="L45">        return false;</span>
+    }
+
+    public ASTMethodDeclarator getMethodNameDeclaratorNode() {
+<span class="nc" id="L49">        return (ASTMethodDeclarator) node;</span>
+    }
+
+    public String getParameterDisplaySignature() {
+<span class="nc" id="L53">        StringBuilder sb = new StringBuilder(&quot;(&quot;);</span>
+<span class="nc" id="L54">        ASTFormalParameters params = (ASTFormalParameters) node.jjtGetChild(0);</span>
+        // TODO - this can be optimized - add [0] then ,[n] in a loop.
+        // no need to trim at the end
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        for (int i = 0; i &lt; ((ASTMethodDeclarator) node).getParameterCount(); i++) {</span>
+<span class="nc" id="L58">            ASTFormalParameter p = (ASTFormalParameter) params.jjtGetChild(i);</span>
+<span class="nc" id="L59">            sb.append(p.getTypeNode().getTypeImage());</span>
+            // if (p.isVarargs()) {
+            // sb.append(&quot;...&quot;);
+            // }
+<span class="nc" id="L63">            sb.append(',');</span>
+        }
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (sb.charAt(sb.length() - 1) == ',') {</span>
+<span class="nc" id="L66">            sb.deleteCharAt(sb.length() - 1);</span>
+        }
+<span class="nc" id="L68">        sb.append(')');</span>
+<span class="nc" id="L69">        return sb.toString();</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (!(o instanceof MethodNameDeclaration)) {</span>
+<span class="nc" id="L75">            return false;</span>
+        }
+
+<span class="nc" id="L78">        MethodNameDeclaration other = (MethodNameDeclaration) o;</span>
+
+        // compare name
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (!other.node.getImage().equals(node.getImage())) {</span>
+<span class="nc" id="L82">            return false;</span>
+        }
+
+        // compare parameter count - this catches the case where there are no
+        // params, too
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (((ASTMethodDeclarator) other.node).getParameterCount() != ((ASTMethodDeclarator) node)</span>
+                .getParameterCount()) {
+<span class="nc" id="L89">            return false;</span>
+        }
+
+        // compare parameter types
+        // SRT ASTFormalParameters myParams = (ASTFormalParameters)
+        // node.jjtGetChild(0);
+        // SRT ASTFormalParameters otherParams = (ASTFormalParameters)
+        // other.node.jjtGetChild(0);
+<span class="nc" id="L97">        ASTFormalParameters myParams = node.getFirstDescendantOfType(ASTFormalParameters.class);</span>
+<span class="nc" id="L98">        ASTFormalParameters otherParams = other.node.getFirstDescendantOfType(ASTFormalParameters.class);</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for (int i = 0; i &lt; ((ASTMethodDeclarator) node).getParameterCount(); i++) {</span>
+<span class="nc" id="L100">            ASTFormalParameter myParam = (ASTFormalParameter) myParams.jjtGetChild(i);</span>
+<span class="nc" id="L101">            ASTFormalParameter otherParam = (ASTFormalParameter) otherParams.jjtGetChild(i);</span>
+
+            // Compare vararg
+            // if (myParam.isVarargs() != otherParam.isVarargs()) {
+            // return false;
+            // }
+
+<span class="nc" id="L108">            Node myTypeNode = myParam.getTypeNode().jjtGetChild(0);</span>
+<span class="nc" id="L109">            Node otherTypeNode = otherParam.getTypeNode().jjtGetChild(0);</span>
+
+            // compare primitive vs reference type
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (myTypeNode.getClass() != otherTypeNode.getClass()) {</span>
+<span class="nc" id="L113">                return false;</span>
+            }
+
+            // simple comparison of type images
+            // this can be fooled by one method using &quot;String&quot;
+            // and the other method using &quot;java.lang.String&quot;
+            // once we get real types in here that should get fixed
+            String myTypeImg;
+            String otherTypeImg;
+            // if (myTypeNode instanceof ASTPrimitiveType) {
+            // myTypeImg = myTypeNode.getImage();
+            // otherTypeImg = otherTypeNode.getImage();
+            // } else {
+<span class="nc" id="L126">            myTypeImg = ((AbstractPLSQLNode) myTypeNode.jjtGetChild(0)).getImage();</span>
+<span class="nc" id="L127">            otherTypeImg = ((AbstractPLSQLNode) otherTypeNode.jjtGetChild(0)).getImage();</span>
+            // }
+
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            if (!myTypeImg.equals(otherTypeImg)) {</span>
+<span class="nc" id="L131">                return false;</span>
+            }
+
+            // if type is ASTPrimitiveType and is an array, make sure the other
+            // one is also
+        }
+<span class="nc" id="L137">        return true;</span>
+    }
+
+    @Override
+    public int hashCode() {
+        try {
+            // SRT node.getImage().hashCode() + ((ASTMethodDeclarator)node).getParameterCount();
+<span class="fc" id="L144">            return node.hashCode();</span>
+<span class="nc" id="L145">        } catch (Exception e) {</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L147">                LOGGER.finest(</span>
+                        &quot;MethodNameDeclaration problem for &quot; + node + &quot; of class &quot; + node.getClass().getCanonicalName()
+                                + &quot; =&gt; &quot; + node.getBeginLine() + &quot;/&quot; + node.getBeginColumn());
+            }
+            // @TODO SRT restore the thrown exception - throw e;
+<span class="nc" id="L152">            return 0;</span>
+        }
+    }
+
+    @Override
+    public String toString() {
+        // SRT return &quot;Method &quot; + node.getImage() + &quot;, line &quot; +
+        // node.getBeginLine() + &quot;, params = &quot; + ((ASTMethodDeclarator)
+        // node).getParameterCount();
+<span class="nc" id="L161">        return node.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

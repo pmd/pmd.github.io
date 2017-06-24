@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Linker.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.dfa</a> &gt; <span class="el_source">Linker.java</span></div><h1>Linker.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.dfa;
+
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import net.sourceforge.pmd.lang.DataFlowHandler;
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * @author raik Links data flow nodes to each other.
+ */
+public class Linker {
+<span class="nc" id="L18">    private static final Logger LOGGER = Logger.getLogger(Linker.class.getName());</span>
+<span class="nc" id="L19">    private static final String CLASS_NAME = Linker.class.getCanonicalName();</span>
+
+    /**
+     * Maximum loops to prevent hanging of PMD. See
+     * https://sourceforge.net/p/pmd/bugs/1393/
+     */
+    private static final int MAX_LOOPS = 100;
+
+    private final DataFlowHandler dataFlowHandler;
+    private List&lt;StackObject&gt; braceStack;
+    private List&lt;StackObject&gt; continueBreakReturnStack;
+
+    public Linker(DataFlowHandler dataFlowHandler, List&lt;StackObject&gt; braceStack,
+<span class="nc" id="L32">            List&lt;StackObject&gt; continueBreakReturnStack) {</span>
+<span class="nc" id="L33">        this.dataFlowHandler = dataFlowHandler;</span>
+<span class="nc" id="L34">        this.braceStack = braceStack;</span>
+<span class="nc" id="L35">        this.continueBreakReturnStack = continueBreakReturnStack;</span>
+<span class="nc" id="L36">    }</span>
+
+    /**
+     * Creates all the links between the data flow nodes.
+     */
+    public void computePaths() throws LinkerException, SequenceException {
+<span class="nc" id="L42">        LOGGER.entering(CLASS_NAME, &quot;computePaths&quot;);</span>
+        // Returns true if there are more sequences, computes the first and
+        // the last index of the sequence.
+<span class="nc" id="L45">        LOGGER.fine(&quot;SequenceChecking continueBreakReturnStack elements&quot;);</span>
+<span class="nc" id="L46">        SequenceChecker sc = new SequenceChecker(braceStack);</span>
+<span class="nc" id="L47">        int i = 0;</span>
+<span class="nc bnc" id="L48" title="All 4 branches missed.">        while (!sc.run() &amp;&amp; i &lt; MAX_LOOPS) {</span>
+<span class="nc" id="L49">            i++;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L51">                LOGGER.fine(&quot;After sc.run - starting Sequence checking loop with firstIndex=&quot; + sc.getFirstIndex()</span>
+                        + &quot;, lastIndex &quot; + sc.getLastIndex() + &quot; with this StackList &quot;
+                        + dump(&quot;braceStack&quot;, braceStack));
+            }
+<span class="nc bnc" id="L55" title="All 4 branches missed.">            if (sc.getFirstIndex() &lt; 0 || sc.getLastIndex() &lt; 0) {</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">                if (LOGGER.isLoggable(Level.SEVERE)) {</span>
+<span class="nc" id="L57">                    LOGGER.severe(&quot;Sequence Checker problem: getFirstIndex()==&quot; + sc.getFirstIndex()</span>
+                            + &quot;, getLastIndex()==&quot; + sc.getLastIndex());
+                }
+<span class="nc" id="L60">                throw new SequenceException(&quot;computePaths(): return index &lt;  0&quot;);</span>
+            }
+
+<span class="nc" id="L63">            StackObject firstStackObject = braceStack.get(sc.getFirstIndex());</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L66">                LOGGER.fine(&quot;Checking first braceStack element of type==&quot;</span>
+                        + NodeType.stringFromType(firstStackObject.getType()));
+            }
+<span class="nc bnc" id="L69" title="All 6 branches missed.">            switch (firstStackObject.getType()) {</span>
+            case NodeType.IF_EXPR:
+<span class="nc" id="L71">                LOGGER.finest(&quot;IF_EXPR&quot;);</span>
+<span class="nc" id="L72">                int x = sc.getLastIndex() - sc.getFirstIndex();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                if (x == 2) {</span>
+<span class="nc" id="L74">                    this.computeIf(sc.getFirstIndex(), sc.getFirstIndex() + 1, sc.getLastIndex());</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                } else if (x == 1) {</span>
+<span class="nc" id="L76">                    this.computeIf(sc.getFirstIndex(), sc.getLastIndex());</span>
+                } else {
+<span class="nc" id="L78">                    LOGGER.severe(&quot;Error - computePaths 1&quot;);</span>
+                }
+<span class="nc" id="L80">                break;</span>
+
+            case NodeType.WHILE_EXPR:
+<span class="nc" id="L83">                LOGGER.finest(&quot;WHILE_EXPR&quot;);</span>
+<span class="nc" id="L84">                this.computeWhile(sc.getFirstIndex(), sc.getLastIndex());</span>
+<span class="nc" id="L85">                break;</span>
+
+            case NodeType.SWITCH_START:
+<span class="nc" id="L88">                LOGGER.finest(&quot;SWITCH_START&quot;);</span>
+<span class="nc" id="L89">                this.computeSwitch(sc.getFirstIndex(), sc.getLastIndex());</span>
+<span class="nc" id="L90">                break;</span>
+
+            case NodeType.FOR_INIT:
+            case NodeType.FOR_EXPR:
+            case NodeType.FOR_UPDATE:
+            case NodeType.FOR_BEFORE_FIRST_STATEMENT:
+<span class="nc" id="L96">                LOGGER.finest(&quot;FOR_EXPR&quot;);</span>
+<span class="nc" id="L97">                this.computeFor(sc.getFirstIndex(), sc.getLastIndex());</span>
+<span class="nc" id="L98">                break;</span>
+
+            case NodeType.DO_BEFORE_FIRST_STATEMENT:
+<span class="nc" id="L101">                LOGGER.finest(&quot;DO_BEFORE_FIRST_STATEMENT&quot;);</span>
+<span class="nc" id="L102">                this.computeDo(sc.getFirstIndex(), sc.getLastIndex());</span>
+<span class="nc" id="L103">                break;</span>
+
+            default:
+            }
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L109">                LOGGER.finest(&quot;Removing braces from Last to first: &quot; + sc.getLastIndex() + &quot; to &quot; + sc.getFirstIndex());</span>
+            }
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            for (int y = sc.getLastIndex(); y &gt;= sc.getFirstIndex(); y--) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L113">                    LOGGER.finest(&quot;Removing brace : &quot; + y);</span>
+                }
+<span class="nc" id="L115">                braceStack.remove(y);</span>
+            }
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L118">                LOGGER.fine(&quot;Completed Sequence checking loop&quot; + braceStack);</span>
+            }
+<span class="nc" id="L120">        }</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINER)) {</span>
+<span class="nc" id="L122">            LOGGER.log(Level.FINER, &quot;After Sequence checking loop : remaining braces=={0}&quot;,</span>
+                    dump(&quot;braceStack&quot;, braceStack));
+        }
+
+<span class="nc" id="L126">        LOGGER.fine(&quot;Processing continueBreakReturnStack elements&quot;);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        while (!continueBreakReturnStack.isEmpty()) {</span>
+<span class="nc" id="L128">            LOGGER.fine(&quot;Starting continueBreakReturnStack processing loop&quot;);</span>
+<span class="nc" id="L129">            StackObject stackObject = continueBreakReturnStack.get(0);</span>
+<span class="nc" id="L130">            DataFlowNode node = stackObject.getDataFlowNode();</span>
+
+<span class="nc bnc" id="L132" title="All 4 branches missed.">            switch (stackObject.getType()) {</span>
+            case NodeType.THROW_STATEMENT:
+                // do the same like a return
+            case NodeType.RETURN_STATEMENT:
+<span class="nc bnc" id="L136" title="All 2 branches missed.">                if (LOGGER.isLoggable(Level.FINEST)) {</span>
+<span class="nc" id="L137">                    LOGGER.finest(&quot;CBR: &quot; + NodeType.stringFromType(stackObject.getType()));</span>
+                }
+                // remove all children (should contain only one child)
+<span class="nc" id="L140">                node.removePathToChild(node.getChildren().get(0));</span>
+<span class="nc" id="L141">                DataFlowNode lastNode = node.getFlow().get(node.getFlow().size() - 1);</span>
+<span class="nc" id="L142">                node.addPathToChild(lastNode);</span>
+<span class="nc" id="L143">                continueBreakReturnStack.remove(0);</span>
+<span class="nc" id="L144">                break;</span>
+            case NodeType.BREAK_STATEMENT:
+<span class="nc" id="L146">                LOGGER.finest(&quot;CBR: BREAK_STATEMENT&quot;);</span>
+<span class="nc" id="L147">                DataFlowNode last = getNodeToBreakStatement(node);</span>
+<span class="nc" id="L148">                node.removePathToChild(node.getChildren().get(0));</span>
+<span class="nc" id="L149">                node.addPathToChild(last);</span>
+<span class="nc" id="L150">                continueBreakReturnStack.remove(0);</span>
+<span class="nc" id="L151">                break;</span>
+
+            case NodeType.CONTINUE_STATEMENT:
+<span class="nc" id="L154">                LOGGER.finest(&quot;CBR: CONTINUE_STATEMENT&quot;);</span>
+                // List cList = node.getFlow();
+                /*
+                 * traverse up the tree and find the first loop start node
+                 */
+                /*
+                 * for(int i = cList.indexOf(node)-1;i&gt;=0;i--) { IDataFlowNode n
+                 * = (IDataFlowNode)cList.get(i);
+                 *
+                 * if(n.isType(NodeType.FOR_UPDATE) ||
+                 * n.isType(NodeType.FOR_EXPR) || n.isType(NodeType.WHILE_EXPR))
+                 * {
+                 */
+                /*
+                 * while(..) { while(...) { ... } continue; }
+                 *
+                 * Without this Expression he continues the second WHILE loop.
+                 * The continue statement and the while loop have to be in
+                 * different scopes.
+                 *
+                 * TODO An error occurs if &quot;continue&quot; is even nested in scopes
+                 * other than local loop scopes, like &quot;if&quot;. The result is, that
+                 * the data flow isn't build right and the pathfinder runs in
+                 * invinity loop.
+                 */
+                /*
+                 * if(n.getNode().getScope().equals(node.getNode().getScope()))
+                 * { System.err.println(&quot;equals&quot;); continue; } else {
+                 * System.err.println(&quot;don't equals&quot;); }
+                 *
+                 * //remove all children (should contain only one child)
+                 * node.removePathToChild
+                 * ((IDataFlowNode)node.getChildren().get(0));
+                 *
+                 * node.addPathToChild(n); cbrStack.remove(0); break;
+                 *
+                 * }else if(n.isType(NodeType.DO_BEFOR_FIRST_STATEMENT)) {
+                 *
+                 * IDataFlowNode inode =
+                 * (IDataFlowNode)n.getFlow().get(n.getIndex()1);
+                 *
+                 * for(int j=0;j&lt;inode.getParents().size();j) { IDataFlowNode
+                 * parent = (IDataFlowNode)inode.getParents().get(j);
+                 *
+                 * if(parent.isType(NodeType.DO_EXPR)) {
+                 * node.removePathToChild((
+                 * IDataFlowNode)node.getChildren().get(0));
+                 * node.addPathToChild(parent);
+                 *
+                 * cbrStack.remove(0); break; } } break; } }
+                 */
+                // delete this statement if you uncomment the stuff above
+<span class="nc" id="L206">                continueBreakReturnStack.remove(0);</span>
+<span class="nc" id="L207">                break;</span>
+            default:
+<span class="nc" id="L209">                LOGGER.finest(&quot;CBR: default&quot;);</span>
+                // Do nothing
+                break;
+            }
+<span class="nc" id="L213">            LOGGER.fine(&quot;Completed continueBreakReturnStack processing loop&quot;);</span>
+<span class="nc" id="L214">        }</span>
+<span class="nc" id="L215">        LOGGER.exiting(CLASS_NAME, &quot;computePaths&quot;);</span>
+<span class="nc" id="L216">    }</span>
+
+    private DataFlowNode getNodeToBreakStatement(DataFlowNode node) {
+<span class="nc" id="L219">        LOGGER.entering(CLASS_NAME, &quot;getNodeToBreakStatement&quot;);</span>
+        // What about breaks to labels above if statements?
+<span class="nc" id="L221">        List&lt;DataFlowNode&gt; bList = node.getFlow();</span>
+<span class="nc" id="L222">        int findEnds = 1; // ignore ends of other for's while's etc.</span>
+
+        // find out index of the node where the path goes to after the break
+<span class="nc" id="L225">        int index = bList.indexOf(node);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        for (; index &lt; bList.size() - 2; index++) {</span>
+<span class="nc" id="L227">            DataFlowNode n = bList.get(index);</span>
+<span class="nc bnc" id="L228" title="All 8 branches missed.">            if (n.isType(NodeType.DO_EXPR) || n.isType(NodeType.FOR_INIT) || n.isType(NodeType.WHILE_EXPR)</span>
+                    || n.isType(NodeType.SWITCH_START)) {
+<span class="nc" id="L230">                findEnds++;</span>
+            }
+<span class="nc bnc" id="L232" title="All 8 branches missed.">            if (n.isType(NodeType.WHILE_LAST_STATEMENT) || n.isType(NodeType.SWITCH_END) || n.isType(NodeType.FOR_END)</span>
+                    || n.isType(NodeType.DO_EXPR)) {
+<span class="nc bnc" id="L234" title="All 2 branches missed.">                if (findEnds &gt; 1) {</span>
+                    // thats not the right node
+<span class="nc" id="L236">                    findEnds--;</span>
+                } else {
+                    break;
+                }
+            }
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (n.isType(NodeType.LABEL_LAST_STATEMENT)) {</span>
+<span class="nc" id="L243">                Node parentNode = n.getNode().getFirstParentOfType(dataFlowHandler.getLabelStatementNodeClass());</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">                if (parentNode == null) {</span>
+<span class="nc" id="L245">                    break;</span>
+                } else {
+<span class="nc" id="L247">                    String label = node.getNode().getImage();</span>
+<span class="nc bnc" id="L248" title="All 4 branches missed.">                    if (label == null || label.equals(parentNode.getImage())) {</span>
+<span class="nc" id="L249">                        node.removePathToChild(node.getChildren().get(0));</span>
+<span class="nc" id="L250">                        DataFlowNode last = bList.get(index + 1);</span>
+<span class="nc" id="L251">                        node.addPathToChild(last);</span>
+<span class="nc" id="L252">                        break;</span>
+                    }
+                }
+            }
+        }
+<span class="nc" id="L257">        LOGGER.exiting(CLASS_NAME, &quot;getNodeToBreakSttement&quot;);</span>
+<span class="nc" id="L258">        return node.getFlow().get(index + 1);</span>
+    }
+
+    private void computeDo(int first, int last) {
+<span class="nc" id="L262">        LOGGER.entering(CLASS_NAME, &quot;computeDo&quot;);</span>
+<span class="nc" id="L263">        DataFlowNode doSt = this.braceStack.get(first).getDataFlowNode();</span>
+<span class="nc" id="L264">        DataFlowNode doExpr = this.braceStack.get(last).getDataFlowNode();</span>
+<span class="nc" id="L265">        DataFlowNode doFirst = doSt.getFlow().get(doSt.getIndex() + 1);</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (doFirst.getIndex() != doExpr.getIndex()) {</span>
+<span class="nc" id="L267">            doExpr.addPathToChild(doFirst);</span>
+        }
+<span class="nc" id="L269">        LOGGER.exiting(CLASS_NAME, &quot;computeDo&quot;);</span>
+<span class="nc" id="L270">    }</span>
+
+    private void computeFor(int firstIndex, int lastIndex) {
+<span class="nc" id="L273">        LOGGER.entering(CLASS_NAME, &quot;computeFor&quot;);</span>
+<span class="nc" id="L274">        DataFlowNode fExpr = null;</span>
+<span class="nc" id="L275">        DataFlowNode fUpdate = null;</span>
+<span class="nc" id="L276">        DataFlowNode fSt = null;</span>
+<span class="nc" id="L277">        DataFlowNode fEnd = null;</span>
+<span class="nc" id="L278">        boolean isUpdate = false;</span>
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        for (int i = firstIndex; i &lt;= lastIndex; i++) {</span>
+<span class="nc" id="L281">            StackObject so = this.braceStack.get(i);</span>
+<span class="nc" id="L282">            DataFlowNode node = so.getDataFlowNode();</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">            if (so.getType() == NodeType.FOR_EXPR) {</span>
+<span class="nc" id="L285">                fExpr = node;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">            } else if (so.getType() == NodeType.FOR_UPDATE) {</span>
+<span class="nc" id="L287">                fUpdate = node;</span>
+<span class="nc" id="L288">                isUpdate = true;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">            } else if (so.getType() == NodeType.FOR_BEFORE_FIRST_STATEMENT) {</span>
+<span class="nc" id="L290">                fSt = node;</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">            } else if (so.getType() == NodeType.FOR_END) {</span>
+<span class="nc" id="L292">                fEnd = node;</span>
+            }
+        }
+<span class="nc" id="L295">        DataFlowNode end = fEnd.getFlow().get(fEnd.getIndex() + 1);</span>
+
+<span class="nc" id="L297">        DataFlowNode firstSt = fSt.getChildren().get(0);</span>
+
+<span class="nc bnc" id="L299" title="All 2 branches missed.">        if (isUpdate) {</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">            if (fSt.getIndex() != fEnd.getIndex()) {</span>
+<span class="nc" id="L301">                end.reverseParentPathsTo(fUpdate);</span>
+<span class="nc" id="L302">                fExpr.removePathToChild(fUpdate);</span>
+<span class="nc" id="L303">                fUpdate.addPathToChild(fExpr);</span>
+<span class="nc" id="L304">                fUpdate.removePathToChild(firstSt);</span>
+<span class="nc" id="L305">                fExpr.addPathToChild(firstSt);</span>
+<span class="nc" id="L306">                fExpr.addPathToChild(end);</span>
+            } else {
+<span class="nc" id="L308">                fSt.removePathToChild(end);</span>
+<span class="nc" id="L309">                fExpr.removePathToChild(fUpdate);</span>
+<span class="nc" id="L310">                fUpdate.addPathToChild(fExpr);</span>
+<span class="nc" id="L311">                fExpr.addPathToChild(fUpdate);</span>
+<span class="nc" id="L312">                fExpr.addPathToChild(end);</span>
+            }
+        } else {
+<span class="nc bnc" id="L315" title="All 2 branches missed.">            if (fSt.getIndex() != fEnd.getIndex()) {</span>
+<span class="nc" id="L316">                end.reverseParentPathsTo(fExpr);</span>
+<span class="nc" id="L317">                fExpr.addPathToChild(end);</span>
+            }
+        }
+<span class="nc" id="L320">        LOGGER.exiting(CLASS_NAME, &quot;computeFor&quot;);</span>
+<span class="nc" id="L321">    }</span>
+
+    private void computeSwitch(int firstIndex, int lastIndex) {
+<span class="nc" id="L324">        LOGGER.entering(CLASS_NAME, &quot;computeSwitch&quot;);</span>
+
+<span class="nc" id="L326">        int diff = lastIndex - firstIndex;</span>
+<span class="nc" id="L327">        boolean defaultStatement = false;</span>
+
+<span class="nc" id="L329">        DataFlowNode sStart = this.braceStack.get(firstIndex).getDataFlowNode();</span>
+<span class="nc" id="L330">        DataFlowNode sEnd = this.braceStack.get(lastIndex).getDataFlowNode();</span>
+<span class="nc" id="L331">        DataFlowNode end = sEnd.getChildren().get(0);</span>
+
+<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L334">            LOGGER.fine(&quot;Stack(sStart)=&gt;&quot; + sStart + &quot;,Stack(sEnd)=&gt;&quot; + sEnd + &quot;,end=&gt;&quot; + end);</span>
+        }
+
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        for (int i = 0; i &lt; diff - 2; i++) {</span>
+<span class="nc" id="L338">            StackObject so = this.braceStack.get(firstIndex + 2 + i);</span>
+<span class="nc" id="L339">            DataFlowNode node = so.getDataFlowNode();</span>
+
+<span class="nc bnc" id="L341" title="All 2 branches missed.">            if (LOGGER.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L342">                LOGGER.fine(&quot;so(&quot; + (firstIndex + 2 + i) + &quot;)=&gt;&quot; + so + &quot; has  dfn=&gt;&quot; + node + &quot; with first child =&gt;&quot;</span>
+                        + node.getChildren().get(0));
+            }
+<span class="nc" id="L345">            sStart.addPathToChild(node.getChildren().get(0));</span>
+
+<span class="nc bnc" id="L347" title="All 2 branches missed.">            if (so.getType() == NodeType.SWITCH_LAST_DEFAULT_STATEMENT) {</span>
+<span class="nc" id="L348">                defaultStatement = true;</span>
+            }
+        }
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">        if (!defaultStatement) {</span>
+<span class="nc" id="L353">            sStart.addPathToChild(end);</span>
+        }
+<span class="nc" id="L355">        LOGGER.exiting(CLASS_NAME, &quot;computeSwitch&quot;);</span>
+<span class="nc" id="L356">    }</span>
+
+    private void computeWhile(int first, int last) {
+<span class="nc" id="L359">        LOGGER.entering(CLASS_NAME, &quot;computeWhile with first and last of&quot; + first + &quot;,&quot; + last);</span>
+<span class="nc" id="L360">        DataFlowNode wStart = this.braceStack.get(first).getDataFlowNode();</span>
+<span class="nc" id="L361">        DataFlowNode wEnd = this.braceStack.get(last).getDataFlowNode();</span>
+
+<span class="nc" id="L363">        DataFlowNode end = wEnd.getFlow().get(wEnd.getIndex() + 1);</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">        if (wStart.getIndex() != wEnd.getIndex()) {</span>
+<span class="nc" id="L366">            end.reverseParentPathsTo(wStart);</span>
+<span class="nc" id="L367">            wStart.addPathToChild(end);</span>
+        }
+<span class="nc" id="L369">        LOGGER.exiting(CLASS_NAME, &quot;computeWhile&quot;);</span>
+<span class="nc" id="L370">    }</span>
+
+    private void computeIf(int first, int second, int last) {
+<span class="nc" id="L373">        LOGGER.entering(CLASS_NAME, &quot;computeIf(3)&quot;, first + &quot;,&quot; + second + &quot;,&quot; + last);</span>
+<span class="nc" id="L374">        DataFlowNode ifStart = this.braceStack.get(first).getDataFlowNode();</span>
+<span class="nc" id="L375">        DataFlowNode ifEnd = this.braceStack.get(second).getDataFlowNode();</span>
+<span class="nc" id="L376">        DataFlowNode elseEnd = this.braceStack.get(last).getDataFlowNode();</span>
+
+<span class="nc" id="L378">        DataFlowNode elseStart = ifEnd.getFlow().get(ifEnd.getIndex() + 1);</span>
+<span class="nc" id="L379">        DataFlowNode end = elseEnd.getFlow().get(elseEnd.getIndex() + 1);</span>
+
+<span class="nc" id="L381">        LOGGER.log(Level.FINEST, &quot;If ifstart={0}, ifEnd={1}, elseEnd={2}, elseStart={3}, end={4}&quot;,</span>
+                new Object[] { ifStart, ifEnd, elseEnd, elseStart, end });
+
+<span class="nc bnc" id="L384" title="All 4 branches missed.">        if (ifStart.getIndex() != ifEnd.getIndex() &amp;&amp; ifEnd.getIndex() != elseEnd.getIndex()) {</span>
+            // if if-statement and else-statement contains statements or
+            // expressions
+<span class="nc" id="L387">            elseStart.reverseParentPathsTo(end);</span>
+<span class="nc" id="L388">            ifStart.addPathToChild(elseStart);</span>
+<span class="nc bnc" id="L389" title="All 4 branches missed.">        } else if (ifStart.getIndex() == ifEnd.getIndex() &amp;&amp; ifEnd.getIndex() != elseEnd.getIndex()) {</span>
+            // if only if-statement contains no expressions
+<span class="nc" id="L391">            ifStart.addPathToChild(end);</span>
+<span class="nc bnc" id="L392" title="All 4 branches missed.">        } else if (ifEnd.getIndex() == elseEnd.getIndex() &amp;&amp; ifStart.getIndex() != ifEnd.getIndex()) {</span>
+            // if only else-statement contains no expressions
+<span class="nc" id="L394">            ifStart.addPathToChild(end);</span>
+        }
+<span class="nc" id="L396">        LOGGER.exiting(CLASS_NAME, &quot;computeIf(3)&quot;);</span>
+<span class="nc" id="L397">    }</span>
+
+    private void computeIf(int first, int last) {
+<span class="nc" id="L400">        LOGGER.entering(CLASS_NAME, &quot;computeIf(2)&quot;);</span>
+<span class="nc" id="L401">        DataFlowNode ifStart = this.braceStack.get(first).getDataFlowNode();</span>
+<span class="nc" id="L402">        DataFlowNode ifEnd = this.braceStack.get(last).getDataFlowNode();</span>
+
+        // only if the if-statement contains another Statement or Expression
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        if (ifStart.getIndex() != ifEnd.getIndex()) {</span>
+<span class="nc" id="L406">            DataFlowNode end = ifEnd.getFlow().get(ifEnd.getIndex() + 1);</span>
+<span class="nc" id="L407">            ifStart.addPathToChild(end);</span>
+        }
+<span class="nc" id="L409">        LOGGER.exiting(CLASS_NAME, &quot;computeIf(2)&quot;);</span>
+<span class="nc" id="L410">    }</span>
+
+    /**
+     *
+     * @return formatted dump of the StackList
+     */
+    private static String dump(String description, List&lt;StackObject&gt; stackList) {
+<span class="nc" id="L417">        StringBuilder stringDump = new StringBuilder(&quot;Stack List (&quot;);</span>
+<span class="nc" id="L418">        stringDump.append(description).append(&quot;) ListDump:\n&quot;);</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">        for (StackObject stackObject : stackList) {</span>
+<span class="nc" id="L420">            stringDump.append('\n').append(stackObject.toString());</span>
+<span class="nc" id="L421">        }</span>
+<span class="nc" id="L422">        return stringDump.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

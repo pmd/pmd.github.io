@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ClassStats.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.oom</a> &gt; <span class="el_source">ClassStats.java</span></div><h1>ClassStats.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.oom;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodOrConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.QualifiedName;
+import net.sourceforge.pmd.lang.java.oom.api.ClassMetric;
+import net.sourceforge.pmd.lang.java.oom.api.ClassMetricKey;
+import net.sourceforge.pmd.lang.java.oom.api.MetricVersion;
+import net.sourceforge.pmd.lang.java.oom.api.OperationMetricKey;
+import net.sourceforge.pmd.lang.java.oom.api.ResultOption;
+import net.sourceforge.pmd.lang.java.oom.signature.FieldSigMask;
+import net.sourceforge.pmd.lang.java.oom.signature.FieldSignature;
+import net.sourceforge.pmd.lang.java.oom.signature.OperationSigMask;
+import net.sourceforge.pmd.lang.java.oom.signature.OperationSignature;
+
+/**
+ * Statistics about a class. Gathers information about the contained members and their signatures,
+ * subclasses and superclasses. This class does not provide methods to operate directly on its
+ * nested classes, but only on itself. To operate on a nested class, retrieve the correct ClassStats
+ * with {@link PackageStats#getClassStats(QualifiedName, boolean)} then use the methods of
+ * ClassStats.
+ *
+ * &lt;p&gt;Note that at this level, entities of the DS do not manipulate QualifiedNames anymore, only
+ * Strings.
+ *
+ * @author Clément Fournier
+ */
+<span class="fc" id="L39">/* default */ class ClassStats {</span>
+
+<span class="fc" id="L41">    private Map&lt;OperationSignature, Map&lt;String, OperationStats&gt;&gt; operations = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L42">    private Map&lt;FieldSignature, Set&lt;String&gt;&gt; fields = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L43">    private Map&lt;String, ClassStats&gt; nestedClasses = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L45">    private Map&lt;ParameterizedMetricKey, Double&gt; memo = new HashMap&lt;&gt;();</span>
+
+    // References to the hierarchy
+    // TODO:cf useful?
+    // private String superclass;
+    // private List&lt;String&gt; subclasses;
+
+    private static double highest(List&lt;Double&gt; values) {
+<span class="fc" id="L53">        double highest = Double.NEGATIVE_INFINITY;</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (double val : values) {</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">            if (val &gt; highest) {</span>
+<span class="fc" id="L56">                highest = val;</span>
+            }
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">        return highest;</span>
+    }
+
+    private static double average(List&lt;Double&gt; values) {
+<span class="nc" id="L63">        return sum(values) / values.size();</span>
+    }
+
+    private static double sum(List&lt;Double&gt; values) {
+<span class="nc" id="L67">        double sum = 0;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">        for (double val : values) {</span>
+<span class="nc" id="L69">            sum += val;</span>
+<span class="nc" id="L70">        }</span>
+<span class="nc" id="L71">        return sum;</span>
+    }
+
+    /**
+     * Finds a ClassStats in the direct children of this class. This can only be a directly nested class, for example
+     * in the following snippet, A can get B and B can get C but A cannot get C without asking B.
+     * &lt;pre&gt;
+     * &lt;code&gt;
+     * class MyClass { // ClassStats A
+     *   class MyNested { // ClassStats B
+     *     class MyDeeplyNested { // ClassStats C
+     *     }
+     *   }
+     * }
+     * &lt;/code&gt;
+     * &lt;/pre&gt;
+     *
+     * @param className        Name of the nested class.
+     * @param createIfNotFound Create the requested ClassStats if missing.
+     *
+     * @return The new ClassStats or the one that was found. Can return null if createIfNotFound is unset.
+     */
+    /* default */ ClassStats getNestedClassStats(String className, boolean createIfNotFound) {
+<span class="fc bfc" id="L94" title="All 4 branches covered.">        if (createIfNotFound &amp;&amp; !nestedClasses.containsKey(className)) {</span>
+<span class="fc" id="L95">            nestedClasses.put(className, new ClassStats());</span>
+        }
+<span class="fc" id="L97">        return nestedClasses.get(className);</span>
+    }
+
+    /**
+     * Adds an operation to the class.
+     *
+     * @param name The name of the operation
+     * @param sig  The signature of the operation
+     */
+    /* default */ void addOperation(String name, OperationSignature sig) {
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (!operations.containsKey(sig)) {</span>
+<span class="fc" id="L108">            operations.put(sig, new HashMap&lt;String, OperationStats&gt;());</span>
+        }
+<span class="fc" id="L110">        operations.get(sig).put(name, new OperationStats(name));</span>
+<span class="fc" id="L111">    }</span>
+
+    /**
+     * Adds a field to the class.
+     *
+     * @param name The name of the field
+     * @param sig  The signature of the field
+     */
+    /* default */ void addField(String name, FieldSignature sig) {
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (!fields.containsKey(sig)) {</span>
+<span class="fc" id="L121">            fields.put(sig, new HashSet&lt;String&gt;());</span>
+        }
+<span class="fc" id="L123">        fields.get(sig).add(name);</span>
+<span class="fc" id="L124">    }</span>
+
+    /**
+     * Checks whether the class declares an operation by the name given which is covered by the
+     * signature mask.
+     *
+     * @param name The name of the operation to look for
+     * @param mask The mask covering accepted signatures
+     *
+     * @return True if the class declares an operation by the name given which is covered by the signature mask, false
+     * otherwise.
+     */
+    /* default */ boolean hasMatchingSig(String name, OperationSigMask mask) {
+        // Indexing on signatures optimises this type of request
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        for (OperationSignature sig : operations.keySet()) {</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (mask.covers(sig)) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                if (operations.get(sig).containsKey(name)) {</span>
+<span class="fc" id="L141">                    return true;</span>
+                }
+            }
+<span class="fc" id="L144">        }</span>
+<span class="fc" id="L145">        return false;</span>
+    }
+
+    /**
+     * Checks whether the class declares a field by the name given which is covered by the
+     * signature mask.
+     *
+     * @param name The name of the field to look for
+     * @param mask The mask covering accepted signatures
+     *
+     * @return True if the class declares a field by the name given which is covered by the signature mask, false
+     * otherwise.
+     */
+    /* default */ boolean hasMatchingSig(String name, FieldSigMask mask) {
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        for (FieldSignature sig : fields.keySet()) {</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">            if (mask.covers(sig)) {</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">                if (fields.get(sig).contains(name)) {</span>
+<span class="fc" id="L162">                    return true;</span>
+                }
+            }
+<span class="fc" id="L165">        }</span>
+
+<span class="nc" id="L167">        return false;</span>
+    }
+
+    /**
+     * Computes the value of a metric for an operation.
+     *
+     * @param key   The operation metric for which to find a memoized result.
+     * @param node  The AST node of the operation.
+     * @param name  The name of the operation.
+     * @param force Force the recomputation. If unset, we'll first check for a memoized result.
+     *
+     * @return The result of the computation, or {@code Double.NaN} if it couldn't be performed.
+     */
+    /* default */ double compute(OperationMetricKey key, ASTMethodOrConstructorDeclaration node, String name,
+                                 boolean force, MetricVersion version) {
+
+        // TODO:cf the operation signature will be built many times, we might as well store it in the node
+<span class="fc" id="L184">        Map&lt;String, OperationStats&gt; sigMap = operations.get(OperationSignature.buildFor(node));</span>
+
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">        if (sigMap == null) {</span>
+<span class="nc" id="L187">            return Double.NaN;</span>
+        }
+
+<span class="fc" id="L190">        OperationStats stats = sigMap.get(name);</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        return stats == null ? Double.NaN : stats.compute(key, node, force, version);</span>
+    }
+
+    /**
+     * Computes an aggregate result using a ResultOption.
+     *
+     * @param key     The class metric to compute.
+     * @param node    The AST node of the class.
+     * @param force   Force the recomputation. If unset, we'll first check for a memoized result.
+     * @param version The version of the metric.
+     * @param option  The type of result to compute
+     *
+     * @return The result of the computation, or {@code Double.NaN} if it couldn't be performed.
+     */
+    /* default */ double computeWithResultOption(OperationMetricKey key, ASTClassOrInterfaceDeclaration node,
+                                                 boolean force, MetricVersion version, ResultOption option) {
+
+<span class="fc" id="L208">        List&lt;ASTMethodOrConstructorDeclaration&gt; ops = AbstractMetric.findOperations(node, false);</span>
+
+<span class="fc" id="L210">        List&lt;Double&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">        for (ASTMethodOrConstructorDeclaration op : ops) {</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if (key.getCalculator().supports(op)) {</span>
+<span class="fc" id="L213">                double val = this.compute(key, op, op.getQualifiedName().getOperation(), force, version);</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">                if (val != Double.NaN) {</span>
+<span class="fc" id="L215">                    values.add(val);</span>
+                }
+            }
+<span class="fc" id="L218">        }</span>
+
+        // FUTURE use streams to do that when we upgrade the compiler to 1.8
+<span class="pc bpc" id="L221" title="3 of 4 branches missed.">        switch (option) {</span>
+        case SUM:
+<span class="nc" id="L223">            return sum(values);</span>
+        case HIGHEST:
+<span class="fc" id="L225">            return highest(values);</span>
+        case AVERAGE:
+<span class="nc" id="L227">            return average(values);</span>
+        default:
+<span class="nc" id="L229">            return Double.NaN;</span>
+        }
+    }
+
+    /**
+     * Computes the value of a metric for a class.
+     *
+     * @param key   The class metric for which to find a memoized result.
+     * @param node  The AST node of the class.
+     * @param force Force the recomputation. If unset, we'll first check for a memoized result.
+     *
+     * @return The result of the computation, or {@code Double.NaN} if it couldn't be performed.
+     */
+    /* default */ double compute(ClassMetricKey key, ASTClassOrInterfaceDeclaration node, boolean force, MetricVersion version) {
+
+<span class="fc" id="L244">        ParameterizedMetricKey paramKey = ParameterizedMetricKey.build(key, version);</span>
+        // if memo.get(key) == null then the metric has never been computed. NaN is a valid value.
+<span class="fc" id="L246">        Double prev = memo.get(paramKey);</span>
+<span class="pc bpc" id="L247" title="1 of 4 branches missed.">        if (!force &amp;&amp; prev != null) {</span>
+<span class="fc" id="L248">            return prev;</span>
+        }
+
+<span class="fc" id="L251">        ClassMetric metric = key.getCalculator();</span>
+<span class="fc" id="L252">        double val = metric.computeFor(node, version);</span>
+<span class="fc" id="L253">        memo.put(paramKey, val);</span>
+
+<span class="fc" id="L255">        return val;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

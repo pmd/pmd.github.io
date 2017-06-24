@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GuardLogStatementJavaUtilRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.logging</a> &gt; <span class="el_source">GuardLogStatementJavaUtilRule.java</span></div><h1>GuardLogStatementJavaUtilRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.logging;
+
+import java.util.List;
+import java.util.logging.Level;
+
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
+
+<span class="fc" id="L13">public class GuardLogStatementJavaUtilRule extends GuardLogStatementRule {</span>
+
+    private static final String GUARD_METHOD_NAME = &quot;isLoggable&quot;;
+
+<span class="fc" id="L17">    private static String extendedXPath = &quot;//PrimaryPrefix[ends-with(Name/@Image, '.log')]\n&quot;</span>
+            + &quot;[following-sibling::PrimarySuffix\n&quot;
+            + &quot;    [ends-with(.//PrimaryPrefix/Name/@Image, 'LOG_LEVEL_UPPERCASE')]\n&quot;
+            + &quot;    [count(../descendant::AdditiveExpression) &gt; 0]\n&quot; + &quot;]\n&quot;
+            + &quot;[count(ancestor::IfStatement/Expression/descendant::PrimaryExpression\n&quot;
+            + &quot;    [ends-with(descendant::PrimaryPrefix[1]/Name/@Image,'GUARD')]) = 0\n&quot; + &quot;or\n&quot;
+            + &quot;count(ancestor::IfStatement/Expression/descendant::PrimaryExpression\n&quot;
+            + &quot;    [ends-with(descendant::PrimaryPrefix[2]/Name/@Image,'LOG_LEVEL_UPPERCASE')]) = 0]&quot;;
+
+    @Override
+    public Object visit(ASTCompilationUnit unit, Object data) {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (isSlf4jOrLog4jImported(unit)) {</span>
+<span class="fc" id="L29">            return data;</span>
+        }
+
+<span class="fc" id="L32">        String[] logLevels = getProperty(LOG_LEVELS);</span>
+<span class="fc" id="L33">        String[] guardMethods = getProperty(GUARD_METHODS);</span>
+
+<span class="pc bpc" id="L35" title="1 of 6 branches missed.">        if (super.guardStmtByLogLevel.isEmpty() &amp;&amp; logLevels.length &gt; 0 &amp;&amp; guardMethods.length &gt; 0) {</span>
+<span class="fc" id="L36">            configureGuards(logLevels, guardMethods);</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        } else if (super.guardStmtByLogLevel.isEmpty()) {</span>
+<span class="fc" id="L38">            configureDefaultGuards();</span>
+        }
+
+<span class="fc" id="L41">        findViolationForEachLogStatement(unit, data, extendedXPath);</span>
+<span class="fc" id="L42">        return super.visit(unit, data);</span>
+    }
+
+    private boolean isSlf4jOrLog4jImported(ASTCompilationUnit unit) {
+<span class="fc" id="L46">        List&lt;ASTImportDeclaration&gt; imports = unit.findChildrenOfType(ASTImportDeclaration.class);</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (ASTImportDeclaration i : imports) {</span>
+<span class="fc bfc" id="L48" title="All 4 branches covered.">            if (i.getImportedName().startsWith(&quot;org.slf4j&quot;) || i.getImportedName().startsWith(&quot;org.apache.log4j&quot;)) {</span>
+<span class="fc" id="L49">                return true;</span>
+            }
+<span class="fc" id="L51">        }</span>
+<span class="fc" id="L52">        return false;</span>
+    }
+
+    private void configureGuards(String[] logLevels, String[] guardMethods) {
+<span class="fc" id="L56">        String[] methods = guardMethods;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (methods.length != logLevels.length) {</span>
+<span class="fc" id="L58">            String firstMethodName = guardMethods[0];</span>
+<span class="fc" id="L59">            methods = new String[logLevels.length];</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            for (int i = 0; i &lt; logLevels.length; i++) {</span>
+<span class="fc" id="L61">                methods[i] = firstMethodName;</span>
+            }
+        }
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (int i = 0; i &lt; logLevels.length; i++) {</span>
+<span class="fc" id="L65">            super.guardStmtByLogLevel.put(&quot;.&quot; + logLevels[i], methods[i]);</span>
+        }
+<span class="fc" id="L67">    }</span>
+
+    private void configureDefaultGuards() {
+<span class="fc" id="L70">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.FINEST), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L71">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.FINER), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L72">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.FINE), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L73">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.INFO), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L74">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.WARNING), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L75">        super.guardStmtByLogLevel.put(formatLogLevelString(Level.SEVERE), GUARD_METHOD_NAME);</span>
+<span class="fc" id="L76">    }</span>
+
+    private String formatLogLevelString(Level logLevel) {
+<span class="fc" id="L79">        return &quot;.&quot; + logLevel.toString().toLowerCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

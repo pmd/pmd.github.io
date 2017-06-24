@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PMDTestRunner.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.testframework</a> &gt; <span class="el_source">PMDTestRunner.java</span></div><h1>PMDTestRunner.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.testframework;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+
+import org.junit.Test;
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.manipulation.Filter;
+import org.junit.runner.manipulation.Filterable;
+import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.TestClass;
+
+import net.sourceforge.pmd.Rule;
+
+/**
+ * A test runner for rule tests. It reports
+ * the successful executed tests and allows to selectively execute single test
+ * cases (it is {@link Filterable}).
+ *
+ * &lt;p&gt;In order to use it, you'll need to subclass {@link SimpleAggregatorTst} and
+ * annotate your test class with RunWith:&lt;/p&gt;
+ * 
+ * &lt;pre&gt;
+ * {@code @}RunWith(PMDTestRunner.class)
+ * public class MyRuleSetTest extends SimpleAggregatorTst {
+ * ...
+ * }
+ * &lt;/pre&gt;
+ */
+public class PMDTestRunner extends Runner implements Filterable {
+    private final Description desc;
+    private final Class&lt;? extends SimpleAggregatorTst&gt; klass;
+<span class="nc" id="L45">    private final List&lt;TestDescriptor&gt; allTests = new ArrayList&lt;&gt;();</span>
+    private BlockJUnit4ClassRunner chainedRunner;
+
+    /**
+     * Creates a new {@link PMDTestRunner} for the given test class.
+     * 
+     * @param klass
+     *            the test class that is under test
+     * @throws InitializationError
+     *             any error
+     */
+<span class="nc" id="L56">    public PMDTestRunner(final Class&lt;? extends SimpleAggregatorTst&gt; klass) throws InitializationError {</span>
+<span class="nc" id="L57">        this.klass = klass;</span>
+
+<span class="nc" id="L59">        desc = Description.createSuiteDescription(klass);</span>
+<span class="nc" id="L60">        configureRuleTests();</span>
+<span class="nc" id="L61">        configureUnitTests();</span>
+<span class="nc" id="L62">    }</span>
+
+    private void configureRuleTests() throws InitializationError {
+<span class="nc" id="L65">        Description root = Description.createSuiteDescription(&quot;Rule Tests&quot;);</span>
+        try {
+<span class="nc" id="L67">            SimpleAggregatorTst test = createTestClass();</span>
+<span class="nc" id="L68">            test.setUp();</span>
+
+<span class="nc" id="L70">            List&lt;Rule&gt; rules = new ArrayList&lt;&gt;(test.getRules());</span>
+<span class="nc" id="L71">            Collections.sort(rules, new Comparator&lt;Rule&gt;() {</span>
+                @Override
+                public int compare(Rule o1, Rule o2) {
+<span class="nc" id="L74">                    return o1.getName().compareTo(o2.getName());</span>
+                }
+            });
+
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            for (Rule r : rules) {</span>
+<span class="nc" id="L79">                Description ruleDescription = Description.createSuiteDescription(r.getName());</span>
+<span class="nc" id="L80">                root.addChild(ruleDescription);</span>
+
+<span class="nc" id="L82">                TestDescriptor[] ruleTests = test.extractTestsFromXml(r);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                for (TestDescriptor t : ruleTests) {</span>
+<span class="nc" id="L84">                    Description d = createTestDescription(t);</span>
+<span class="nc" id="L85">                    ruleDescription.addChild(d);</span>
+<span class="nc" id="L86">                    allTests.add(t);</span>
+                }
+<span class="nc" id="L88">            }</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (!root.getChildren().isEmpty()) {</span>
+<span class="nc" id="L90">                desc.addChild(root);</span>
+            }
+<span class="nc" id="L92">        } catch (Exception e) {</span>
+<span class="nc" id="L93">            throw new InitializationError(e);</span>
+<span class="nc" id="L94">        }</span>
+<span class="nc" id="L95">    }</span>
+
+    private SimpleAggregatorTst createTestClass() {
+        try {
+<span class="nc" id="L99">            return klass.getConstructor().newInstance();</span>
+<span class="nc" id="L100">        } catch (Exception e) {</span>
+<span class="nc" id="L101">            throw new RuntimeException(e);</span>
+        }
+    }
+
+    private void configureUnitTests() throws InitializationError {
+<span class="nc" id="L106">        TestClass tclass = new TestClass(klass);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (!tclass.getAnnotatedMethods(Test.class).isEmpty()) {</span>
+<span class="nc" id="L108">            Description unitTests = Description.createSuiteDescription(&quot;Unit tests&quot;);</span>
+<span class="nc" id="L109">            chainedRunner = new BlockJUnit4ClassRunner(klass);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">            for (Description d : chainedRunner.getDescription().getChildren()) {</span>
+<span class="nc" id="L111">                unitTests.addChild(d);</span>
+<span class="nc" id="L112">            }</span>
+<span class="nc" id="L113">            desc.addChild(unitTests);</span>
+        }
+<span class="nc" id="L115">    }</span>
+
+    @Override
+    public Description getDescription() {
+<span class="nc" id="L119">        return desc;</span>
+    }
+
+    @Override
+    public void run(RunNotifier notifier) {
+<span class="nc" id="L124">        SimpleAggregatorTst test = createTestClass();</span>
+<span class="nc" id="L125">        boolean regressionTestMode = TestDescriptor.inRegressionTestMode();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        for (TestDescriptor t : allTests) {</span>
+<span class="nc" id="L128">            Description d = createTestDescription(t);</span>
+<span class="nc" id="L129">            notifier.fireTestStarted(d);</span>
+            try {
+<span class="nc bnc" id="L131" title="All 4 branches missed.">                if (!regressionTestMode || t.isRegressionTest()) {</span>
+<span class="nc" id="L132">                    test.runTest(t);</span>
+                } else {
+<span class="nc" id="L134">                    notifier.fireTestIgnored(d);</span>
+                }
+<span class="nc" id="L136">            } catch (Throwable e) {</span>
+<span class="nc" id="L137">                notifier.fireTestFailure(new Failure(d, e));</span>
+            } finally {
+<span class="nc" id="L139">                notifier.fireTestFinished(d);</span>
+<span class="nc" id="L140">            }</span>
+<span class="nc" id="L141">        }</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        if (chainedRunner != null) {</span>
+<span class="nc" id="L143">            chainedRunner.run(notifier);</span>
+        }
+<span class="nc" id="L145">    }</span>
+
+    private Description createTestDescription(TestDescriptor t) {
+<span class="nc" id="L148">        String d = t.getDescription().replaceAll(&quot;\n|\r&quot;, &quot; &quot;);</span>
+<span class="nc" id="L149">        return Description.createTestDescription(klass,</span>
+                t.getRule().getName() + &quot;::&quot; + t.getNumberInDocument() + &quot; &quot; + d);
+    }
+
+    @Override
+    public void filter(Filter filter) throws NoTestsRemainException {
+<span class="nc" id="L155">        Iterator&lt;TestDescriptor&gt; it = allTests.iterator();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        while (it.hasNext()) {</span>
+<span class="nc" id="L157">            TestDescriptor t = it.next();</span>
+<span class="nc" id="L158">            Description testDesc = createTestDescription(t);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (filter.shouldRun(testDesc)) {</span>
+                try {
+<span class="nc" id="L161">                    filter.apply(t);</span>
+<span class="nc" id="L162">                } catch (NoTestsRemainException e) {</span>
+<span class="nc" id="L163">                    it.remove();</span>
+<span class="nc" id="L164">                }</span>
+            } else {
+<span class="nc" id="L166">                it.remove();</span>
+            }
+<span class="nc" id="L168">        }</span>
+
+<span class="nc" id="L170">        boolean chainIsEmpty = false;</span>
+        try {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">            if (chainedRunner != null) {</span>
+<span class="nc" id="L173">                chainedRunner.filter(filter);</span>
+            } else {
+<span class="nc" id="L175">                chainIsEmpty = true;</span>
+            }
+<span class="nc" id="L177">        } catch (NoTestsRemainException e) {</span>
+<span class="nc" id="L178">            chainIsEmpty = true;</span>
+<span class="nc" id="L179">        }</span>
+
+<span class="nc bnc" id="L181" title="All 4 branches missed.">        if (allTests.isEmpty() &amp;&amp; chainIsEmpty) {</span>
+<span class="nc" id="L182">            throw new NoTestsRemainException();</span>
+        }
+<span class="nc" id="L184">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

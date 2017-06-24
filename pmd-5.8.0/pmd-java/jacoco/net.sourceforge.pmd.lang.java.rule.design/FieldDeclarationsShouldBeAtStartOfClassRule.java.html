@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FieldDeclarationsShouldBeAtStartOfClassRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">FieldDeclarationsShouldBeAtStartOfClassRule.java</span></div><h1>FieldDeclarationsShouldBeAtStartOfClassRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotationTypeDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFieldDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.rule.properties.BooleanProperty;
+
+/**
+ * Detects fields that are declared after methods, constructors, etc. It was a
+ * XPath rule, but the Java version is much faster. The XPath rule for
+ * reference:
+ * 
+ * &lt;pre&gt;
+//ClassOrInterfaceBody/ClassOrInterfaceBodyDeclaration/FieldDeclaration
+[not(.//ClassOrInterfaceBodyDeclaration) or $ignoreAnonymousClassDeclarations = 'false']
+[../preceding-sibling::ClassOrInterfaceBodyDeclaration
+    [  count(ClassOrInterfaceDeclaration) &amp;gt; 0
+    or count(ConstructorDeclaration) &amp;gt; 0
+    or count(MethodDeclaration) &amp;gt; 0
+    or count(AnnotationTypeDeclaration) &amp;gt; 0
+    or ($ignoreEnumDeclarations = 'false' and count(EnumDeclaration) &amp;gt; 0)
+    ]
+]
+ * &lt;/pre&gt;
+ */
+public class FieldDeclarationsShouldBeAtStartOfClassRule extends AbstractJavaRule {
+
+<span class="fc" id="L39">    private BooleanProperty ignoreEnumDeclarations = new BooleanProperty(&quot;ignoreEnumDeclarations&quot;,</span>
+<span class="fc" id="L40">            &quot;Ignore Enum Declarations that precede fields.&quot;, true, 1.0f);</span>
+<span class="fc" id="L41">    private BooleanProperty ignoreAnonymousClassDeclarations = new BooleanProperty(&quot;ignoreAnonymousClassDeclarations&quot;,</span>
+<span class="fc" id="L42">            &quot;Ignore Field Declarations, that are initialized with anonymous class declarations&quot;, true, 2.0f);</span>
+<span class="fc" id="L43">    private BooleanProperty ignoreInterfaceDeclarations = new BooleanProperty(&quot;ignoreInterfaceDeclarations&quot;,</span>
+<span class="fc" id="L44">            &quot;Ignore Interface Declarations that precede fields.&quot;, false, 3.0f);</span>
+
+    /**
+     * Initializes the rule {@link FieldDeclarationsShouldBeAtStartOfClassRule}.
+     */
+<span class="fc" id="L49">    public FieldDeclarationsShouldBeAtStartOfClassRule() {</span>
+<span class="fc" id="L50">        definePropertyDescriptor(ignoreEnumDeclarations);</span>
+<span class="fc" id="L51">        definePropertyDescriptor(ignoreAnonymousClassDeclarations);</span>
+<span class="fc" id="L52">        definePropertyDescriptor(ignoreInterfaceDeclarations);</span>
+<span class="fc" id="L53">    }</span>
+
+    @Override
+    public Object visit(ASTFieldDeclaration node, Object data) {
+<span class="fc" id="L57">        Node parent = node.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        for (int i = 0; i &lt; parent.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L59">            Node child = parent.jjtGetChild(i);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (child.jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc" id="L61">                child = skipAnnotations(child);</span>
+            }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (child.equals(node)) {</span>
+<span class="fc" id="L64">                break;</span>
+            }
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if (child instanceof ASTFieldDeclaration) {</span>
+<span class="fc" id="L67">                continue;</span>
+            }
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            if (node.hasDescendantOfType(ASTClassOrInterfaceBodyDeclaration.class)</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                    &amp;&amp; getProperty(ignoreAnonymousClassDeclarations).booleanValue()) {</span>
+<span class="fc" id="L71">                continue;</span>
+            }
+<span class="pc bpc" id="L73" title="1 of 6 branches missed.">            if (child instanceof ASTMethodDeclaration || child instanceof ASTConstructorDeclaration</span>
+                    || child instanceof ASTAnnotationTypeDeclaration) {
+<span class="fc" id="L75">                addViolation(data, node);</span>
+<span class="fc" id="L76">                break;</span>
+            }
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (child instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="fc" id="L79">                ASTClassOrInterfaceDeclaration declaration = (ASTClassOrInterfaceDeclaration) child;</span>
+<span class="fc bfc" id="L80" title="All 4 branches covered.">                if (declaration.isInterface() &amp;&amp; getProperty(ignoreInterfaceDeclarations).booleanValue()) {</span>
+<span class="fc" id="L81">                    continue;</span>
+                } else {
+<span class="fc" id="L83">                    addViolation(data, node);</span>
+<span class="fc" id="L84">                    break;</span>
+                }
+            }
+<span class="fc bfc" id="L87" title="All 4 branches covered.">            if (child instanceof ASTEnumDeclaration &amp;&amp; !getProperty(ignoreEnumDeclarations).booleanValue()) {</span>
+<span class="fc" id="L88">                addViolation(data, node);</span>
+<span class="fc" id="L89">                break;</span>
+            }
+        }
+<span class="fc" id="L92">        return data;</span>
+    }
+
+    /**
+     * Ignore all annotations, until anything, that is not an annotation and
+     * return this node
+     * 
+     * @param child
+     *            the node from where to start the search
+     * @return the first child or the first child after annotations
+     */
+    private Node skipAnnotations(Node child) {
+<span class="fc" id="L104">        Node nextChild = child.jjtGetChild(0);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        for (int j = 0; j &lt; child.jjtGetNumChildren(); j++) {</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (!(child.jjtGetChild(j) instanceof ASTAnnotation)) {</span>
+<span class="fc" id="L107">                nextChild = child.jjtGetChild(j);</span>
+<span class="fc" id="L108">                break;</span>
+            }
+        }
+<span class="fc" id="L111">        return nextChild;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

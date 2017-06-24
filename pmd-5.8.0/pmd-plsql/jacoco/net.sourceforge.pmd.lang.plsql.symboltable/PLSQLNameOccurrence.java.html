@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PLSQLNameOccurrence.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD PL/SQL</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.plsql.symboltable</a> &gt; <span class="el_source">PLSQLNameOccurrence.java</span></div><h1>PLSQLNameOccurrence.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.plsql.symboltable;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.plsql.ast.ASTExpression;
+import net.sourceforge.pmd.lang.plsql.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.plsql.ast.PLSQLNode;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+public class PLSQLNameOccurrence implements NameOccurrence {
+
+    private PLSQLNode location;
+    private String image;
+    private PLSQLNameOccurrence qualifiedName;
+
+    private boolean isMethodOrConstructorInvocation;
+    private int argumentCount;
+
+    private static final String THIS = &quot;this&quot;;
+    private static final String SUPER = &quot;super&quot;;
+
+<span class="fc" id="L25">    public PLSQLNameOccurrence(PLSQLNode location, String image) {</span>
+<span class="fc" id="L26">        this.location = location;</span>
+<span class="fc" id="L27">        this.image = image;</span>
+<span class="fc" id="L28">    }</span>
+
+    public void setIsMethodOrConstructorInvocation() {
+<span class="nc" id="L31">        isMethodOrConstructorInvocation = true;</span>
+<span class="nc" id="L32">    }</span>
+
+    public void setArgumentCount(int count) {
+<span class="nc" id="L35">        argumentCount = count;</span>
+<span class="nc" id="L36">    }</span>
+
+    public int getArgumentCount() {
+<span class="nc" id="L39">        return argumentCount;</span>
+    }
+
+    public boolean isMethodOrConstructorInvocation() {
+<span class="nc" id="L43">        return isMethodOrConstructorInvocation;</span>
+    }
+
+    public void setNameWhichThisQualifies(PLSQLNameOccurrence qualifiedName) {
+<span class="fc" id="L47">        this.qualifiedName = qualifiedName;</span>
+<span class="fc" id="L48">    }</span>
+
+    public PLSQLNameOccurrence getNameForWhichThisIsAQualifier() {
+<span class="nc" id="L51">        return qualifiedName;</span>
+    }
+
+    public boolean isPartOfQualifiedName() {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        return qualifiedName != null;</span>
+    }
+
+    @Override
+    public PLSQLNode getLocation() {
+<span class="fc" id="L60">        return location;</span>
+    }
+
+    public boolean isOnRightHandSide() {
+<span class="nc" id="L64">        Node node = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">        return node instanceof ASTExpression &amp;&amp; node.jjtGetNumChildren() == 3;</span>
+    }
+
+    public boolean isOnLeftHandSide() {
+        // I detest this method with every atom of my being
+        Node primaryExpression;
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        if (location.jjtGetParent() instanceof ASTPrimaryExpression) {</span>
+<span class="nc" id="L72">            primaryExpression = location.jjtGetParent().jjtGetParent();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        } else if (location.jjtGetParent().jjtGetParent() instanceof ASTPrimaryExpression) {</span>
+<span class="nc" id="L74">            primaryExpression = location.jjtGetParent().jjtGetParent().jjtGetParent();</span>
+        } else {
+<span class="nc" id="L76">            throw new RuntimeException(</span>
+                    &quot;Found a NameOccurrence that didn't have an ASTPrimaryExpression as parent or grandparent. &quot;
+                            + &quot; Node = &quot; + location.getClass().getCanonicalName() + &quot;, Parent = &quot;
+                            + location.jjtGetParent().getClass().getCanonicalName() + &quot; and grandparent = &quot;
+                            + location.jjtGetParent().jjtGetParent().getClass().getCanonicalName() + &quot; @ line = &quot;
+                            + location.getBeginLine() + &quot;, column = &quot; + location.getBeginColumn());
+        }
+
+        /*
+         * if (isStandAlonePostfix(primaryExpression)) { return true; }
+         */
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (primaryExpression.jjtGetNumChildren() &lt;= 1) {</span>
+<span class="nc" id="L89">            return false;</span>
+        }
+
+        /*
+         * if (!(primaryExpression.jjtGetChild(1) instanceof
+         * ASTAssignmentOperator)) { return false; }
+         */
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (isPartOfQualifiedName() /* or is an array type */) {</span>
+<span class="nc" id="L98">            return false;</span>
+        }
+
+        /*
+         * if (isCompoundAssignment(primaryExpression)) { return false; }
+         */
+
+<span class="nc" id="L105">        return true;</span>
+    }
+
+    /*
+     * private boolean isCompoundAssignment(Node primaryExpression) { return
+     * ((ASTAssignmentOperator) primaryExpression.jjtGetChild(1)).isCompound();
+     * }
+     * 
+     * private boolean isStandAlonePostfix(Node primaryExpression) { if
+     * (!(primaryExpression instanceof ASTPostfixExpression) ||
+     * !(primaryExpression.jjtGetParent() instanceof ASTStatementExpression)) {
+     * return false; }
+     * 
+     * ASTPrimaryPrefix pf = (ASTPrimaryPrefix) ((ASTPrimaryExpression)
+     * primaryExpression.jjtGetChild(0)).jjtGetChild(0); if
+     * (pf.usesThisModifier()) { return true; }
+     * 
+     * return thirdChildHasDottedName(primaryExpression); }
+     * 
+     * private boolean thirdChildHasDottedName(Node primaryExpression) { Node
+     * thirdChild =
+     * primaryExpression.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0); return
+     * thirdChild instanceof ASTName &amp;&amp; ((ASTName)
+     * thirdChild).getImage().indexOf('.') == -1; }
+     */
+
+    /**
+     * Assert it the occurrence is a self assignment such as:
+     * &lt;code&gt;
+     * i += 3;
+     * &lt;/code&gt;
+     *
+     * @return true, if the occurrence is self-assignment, false, otherwise.
+     */
+    /*
+     * @SuppressWarnings(&quot;PMD.AvoidBranchingStatementAsLastInLoop&quot;) public
+     * boolean isSelfAssignment() { Node l = location; while (true) { Node p =
+     * l.jjtGetParent(); Node gp = p.jjtGetParent(); Node node =
+     * gp.jjtGetParent(); if (node instanceof ASTPreDecrementExpression || node
+     * instanceof ASTPreIncrementExpression || node instanceof
+     * ASTPostfixExpression) { return true; }
+     * 
+     * if (hasAssignmentOperator(gp)) { return isCompoundAssignment(gp); }
+     * 
+     * if (hasAssignmentOperator(node)) { return isCompoundAssignment(node); }
+     * 
+     * // deal with extra parenthesis: &quot;(i)++&quot; if (p instanceof ASTPrimaryPrefix
+     * &amp;&amp; p.jjtGetNumChildren() == 1 &amp;&amp; gp instanceof ASTPrimaryExpression &amp;&amp;
+     * gp.jjtGetNumChildren() == 1&amp;&amp; node instanceof ASTExpression &amp;&amp;
+     * node.jjtGetNumChildren() == 1 &amp;&amp; node.jjtGetParent() instanceof
+     * ASTPrimaryPrefix &amp;&amp; node.jjtGetParent().jjtGetNumChildren() == 1) { l =
+     * node; continue; }
+     * 
+     * // catch this.i++ or ++this.i return gp instanceof
+     * ASTPreDecrementExpression || gp instanceof ASTPreIncrementExpression ||
+     * gp instanceof ASTPostfixExpression; } }
+     */
+
+    /*
+     * private boolean hasAssignmentOperator(Node node) { if (node instanceof
+     * ASTStatementExpression || node instanceof ASTExpression) { if
+     * (node.jjtGetNumChildren() &gt;= 2 &amp;&amp; node.jjtGetChild(1) instanceof
+     * ASTAssignmentOperator) { return true; } } return false; }
+     */
+
+    /**
+     * Simply return true is the image is equal to keyword 'this' or 'super'.
+     *
+     * @return return true if image equal to 'this' or 'super'.
+     */
+    public boolean isThisOrSuper() {
+<span class="nc bnc" id="L176" title="All 4 branches missed.">        return image.equals(THIS) || image.equals(SUPER);</span>
+    }
+
+    /**
+     * Simply return if the image start with keyword 'this' or 'super'.
+     *
+     * @return true, if keyword is used, false otherwise.
+     */
+    /*
+     * public boolean useThisOrSuper() { Node node = location.jjtGetParent(); if
+     * ( node instanceof ASTPrimaryExpression ) { ASTPrimaryExpression
+     * primaryExpression = (ASTPrimaryExpression)node; ASTPrimaryPrefix prefix =
+     * (ASTPrimaryPrefix) primaryExpression.jjtGetChild(0); if ( prefix != null
+     * ) { return prefix.usesSuperModifier() || prefix.usesThisModifier(); } }
+     * return image.startsWith(THIS_DOT) || image.startsWith(SUPER_DOT); }
+     */
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (o instanceof PLSQLNameOccurrence) {</span>
+<span class="nc" id="L196">            PLSQLNameOccurrence n = (PLSQLNameOccurrence) o;</span>
+<span class="nc" id="L197">            return n.getImage().equals(getImage());</span>
+        }
+<span class="nc" id="L199">        return false;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L204">        return getImage().hashCode();</span>
+    }
+
+    @Override
+    public String getImage() {
+<span class="fc" id="L209">        return image;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L214" title="All 2 branches missed.">        return getImage() + &quot;:&quot; + location.getBeginLine() + &quot;:&quot; + location.getClass()</span>
+                + (this.isMethodOrConstructorInvocation() ? &quot;(method call)&quot; : &quot;&quot;);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

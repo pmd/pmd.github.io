@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VariableNameDeclaration.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.symboltable</a> &gt; <span class="el_source">VariableNameDeclaration.java</span></div><h1>VariableNameDeclaration.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.symboltable;
+
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTLambdaExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType;
+import net.sourceforge.pmd.lang.java.ast.ASTReferenceType;
+import net.sourceforge.pmd.lang.java.ast.ASTType;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableDeclaratorId;
+import net.sourceforge.pmd.lang.java.ast.AccessNode;
+import net.sourceforge.pmd.lang.java.ast.Dimensionable;
+import net.sourceforge.pmd.lang.java.ast.TypeNode;
+import net.sourceforge.pmd.lang.symboltable.AbstractNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.Scope;
+
+public class VariableNameDeclaration extends AbstractNameDeclaration implements TypedNameDeclaration {
+
+    public VariableNameDeclaration(ASTVariableDeclaratorId node) {
+<span class="fc" id="L22">        super(node);</span>
+<span class="fc" id="L23">    }</span>
+
+    @Override
+    public Scope getScope() {
+<span class="fc" id="L27">        return node.getScope().getEnclosingScope(ClassScope.class);</span>
+    }
+
+    public boolean isArray() {
+<span class="fc" id="L31">        ASTVariableDeclaratorId astVariableDeclaratorId = (ASTVariableDeclaratorId) node;</span>
+<span class="fc" id="L32">        ASTType typeNode = astVariableDeclaratorId.getTypeNode();</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (typeNode != null) {</span>
+<span class="fc" id="L34">            return ((Dimensionable) typeNode.jjtGetParent()).isArray();</span>
+        } else {
+<span class="nc" id="L36">            return false;</span>
+        }
+    }
+
+    public boolean isVarargs() {
+<span class="fc" id="L41">        ASTVariableDeclaratorId astVariableDeclaratorId = (ASTVariableDeclaratorId) node;</span>
+<span class="fc" id="L42">        ASTFormalParameter parameter = astVariableDeclaratorId.getFirstParentOfType(ASTFormalParameter.class);</span>
+<span class="pc bpc" id="L43" title="1 of 4 branches missed.">        return parameter != null &amp;&amp; parameter.isVarargs();</span>
+    }
+
+    public boolean isExceptionBlockParameter() {
+<span class="fc" id="L47">        return ((ASTVariableDeclaratorId) node).isExceptionBlockParameter();</span>
+    }
+
+    public boolean isLambdaTypelessParameter() {
+<span class="fc" id="L51">        return getAccessNodeParent() instanceof ASTLambdaExpression;</span>
+    }
+
+    public boolean isPrimitiveType() {
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        return !isLambdaTypelessParameter()</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                &amp;&amp; getAccessNodeParent().getFirstChildOfType(ASTType.class).jjtGetChild(0) instanceof ASTPrimitiveType;</span>
+    }
+
+    public String getTypeImage() {
+<span class="fc" id="L60">        TypeNode typeNode = getTypeNode();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (typeNode != null) {</span>
+<span class="fc" id="L62">            return typeNode.getImage();</span>
+        }
+<span class="fc" id="L64">        return null;</span>
+    }
+
+    /**
+     * Note that an array of primitive types (int[]) is a reference type.
+     */
+    public boolean isReferenceType() {
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        return !isLambdaTypelessParameter()</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                &amp;&amp; getAccessNodeParent().getFirstChildOfType(ASTType.class).jjtGetChild(0) instanceof ASTReferenceType;</span>
+    }
+
+    public AccessNode getAccessNodeParent() {
+<span class="fc bfc" id="L76" title="All 4 branches covered.">        if (node.jjtGetParent() instanceof ASTFormalParameter || node.jjtGetParent() instanceof ASTLambdaExpression) {</span>
+<span class="fc" id="L77">            return (AccessNode) node.jjtGetParent();</span>
+        }
+<span class="fc" id="L79">        return (AccessNode) node.jjtGetParent().jjtGetParent();</span>
+    }
+
+    public ASTVariableDeclaratorId getDeclaratorId() {
+<span class="fc" id="L83">        return (ASTVariableDeclaratorId) node;</span>
+    }
+
+    private TypeNode getTypeNode() {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (isPrimitiveType()) {</span>
+<span class="fc" id="L88">            return (TypeNode) getAccessNodeParent().getFirstChildOfType(ASTType.class).jjtGetChild(0);</span>
+        }
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (!isLambdaTypelessParameter()) {</span>
+<span class="fc" id="L91">            return (TypeNode) getAccessNodeParent().getFirstChildOfType(ASTType.class).jjtGetChild(0).jjtGetChild(0);</span>
+        }
+<span class="fc" id="L93">        return null;</span>
+    }
+
+    public Class&lt;?&gt; getType() {
+<span class="fc" id="L97">        TypeNode typeNode = getTypeNode();</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (typeNode != null) {</span>
+<span class="fc" id="L99">            return typeNode.getType();</span>
+        }
+<span class="nc" id="L101">        return null;</span>
+    }
+
+    @Override
+    public boolean equals(Object o) {
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!(o instanceof VariableNameDeclaration)) {</span>
+<span class="nc" id="L107">            return false;</span>
+        }
+<span class="fc" id="L109">        VariableNameDeclaration n = (VariableNameDeclaration) o;</span>
+<span class="fc" id="L110">        return n.node.getImage().equals(node.getImage());</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L115">        return node.getImage().hashCode();</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L120">        return &quot;Variable: image = '&quot; + node.getImage() + &quot;', line = &quot; + node.getBeginLine();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
