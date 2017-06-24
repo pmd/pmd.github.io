@@ -29,7 +29,7 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 public class UnusedFormalParameterRule extends AbstractJavaRule {
 
 <span class="fc" id="L31">    private static final BooleanProperty CHECKALL_DESCRIPTOR = new BooleanProperty(&quot;checkAll&quot;,</span>
-            &quot;Check all methods, including non-private ones&quot;, false, 1.0f);
+<span class="fc" id="L32">            &quot;Check all methods, including non-private ones&quot;, false, 1.0f);</span>
 
 <span class="fc" id="L34">    public UnusedFormalParameterRule() {</span>
 <span class="fc" id="L35">        definePropertyDescriptor(CHECKALL_DESCRIPTOR);</span>
@@ -53,12 +53,12 @@ public class UnusedFormalParameterRule extends AbstractJavaRule {
     private boolean isSerializationMethod(ASTMethodDeclaration node) {
 <span class="fc" id="L54">        ASTMethodDeclarator declarator = node.getFirstDescendantOfType(ASTMethodDeclarator.class);</span>
 <span class="fc" id="L55">        List&lt;ASTFormalParameter&gt; parameters = declarator.findDescendantsOfType(ASTFormalParameter.class);</span>
-<span class="fc bfc" id="L56" title="All 8 branches covered.">        if (node.isPrivate() &amp;&amp; &quot;readObject&quot;.equals(node.getMethodName()) &amp;&amp; parameters.size() == 1</span>
-                &amp;&amp; throwsOneException(node, InvalidObjectException.class)) {
+<span class="fc bfc" id="L56" title="All 6 branches covered.">        if (node.isPrivate() &amp;&amp; &quot;readObject&quot;.equals(node.getMethodName()) &amp;&amp; parameters.size() == 1</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                &amp;&amp; throwsOneException(node, InvalidObjectException.class)) {</span>
 <span class="fc" id="L58">            ASTType type = parameters.get(0).getTypeNode();</span>
-<span class="pc bpc" id="L59" title="2 of 6 branches missed.">            if (type.getType() == ObjectInputStream.class</span>
-                    || ObjectInputStream.class.getSimpleName().equals(type.getTypeImage())
-                    || ObjectInputStream.class.getName().equals(type.getTypeImage())) {
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if (type.getType() == ObjectInputStream.class</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                    || ObjectInputStream.class.getSimpleName().equals(type.getTypeImage())</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">                    || ObjectInputStream.class.getName().equals(type.getTypeImage())) {</span>
 <span class="fc" id="L62">                return true;</span>
             }
         }
@@ -69,8 +69,8 @@ public class UnusedFormalParameterRule extends AbstractJavaRule {
 <span class="fc" id="L69">        ASTNameList throwsList = node.getThrows();</span>
 <span class="pc bpc" id="L70" title="1 of 4 branches missed.">        if (throwsList != null &amp;&amp; throwsList.jjtGetNumChildren() == 1) {</span>
 <span class="fc" id="L71">            ASTName n = (ASTName) throwsList.jjtGetChild(0);</span>
-<span class="pc bpc" id="L72" title="4 of 6 branches missed.">            if (n.getType() == exception || exception.getSimpleName().equals(n.getImage())</span>
-                    || exception.getName().equals(n.getImage())) {
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">            if (n.getType() == exception || exception.getSimpleName().equals(n.getImage())</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                    || exception.getName().equals(n.getImage())) {</span>
 <span class="fc" id="L74">                return true;</span>
             }
         }
@@ -79,17 +79,17 @@ public class UnusedFormalParameterRule extends AbstractJavaRule {
 
     private void check(Node node, Object data) {
 <span class="fc" id="L81">        Node parent = node.jjtGetParent().jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L82" title="2 of 4 branches missed.">        if (parent instanceof ASTClassOrInterfaceDeclaration</span>
-                &amp;&amp; !((ASTClassOrInterfaceDeclaration) parent).isInterface()) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (parent instanceof ASTClassOrInterfaceDeclaration</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                &amp;&amp; !((ASTClassOrInterfaceDeclaration) parent).isInterface()) {</span>
 <span class="fc" id="L84">            Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = ((JavaNode) node).getScope()</span>
-                    .getDeclarations(VariableNameDeclaration.class);
+<span class="fc" id="L85">                    .getDeclarations(VariableNameDeclaration.class);</span>
 <span class="fc bfc" id="L86" title="All 2 branches covered.">            for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
 <span class="fc" id="L87">                VariableNameDeclaration nameDecl = entry.getKey();</span>
 <span class="fc bfc" id="L88" title="All 2 branches covered.">                if (actuallyUsed(nameDecl, entry.getValue())) {</span>
 <span class="fc" id="L89">                    continue;</span>
                 }
 <span class="fc bfc" id="L91" title="All 2 branches covered.">                addViolation(data, nameDecl.getNode(), new Object[] {</span>
-                    node instanceof ASTMethodDeclaration ? &quot;method&quot; : &quot;constructor&quot;, nameDecl.getImage(), });
+<span class="fc" id="L92">                    node instanceof ASTMethodDeclaration ? &quot;method&quot; : &quot;constructor&quot;, nameDecl.getImage(), });</span>
 <span class="fc" id="L93">            }</span>
         }
 <span class="fc" id="L95">    }</span>

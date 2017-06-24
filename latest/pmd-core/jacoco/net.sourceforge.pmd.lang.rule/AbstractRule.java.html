@@ -40,40 +40,42 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
 <span class="fc" id="L40">    private RulePriority priority = RulePriority.LOW;</span>
     private boolean usesDFA;
     private boolean usesTypeResolution;
-<span class="fc" id="L43">    private List&lt;String&gt; ruleChainVisits = new ArrayList&lt;&gt;();</span>
+    private boolean usesMetrics;
+<span class="fc" id="L44">    private List&lt;String&gt; ruleChainVisits = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L45">    public AbstractRule() {</span>
-<span class="fc" id="L46">        definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR);</span>
-<span class="fc" id="L47">        definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR);</span>
-<span class="fc" id="L48">    }</span>
+<span class="fc" id="L46">    public AbstractRule() {</span>
+<span class="fc" id="L47">        definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_REGEX_DESCRIPTOR);</span>
+<span class="fc" id="L48">        definePropertyDescriptor(Rule.VIOLATION_SUPPRESS_XPATH_DESCRIPTOR);</span>
+<span class="fc" id="L49">    }</span>
 
     public void deepCopyValuesTo(AbstractRule otherRule) {
-<span class="nc" id="L51">        otherRule.language = language;</span>
-<span class="nc" id="L52">        otherRule.minimumLanguageVersion = minimumLanguageVersion;</span>
-<span class="nc" id="L53">        otherRule.maximumLanguageVersion = maximumLanguageVersion;</span>
-<span class="nc" id="L54">        otherRule.deprecated = deprecated;</span>
-<span class="nc" id="L55">        otherRule.name = name;</span>
-<span class="nc" id="L56">        otherRule.since = since;</span>
-<span class="nc" id="L57">        otherRule.ruleClass = ruleClass;</span>
-<span class="nc" id="L58">        otherRule.ruleSetName = ruleSetName;</span>
-<span class="nc" id="L59">        otherRule.message = message;</span>
-<span class="nc" id="L60">        otherRule.description = description;</span>
-<span class="nc" id="L61">        otherRule.examples = copyExamples();</span>
-<span class="nc" id="L62">        otherRule.externalInfoUrl = externalInfoUrl;</span>
-<span class="nc" id="L63">        otherRule.priority = priority;</span>
-<span class="nc" id="L64">        otherRule.propertyDescriptors = copyPropertyDescriptors();</span>
-<span class="nc" id="L65">        otherRule.propertyValuesByDescriptor = copyPropertyValues();</span>
-<span class="nc" id="L66">        otherRule.usesDFA = usesDFA;</span>
-<span class="nc" id="L67">        otherRule.usesTypeResolution = usesTypeResolution;</span>
-<span class="nc" id="L68">        otherRule.ruleChainVisits = copyRuleChainVisits();</span>
-<span class="nc" id="L69">    }</span>
+<span class="nc" id="L52">        otherRule.language = language;</span>
+<span class="nc" id="L53">        otherRule.minimumLanguageVersion = minimumLanguageVersion;</span>
+<span class="nc" id="L54">        otherRule.maximumLanguageVersion = maximumLanguageVersion;</span>
+<span class="nc" id="L55">        otherRule.deprecated = deprecated;</span>
+<span class="nc" id="L56">        otherRule.name = name;</span>
+<span class="nc" id="L57">        otherRule.since = since;</span>
+<span class="nc" id="L58">        otherRule.ruleClass = ruleClass;</span>
+<span class="nc" id="L59">        otherRule.ruleSetName = ruleSetName;</span>
+<span class="nc" id="L60">        otherRule.message = message;</span>
+<span class="nc" id="L61">        otherRule.description = description;</span>
+<span class="nc" id="L62">        otherRule.examples = copyExamples();</span>
+<span class="nc" id="L63">        otherRule.externalInfoUrl = externalInfoUrl;</span>
+<span class="nc" id="L64">        otherRule.priority = priority;</span>
+<span class="nc" id="L65">        otherRule.propertyDescriptors = copyPropertyDescriptors();</span>
+<span class="nc" id="L66">        otherRule.propertyValuesByDescriptor = copyPropertyValues();</span>
+<span class="nc" id="L67">        otherRule.usesDFA = usesDFA;</span>
+<span class="nc" id="L68">        otherRule.usesTypeResolution = usesTypeResolution;</span>
+<span class="nc" id="L69">        otherRule.usesMetrics = usesMetrics;</span>
+<span class="nc" id="L70">        otherRule.ruleChainVisits = copyRuleChainVisits();</span>
+<span class="nc" id="L71">    }</span>
 
     private List&lt;String&gt; copyExamples() {
-<span class="nc" id="L72">        return new ArrayList&lt;&gt;(examples);</span>
+<span class="nc" id="L74">        return new ArrayList&lt;&gt;(examples);</span>
     }
 
     private List&lt;String&gt; copyRuleChainVisits() {
-<span class="nc" id="L76">        return new ArrayList&lt;&gt;(ruleChainVisits);</span>
+<span class="nc" id="L78">        return new ArrayList&lt;&gt;(ruleChainVisits);</span>
     }
 
     /**
@@ -81,7 +83,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public Language getLanguage() {
-<span class="fc" id="L84">        return language;</span>
+<span class="fc" id="L86">        return language;</span>
     }
 
     /**
@@ -89,19 +91,19 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setLanguage(Language language) {
-<span class="pc bpc" id="L92" title="3 of 6 branches missed.">        if (this.language != null &amp;&amp; this instanceof ImmutableLanguage &amp;&amp; !this.language.equals(language)) {</span>
-<span class="nc" id="L93">            throw new UnsupportedOperationException(&quot;The Language for Rule class &quot; + this.getClass().getName()</span>
+<span class="pc bpc" id="L94" title="3 of 6 branches missed.">        if (this.language != null &amp;&amp; this instanceof ImmutableLanguage &amp;&amp; !this.language.equals(language)) {</span>
+<span class="nc" id="L95">            throw new UnsupportedOperationException(&quot;The Language for Rule class &quot; + this.getClass().getName()</span>
                     + &quot; is immutable and cannot be changed.&quot;);
         }
-<span class="fc" id="L96">        this.language = language;</span>
-<span class="fc" id="L97">    }</span>
+<span class="fc" id="L98">        this.language = language;</span>
+<span class="fc" id="L99">    }</span>
 
     /**
      * @see Rule#getMinimumLanguageVersion()
      */
     @Override
     public LanguageVersion getMinimumLanguageVersion() {
-<span class="fc" id="L104">        return minimumLanguageVersion;</span>
+<span class="fc" id="L106">        return minimumLanguageVersion;</span>
     }
 
     /**
@@ -109,15 +111,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setMinimumLanguageVersion(LanguageVersion minimumLanguageVersion) {
-<span class="fc" id="L112">        this.minimumLanguageVersion = minimumLanguageVersion;</span>
-<span class="fc" id="L113">    }</span>
+<span class="fc" id="L114">        this.minimumLanguageVersion = minimumLanguageVersion;</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * @see Rule#getMaximumLanguageVersion()
      */
     @Override
     public LanguageVersion getMaximumLanguageVersion() {
-<span class="fc" id="L120">        return maximumLanguageVersion;</span>
+<span class="fc" id="L122">        return maximumLanguageVersion;</span>
     }
 
     /**
@@ -125,15 +127,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setMaximumLanguageVersion(LanguageVersion maximumLanguageVersion) {
-<span class="fc" id="L128">        this.maximumLanguageVersion = maximumLanguageVersion;</span>
-<span class="fc" id="L129">    }</span>
+<span class="fc" id="L130">        this.maximumLanguageVersion = maximumLanguageVersion;</span>
+<span class="fc" id="L131">    }</span>
 
     /**
      * @see Rule#isDeprecated()
      */
     @Override
     public boolean isDeprecated() {
-<span class="fc" id="L136">        return deprecated;</span>
+<span class="fc" id="L138">        return deprecated;</span>
     }
 
     /**
@@ -141,15 +143,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setDeprecated(boolean deprecated) {
-<span class="nc" id="L144">        this.deprecated = deprecated;</span>
-<span class="nc" id="L145">    }</span>
+<span class="nc" id="L146">        this.deprecated = deprecated;</span>
+<span class="nc" id="L147">    }</span>
 
     /**
      * @see Rule#getName()
      */
     @Override
     public String getName() {
-<span class="fc" id="L152">        return name;</span>
+<span class="fc" id="L154">        return name;</span>
     }
 
     /**
@@ -157,15 +159,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setName(String name) {
-<span class="fc" id="L160">        this.name = name;</span>
-<span class="fc" id="L161">    }</span>
+<span class="fc" id="L162">        this.name = name;</span>
+<span class="fc" id="L163">    }</span>
 
     /**
      * @see Rule#getSince()
      */
     @Override
     public String getSince() {
-<span class="fc" id="L168">        return since;</span>
+<span class="fc" id="L170">        return since;</span>
     }
 
     /**
@@ -173,15 +175,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setSince(String since) {
-<span class="fc" id="L176">        this.since = since;</span>
-<span class="fc" id="L177">    }</span>
+<span class="fc" id="L178">        this.since = since;</span>
+<span class="fc" id="L179">    }</span>
 
     /**
      * @see Rule#getRuleClass()
      */
     @Override
     public String getRuleClass() {
-<span class="fc" id="L184">        return ruleClass;</span>
+<span class="fc" id="L186">        return ruleClass;</span>
     }
 
     /**
@@ -189,15 +191,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setRuleClass(String ruleClass) {
-<span class="nc" id="L192">        this.ruleClass = ruleClass;</span>
-<span class="nc" id="L193">    }</span>
+<span class="nc" id="L194">        this.ruleClass = ruleClass;</span>
+<span class="nc" id="L195">    }</span>
 
     /**
      * @see Rule#getRuleSetName()
      */
     @Override
     public String getRuleSetName() {
-<span class="fc" id="L200">        return ruleSetName;</span>
+<span class="fc" id="L202">        return ruleSetName;</span>
     }
 
     /**
@@ -205,15 +207,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setRuleSetName(String ruleSetName) {
-<span class="fc" id="L208">        this.ruleSetName = ruleSetName;</span>
-<span class="fc" id="L209">    }</span>
+<span class="fc" id="L210">        this.ruleSetName = ruleSetName;</span>
+<span class="fc" id="L211">    }</span>
 
     /**
      * @see Rule#getMessage()
      */
     @Override
     public String getMessage() {
-<span class="fc" id="L216">        return message;</span>
+<span class="fc" id="L218">        return message;</span>
     }
 
     /**
@@ -221,15 +223,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setMessage(String message) {
-<span class="fc" id="L224">        this.message = message;</span>
-<span class="fc" id="L225">    }</span>
+<span class="fc" id="L226">        this.message = message;</span>
+<span class="fc" id="L227">    }</span>
 
     /**
      * @see Rule#getDescription()
      */
     @Override
     public String getDescription() {
-<span class="fc" id="L232">        return description;</span>
+<span class="fc" id="L234">        return description;</span>
     }
 
     /**
@@ -237,8 +239,8 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setDescription(String description) {
-<span class="fc" id="L240">        this.description = description;</span>
-<span class="fc" id="L241">    }</span>
+<span class="fc" id="L242">        this.description = description;</span>
+<span class="fc" id="L243">    }</span>
 
     /**
      * @see Rule#getExamples()
@@ -246,7 +248,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     @Override
     public List&lt;String&gt; getExamples() {
         // TODO Needs to be externally immutable
-<span class="fc" id="L249">        return examples;</span>
+<span class="fc" id="L251">        return examples;</span>
     }
 
     /**
@@ -254,15 +256,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void addExample(String example) {
-<span class="fc" id="L257">        examples.add(example);</span>
-<span class="fc" id="L258">    }</span>
+<span class="fc" id="L259">        examples.add(example);</span>
+<span class="fc" id="L260">    }</span>
 
     /**
      * @see Rule#getExternalInfoUrl()
      */
     @Override
     public String getExternalInfoUrl() {
-<span class="fc" id="L265">        return externalInfoUrl;</span>
+<span class="fc" id="L267">        return externalInfoUrl;</span>
     }
 
     /**
@@ -270,15 +272,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setExternalInfoUrl(String externalInfoUrl) {
-<span class="fc" id="L273">        this.externalInfoUrl = externalInfoUrl;</span>
-<span class="fc" id="L274">    }</span>
+<span class="fc" id="L275">        this.externalInfoUrl = externalInfoUrl;</span>
+<span class="fc" id="L276">    }</span>
 
     /**
      * @see Rule#getPriority()
      */
     @Override
     public RulePriority getPriority() {
-<span class="fc" id="L281">        return priority;</span>
+<span class="fc" id="L283">        return priority;</span>
     }
 
     /**
@@ -286,8 +288,8 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setPriority(RulePriority priority) {
-<span class="fc" id="L289">        this.priority = priority;</span>
-<span class="fc" id="L290">    }</span>
+<span class="fc" id="L291">        this.priority = priority;</span>
+<span class="fc" id="L292">    }</span>
 
     /**
      * This implementation returns a new instance of {@link ParserOptions} using
@@ -297,7 +299,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public ParserOptions getParserOptions() {
-<span class="nc" id="L300">        return new ParserOptions();</span>
+<span class="nc" id="L302">        return new ParserOptions();</span>
     }
 
     /**
@@ -305,15 +307,15 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setUsesDFA() {
-<span class="fc" id="L308">        usesDFA = true;</span>
-<span class="fc" id="L309">    }</span>
+<span class="fc" id="L310">        usesDFA = true;</span>
+<span class="fc" id="L311">    }</span>
 
     /**
      * @see Rule#usesDFA()
      */
     @Override
     public boolean usesDFA() {
-<span class="fc" id="L316">        return usesDFA;</span>
+<span class="fc" id="L318">        return usesDFA;</span>
     }
 
     /**
@@ -321,23 +323,40 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void setUsesTypeResolution() {
-<span class="nc" id="L324">        usesTypeResolution = true;</span>
-<span class="nc" id="L325">    }</span>
+<span class="nc" id="L326">        usesTypeResolution = true;</span>
+<span class="nc" id="L327">    }</span>
 
     /**
      * @see Rule#usesTypeResolution()
      */
     @Override
     public boolean usesTypeResolution() {
-<span class="fc" id="L332">        return usesTypeResolution;</span>
+<span class="fc" id="L334">        return usesTypeResolution;</span>
     }
+
+    /**
+     * @see Rule#setUsesMetrics()
+     */
+    @Override
+    public void setUsesMetrics() {
+<span class="nc" id="L342">        usesMetrics = true;</span>
+<span class="nc" id="L343">    }</span>
+
+    /**
+     * @see Rule#usesMetrics()
+     */
+    @Override
+    public boolean usesMetrics() {
+<span class="fc" id="L350">        return usesMetrics;</span>
+    }
+
 
     /**
      * @see Rule#usesRuleChain()
      */
     @Override
     public boolean usesRuleChain() {
-<span class="fc bfc" id="L340" title="All 2 branches covered.">        return !getRuleChainVisits().isEmpty();</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        return !getRuleChainVisits().isEmpty();</span>
     }
 
     /**
@@ -345,7 +364,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public List&lt;String&gt; getRuleChainVisits() {
-<span class="fc" id="L348">        return ruleChainVisits;</span>
+<span class="fc" id="L367">        return ruleChainVisits;</span>
     }
 
     /**
@@ -353,21 +372,21 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public void addRuleChainVisit(Class&lt;? extends Node&gt; nodeClass) {
-<span class="nc bnc" id="L356" title="All 2 branches missed.">        if (!nodeClass.getSimpleName().startsWith(&quot;AST&quot;)) {</span>
-<span class="nc" id="L357">            throw new IllegalArgumentException(&quot;Node class does not start with 'AST' prefix: &quot; + nodeClass);</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (!nodeClass.getSimpleName().startsWith(&quot;AST&quot;)) {</span>
+<span class="nc" id="L376">            throw new IllegalArgumentException(&quot;Node class does not start with 'AST' prefix: &quot; + nodeClass);</span>
         }
-<span class="nc" id="L359">        addRuleChainVisit(nodeClass.getSimpleName().substring(&quot;AST&quot;.length()));</span>
-<span class="nc" id="L360">    }</span>
+<span class="nc" id="L378">        addRuleChainVisit(nodeClass.getSimpleName().substring(&quot;AST&quot;.length()));</span>
+<span class="nc" id="L379">    }</span>
 
     /**
      * @see Rule#addRuleChainVisit(String)
      */
     @Override
     public void addRuleChainVisit(String astNodeName) {
-<span class="pc bpc" id="L367" title="1 of 2 branches missed.">        if (!ruleChainVisits.contains(astNodeName)) {</span>
-<span class="fc" id="L368">            ruleChainVisits.add(astNodeName);</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        if (!ruleChainVisits.contains(astNodeName)) {</span>
+<span class="fc" id="L387">            ruleChainVisits.add(astNodeName);</span>
         }
-<span class="fc" id="L370">    }</span>
+<span class="fc" id="L389">    }</span>
 
     /**
      * @see Rule#start(RuleContext)
@@ -375,7 +394,7 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     @Override
     public void start(RuleContext ctx) {
         // Override as needed
-<span class="fc" id="L378">    }</span>
+<span class="fc" id="L397">    }</span>
 
     /**
      * @see Rule#end(RuleContext)
@@ -383,67 +402,67 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
     @Override
     public void end(RuleContext ctx) {
         // Override as needed
-<span class="fc" id="L386">    }</span>
+<span class="fc" id="L405">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolation(Object data, Node node) {
-<span class="fc" id="L393">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="fc" id="L394">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+<span class="fc" id="L412">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="fc" id="L413">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
                 this, node, this.getMessage(), null);
-<span class="fc" id="L396">    }</span>
+<span class="fc" id="L415">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolation(Object data, Node node, String arg) {
-<span class="nc" id="L403">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="nc" id="L404">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
-                this, node, this.getMessage(), new Object[] { arg });
-<span class="nc" id="L406">    }</span>
+<span class="nc" id="L422">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="nc" id="L423">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+                this, node, this.getMessage(), new Object[]{arg});
+<span class="nc" id="L425">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolation(Object data, Node node, Object[] args) {
-<span class="nc" id="L413">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="nc" id="L414">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+<span class="nc" id="L432">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="nc" id="L433">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
                 this, node, this.getMessage(), args);
-<span class="nc" id="L416">    }</span>
+<span class="nc" id="L435">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolationWithMessage(Object data, Node node, String message) {
-<span class="nc" id="L423">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="nc" id="L424">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+<span class="nc" id="L442">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="nc" id="L443">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
                 this, node, message, null);
-<span class="nc" id="L426">    }</span>
+<span class="nc" id="L445">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolationWithMessage(Object data, Node node, String message, int beginLine, int endLine) {
-<span class="nc" id="L433">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="nc" id="L434">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+<span class="nc" id="L452">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="nc" id="L453">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
                 this, node, message, beginLine, endLine, null);
-<span class="nc" id="L436">    }</span>
+<span class="nc" id="L455">    }</span>
 
     /**
      * @see RuleViolationFactory#addViolation(RuleContext, Rule, Node, String,
-     *      Object[])
+     * Object[])
      */
     public void addViolationWithMessage(Object data, Node node, String message, Object[] args) {
-<span class="fc" id="L443">        RuleContext ruleContext = (RuleContext) data;</span>
-<span class="fc" id="L444">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
+<span class="fc" id="L462">        RuleContext ruleContext = (RuleContext) data;</span>
+<span class="fc" id="L463">        ruleContext.getLanguageVersion().getLanguageVersionHandler().getRuleViolationFactory().addViolation(ruleContext,</span>
                 this, node, message, args);
-<span class="fc" id="L446">    }</span>
+<span class="fc" id="L465">    }</span>
 
     /**
      * Rules are equal if:
@@ -456,23 +475,23 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public boolean equals(Object o) {
-<span class="fc bfc" id="L459" title="All 2 branches covered.">        if (o == null) {</span>
-<span class="fc" id="L460">            return false; // trivial</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">        if (o == null) {</span>
+<span class="fc" id="L479">            return false; // trivial</span>
         }
 
-<span class="fc bfc" id="L463" title="All 2 branches covered.">        if (this == o) {</span>
-<span class="fc" id="L464">            return true; // trivial</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">        if (this == o) {</span>
+<span class="fc" id="L483">            return true; // trivial</span>
         }
 
-<span class="fc bfc" id="L467" title="All 2 branches covered.">        boolean equality = getClass() == o.getClass();</span>
+<span class="fc bfc" id="L486" title="All 2 branches covered.">        boolean equality = getClass() == o.getClass();</span>
 
-<span class="fc bfc" id="L469" title="All 2 branches covered.">        if (equality) {</span>
-<span class="fc" id="L470">            Rule that = (Rule) o;</span>
-<span class="fc bfc" id="L471" title="All 6 branches covered.">            equality = getName().equals(that.getName()) &amp;&amp; getPriority().equals(that.getPriority())</span>
+<span class="fc bfc" id="L488" title="All 2 branches covered.">        if (equality) {</span>
+<span class="fc" id="L489">            Rule that = (Rule) o;</span>
+<span class="fc bfc" id="L490" title="All 6 branches covered.">            equality = getName().equals(that.getName()) &amp;&amp; getPriority().equals(that.getPriority())</span>
                     &amp;&amp; getPropertiesByPropertyDescriptor().equals(that.getPropertiesByPropertyDescriptor());
         }
 
-<span class="fc" id="L475">        return equality;</span>
+<span class="fc" id="L494">        return equality;</span>
     }
 
     /**
@@ -480,8 +499,8 @@ public abstract class AbstractRule extends AbstractPropertySource implements Rul
      */
     @Override
     public int hashCode() {
-<span class="fc" id="L483">        Object propertyValues = getPropertiesByPropertyDescriptor();</span>
-<span class="pc bpc" id="L484" title="2 of 4 branches missed.">        return getClass().getName().hashCode() + (getName() != null ? getName().hashCode() : 0)</span>
+<span class="fc" id="L502">        Object propertyValues = getPropertiesByPropertyDescriptor();</span>
+<span class="pc bpc" id="L503" title="2 of 4 branches missed.">        return getClass().getName().hashCode() + (getName() != null ? getName().hashCode() : 0)</span>
                 + getPriority().hashCode() + (propertyValues != null ? propertyValues.hashCode() : 0);
     }
 }

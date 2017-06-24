@@ -50,8 +50,8 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
 
     @Override
     public Object visit(ASTName node, Object data) {
-<span class="fc bfc" id="L53" title="All 4 branches covered.">        if (!(node.jjtGetParent() instanceof ASTImportDeclaration)</span>
-                &amp;&amp; !(node.jjtGetParent() instanceof ASTPackageDeclaration)) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (!(node.jjtGetParent() instanceof ASTImportDeclaration)</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">                &amp;&amp; !(node.jjtGetParent() instanceof ASTPackageDeclaration)) {</span>
 <span class="fc" id="L55">            checkImports(node, data);</span>
         }
 <span class="fc" id="L57">        return data;</span>
@@ -109,8 +109,8 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
                         }
                     } else {
                         // Last 2 parts match?
-<span class="fc bfc" id="L112" title="All 4 branches covered.">                        if (nameParts[nameParts.length - 1].equals(importParts[importParts.length - 1])</span>
-                                &amp;&amp; nameParts[nameParts.length - 2].equals(importParts[importParts.length - 2])) {
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                        if (nameParts[nameParts.length - 1].equals(importParts[importParts.length - 1])</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                                &amp;&amp; nameParts[nameParts.length - 2].equals(importParts[importParts.length - 2])) {</span>
 <span class="fc" id="L114">                            matches.add(importDeclaration);</span>
                         }
                     }
@@ -142,9 +142,9 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
             // Is there any other static import conflictive?
 <span class="fc bfc" id="L143" title="All 2 branches covered.">            for (final ASTImportDeclaration importDeclaration : imports) {</span>
 <span class="fc bfc" id="L144" title="All 4 branches covered.">                if (importDeclaration != firstMatch &amp;&amp; importDeclaration.isStatic()) {</span>
-<span class="pc bpc" id="L145" title="3 of 4 branches missed.">                    if (importDeclaration.getImportedName().startsWith(firstMatch.getImportedName())</span>
-                            &amp;&amp; importDeclaration.getImportedName().lastIndexOf('.') == firstMatch.getImportedName()
-                                    .length()) {
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                    if (importDeclaration.getImportedName().startsWith(firstMatch.getImportedName())</span>
+<span class="nc" id="L146">                            &amp;&amp; importDeclaration.getImportedName().lastIndexOf('.') == firstMatch.getImportedName()</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                                    .length()) {</span>
                         // A conflict against the same class is not an excuse,
                         // ie:
                         // import java.util.Arrays;
@@ -173,11 +173,11 @@ public class UnnecessaryFullyQualifiedNameRule extends AbstractJavaRule {
 <span class="fc" id="L173">        final String unqualifiedName = name.substring(name.lastIndexOf('.') + 1);</span>
 <span class="fc" id="L174">        final int unqualifiedNameLength = unqualifiedName.length();</span>
 <span class="fc" id="L175">        final Set&lt;String&gt; qualifiedTypes = node.getScope().getEnclosingScope(SourceFileScope.class)</span>
-                .getQualifiedTypeNames().keySet();
+<span class="fc" id="L176">                .getQualifiedTypeNames().keySet();</span>
 <span class="fc bfc" id="L177" title="All 2 branches covered.">        for (final String qualified : qualifiedTypes) {</span>
 <span class="fc" id="L178">            int fullLength = qualified.length();</span>
-<span class="pc bpc" id="L179" title="2 of 6 branches missed.">            if (qualified.endsWith(unqualifiedName)</span>
-                    &amp;&amp; (fullLength == unqualifiedNameLength || qualified.charAt(fullLength - unqualifiedNameLength - 1) == '.')) {
+<span class="pc bpc" id="L179" title="1 of 4 branches missed.">            if (qualified.endsWith(unqualifiedName)</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                    &amp;&amp; (fullLength == unqualifiedNameLength || qualified.charAt(fullLength - unqualifiedNameLength - 1) == '.')) {</span>
 <span class="fc" id="L181">                return true;</span>
             }
 <span class="fc" id="L183">        }</span>

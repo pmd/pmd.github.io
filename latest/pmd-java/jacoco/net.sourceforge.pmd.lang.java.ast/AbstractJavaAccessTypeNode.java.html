@@ -4,26 +4,41 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-public abstract class AbstractJavaAccessTypeNode extends AbstractJavaAccessNode implements TypeNode {
+import net.sourceforge.pmd.lang.java.typeresolution.typedefinition.JavaTypeDefinition;
 
-    private Class&lt;?&gt; type;
+public abstract class AbstractJavaAccessTypeNode extends AbstractJavaAccessNode implements TypeNode {
+    private JavaTypeDefinition typeDefinition;
 
     public AbstractJavaAccessTypeNode(int i) {
-<span class="fc" id="L12">        super(i);</span>
-<span class="fc" id="L13">    }</span>
+<span class="fc" id="L13">        super(i);</span>
+<span class="fc" id="L14">    }</span>
 
     public AbstractJavaAccessTypeNode(JavaParser parser, int i) {
-<span class="fc" id="L16">        super(parser, i);</span>
-<span class="fc" id="L17">    }</span>
+<span class="fc" id="L17">        super(parser, i);</span>
+<span class="fc" id="L18">    }</span>
 
     @Override
     public Class&lt;?&gt; getType() {
-<span class="fc" id="L21">        return type;</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        if (typeDefinition != null) {</span>
+<span class="fc" id="L23">            return typeDefinition.getType();</span>
+        }
+
+<span class="fc" id="L26">        return null;</span>
     }
 
     @Override
     public void setType(Class&lt;?&gt; type) {
-<span class="fc" id="L26">        this.type = type;</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L31">        typeDefinition = JavaTypeDefinition.build(type);</span>
+<span class="fc" id="L32">    }</span>
+
+    @Override
+    public JavaTypeDefinition getTypeDefinition() {
+<span class="fc" id="L36">        return typeDefinition;</span>
+    }
+
+    @Override
+    public void setTypeDefinition(JavaTypeDefinition typeDefinition) {
+<span class="fc" id="L41">        this.typeDefinition = typeDefinition;</span>
+<span class="fc" id="L42">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

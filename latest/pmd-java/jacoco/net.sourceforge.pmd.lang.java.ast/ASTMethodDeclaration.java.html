@@ -8,21 +8,24 @@ package net.sourceforge.pmd.lang.java.ast;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.dfa.DFAGraphMethod;
 
-public class ASTMethodDeclaration extends AbstractJavaAccessNode implements DFAGraphMethod {
+public class ASTMethodDeclaration extends AbstractJavaAccessNode implements DFAGraphMethod, ASTMethodOrConstructorDeclaration {
+
+    private QualifiedName qualifiedName;
+
     public ASTMethodDeclaration(int id) {
-<span class="fc" id="L13">        super(id);</span>
-<span class="fc" id="L14">    }</span>
+<span class="fc" id="L16">        super(id);</span>
+<span class="fc" id="L17">    }</span>
 
     public ASTMethodDeclaration(JavaParser p, int id) {
-<span class="fc" id="L17">        super(p, id);</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L20">        super(p, id);</span>
+<span class="fc" id="L21">    }</span>
 
     /**
      * Accept the visitor. *
      */
     @Override
     public Object jjtAccept(JavaParserVisitor visitor, Object data) {
-<span class="fc" id="L25">        return visitor.visit(this, data);</span>
+<span class="fc" id="L28">        return visitor.visit(this, data);</span>
     }
 
     /**
@@ -31,82 +34,90 @@ public class ASTMethodDeclaration extends AbstractJavaAccessNode implements DFAG
      * @return a String representing the name of the method
      */
     public String getMethodName() {
-<span class="fc" id="L34">        ASTMethodDeclarator md = getFirstChildOfType(ASTMethodDeclarator.class);</span>
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (md != null) {</span>
-<span class="fc" id="L36">            return md.getImage();</span>
+<span class="fc" id="L37">        ASTMethodDeclarator md = getFirstChildOfType(ASTMethodDeclarator.class);</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (md != null) {</span>
+<span class="fc" id="L39">            return md.getImage();</span>
         }
-<span class="nc" id="L38">        return null;</span>
+<span class="nc" id="L41">        return null;</span>
     }
 
     public String getName() {
-<span class="nc" id="L42">        return getMethodName();</span>
+<span class="fc" id="L45">        return getMethodName();</span>
     }
 
     public boolean isSyntacticallyPublic() {
-<span class="fc" id="L46">        return super.isPublic();</span>
+<span class="fc" id="L49">        return super.isPublic();</span>
     }
 
     public boolean isSyntacticallyAbstract() {
-<span class="fc" id="L50">        return super.isAbstract();</span>
+<span class="fc" id="L53">        return super.isAbstract();</span>
     }
 
     @Override
     public boolean isPublic() {
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
-<span class="fc" id="L56">            return true;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="fc" id="L59">            return true;</span>
         }
-<span class="fc" id="L58">        return super.isPublic();</span>
+<span class="fc" id="L61">        return super.isPublic();</span>
     }
 
     @Override
     public boolean isAbstract() {
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
-<span class="fc" id="L64">            return true;</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (isInterfaceMember()) {</span>
+<span class="fc" id="L67">            return true;</span>
         }
-<span class="fc" id="L66">        return super.isAbstract();</span>
+<span class="fc" id="L69">        return super.isAbstract();</span>
     }
 
     public boolean isInterfaceMember() {
-<span class="fc" id="L70">        ASTClassOrInterfaceDeclaration clz = getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L71" title="All 4 branches covered.">        return clz != null &amp;&amp; clz.isInterface();</span>
+<span class="fc" id="L73">        ASTClassOrInterfaceDeclaration clz = getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L74" title="All 4 branches covered.">        return clz != null &amp;&amp; clz.isInterface();</span>
     }
 
     public boolean isVoid() {
-<span class="fc" id="L75">        return getResultType().isVoid();</span>
+<span class="fc" id="L78">        return getResultType().isVoid();</span>
     }
 
     public ASTResultType getResultType() {
-<span class="fc" id="L79">        return getFirstChildOfType(ASTResultType.class);</span>
+<span class="fc" id="L82">        return getFirstChildOfType(ASTResultType.class);</span>
     }
 
     public ASTBlock getBlock() {
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        for (int i = 0; i &lt; jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L84">            Node n = jjtGetChild(i);</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (n instanceof ASTBlock) {</span>
-<span class="fc" id="L86">                return (ASTBlock) n;</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        for (int i = 0; i &lt; jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L87">            Node n = jjtGetChild(i);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (n instanceof ASTBlock) {</span>
+<span class="fc" id="L89">                return (ASTBlock) n;</span>
             }
         }
-<span class="nc" id="L89">        return null;</span>
+<span class="nc" id="L92">        return null;</span>
     }
 
     public ASTNameList getThrows() {
-<span class="fc" id="L93">        int declaratorIndex = -1;</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        for (int i = 0; i &lt; jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L95">            Node child = jjtGetChild(i);</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (child instanceof ASTMethodDeclarator) {</span>
-<span class="fc" id="L97">                declaratorIndex = i;</span>
-<span class="fc" id="L98">                break;</span>
+<span class="fc" id="L96">        int declaratorIndex = -1;</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        for (int i = 0; i &lt; jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L98">            Node child = jjtGetChild(i);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (child instanceof ASTMethodDeclarator) {</span>
+<span class="fc" id="L100">                declaratorIndex = i;</span>
+<span class="fc" id="L101">                break;</span>
             }
         }
         // the throws declaration is immediately followed by the
         // MethodDeclarator
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (jjtGetNumChildren() &gt; declaratorIndex + 1) {</span>
-<span class="fc" id="L104">            Node n = jjtGetChild(declaratorIndex + 1);</span>
-<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (n instanceof ASTNameList) {</span>
-<span class="fc" id="L106">                return (ASTNameList) n;</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (jjtGetNumChildren() &gt; declaratorIndex + 1) {</span>
+<span class="fc" id="L107">            Node n = jjtGetChild(declaratorIndex + 1);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (n instanceof ASTNameList) {</span>
+<span class="fc" id="L109">                return (ASTNameList) n;</span>
             }
         }
-<span class="fc" id="L109">        return null;</span>
+<span class="fc" id="L112">        return null;</span>
+    }
+
+    @Override
+    public QualifiedName getQualifiedName() {
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        if (qualifiedName == null) {</span>
+<span class="fc" id="L118">            qualifiedName = QualifiedName.makeOperationOf(this);</span>
+        }
+<span class="fc" id="L120">        return qualifiedName;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

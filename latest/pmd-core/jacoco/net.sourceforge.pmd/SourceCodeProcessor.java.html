@@ -155,28 +155,41 @@ public class SourceCodeProcessor {
         }
 <span class="fc" id="L156">    }</span>
 
+    private void usesMetrics(LanguageVersion languageVersion, Node rootNode, RuleSets ruleSets,
+                                    Language language) {
+
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (ruleSets.usesMetrics(language)) {</span>
+<span class="nc" id="L162">            long start = System.nanoTime();</span>
+<span class="nc" id="L163">            languageVersion.getLanguageVersionHandler().getMetricsVisitorFacade()</span>
+                    .start(rootNode);
+<span class="nc" id="L165">            long end = System.nanoTime();</span>
+<span class="nc" id="L166">            Benchmarker.mark(Benchmark.MetricsVisitor, end - start, 0);</span>
+        }
+<span class="fc" id="L168">    }</span>
+
     private void processSource(Reader sourceCode, RuleSets ruleSets, RuleContext ctx) {
-<span class="fc" id="L159">        LanguageVersion languageVersion = ctx.getLanguageVersion();</span>
-<span class="fc" id="L160">        LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
-<span class="fc" id="L161">        Parser parser = PMD.parserFor(languageVersion, configuration);</span>
+<span class="fc" id="L171">        LanguageVersion languageVersion = ctx.getLanguageVersion();</span>
+<span class="fc" id="L172">        LanguageVersionHandler languageVersionHandler = languageVersion.getLanguageVersionHandler();</span>
+<span class="fc" id="L173">        Parser parser = PMD.parserFor(languageVersion, configuration);</span>
 
-<span class="fc" id="L163">        Node rootNode = parse(ctx, sourceCode, parser);</span>
-<span class="fc" id="L164">        symbolFacade(rootNode, languageVersionHandler);</span>
-<span class="fc" id="L165">        Language language = languageVersion.getLanguage();</span>
-<span class="fc" id="L166">        usesDFA(languageVersion, rootNode, ruleSets, language);</span>
-<span class="fc" id="L167">        usesTypeResolution(languageVersion, rootNode, ruleSets, language);</span>
+<span class="fc" id="L175">        Node rootNode = parse(ctx, sourceCode, parser);</span>
+<span class="fc" id="L176">        symbolFacade(rootNode, languageVersionHandler);</span>
+<span class="fc" id="L177">        Language language = languageVersion.getLanguage();</span>
+<span class="fc" id="L178">        usesDFA(languageVersion, rootNode, ruleSets, language);</span>
+<span class="fc" id="L179">        usesTypeResolution(languageVersion, rootNode, ruleSets, language);</span>
+<span class="fc" id="L180">        usesMetrics(languageVersion, rootNode, ruleSets, language);</span>
 
-<span class="fc" id="L169">        List&lt;Node&gt; acus = Collections.singletonList(rootNode);</span>
-<span class="fc" id="L170">        ruleSets.apply(acus, ctx, language);</span>
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L182">        List&lt;Node&gt; acus = Collections.singletonList(rootNode);</span>
+<span class="fc" id="L183">        ruleSets.apply(acus, ctx, language);</span>
+<span class="fc" id="L184">    }</span>
 
     private void determineLanguage(RuleContext ctx) {
         // If LanguageVersion of the source file is not known, make a
         // determination
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (ctx.getLanguageVersion() == null) {</span>
-<span class="fc" id="L177">            LanguageVersion languageVersion = configuration.getLanguageVersionOfFile(ctx.getSourceCodeFilename());</span>
-<span class="fc" id="L178">            ctx.setLanguageVersion(languageVersion);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (ctx.getLanguageVersion() == null) {</span>
+<span class="fc" id="L190">            LanguageVersion languageVersion = configuration.getLanguageVersionOfFile(ctx.getSourceCodeFilename());</span>
+<span class="fc" id="L191">            ctx.setLanguageVersion(languageVersion);</span>
         }
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L193">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

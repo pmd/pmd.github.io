@@ -38,23 +38,29 @@ public class TokenEntry implements Comparable&lt;TokenEntry&gt; {
 <span class="fc" id="L38">        this.tokenSrcID = &quot;EOFMarker&quot;;</span>
 <span class="fc" id="L39">    }</span>
 
-<span class="fc" id="L41">    public TokenEntry(String image, String tokenSrcID, int beginLine) {</span>
-<span class="fc" id="L42">        setImage(image);</span>
-<span class="fc" id="L43">        this.tokenSrcID = tokenSrcID;</span>
-<span class="fc" id="L44">        this.beginLine = beginLine;</span>
-<span class="fc" id="L45">        this.index = TOKEN_COUNT.get().getAndIncrement();</span>
-<span class="fc" id="L46">    }</span>
+    /**
+     * Creates a new token entry with the given informations.
+     * @param image
+     * @param tokenSrcID
+     * @param beginLine the linenumber, 1-based.
+     */
+<span class="fc" id="L47">    public TokenEntry(String image, String tokenSrcID, int beginLine) {</span>
+<span class="fc" id="L48">        setImage(image);</span>
+<span class="fc" id="L49">        this.tokenSrcID = tokenSrcID;</span>
+<span class="fc" id="L50">        this.beginLine = beginLine;</span>
+<span class="fc" id="L51">        this.index = TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L52">    }</span>
 
     public static TokenEntry getEOF() {
-<span class="fc" id="L49">        TOKEN_COUNT.get().getAndIncrement();</span>
-<span class="fc" id="L50">        return EOF;</span>
+<span class="fc" id="L55">        TOKEN_COUNT.get().getAndIncrement();</span>
+<span class="fc" id="L56">        return EOF;</span>
     }
 
     public static void clearImages() {
-<span class="fc" id="L54">        TOKENS.get().clear();</span>
-<span class="fc" id="L55">        TOKENS.remove();</span>
-<span class="fc" id="L56">        TOKEN_COUNT.remove();</span>
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L60">        TOKENS.get().clear();</span>
+<span class="fc" id="L61">        TOKENS.remove();</span>
+<span class="fc" id="L62">        TOKEN_COUNT.remove();</span>
+<span class="fc" id="L63">    }</span>
 
     /**
      * Helper class to preserve and restore the current state of the token
@@ -65,79 +71,79 @@ public class TokenEntry implements Comparable&lt;TokenEntry&gt; {
         private Map&lt;String, Integer&gt; tokens;
         private List&lt;TokenEntry&gt; entries;
 
-<span class="nc" id="L68">        public State(List&lt;TokenEntry&gt; entries) {</span>
-<span class="nc" id="L69">            this.tokenCount = TokenEntry.TOKEN_COUNT.get().intValue();</span>
-<span class="nc" id="L70">            this.tokens = new HashMap&lt;&gt;(TokenEntry.TOKENS.get());</span>
-<span class="nc" id="L71">            this.entries = new ArrayList&lt;&gt;(entries);</span>
-<span class="nc" id="L72">        }</span>
+<span class="nc" id="L74">        public State(List&lt;TokenEntry&gt; entries) {</span>
+<span class="nc" id="L75">            this.tokenCount = TokenEntry.TOKEN_COUNT.get().intValue();</span>
+<span class="nc" id="L76">            this.tokens = new HashMap&lt;&gt;(TokenEntry.TOKENS.get());</span>
+<span class="nc" id="L77">            this.entries = new ArrayList&lt;&gt;(entries);</span>
+<span class="nc" id="L78">        }</span>
 
         public List&lt;TokenEntry&gt; restore() {
-<span class="nc" id="L75">            TokenEntry.TOKEN_COUNT.get().set(tokenCount);</span>
-<span class="nc" id="L76">            TOKENS.get().clear();</span>
-<span class="nc" id="L77">            TOKENS.get().putAll(tokens);</span>
-<span class="nc" id="L78">            return entries;</span>
+<span class="nc" id="L81">            TokenEntry.TOKEN_COUNT.get().set(tokenCount);</span>
+<span class="nc" id="L82">            TOKENS.get().clear();</span>
+<span class="nc" id="L83">            TOKENS.get().putAll(tokens);</span>
+<span class="nc" id="L84">            return entries;</span>
         }
     }
 
     public String getTokenSrcID() {
-<span class="fc" id="L83">        return tokenSrcID;</span>
+<span class="fc" id="L89">        return tokenSrcID;</span>
     }
 
     public int getBeginLine() {
-<span class="fc" id="L87">        return beginLine;</span>
+<span class="fc" id="L93">        return beginLine;</span>
     }
 
     public int getIdentifier() {
-<span class="fc" id="L91">        return this.identifier;</span>
+<span class="fc" id="L97">        return this.identifier;</span>
     }
 
     public int getIndex() {
-<span class="fc" id="L95">        return this.index;</span>
+<span class="fc" id="L101">        return this.index;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="fc" id="L100">        return hashCode;</span>
+<span class="fc" id="L106">        return hashCode;</span>
     }
 
     public void setHashCode(int hashCode) {
-<span class="fc" id="L104">        this.hashCode = hashCode;</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L110">        this.hashCode = hashCode;</span>
+<span class="fc" id="L111">    }</span>
 
     @Override
     public boolean equals(Object o) {
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (!(o instanceof TokenEntry)) {</span>
-<span class="nc" id="L110">            return false;</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (!(o instanceof TokenEntry)) {</span>
+<span class="nc" id="L116">            return false;</span>
         }
-<span class="fc" id="L112">        TokenEntry other = (TokenEntry) o;</span>
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        return other.hashCode == hashCode;</span>
+<span class="fc" id="L118">        TokenEntry other = (TokenEntry) o;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        return other.hashCode == hashCode;</span>
     }
 
     @Override
     public int compareTo(TokenEntry other) {
-<span class="fc" id="L118">        return getIndex() - other.getIndex();</span>
+<span class="fc" id="L124">        return getIndex() - other.getIndex();</span>
     }
 
     @Override
     public String toString() {
-<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (this == EOF) {</span>
-<span class="nc" id="L124">            return &quot;EOF&quot;;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (this == EOF) {</span>
+<span class="nc" id="L130">            return &quot;EOF&quot;;</span>
         }
-<span class="nc bnc" id="L126" title="All 2 branches missed.">        for (Map.Entry&lt;String, Integer&gt; e : TOKENS.get().entrySet()) {</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (e.getValue().intValue() == identifier) {</span>
-<span class="nc" id="L128">                return e.getKey();</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        for (Map.Entry&lt;String, Integer&gt; e : TOKENS.get().entrySet()) {</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (e.getValue().intValue() == identifier) {</span>
+<span class="nc" id="L134">                return e.getKey();</span>
             }
-<span class="nc" id="L130">        }</span>
-<span class="nc" id="L131">        return &quot;--unkown--&quot;;</span>
+<span class="nc" id="L136">        }</span>
+<span class="nc" id="L137">        return &quot;--unkown--&quot;;</span>
     }
 
     final void setImage(String image) {
-<span class="fc" id="L135">        Integer i = TOKENS.get().get(image);</span>
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (i == null) {</span>
-<span class="fc" id="L137">            i = TOKENS.get().size() + 1;</span>
-<span class="fc" id="L138">            TOKENS.get().put(image, i);</span>
+<span class="fc" id="L141">        Integer i = TOKENS.get().get(image);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (i == null) {</span>
+<span class="fc" id="L143">            i = TOKENS.get().size() + 1;</span>
+<span class="fc" id="L144">            TOKENS.get().put(image, i);</span>
         }
-<span class="fc" id="L140">        this.identifier = i.intValue();</span>
-<span class="fc" id="L141">    }</span>
+<span class="fc" id="L146">        this.identifier = i.intValue();</span>
+<span class="fc" id="L147">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -23,129 +23,169 @@ import net.sourceforge.pmd.lang.java.typeresolution.TypeHelper;
 
 <span class="fc" id="L24">public abstract class AbstractJUnitRule extends AbstractJavaRule {</span>
 
-    public static final Class&lt;?&gt; JUNIT4_CLASS;
-
     public static final Class&lt;?&gt; JUNIT3_CLASS;
+    private static final String JUNIT3_CLASS_NAME = &quot;junit.framework.TestCase&quot;;
+    public static final Class&lt;?&gt; JUNIT4_CLASS;
+    private static final String JUNIT4_CLASS_NAME = &quot;org.junit.Test&quot;;
+    public static final Class&lt;?&gt; JUNIT5_CLASS;
+    private static final String JUNIT5_CLASS_NAME = &quot;org.junit.jupiter.api.Test&quot;;
 
     private boolean isJUnit3Class;
     private boolean isJUnit4Class;
+    private boolean isJUnit5Class;
 
     static {
         Class&lt;?&gt; c;
-        try {
-<span class="fc" id="L36">            c = Class.forName(&quot;org.junit.Test&quot;);</span>
-<span class="nc" id="L37">        } catch (ClassNotFoundException t) {</span>
-<span class="nc" id="L38">            c = null;</span>
-<span class="nc" id="L39">        } catch (NoClassDefFoundError t) {</span>
-<span class="nc" id="L40">            c = null;</span>
-<span class="pc" id="L41">        }</span>
-<span class="fc" id="L42">        JUNIT4_CLASS = c;</span>
 
         try {
-<span class="fc" id="L45">            c = Class.forName(&quot;junit.framework.TestCase&quot;);</span>
-<span class="nc" id="L46">        } catch (ClassNotFoundException t) {</span>
-<span class="nc" id="L47">            c = null;</span>
-<span class="nc" id="L48">        } catch (NoClassDefFoundError t) {</span>
-<span class="nc" id="L49">            c = null;</span>
-<span class="pc" id="L50">        }</span>
-<span class="fc" id="L51">        JUNIT3_CLASS = c;</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L41">            c = Class.forName(JUNIT3_CLASS_NAME);</span>
+<span class="nc" id="L42">        } catch (ClassNotFoundException | NoClassDefFoundError t) {</span>
+<span class="nc" id="L43">            c = null;</span>
+<span class="fc" id="L44">        }</span>
+<span class="fc" id="L45">        JUNIT3_CLASS = c;</span>
+
+        try {
+<span class="fc" id="L48">            c = Class.forName(JUNIT4_CLASS_NAME);</span>
+<span class="nc" id="L49">        } catch (ClassNotFoundException | NoClassDefFoundError t) {</span>
+<span class="nc" id="L50">            c = null;</span>
+<span class="fc" id="L51">        }</span>
+<span class="fc" id="L52">        JUNIT4_CLASS = c;</span>
+
+        try {
+<span class="nc" id="L55">            c = Class.forName(JUNIT5_CLASS_NAME);</span>
+<span class="fc" id="L56">        } catch (ClassNotFoundException | NoClassDefFoundError t) {</span>
+<span class="fc" id="L57">            c = null;</span>
+<span class="nc" id="L58">        }</span>
+<span class="fc" id="L59">        JUNIT5_CLASS = c;</span>
+<span class="fc" id="L60">    }</span>
 
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
 
-<span class="fc" id="L57">        isJUnit3Class = false;</span>
-<span class="fc" id="L58">        isJUnit4Class = false;</span>
+<span class="fc" id="L65">        isJUnit3Class = false;</span>
+<span class="fc" id="L66">        isJUnit4Class = false;</span>
+<span class="fc" id="L67">        isJUnit5Class = false;</span>
 
-<span class="fc" id="L60">        isJUnit3Class = isJUnit3Class(node);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (!isJUnit3Class) {</span>
-<span class="fc" id="L62">            isJUnit4Class = isJUnit4Class(node);</span>
+<span class="fc" id="L69">        isJUnit3Class = isJUnit3Class(node);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!isJUnit3Class) {</span>
+<span class="fc" id="L71">            isJUnit4Class = isJUnit4Class(node);</span>
+<span class="fc" id="L72">            isJUnit5Class = isJUnit5Class(node);</span>
+        }
+<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (isJUnit4Class &amp;&amp; isJUnit5Class) {</span>
+<span class="fc" id="L75">            isJUnit4Class &amp;= hasImports(node, JUNIT4_CLASS_NAME);</span>
+<span class="fc" id="L76">            isJUnit5Class &amp;= hasImports(node, JUNIT5_CLASS_NAME);</span>
         }
 
-<span class="fc bfc" id="L65" title="All 6 branches covered.">        if (!isTestNgClass(node) &amp;&amp; (isJUnit3Class || isJUnit4Class)) {</span>
-<span class="fc" id="L66">            return super.visit(node, data);</span>
+<span class="fc bfc" id="L79" title="All 8 branches covered.">        if (!isTestNgClass(node) &amp;&amp; (isJUnit3Class || isJUnit4Class || isJUnit5Class)) {</span>
+<span class="fc" id="L80">            return super.visit(node, data);</span>
         }
-<span class="fc" id="L68">        return data;</span>
+<span class="fc" id="L82">        return data;</span>
     }
 
     private boolean isTestNgClass(ASTCompilationUnit node) {
-<span class="fc" id="L72">        List&lt;ASTImportDeclaration&gt; imports = node.findDescendantsOfType(ASTImportDeclaration.class);</span>
-<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (ASTImportDeclaration i : imports) {</span>
-<span class="pc bpc" id="L74" title="1 of 4 branches missed.">            if (i.getImportedName() != null &amp;&amp; i.getImportedName().startsWith(&quot;org.testng&quot;)) {</span>
-<span class="fc" id="L75">                return true;</span>
+<span class="fc" id="L86">        List&lt;ASTImportDeclaration&gt; imports = node.findDescendantsOfType(ASTImportDeclaration.class);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        for (ASTImportDeclaration i : imports) {</span>
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">            if (i.getImportedName() != null &amp;&amp; i.getImportedName().startsWith(&quot;org.testng&quot;)) {</span>
+<span class="fc" id="L89">                return true;</span>
             }
-<span class="fc" id="L77">        }</span>
-<span class="fc" id="L78">        return false;</span>
+<span class="fc" id="L91">        }</span>
+<span class="fc" id="L92">        return false;</span>
     }
 
     public boolean isJUnitMethod(ASTMethodDeclaration method, Object data) {
-
-<span class="pc bpc" id="L83" title="1 of 8 branches missed.">        if (!method.isPublic() || method.isAbstract() || method.isNative() || method.isStatic()) {</span>
-<span class="fc" id="L84">            return false; // skip various inapplicable method variations</span>
+<span class="pc bpc" id="L96" title="1 of 6 branches missed.">        if (method.isAbstract() || method.isNative() || method.isStatic()) {</span>
+<span class="fc" id="L97">            return false; // skip various inapplicable method variations</span>
         }
 
-<span class="fc" id="L87">        boolean result = false;</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (isJUnit3Class) {</span>
-<span class="fc" id="L89">            result = isJUnit3Method(method);</span>
+<span class="fc bfc" id="L100" title="All 4 branches covered.">        if (!isJUnit5Class &amp;&amp; !method.isPublic()) {</span>
+            // junit5 class doesn't require test methods to be public anymore
+<span class="fc" id="L102">            return false;</span>
         }
 
-<span class="fc" id="L92">        result |= isJUnit4Method(method);</span>
-<span class="fc" id="L93">        return result;</span>
+<span class="fc" id="L105">        boolean result = false;</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        if (isJUnit3Class) {</span>
+<span class="fc" id="L107">            result = isJUnit3Method(method);</span>
+        }
+
+<span class="fc" id="L110">        result |= isJUnit4Method(method);</span>
+<span class="fc" id="L111">        result |= isJUnit5Method(method);</span>
+<span class="fc" id="L112">        return result;</span>
     }
 
     private boolean isJUnit4Method(ASTMethodDeclaration method) {
-<span class="fc" id="L97">        return doesNodeContainJUnitAnnotation(method.jjtGetParent());</span>
+<span class="fc" id="L116">        return doesNodeContainJUnitAnnotation(method.jjtGetParent(), JUNIT4_CLASS, JUNIT4_CLASS_NAME);</span>
+    }
+
+    private boolean isJUnit5Method(ASTMethodDeclaration method) {
+<span class="fc" id="L120">        return doesNodeContainJUnitAnnotation(method.jjtGetParent(), JUNIT5_CLASS, JUNIT5_CLASS_NAME);</span>
     }
 
     private boolean isJUnit3Method(ASTMethodDeclaration method) {
-<span class="fc" id="L101">        Node node = method.jjtGetChild(0);</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (node instanceof ASTTypeParameters) {</span>
-<span class="nc" id="L103">            node = method.jjtGetChild(1);</span>
+<span class="fc" id="L124">        Node node = method.jjtGetChild(0);</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (node instanceof ASTTypeParameters) {</span>
+<span class="nc" id="L126">            node = method.jjtGetChild(1);</span>
         }
-<span class="pc bpc" id="L105" title="1 of 4 branches missed.">        return ((ASTResultType) node).isVoid() &amp;&amp; method.getMethodName().startsWith(&quot;test&quot;);</span>
+<span class="pc bpc" id="L128" title="1 of 4 branches missed.">        return ((ASTResultType) node).isVoid() &amp;&amp; method.getMethodName().startsWith(&quot;test&quot;);</span>
     }
 
     private boolean isJUnit3Class(ASTCompilationUnit node) {
-<span class="fc bfc" id="L109" title="All 4 branches covered.">        if (node.getType() != null &amp;&amp; TypeHelper.isA(node, JUNIT3_CLASS)) {</span>
-<span class="fc" id="L110">            return true;</span>
-
-<span class="fc bfc" id="L112" title="All 2 branches covered.">        } else if (node.getType() == null) {</span>
-<span class="fc" id="L113">            ASTClassOrInterfaceDeclaration cid = node.getFirstDescendantOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (cid == null) {</span>
-<span class="fc" id="L115">                return false;</span>
-            }
-<span class="fc" id="L117">            ASTExtendsList extendsList = cid.getFirstChildOfType(ASTExtendsList.class);</span>
-<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (extendsList == null) {</span>
-<span class="fc" id="L119">                return false;</span>
-            }
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            if (((ASTClassOrInterfaceType) extendsList.jjtGetChild(0)).getImage().endsWith(&quot;TestCase&quot;)) {</span>
-<span class="fc" id="L122">                return true;</span>
-            }
-<span class="fc" id="L124">            String className = cid.getImage();</span>
-<span class="fc" id="L125">            return className.endsWith(&quot;Test&quot;);</span>
+<span class="fc" id="L132">        ASTClassOrInterfaceDeclaration cid = node.getFirstDescendantOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (cid == null) {</span>
+<span class="fc" id="L134">            return false;</span>
         }
-<span class="fc" id="L127">        return false;</span>
+
+<span class="fc bfc" id="L137" title="All 4 branches covered.">        if (node.getType() != null &amp;&amp; TypeHelper.isA(node, JUNIT3_CLASS)) {</span>
+<span class="fc" id="L138">            return true;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        } else if (node.getType() == null) {</span>
+<span class="fc" id="L140">            ASTExtendsList extendsList = cid.getFirstChildOfType(ASTExtendsList.class);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            if (extendsList == null) {</span>
+<span class="fc" id="L142">                return false;</span>
+            }
+<span class="fc bfc" id="L144" title="All 2 branches covered.">            if (((ASTClassOrInterfaceType) extendsList.jjtGetChild(0)).getImage().endsWith(&quot;TestCase&quot;)) {</span>
+<span class="fc" id="L145">                return true;</span>
+            }
+<span class="fc" id="L147">            String className = cid.getImage();</span>
+<span class="fc" id="L148">            return className.endsWith(&quot;Test&quot;);</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        } else if (hasImports(node, JUNIT3_CLASS_NAME)) {</span>
+<span class="nc" id="L150">            return cid.getImage().endsWith(&quot;Test&quot;);</span>
+        }
+<span class="fc" id="L152">        return false;</span>
     }
 
     private boolean isJUnit4Class(ASTCompilationUnit node) {
-<span class="fc" id="L131">        return doesNodeContainJUnitAnnotation(node);</span>
+<span class="fc" id="L156">        return doesNodeContainJUnitAnnotation(node, JUNIT4_CLASS, JUNIT4_CLASS_NAME);</span>
     }
 
-    private boolean doesNodeContainJUnitAnnotation(Node node) {
-<span class="fc" id="L135">        List&lt;ASTAnnotation&gt; annotations = node.findDescendantsOfType(ASTAnnotation.class);</span>
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        for (ASTAnnotation annotation : annotations) {</span>
-<span class="fc" id="L137">            Node annotationTypeNode = annotation.jjtGetChild(0);</span>
-<span class="fc" id="L138">            TypeNode annotationType = (TypeNode) annotationTypeNode;</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">            if (annotationType.getType() == null) {</span>
-<span class="fc" id="L140">                ASTName name = annotationTypeNode.getFirstChildOfType(ASTName.class);</span>
-<span class="pc bpc" id="L141" title="1 of 4 branches missed.">                if (name != null &amp;&amp; &quot;Test&quot;.equals(name.getImage())) {</span>
-<span class="fc" id="L142">                    return true;</span>
+    private boolean isJUnit5Class(ASTCompilationUnit node) {
+<span class="fc" id="L160">        return doesNodeContainJUnitAnnotation(node, JUNIT5_CLASS, JUNIT5_CLASS_NAME);</span>
+    }
+
+    private boolean doesNodeContainJUnitAnnotation(Node node, Class&lt;?&gt; annotationTypeClass, String annotationTypeClassName) {
+<span class="fc" id="L164">        List&lt;ASTAnnotation&gt; annotations = node.findDescendantsOfType(ASTAnnotation.class);</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        for (ASTAnnotation annotation : annotations) {</span>
+<span class="fc" id="L166">            Node annotationTypeNode = annotation.jjtGetChild(0);</span>
+<span class="fc" id="L167">            TypeNode annotationType = (TypeNode) annotationTypeNode;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (annotationType.getType() == null) {</span>
+<span class="fc" id="L169">                ASTName name = annotationTypeNode.getFirstChildOfType(ASTName.class);</span>
+<span class="pc bpc" id="L170" title="2 of 6 branches missed.">                if (name != null &amp;&amp; (name.hasImageEqualTo(&quot;Test&quot;) || name.hasImageEqualTo(annotationTypeClassName))) {</span>
+<span class="fc" id="L171">                    return true;</span>
                 }
-<span class="fc bfc" id="L144" title="All 2 branches covered.">            } else if (annotationType.getType().equals(JUNIT4_CLASS)) {</span>
-<span class="fc" id="L145">                return true;</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">            } else if (annotationType.getType().equals(annotationTypeClass)) {</span>
+<span class="fc" id="L174">                return true;</span>
             }
-<span class="fc" id="L147">        }</span>
-<span class="fc" id="L148">        return false;</span>
+<span class="fc" id="L176">        }</span>
+<span class="fc" id="L177">        return false;</span>
+    }
+
+    private boolean hasImports(ASTCompilationUnit cu, String className) {
+<span class="fc" id="L181">        List&lt;ASTImportDeclaration&gt; imports = cu.findDescendantsOfType(ASTImportDeclaration.class);</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (ASTImportDeclaration importDeclaration : imports) {</span>
+<span class="fc" id="L183">            ASTName name = importDeclaration.getFirstChildOfType(ASTName.class);</span>
+<span class="pc bpc" id="L184" title="1 of 4 branches missed.">            if (name != null &amp;&amp; name.hasImageEqualTo(className)) {</span>
+<span class="fc" id="L185">                return true;</span>
+            }
+<span class="fc" id="L187">        }</span>
+<span class="fc" id="L188">        return false;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

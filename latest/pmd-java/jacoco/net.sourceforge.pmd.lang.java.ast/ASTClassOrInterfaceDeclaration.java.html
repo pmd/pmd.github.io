@@ -5,21 +5,22 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-public class ASTClassOrInterfaceDeclaration extends AbstractJavaAccessTypeNode {
+public class ASTClassOrInterfaceDeclaration extends AbstractJavaAccessTypeNode implements QualifiableNode {
 
     private boolean isInterface;
+    private QualifiedName qualifiedName;
 
     public ASTClassOrInterfaceDeclaration(int id) {
-<span class="nc" id="L13">        super(id);</span>
-<span class="nc" id="L14">    }</span>
+<span class="nc" id="L14">        super(id);</span>
+<span class="nc" id="L15">    }</span>
 
     public ASTClassOrInterfaceDeclaration(JavaParser p, int id) {
-<span class="fc" id="L17">        super(p, id);</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L18">        super(p, id);</span>
+<span class="fc" id="L19">    }</span>
 
     @Override
     public boolean isFindBoundary() {
-<span class="fc" id="L22">        return isNested();</span>
+<span class="fc" id="L23">        return isNested();</span>
     }
 
     /**
@@ -27,20 +28,36 @@ public class ASTClassOrInterfaceDeclaration extends AbstractJavaAccessTypeNode {
      */
     @Override
     public Object jjtAccept(JavaParserVisitor visitor, Object data) {
-<span class="fc" id="L30">        return visitor.visit(this, data);</span>
+<span class="fc" id="L31">        return visitor.visit(this, data);</span>
     }
 
     public boolean isNested() {
-<span class="fc bfc" id="L34" title="All 4 branches covered.">        return jjtGetParent() instanceof ASTClassOrInterfaceBodyDeclaration</span>
-                || jjtGetParent() instanceof ASTAnnotationTypeMemberDeclaration;
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        return jjtGetParent() instanceof ASTClassOrInterfaceBodyDeclaration</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            || jjtGetParent() instanceof ASTAnnotationTypeMemberDeclaration;</span>
     }
 
     public boolean isInterface() {
-<span class="fc" id="L39">        return this.isInterface;</span>
+<span class="fc" id="L40">        return this.isInterface;</span>
     }
 
     public void setInterface() {
-<span class="fc" id="L43">        this.isInterface = true;</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L44">        this.isInterface = true;</span>
+<span class="fc" id="L45">    }</span>
+
+    @Override
+    public QualifiedName getQualifiedName() {
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (qualifiedName == null) {</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (isNested()) {</span>
+<span class="fc" id="L51">                ASTClassOrInterfaceDeclaration parent = this.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc" id="L52">                QualifiedName parentQN = parent.getQualifiedName();</span>
+<span class="fc" id="L53">                qualifiedName = QualifiedName.makeNestedClassOf(parentQN, this.getImage());</span>
+<span class="fc" id="L54">                return qualifiedName;</span>
+            }
+
+<span class="fc" id="L57">            qualifiedName = QualifiedName.makeOuterClassOf(this);</span>
+        }
+
+<span class="fc" id="L60">        return qualifiedName;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

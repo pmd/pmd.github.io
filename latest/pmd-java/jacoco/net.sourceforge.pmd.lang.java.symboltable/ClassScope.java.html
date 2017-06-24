@@ -102,179 +102,183 @@ public class ClassScope extends AbstractJavaScope {
 <span class="fc" id="L102">        classDeclaration = classNameDeclaration;</span>
 <span class="fc" id="L103">    }</span>
 
+    public ClassNameDeclaration getClassDeclaration() {
+<span class="fc" id="L106">        return classDeclaration;</span>
+    }
+
     public void setIsEnum(boolean isEnum) {
-<span class="fc" id="L106">        this.isEnum = isEnum;</span>
-<span class="fc" id="L107">    }</span>
+<span class="fc" id="L110">        this.isEnum = isEnum;</span>
+<span class="fc" id="L111">    }</span>
 
     public Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; getClassDeclarations() {
-<span class="fc" id="L110">        return getDeclarations(ClassNameDeclaration.class);</span>
+<span class="fc" id="L114">        return getDeclarations(ClassNameDeclaration.class);</span>
     }
 
     public Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; getMethodDeclarations() {
-<span class="fc" id="L114">        return getDeclarations(MethodNameDeclaration.class);</span>
+<span class="fc" id="L118">        return getDeclarations(MethodNameDeclaration.class);</span>
     }
 
     public Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; getVariableDeclarations() {
-<span class="fc" id="L118">        return getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc" id="L122">        return getDeclarations(VariableNameDeclaration.class);</span>
     }
 
     public Set&lt;NameDeclaration&gt; addNameOccurrence(NameOccurrence occurrence) {
-<span class="fc" id="L122">        JavaNameOccurrence javaOccurrence = (JavaNameOccurrence) occurrence;</span>
-<span class="fc" id="L123">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(javaOccurrence);</span>
-<span class="pc bpc" id="L124" title="1 of 6 branches missed.">        if (!declarations.isEmpty()</span>
-                &amp;&amp; (javaOccurrence.isMethodOrConstructorInvocation() || javaOccurrence.isMethodReference())) {
-<span class="fc bfc" id="L126" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
-<span class="fc" id="L127">                List&lt;NameOccurrence&gt; nameOccurrences = getMethodDeclarations().get(decl);</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">                if (nameOccurrences == null) {</span>
+<span class="fc" id="L126">        JavaNameOccurrence javaOccurrence = (JavaNameOccurrence) occurrence;</span>
+<span class="fc" id="L127">        Set&lt;NameDeclaration&gt; declarations = findVariableHere(javaOccurrence);</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (!declarations.isEmpty()</span>
+<span class="fc bfc" id="L129" title="All 4 branches covered.">                &amp;&amp; (javaOccurrence.isMethodOrConstructorInvocation() || javaOccurrence.isMethodReference())) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
+<span class="fc" id="L131">                List&lt;NameOccurrence&gt; nameOccurrences = getMethodDeclarations().get(decl);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">                if (nameOccurrences == null) {</span>
                     // TODO may be a class name: Foo.this.super();
                     
                     // search inner classes
-<span class="fc bfc" id="L132" title="All 2 branches covered.">                    for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
-<span class="fc" id="L133">                        Scope innerClassScope = innerClass.getScope();</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">                        if (innerClassScope.contains(javaOccurrence)) {</span>
-<span class="fc" id="L135">                            innerClassScope.addNameOccurrence(javaOccurrence);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                    for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
+<span class="fc" id="L137">                        Scope innerClassScope = innerClass.getScope();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">                        if (innerClassScope.contains(javaOccurrence)) {</span>
+<span class="fc" id="L139">                            innerClassScope.addNameOccurrence(javaOccurrence);</span>
                         }
-<span class="fc" id="L137">                    }</span>
+<span class="fc" id="L141">                    }</span>
                 } else {
-<span class="fc" id="L139">                    nameOccurrences.add(javaOccurrence);</span>
-<span class="fc" id="L140">                    Node n = javaOccurrence.getLocation();</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">                    if (n instanceof ASTName) {</span>
-<span class="fc" id="L142">                        ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="fc" id="L143">                    nameOccurrences.add(javaOccurrence);</span>
+<span class="fc" id="L144">                    Node n = javaOccurrence.getLocation();</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                    if (n instanceof ASTName) {</span>
+<span class="fc" id="L146">                        ((ASTName) n).setNameDeclaration(decl);</span>
                     } // TODO what to do with PrimarySuffix case?
                 }
-<span class="fc" id="L145">            }</span>
-<span class="pc bpc" id="L146" title="1 of 4 branches missed.">        } else if (!declarations.isEmpty() &amp;&amp; !javaOccurrence.isThisOrSuper()) {</span>
-<span class="fc bfc" id="L147" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
-<span class="fc" id="L148">                List&lt;NameOccurrence&gt; nameOccurrences = getVariableDeclarations().get(decl);</span>
-<span class="fc bfc" id="L149" title="All 2 branches covered.">                if (nameOccurrences == null) {</span>
+<span class="fc" id="L149">            }</span>
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">        } else if (!declarations.isEmpty() &amp;&amp; !javaOccurrence.isThisOrSuper()) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            for (NameDeclaration decl : declarations) {</span>
+<span class="fc" id="L152">                List&lt;NameOccurrence&gt; nameOccurrences = getVariableDeclarations().get(decl);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">                if (nameOccurrences == null) {</span>
                     // TODO may be a class name
 
                     // search inner classes
-<span class="fc bfc" id="L153" title="All 2 branches covered.">                    for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
-<span class="fc" id="L154">                        Scope innerClassScope = innerClass.getScope();</span>
-<span class="fc bfc" id="L155" title="All 2 branches covered.">                        if (innerClassScope.contains(javaOccurrence)) {</span>
-<span class="fc" id="L156">                            innerClassScope.addNameOccurrence(javaOccurrence);</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                    for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
+<span class="fc" id="L158">                        Scope innerClassScope = innerClass.getScope();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                        if (innerClassScope.contains(javaOccurrence)) {</span>
+<span class="fc" id="L160">                            innerClassScope.addNameOccurrence(javaOccurrence);</span>
                         }
-<span class="fc" id="L158">                    }</span>
+<span class="fc" id="L162">                    }</span>
                 } else {
-<span class="fc" id="L160">                    nameOccurrences.add(javaOccurrence);</span>
-<span class="fc" id="L161">                    Node n = javaOccurrence.getLocation();</span>
-<span class="fc bfc" id="L162" title="All 2 branches covered.">                    if (n instanceof ASTName) {</span>
-<span class="fc" id="L163">                        ((ASTName) n).setNameDeclaration(decl);</span>
+<span class="fc" id="L164">                    nameOccurrences.add(javaOccurrence);</span>
+<span class="fc" id="L165">                    Node n = javaOccurrence.getLocation();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                    if (n instanceof ASTName) {</span>
+<span class="fc" id="L167">                        ((ASTName) n).setNameDeclaration(decl);</span>
                     } // TODO what to do with PrimarySuffix case?
                 }
-<span class="fc" id="L166">            }</span>
+<span class="fc" id="L170">            }</span>
         }
-<span class="fc" id="L168">        return declarations;</span>
+<span class="fc" id="L172">        return declarations;</span>
     }
 
     public String getClassName() {
-<span class="fc" id="L172">        return this.className;</span>
+<span class="fc" id="L176">        return this.className;</span>
     }
 
     protected Set&lt;NameDeclaration&gt; findVariableHere(JavaNameOccurrence occurrence) {
-<span class="fc bfc" id="L176" title="All 4 branches covered.">        if (occurrence.isThisOrSuper() || className.equals(occurrence.getImage())) {</span>
+<span class="fc bfc" id="L180" title="All 4 branches covered.">        if (occurrence.isThisOrSuper() || className.equals(occurrence.getImage())) {</span>
             // Reference to ourselves!
-<span class="fc" id="L178">            return Collections.&lt;NameDeclaration&gt;singleton(classDeclaration);</span>
+<span class="fc" id="L182">            return Collections.&lt;NameDeclaration&gt;singleton(classDeclaration);</span>
         }
 
-<span class="fc" id="L181">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
-<span class="fc" id="L182">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (occurrence.isMethodOrConstructorInvocation()) {</span>
-<span class="fc" id="L184">            final boolean hasAuxclasspath = getEnclosingScope(SourceFileScope.class).hasAuxclasspath();</span>
-<span class="fc" id="L185">            matchMethodDeclaration(occurrence, methodDeclarations.keySet(), hasAuxclasspath, result);</span>
+<span class="fc" id="L185">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
+<span class="fc" id="L186">        Set&lt;NameDeclaration&gt; result = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if (occurrence.isMethodOrConstructorInvocation()) {</span>
+<span class="fc" id="L188">            final boolean hasAuxclasspath = getEnclosingScope(SourceFileScope.class).hasAuxclasspath();</span>
+<span class="fc" id="L189">            matchMethodDeclaration(occurrence, methodDeclarations.keySet(), hasAuxclasspath, result);</span>
 
-<span class="fc bfc" id="L187" title="All 4 branches covered.">            if (isEnum &amp;&amp; &quot;valueOf&quot;.equals(occurrence.getImage())) {</span>
-<span class="fc" id="L188">                result.add(createBuiltInMethodDeclaration(&quot;valueOf&quot;, &quot;String&quot;));</span>
+<span class="fc bfc" id="L191" title="All 4 branches covered.">            if (isEnum &amp;&amp; &quot;valueOf&quot;.equals(occurrence.getImage())) {</span>
+<span class="fc" id="L192">                result.add(createBuiltInMethodDeclaration(&quot;valueOf&quot;, &quot;String&quot;));</span>
             }
 
-<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (result.isEmpty()) {</span>
-<span class="fc bfc" id="L192" title="All 2 branches covered.">                for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
-<span class="fc" id="L193">                    matchMethodDeclaration(occurrence, innerClass.getScope().getDeclarations(MethodNameDeclaration.class).keySet(), hasAuxclasspath, result);</span>
-<span class="fc" id="L194">                }</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">            if (result.isEmpty()) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
+<span class="fc" id="L197">                    matchMethodDeclaration(occurrence, innerClass.getScope().getDeclarations(MethodNameDeclaration.class).keySet(), hasAuxclasspath, result);</span>
+<span class="fc" id="L198">                }</span>
             }
-<span class="fc" id="L196">            return result;</span>
+<span class="fc" id="L200">            return result;</span>
         }
-<span class="fc bfc" id="L198" title="All 2 branches covered.">        if (occurrence.isMethodReference()) {</span>
-<span class="fc bfc" id="L199" title="All 2 branches covered.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
-<span class="fc bfc" id="L200" title="All 2 branches covered.">                if (mnd.getImage().equals(occurrence.getImage())) {</span>
-<span class="fc" id="L201">                    result.add(mnd);</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">        if (occurrence.isMethodReference()) {</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                if (mnd.getImage().equals(occurrence.getImage())) {</span>
+<span class="fc" id="L205">                    result.add(mnd);</span>
                 }
-<span class="fc" id="L203">            }</span>
-<span class="fc" id="L204">            return result;</span>
+<span class="fc" id="L207">            }</span>
+<span class="fc" id="L208">            return result;</span>
         }
 
-<span class="fc" id="L207">        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L208" title="1 of 2 branches missed.">        if (occurrence.getImage() != null) {</span>
-<span class="fc" id="L209">            images.add(occurrence.getImage());</span>
-<span class="fc bfc" id="L210" title="All 2 branches covered.">            if (occurrence.getImage().startsWith(className)) {</span>
-<span class="fc" id="L211">                images.add(clipClassName(occurrence.getImage()));</span>
+<span class="fc" id="L211">        List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">        if (occurrence.getImage() != null) {</span>
+<span class="fc" id="L213">            images.add(occurrence.getImage());</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">            if (occurrence.getImage().startsWith(className)) {</span>
+<span class="fc" id="L215">                images.add(clipClassName(occurrence.getImage()));</span>
             }
         }
 
-<span class="fc" id="L215">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
-<span class="fc" id="L216">        ImageFinderFunction finder = new ImageFinderFunction(images);</span>
-<span class="fc" id="L217">        Applier.apply(finder, variableDeclarations.keySet().iterator());</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
-<span class="fc" id="L219">            result.add(finder.getDecl());</span>
+<span class="fc" id="L219">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
+<span class="fc" id="L220">        ImageFinderFunction finder = new ImageFinderFunction(images);</span>
+<span class="fc" id="L221">        Applier.apply(finder, variableDeclarations.keySet().iterator());</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">        if (finder.getDecl() != null) {</span>
+<span class="fc" id="L223">            result.add(finder.getDecl());</span>
         }
 
         // search inner classes
-<span class="fc" id="L223">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classDeclarations = getClassDeclarations();</span>
-<span class="fc bfc" id="L224" title="All 4 branches covered.">        if (result.isEmpty() &amp;&amp; !classDeclarations.isEmpty()) {</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">            for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
-<span class="fc" id="L226">                Applier.apply(finder, innerClass.getScope().getDeclarations(VariableNameDeclaration.class).keySet().iterator());</span>
-<span class="fc bfc" id="L227" title="All 2 branches covered.">                if (finder.getDecl() != null) {</span>
-<span class="fc" id="L228">                    result.add(finder.getDecl());</span>
+<span class="fc" id="L227">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classDeclarations = getClassDeclarations();</span>
+<span class="fc bfc" id="L228" title="All 4 branches covered.">        if (result.isEmpty() &amp;&amp; !classDeclarations.isEmpty()) {</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            for (ClassNameDeclaration innerClass : getClassDeclarations().keySet()) {</span>
+<span class="fc" id="L230">                Applier.apply(finder, innerClass.getScope().getDeclarations(VariableNameDeclaration.class).keySet().iterator());</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">                if (finder.getDecl() != null) {</span>
+<span class="fc" id="L232">                    result.add(finder.getDecl());</span>
                 }
-<span class="fc" id="L230">            }</span>
+<span class="fc" id="L234">            }</span>
         }
-<span class="fc" id="L232">        return result;</span>
+<span class="fc" id="L236">        return result;</span>
     }
 
     private void matchMethodDeclaration(JavaNameOccurrence occurrence,
             Set&lt;MethodNameDeclaration&gt; methodDeclarations, final boolean hasAuxclasspath,
             Set&lt;NameDeclaration&gt; result) {
-<span class="fc bfc" id="L238" title="All 2 branches covered.">        for (MethodNameDeclaration mnd : methodDeclarations) {</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">            if (mnd.getImage().equals(occurrence.getImage())) {</span>
-<span class="fc" id="L240">                List&lt;TypedNameDeclaration&gt; parameterTypes = determineParameterTypes(mnd);</span>
-<span class="fc" id="L241">                List&lt;TypedNameDeclaration&gt; argumentTypes = determineArgumentTypes(occurrence, parameterTypes);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        for (MethodNameDeclaration mnd : methodDeclarations) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">            if (mnd.getImage().equals(occurrence.getImage())) {</span>
+<span class="fc" id="L244">                List&lt;TypedNameDeclaration&gt; parameterTypes = determineParameterTypes(mnd);</span>
+<span class="fc" id="L245">                List&lt;TypedNameDeclaration&gt; argumentTypes = determineArgumentTypes(occurrence, parameterTypes);</span>
 
-<span class="fc bfc" id="L243" title="All 8 branches covered.">                if (!mnd.isVarargs() &amp;&amp; occurrence.getArgumentCount() == mnd.getParameterCount()</span>
-                        &amp;&amp; (!hasAuxclasspath || parameterTypes.equals(argumentTypes))) {
-<span class="fc" id="L245">                    result.add(mnd);</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">                } else if (mnd.isVarargs()) {</span>
-<span class="fc" id="L247">                    int varArgIndex = parameterTypes.size() - 1;</span>
-<span class="fc" id="L248">                    TypedNameDeclaration varArgType = parameterTypes.get(varArgIndex);</span>
+<span class="fc bfc" id="L247" title="All 6 branches covered.">                if (!mnd.isVarargs() &amp;&amp; occurrence.getArgumentCount() == mnd.getParameterCount()</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">                        &amp;&amp; (!hasAuxclasspath || parameterTypes.equals(argumentTypes))) {</span>
+<span class="fc" id="L249">                    result.add(mnd);</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">                } else if (mnd.isVarargs()) {</span>
+<span class="fc" id="L251">                    int varArgIndex = parameterTypes.size() - 1;</span>
+<span class="fc" id="L252">                    TypedNameDeclaration varArgType = parameterTypes.get(varArgIndex);</span>
 
                     // first parameter is varArg, calling method might have
                     // 0 or more arguments
                     // or the calling method has enough arguments to fill in
                     // the parameters before the vararg
-<span class="fc bfc" id="L254" title="All 8 branches covered.">                    if ((varArgIndex == 0 || argumentTypes.size() &gt;= varArgIndex)</span>
+<span class="fc bfc" id="L258" title="All 6 branches covered.">                    if ((varArgIndex == 0 || argumentTypes.size() &gt;= varArgIndex)</span>
                             &amp;&amp; (!hasAuxclasspath || parameterTypes
-                                    .subList(0, varArgIndex).equals(argumentTypes.subList(0, varArgIndex)))) {
+<span class="fc bfc" id="L260" title="All 2 branches covered.">                                    .subList(0, varArgIndex).equals(argumentTypes.subList(0, varArgIndex)))) {</span>
 
-<span class="fc bfc" id="L258" title="All 2 branches covered.">                        if (!hasAuxclasspath) {</span>
-<span class="fc" id="L259">                            result.add(mnd);</span>
-<span class="fc" id="L260">                            continue;</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                        if (!hasAuxclasspath) {</span>
+<span class="fc" id="L263">                            result.add(mnd);</span>
+<span class="fc" id="L264">                            continue;</span>
                         }
 
-<span class="fc" id="L263">                        boolean sameType = true;</span>
-<span class="fc bfc" id="L264" title="All 2 branches covered.">                        for (int i = varArgIndex; i &lt; argumentTypes.size(); i++) {</span>
-<span class="fc bfc" id="L265" title="All 2 branches covered.">                            if (!varArgType.equals(argumentTypes.get(i))) {</span>
-<span class="fc" id="L266">                                sameType = false;</span>
-<span class="fc" id="L267">                                break;</span>
+<span class="fc" id="L267">                        boolean sameType = true;</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">                        for (int i = varArgIndex; i &lt; argumentTypes.size(); i++) {</span>
+<span class="fc bfc" id="L269" title="All 2 branches covered.">                            if (!varArgType.equals(argumentTypes.get(i))) {</span>
+<span class="fc" id="L270">                                sameType = false;</span>
+<span class="fc" id="L271">                                break;</span>
                             }
                         }
-<span class="fc bfc" id="L270" title="All 2 branches covered.">                        if (sameType) {</span>
-<span class="fc" id="L271">                            result.add(mnd);</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">                        if (sameType) {</span>
+<span class="fc" id="L275">                            result.add(mnd);</span>
                         }
                     }
                 }
             }
-<span class="fc" id="L276">        }</span>
-<span class="fc" id="L277">    }</span>
+<span class="fc" id="L280">        }</span>
+<span class="fc" id="L281">    }</span>
 
     /**
      * Creates a fake method name declaration for built-in methods from Java
@@ -288,61 +292,61 @@ public class ClassScope extends AbstractJavaScope {
      */
     private MethodNameDeclaration createBuiltInMethodDeclaration(final String methodName,
             final String... parameterTypes) {
-<span class="fc" id="L291">        ASTMethodDeclaration methodDeclaration = new ASTMethodDeclaration(JavaParserTreeConstants.JJTMETHODDECLARATION);</span>
-<span class="fc" id="L292">        methodDeclaration.setPublic(true);</span>
-<span class="fc" id="L293">        methodDeclaration.setScope(this);</span>
+<span class="fc" id="L295">        ASTMethodDeclaration methodDeclaration = new ASTMethodDeclaration(JavaParserTreeConstants.JJTMETHODDECLARATION);</span>
+<span class="fc" id="L296">        methodDeclaration.setPublic(true);</span>
+<span class="fc" id="L297">        methodDeclaration.setScope(this);</span>
 
-<span class="fc" id="L295">        ASTMethodDeclarator methodDeclarator = new ASTMethodDeclarator(JavaParserTreeConstants.JJTMETHODDECLARATOR);</span>
-<span class="fc" id="L296">        methodDeclarator.setImage(methodName);</span>
-<span class="fc" id="L297">        methodDeclarator.setScope(this);</span>
+<span class="fc" id="L299">        ASTMethodDeclarator methodDeclarator = new ASTMethodDeclarator(JavaParserTreeConstants.JJTMETHODDECLARATOR);</span>
+<span class="fc" id="L300">        methodDeclarator.setImage(methodName);</span>
+<span class="fc" id="L301">        methodDeclarator.setScope(this);</span>
 
-<span class="fc" id="L299">        ASTFormalParameters formalParameters = new ASTFormalParameters(JavaParserTreeConstants.JJTFORMALPARAMETERS);</span>
-<span class="fc" id="L300">        formalParameters.setScope(this);</span>
+<span class="fc" id="L303">        ASTFormalParameters formalParameters = new ASTFormalParameters(JavaParserTreeConstants.JJTFORMALPARAMETERS);</span>
+<span class="fc" id="L304">        formalParameters.setScope(this);</span>
 
-<span class="fc" id="L302">        methodDeclaration.jjtAddChild(methodDeclarator, 0);</span>
-<span class="fc" id="L303">        methodDeclarator.jjtSetParent(methodDeclaration);</span>
-<span class="fc" id="L304">        methodDeclarator.jjtAddChild(formalParameters, 0);</span>
-<span class="fc" id="L305">        formalParameters.jjtSetParent(methodDeclarator);</span>
+<span class="fc" id="L306">        methodDeclaration.jjtAddChild(methodDeclarator, 0);</span>
+<span class="fc" id="L307">        methodDeclarator.jjtSetParent(methodDeclaration);</span>
+<span class="fc" id="L308">        methodDeclarator.jjtAddChild(formalParameters, 0);</span>
+<span class="fc" id="L309">        formalParameters.jjtSetParent(methodDeclarator);</span>
 
         /*
          * jjtAddChild resizes it's child node list according to known indexes.
          * Going backwards makes sure the first time it gets the right size avoiding copies.
          */
-<span class="fc bfc" id="L311" title="All 2 branches covered.">        for (int i = parameterTypes.length - 1; i &gt;= 0; i--) {</span>
-<span class="fc" id="L312">            ASTFormalParameter formalParameter = new ASTFormalParameter(JavaParserTreeConstants.JJTFORMALPARAMETER);</span>
-<span class="fc" id="L313">            formalParameters.jjtAddChild(formalParameter, i);</span>
-<span class="fc" id="L314">            formalParameter.jjtSetParent(formalParameters);</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        for (int i = parameterTypes.length - 1; i &gt;= 0; i--) {</span>
+<span class="fc" id="L316">            ASTFormalParameter formalParameter = new ASTFormalParameter(JavaParserTreeConstants.JJTFORMALPARAMETER);</span>
+<span class="fc" id="L317">            formalParameters.jjtAddChild(formalParameter, i);</span>
+<span class="fc" id="L318">            formalParameter.jjtSetParent(formalParameters);</span>
 
-<span class="fc" id="L316">            ASTVariableDeclaratorId variableDeclaratorId = new ASTVariableDeclaratorId(</span>
+<span class="fc" id="L320">            ASTVariableDeclaratorId variableDeclaratorId = new ASTVariableDeclaratorId(</span>
                     JavaParserTreeConstants.JJTVARIABLEDECLARATORID);
-<span class="fc" id="L318">            variableDeclaratorId.setImage(&quot;arg&quot; + i);</span>
-<span class="fc" id="L319">            formalParameter.jjtAddChild(variableDeclaratorId, 1);</span>
-<span class="fc" id="L320">            variableDeclaratorId.jjtSetParent(formalParameter);</span>
+<span class="fc" id="L322">            variableDeclaratorId.setImage(&quot;arg&quot; + i);</span>
+<span class="fc" id="L323">            formalParameter.jjtAddChild(variableDeclaratorId, 1);</span>
+<span class="fc" id="L324">            variableDeclaratorId.jjtSetParent(formalParameter);</span>
             
-<span class="fc" id="L322">            ASTType type = new ASTType(JavaParserTreeConstants.JJTTYPE);</span>
-<span class="fc" id="L323">            formalParameter.jjtAddChild(type, 0);</span>
-<span class="fc" id="L324">            type.jjtSetParent(formalParameter);</span>
+<span class="fc" id="L326">            ASTType type = new ASTType(JavaParserTreeConstants.JJTTYPE);</span>
+<span class="fc" id="L327">            formalParameter.jjtAddChild(type, 0);</span>
+<span class="fc" id="L328">            type.jjtSetParent(formalParameter);</span>
 
-<span class="pc bpc" id="L326" title="1 of 2 branches missed.">            if (PRIMITIVE_TYPES.contains(parameterTypes[i])) {</span>
-<span class="nc" id="L327">                ASTPrimitiveType primitiveType = new ASTPrimitiveType(JavaParserTreeConstants.JJTPRIMITIVETYPE);</span>
-<span class="nc" id="L328">                primitiveType.setImage(parameterTypes[i]);</span>
-<span class="nc" id="L329">                type.jjtAddChild(primitiveType, 0);</span>
-<span class="nc" id="L330">                primitiveType.jjtSetParent(type);</span>
-<span class="nc" id="L331">            } else {</span>
-<span class="fc" id="L332">                ASTReferenceType referenceType = new ASTReferenceType(JavaParserTreeConstants.JJTREFERENCETYPE);</span>
-<span class="fc" id="L333">                type.jjtAddChild(referenceType, 0);</span>
-<span class="fc" id="L334">                referenceType.jjtSetParent(type);</span>
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">            if (PRIMITIVE_TYPES.contains(parameterTypes[i])) {</span>
+<span class="nc" id="L331">                ASTPrimitiveType primitiveType = new ASTPrimitiveType(JavaParserTreeConstants.JJTPRIMITIVETYPE);</span>
+<span class="nc" id="L332">                primitiveType.setImage(parameterTypes[i]);</span>
+<span class="nc" id="L333">                type.jjtAddChild(primitiveType, 0);</span>
+<span class="nc" id="L334">                primitiveType.jjtSetParent(type);</span>
+<span class="nc" id="L335">            } else {</span>
+<span class="fc" id="L336">                ASTReferenceType referenceType = new ASTReferenceType(JavaParserTreeConstants.JJTREFERENCETYPE);</span>
+<span class="fc" id="L337">                type.jjtAddChild(referenceType, 0);</span>
+<span class="fc" id="L338">                referenceType.jjtSetParent(type);</span>
 
                 // TODO : this could actually be a primitive array...
-<span class="fc" id="L337">                ASTClassOrInterfaceType classOrInterfaceType = new ASTClassOrInterfaceType(</span>
+<span class="fc" id="L341">                ASTClassOrInterfaceType classOrInterfaceType = new ASTClassOrInterfaceType(</span>
                         JavaParserTreeConstants.JJTCLASSORINTERFACETYPE);
-<span class="fc" id="L339">                classOrInterfaceType.setImage(parameterTypes[i]);</span>
-<span class="fc" id="L340">                referenceType.jjtAddChild(classOrInterfaceType, 0);</span>
-<span class="fc" id="L341">                classOrInterfaceType.jjtSetParent(referenceType);</span>
+<span class="fc" id="L343">                classOrInterfaceType.setImage(parameterTypes[i]);</span>
+<span class="fc" id="L344">                referenceType.jjtAddChild(classOrInterfaceType, 0);</span>
+<span class="fc" id="L345">                classOrInterfaceType.jjtSetParent(referenceType);</span>
             }
         }
 
-<span class="fc" id="L345">        return new MethodNameDeclaration(methodDeclarator);</span>
+<span class="fc" id="L349">        return new MethodNameDeclaration(methodDeclarator);</span>
     }
 
     /**
@@ -354,75 +358,75 @@ public class ClassScope extends AbstractJavaScope {
      * @return List of types
      */
     private List&lt;TypedNameDeclaration&gt; determineParameterTypes(MethodNameDeclaration mnd) {
-<span class="fc" id="L357">        List&lt;ASTFormalParameter&gt; parameters = mnd.getMethodNameDeclaratorNode()</span>
-                .findDescendantsOfType(ASTFormalParameter.class);
-<span class="fc bfc" id="L359" title="All 2 branches covered.">        if (parameters.isEmpty()) {</span>
-<span class="fc" id="L360">            return Collections.emptyList();</span>
+<span class="fc" id="L361">        List&lt;ASTFormalParameter&gt; parameters = mnd.getMethodNameDeclaratorNode()</span>
+<span class="fc" id="L362">                .findDescendantsOfType(ASTFormalParameter.class);</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">        if (parameters.isEmpty()) {</span>
+<span class="fc" id="L364">            return Collections.emptyList();</span>
         }
 
-<span class="fc" id="L363">        List&lt;TypedNameDeclaration&gt; parameterTypes = new ArrayList&lt;&gt;(parameters.size());</span>
-<span class="fc" id="L364">        SourceFileScope fileScope = getEnclosingScope(SourceFileScope.class);</span>
-<span class="fc" id="L365">        Map&lt;String, Node&gt; qualifiedTypeNames = fileScope.getQualifiedTypeNames();</span>
+<span class="fc" id="L367">        List&lt;TypedNameDeclaration&gt; parameterTypes = new ArrayList&lt;&gt;(parameters.size());</span>
+<span class="fc" id="L368">        SourceFileScope fileScope = getEnclosingScope(SourceFileScope.class);</span>
+<span class="fc" id="L369">        Map&lt;String, Node&gt; qualifiedTypeNames = fileScope.getQualifiedTypeNames();</span>
 
-<span class="fc bfc" id="L367" title="All 2 branches covered.">        for (ASTFormalParameter p : parameters) {</span>
-<span class="fc" id="L368">            String typeImage = p.getTypeNode().getTypeImage();</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        for (ASTFormalParameter p : parameters) {</span>
+<span class="fc" id="L372">            String typeImage = p.getTypeNode().getTypeImage();</span>
             // typeImage might be qualified/unqualified. If it refers to a type,
             // defined in the same toplevel class,
             // we should normalize the name here.
             // It might also refer to a type, that is imported.
-<span class="fc" id="L373">            typeImage = qualifyTypeName(typeImage);</span>
-<span class="fc" id="L374">            Node declaringNode = qualifiedTypeNames.get(typeImage);</span>
-<span class="fc" id="L375">            Class&lt;?&gt; resolvedType = fileScope.resolveType(typeImage);</span>
-<span class="fc bfc" id="L376" title="All 2 branches covered.">            if (resolvedType == null) {</span>
-<span class="fc" id="L377">                resolvedType = resolveGenericType(p, typeImage);</span>
+<span class="fc" id="L377">            typeImage = qualifyTypeName(typeImage);</span>
+<span class="fc" id="L378">            Node declaringNode = qualifiedTypeNames.get(typeImage);</span>
+<span class="fc" id="L379">            Class&lt;?&gt; resolvedType = fileScope.resolveType(typeImage);</span>
+<span class="fc bfc" id="L380" title="All 2 branches covered.">            if (resolvedType == null) {</span>
+<span class="fc" id="L381">                resolvedType = resolveGenericType(p, typeImage);</span>
             }
-<span class="fc" id="L379">            parameterTypes.add(new SimpleTypedNameDeclaration(typeImage, resolvedType, determineSuper(declaringNode)));</span>
-<span class="fc" id="L380">        }</span>
-<span class="fc" id="L381">        return parameterTypes;</span>
+<span class="fc" id="L383">            parameterTypes.add(new SimpleTypedNameDeclaration(typeImage, resolvedType, determineSuper(declaringNode)));</span>
+<span class="fc" id="L384">        }</span>
+<span class="fc" id="L385">        return parameterTypes;</span>
     }
 
     private String qualifyTypeName(String typeImage) {
-<span class="pc bpc" id="L385" title="1 of 2 branches missed.">        if (typeImage == null) {</span>
-<span class="nc" id="L386">            return null;</span>
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        if (typeImage == null) {</span>
+<span class="nc" id="L390">            return null;</span>
         }
 
-<span class="fc" id="L389">        final SourceFileScope fileScope = getEnclosingScope(SourceFileScope.class);</span>
+<span class="fc" id="L393">        final SourceFileScope fileScope = getEnclosingScope(SourceFileScope.class);</span>
 
         // Is it an inner class being accessed?
-<span class="fc" id="L392">        String qualified = findQualifiedName(typeImage, fileScope.getQualifiedTypeNames().keySet());</span>
-<span class="fc bfc" id="L393" title="All 2 branches covered.">        if (qualified != null) {</span>
-<span class="fc" id="L394">            return qualified;</span>
+<span class="fc" id="L396">        String qualified = findQualifiedName(typeImage, fileScope.getQualifiedTypeNames().keySet());</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">        if (qualified != null) {</span>
+<span class="fc" id="L398">            return qualified;</span>
         }
 
         // Is it an explicit import?
-<span class="fc" id="L398">        qualified = findQualifiedName(typeImage, fileScope.getExplicitImports());</span>
-<span class="fc bfc" id="L399" title="All 2 branches covered.">        if (qualified != null) {</span>
-<span class="fc" id="L400">            return qualified;</span>
+<span class="fc" id="L402">        qualified = findQualifiedName(typeImage, fileScope.getExplicitImports());</span>
+<span class="fc bfc" id="L403" title="All 2 branches covered.">        if (qualified != null) {</span>
+<span class="fc" id="L404">            return qualified;</span>
         }
 
         // Is it an inner class of an explicit import?
-<span class="fc" id="L404">        int dotIndex = typeImage.indexOf('.');</span>
-<span class="fc bfc" id="L405" title="All 2 branches covered.">        if (dotIndex != -1) {</span>
-<span class="fc" id="L406">            qualified = findQualifiedName(typeImage.substring(0, dotIndex), fileScope.getExplicitImports());</span>
-<span class="pc bpc" id="L407" title="1 of 2 branches missed.">            if (qualified != null) {</span>
-<span class="fc" id="L408">                return qualified.concat(typeImage.substring(dotIndex));</span>
+<span class="fc" id="L408">        int dotIndex = typeImage.indexOf('.');</span>
+<span class="fc bfc" id="L409" title="All 2 branches covered.">        if (dotIndex != -1) {</span>
+<span class="fc" id="L410">            qualified = findQualifiedName(typeImage.substring(0, dotIndex), fileScope.getExplicitImports());</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">            if (qualified != null) {</span>
+<span class="fc" id="L412">                return qualified.concat(typeImage.substring(dotIndex));</span>
             }
         }
 
-<span class="fc" id="L412">        return typeImage;</span>
+<span class="fc" id="L416">        return typeImage;</span>
     }
 
     private String findQualifiedName(String typeImage, Set&lt;String&gt; candidates) {
-<span class="fc" id="L416">        int nameLength = typeImage.length();</span>
-<span class="fc bfc" id="L417" title="All 2 branches covered.">        for (String qualified : candidates) {</span>
-<span class="fc" id="L418">            int fullLength = qualified.length();</span>
-<span class="fc bfc" id="L419" title="All 6 branches covered.">            if (qualified.endsWith(typeImage)</span>
-                    &amp;&amp; (fullLength == nameLength || qualified.charAt(fullLength - nameLength - 1) == '.')) {
-<span class="fc" id="L421">                return qualified;</span>
+<span class="fc" id="L420">        int nameLength = typeImage.length();</span>
+<span class="fc bfc" id="L421" title="All 2 branches covered.">        for (String qualified : candidates) {</span>
+<span class="fc" id="L422">            int fullLength = qualified.length();</span>
+<span class="fc bfc" id="L423" title="All 4 branches covered.">            if (qualified.endsWith(typeImage)</span>
+<span class="fc bfc" id="L424" title="All 2 branches covered.">                    &amp;&amp; (fullLength == nameLength || qualified.charAt(fullLength - nameLength - 1) == '.')) {</span>
+<span class="fc" id="L425">                return qualified;</span>
             }
-<span class="fc" id="L423">        }</span>
+<span class="fc" id="L427">        }</span>
 
-<span class="fc" id="L425">        return null;</span>
+<span class="fc" id="L429">        return null;</span>
     }
 
     /**
@@ -440,86 +444,86 @@ public class ClassScope extends AbstractJavaScope {
      */
     private List&lt;TypedNameDeclaration&gt; determineArgumentTypes(JavaNameOccurrence occurrence,
             List&lt;TypedNameDeclaration&gt; parameterTypes) {
-<span class="fc" id="L443">        ASTArgumentList arguments = null;</span>
+<span class="fc" id="L447">        ASTArgumentList arguments = null;</span>
         Node nextSibling;
-<span class="fc bfc" id="L445" title="All 2 branches covered.">        if (occurrence.getLocation() instanceof ASTPrimarySuffix) {</span>
-<span class="fc" id="L446">            nextSibling = getNextSibling(occurrence.getLocation());</span>
+<span class="fc bfc" id="L449" title="All 2 branches covered.">        if (occurrence.getLocation() instanceof ASTPrimarySuffix) {</span>
+<span class="fc" id="L450">            nextSibling = getNextSibling(occurrence.getLocation());</span>
         } else {
-<span class="fc" id="L448">            nextSibling = getNextSibling(occurrence.getLocation().jjtGetParent());</span>
+<span class="fc" id="L452">            nextSibling = getNextSibling(occurrence.getLocation().jjtGetParent());</span>
         }
 
-<span class="pc bpc" id="L451" title="1 of 2 branches missed.">        if (nextSibling != null) {</span>
-<span class="fc" id="L452">            arguments = nextSibling.getFirstDescendantOfType(ASTArgumentList.class);</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">        if (nextSibling != null) {</span>
+<span class="fc" id="L456">            arguments = nextSibling.getFirstDescendantOfType(ASTArgumentList.class);</span>
         }
 
-<span class="fc bfc" id="L455" title="All 2 branches covered.">        if (arguments == null) {</span>
-<span class="fc" id="L456">            return Collections.emptyList();</span>
+<span class="fc bfc" id="L459" title="All 2 branches covered.">        if (arguments == null) {</span>
+<span class="fc" id="L460">            return Collections.emptyList();</span>
         }
 
-<span class="fc" id="L459">        List&lt;TypedNameDeclaration&gt; argumentTypes = new ArrayList&lt;&gt;(arguments.jjtGetNumChildren());</span>
-<span class="fc" id="L460">        Map&lt;String, Node&gt; qualifiedTypeNames = getEnclosingScope(SourceFileScope.class).getQualifiedTypeNames();</span>
+<span class="fc" id="L463">        List&lt;TypedNameDeclaration&gt; argumentTypes = new ArrayList&lt;&gt;(arguments.jjtGetNumChildren());</span>
+<span class="fc" id="L464">        Map&lt;String, Node&gt; qualifiedTypeNames = getEnclosingScope(SourceFileScope.class).getQualifiedTypeNames();</span>
 
-<span class="fc bfc" id="L462" title="All 2 branches covered.">        for (int i = 0; i &lt; arguments.jjtGetNumChildren(); i++) {</span>
-<span class="fc" id="L463">            Node argument = arguments.jjtGetChild(i);</span>
-<span class="fc" id="L464">            Node child = null;</span>
-<span class="fc" id="L465">            boolean isMethodCall = false;</span>
-<span class="pc bpc" id="L466" title="2 of 6 branches missed.">            if (argument.jjtGetNumChildren() &gt; 0 &amp;&amp; argument.jjtGetChild(0).jjtGetNumChildren() &gt; 0</span>
-                    &amp;&amp; argument.jjtGetChild(0).jjtGetChild(0).jjtGetNumChildren() &gt; 0) {
-<span class="fc" id="L468">                child = argument.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
-<span class="fc bfc" id="L469" title="All 2 branches covered.">                isMethodCall = argument.jjtGetChild(0).jjtGetNumChildren() &gt; 1;</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">        for (int i = 0; i &lt; arguments.jjtGetNumChildren(); i++) {</span>
+<span class="fc" id="L467">            Node argument = arguments.jjtGetChild(i);</span>
+<span class="fc" id="L468">            Node child = null;</span>
+<span class="fc" id="L469">            boolean isMethodCall = false;</span>
+<span class="pc bpc" id="L470" title="2 of 4 branches missed.">            if (argument.jjtGetNumChildren() &gt; 0 &amp;&amp; argument.jjtGetChild(0).jjtGetNumChildren() &gt; 0</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">                    &amp;&amp; argument.jjtGetChild(0).jjtGetChild(0).jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc" id="L472">                child = argument.jjtGetChild(0).jjtGetChild(0).jjtGetChild(0);</span>
+<span class="fc bfc" id="L473" title="All 2 branches covered.">                isMethodCall = argument.jjtGetChild(0).jjtGetNumChildren() &gt; 1;</span>
             }
-<span class="fc" id="L471">            TypedNameDeclaration type = null;</span>
-<span class="fc bfc" id="L472" title="All 4 branches covered.">            if (child instanceof ASTName &amp;&amp; !isMethodCall) {</span>
-<span class="fc" id="L473">                ASTName name = (ASTName) child;</span>
-<span class="fc" id="L474">                Scope s = name.getScope();</span>
-<span class="fc" id="L475">                final JavaNameOccurrence nameOccurrence = new JavaNameOccurrence(name, name.getImage());</span>
-<span class="fc bfc" id="L476" title="All 2 branches covered.">                while (s != null) {</span>
-<span class="fc bfc" id="L477" title="All 2 branches covered.">                    if (s.contains(nameOccurrence)) {</span>
-<span class="fc" id="L478">                        break;</span>
+<span class="fc" id="L475">            TypedNameDeclaration type = null;</span>
+<span class="fc bfc" id="L476" title="All 4 branches covered.">            if (child instanceof ASTName &amp;&amp; !isMethodCall) {</span>
+<span class="fc" id="L477">                ASTName name = (ASTName) child;</span>
+<span class="fc" id="L478">                Scope s = name.getScope();</span>
+<span class="fc" id="L479">                final JavaNameOccurrence nameOccurrence = new JavaNameOccurrence(name, name.getImage());</span>
+<span class="fc bfc" id="L480" title="All 2 branches covered.">                while (s != null) {</span>
+<span class="fc bfc" id="L481" title="All 2 branches covered.">                    if (s.contains(nameOccurrence)) {</span>
+<span class="fc" id="L482">                        break;</span>
                     }
-<span class="fc" id="L480">                    s = s.getParent();</span>
+<span class="fc" id="L484">                    s = s.getParent();</span>
                 }
-<span class="fc bfc" id="L482" title="All 2 branches covered.">                if (s != null) {</span>
-<span class="fc" id="L483">                    Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = s</span>
-                            .getDeclarations(VariableNameDeclaration.class);
-<span class="fc bfc" id="L485" title="All 2 branches covered.">                    for (VariableNameDeclaration d : vars.keySet()) {</span>
+<span class="fc bfc" id="L486" title="All 2 branches covered.">                if (s != null) {</span>
+<span class="fc" id="L487">                    Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = s</span>
+<span class="fc" id="L488">                            .getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc bfc" id="L489" title="All 2 branches covered.">                    for (VariableNameDeclaration d : vars.keySet()) {</span>
                         // in case of simple lambda expression, the type
                         // might be unknown
-<span class="fc bfc" id="L488" title="All 4 branches covered.">                        if (d.getImage().equals(name.getImage()) &amp;&amp; d.getTypeImage() != null) {</span>
-<span class="fc" id="L489">                            String typeName = d.getTypeImage();</span>
-<span class="fc" id="L490">                            typeName = qualifyTypeName(typeName);</span>
-<span class="fc" id="L491">                            Node declaringNode = qualifiedTypeNames.get(typeName);</span>
-<span class="fc" id="L492">                            type = new SimpleTypedNameDeclaration(typeName,</span>
-                                    this.getEnclosingScope(SourceFileScope.class).resolveType(typeName),
-                                    determineSuper(declaringNode));
-<span class="fc" id="L495">                            break;</span>
+<span class="fc bfc" id="L492" title="All 4 branches covered.">                        if (d.getImage().equals(name.getImage()) &amp;&amp; d.getTypeImage() != null) {</span>
+<span class="fc" id="L493">                            String typeName = d.getTypeImage();</span>
+<span class="fc" id="L494">                            typeName = qualifyTypeName(typeName);</span>
+<span class="fc" id="L495">                            Node declaringNode = qualifiedTypeNames.get(typeName);</span>
+<span class="fc" id="L496">                            type = new SimpleTypedNameDeclaration(typeName,</span>
+<span class="fc" id="L497">                                    this.getEnclosingScope(SourceFileScope.class).resolveType(typeName),</span>
+<span class="fc" id="L498">                                    determineSuper(declaringNode));</span>
+<span class="fc" id="L499">                            break;</span>
                         }
-<span class="fc" id="L497">                    }</span>
+<span class="fc" id="L501">                    }</span>
                 }
-<span class="fc bfc" id="L499" title="All 2 branches covered.">            } else if (child instanceof ASTLiteral) {</span>
-<span class="fc" id="L500">                ASTLiteral literal = (ASTLiteral) child;</span>
-<span class="fc bfc" id="L501" title="All 2 branches covered.">                if (literal.isCharLiteral()) {</span>
-<span class="fc" id="L502">                    type = new SimpleTypedNameDeclaration(&quot;char&quot;, literal.getType());</span>
-<span class="fc bfc" id="L503" title="All 2 branches covered.">                } else if (literal.isStringLiteral()) {</span>
-<span class="fc" id="L504">                    type = new SimpleTypedNameDeclaration(&quot;String&quot;, literal.getType());</span>
-<span class="fc bfc" id="L505" title="All 2 branches covered.">                } else if (literal.isFloatLiteral()) {</span>
-<span class="fc" id="L506">                    type = new SimpleTypedNameDeclaration(&quot;float&quot;, literal.getType());</span>
-<span class="fc bfc" id="L507" title="All 2 branches covered.">                } else if (literal.isDoubleLiteral()) {</span>
-<span class="fc" id="L508">                    type = new SimpleTypedNameDeclaration(&quot;double&quot;, literal.getType());</span>
-<span class="fc bfc" id="L509" title="All 2 branches covered.">                } else if (literal.isIntLiteral()) {</span>
-<span class="fc" id="L510">                    type = new SimpleTypedNameDeclaration(&quot;int&quot;, literal.getType());</span>
-<span class="fc bfc" id="L511" title="All 2 branches covered.">                } else if (literal.isLongLiteral()) {</span>
-<span class="fc" id="L512">                    type = new SimpleTypedNameDeclaration(&quot;long&quot;, literal.getType());</span>
-<span class="pc bpc" id="L513" title="1 of 4 branches missed.">                } else if (literal.jjtGetNumChildren() == 1</span>
-                        &amp;&amp; literal.jjtGetChild(0) instanceof ASTBooleanLiteral) {
-<span class="fc" id="L515">                    type = new SimpleTypedNameDeclaration(&quot;boolean&quot;, Boolean.TYPE);</span>
+<span class="fc bfc" id="L503" title="All 2 branches covered.">            } else if (child instanceof ASTLiteral) {</span>
+<span class="fc" id="L504">                ASTLiteral literal = (ASTLiteral) child;</span>
+<span class="fc bfc" id="L505" title="All 2 branches covered.">                if (literal.isCharLiteral()) {</span>
+<span class="fc" id="L506">                    type = new SimpleTypedNameDeclaration(&quot;char&quot;, literal.getType());</span>
+<span class="fc bfc" id="L507" title="All 2 branches covered.">                } else if (literal.isStringLiteral()) {</span>
+<span class="fc" id="L508">                    type = new SimpleTypedNameDeclaration(&quot;String&quot;, literal.getType());</span>
+<span class="fc bfc" id="L509" title="All 2 branches covered.">                } else if (literal.isFloatLiteral()) {</span>
+<span class="fc" id="L510">                    type = new SimpleTypedNameDeclaration(&quot;float&quot;, literal.getType());</span>
+<span class="fc bfc" id="L511" title="All 2 branches covered.">                } else if (literal.isDoubleLiteral()) {</span>
+<span class="fc" id="L512">                    type = new SimpleTypedNameDeclaration(&quot;double&quot;, literal.getType());</span>
+<span class="fc bfc" id="L513" title="All 2 branches covered.">                } else if (literal.isIntLiteral()) {</span>
+<span class="fc" id="L514">                    type = new SimpleTypedNameDeclaration(&quot;int&quot;, literal.getType());</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">                } else if (literal.isLongLiteral()) {</span>
+<span class="fc" id="L516">                    type = new SimpleTypedNameDeclaration(&quot;long&quot;, literal.getType());</span>
+<span class="pc bpc" id="L517" title="1 of 2 branches missed.">                } else if (literal.jjtGetNumChildren() == 1</span>
+<span class="fc bfc" id="L518" title="All 2 branches covered.">                        &amp;&amp; literal.jjtGetChild(0) instanceof ASTBooleanLiteral) {</span>
+<span class="fc" id="L519">                    type = new SimpleTypedNameDeclaration(&quot;boolean&quot;, Boolean.TYPE);</span>
                 }
-<span class="pc bpc" id="L517" title="1 of 4 branches missed.">            } else if (child instanceof ASTAllocationExpression</span>
-                    &amp;&amp; child.jjtGetChild(0) instanceof ASTClassOrInterfaceType) {
-<span class="fc" id="L519">                ASTClassOrInterfaceType classInterface = (ASTClassOrInterfaceType) child.jjtGetChild(0);</span>
-<span class="fc" id="L520">                type = convertToSimpleType(classInterface);</span>
+<span class="fc bfc" id="L521" title="All 2 branches covered.">            } else if (child instanceof ASTAllocationExpression</span>
+<span class="pc bpc" id="L522" title="1 of 2 branches missed.">                    &amp;&amp; child.jjtGetChild(0) instanceof ASTClassOrInterfaceType) {</span>
+<span class="fc" id="L523">                ASTClassOrInterfaceType classInterface = (ASTClassOrInterfaceType) child.jjtGetChild(0);</span>
+<span class="fc" id="L524">                type = convertToSimpleType(classInterface);</span>
             }
-<span class="fc bfc" id="L522" title="All 4 branches covered.">            if (type == null &amp;&amp; !parameterTypes.isEmpty()) {</span>
+<span class="fc bfc" id="L526" title="All 4 branches covered.">            if (type == null &amp;&amp; !parameterTypes.isEmpty()) {</span>
                 // replace the unknown type with the correct parameter type
                 // of the method.
                 // in case the argument is itself a method call, we can't
@@ -530,71 +534,71 @@ public class ClassScope extends AbstractJavaScope {
 
                 // the method might be vararg, so, there might be more
                 // arguments than parameterTypes
-<span class="fc bfc" id="L533" title="All 2 branches covered.">                if (parameterTypes.size() &gt; i) {</span>
-<span class="fc" id="L534">                    type = parameterTypes.get(i);</span>
+<span class="fc bfc" id="L537" title="All 2 branches covered.">                if (parameterTypes.size() &gt; i) {</span>
+<span class="fc" id="L538">                    type = parameterTypes.get(i);</span>
                 } else {
                     // last parameter is the vararg type
-<span class="fc" id="L537">                    type = parameterTypes.get(parameterTypes.size() - 1);</span>
+<span class="fc" id="L541">                    type = parameterTypes.get(parameterTypes.size() - 1);</span>
                 }
             }
-<span class="fc bfc" id="L540" title="All 4 branches covered.">            if (type != null &amp;&amp; type.getType() == null) {</span>
-<span class="fc" id="L541">                Class&lt;?&gt; typeBound = resolveGenericType(argument, type.getTypeImage());</span>
-<span class="fc bfc" id="L542" title="All 2 branches covered.">                if (typeBound != null) {</span>
-<span class="fc" id="L543">                    type = new SimpleTypedNameDeclaration(type.getTypeImage(), typeBound);</span>
+<span class="fc bfc" id="L544" title="All 4 branches covered.">            if (type != null &amp;&amp; type.getType() == null) {</span>
+<span class="fc" id="L545">                Class&lt;?&gt; typeBound = resolveGenericType(argument, type.getTypeImage());</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">                if (typeBound != null) {</span>
+<span class="fc" id="L547">                    type = new SimpleTypedNameDeclaration(type.getTypeImage(), typeBound);</span>
                 }
             }
-<span class="fc" id="L546">            argumentTypes.add(type);</span>
+<span class="fc" id="L550">            argumentTypes.add(type);</span>
         }
-<span class="fc" id="L548">        return argumentTypes;</span>
+<span class="fc" id="L552">        return argumentTypes;</span>
     }
 
     private SimpleTypedNameDeclaration determineSuper(Node declaringNode) {
-<span class="fc" id="L552">        SimpleTypedNameDeclaration result = null;</span>
-<span class="fc bfc" id="L553" title="All 2 branches covered.">        if (declaringNode instanceof ASTClassOrInterfaceDeclaration) {</span>
-<span class="fc" id="L554">            ASTClassOrInterfaceDeclaration classDeclaration = (ASTClassOrInterfaceDeclaration) declaringNode;</span>
-<span class="fc" id="L555">            ASTImplementsList implementsList = classDeclaration.getFirstChildOfType(ASTImplementsList.class);</span>
-<span class="fc bfc" id="L556" title="All 2 branches covered.">            if (implementsList != null) {</span>
-<span class="fc" id="L557">                List&lt;ASTClassOrInterfaceType&gt; types = implementsList.findChildrenOfType(ASTClassOrInterfaceType.class);</span>
-<span class="fc" id="L558">                SimpleTypedNameDeclaration type = convertToSimpleType(types);</span>
-<span class="fc" id="L559">                result = type;</span>
+<span class="fc" id="L556">        SimpleTypedNameDeclaration result = null;</span>
+<span class="fc bfc" id="L557" title="All 2 branches covered.">        if (declaringNode instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="fc" id="L558">            ASTClassOrInterfaceDeclaration classDeclaration = (ASTClassOrInterfaceDeclaration) declaringNode;</span>
+<span class="fc" id="L559">            ASTImplementsList implementsList = classDeclaration.getFirstChildOfType(ASTImplementsList.class);</span>
+<span class="fc bfc" id="L560" title="All 2 branches covered.">            if (implementsList != null) {</span>
+<span class="fc" id="L561">                List&lt;ASTClassOrInterfaceType&gt; types = implementsList.findChildrenOfType(ASTClassOrInterfaceType.class);</span>
+<span class="fc" id="L562">                SimpleTypedNameDeclaration type = convertToSimpleType(types);</span>
+<span class="fc" id="L563">                result = type;</span>
             }
-<span class="fc" id="L561">            ASTExtendsList extendsList = classDeclaration.getFirstChildOfType(ASTExtendsList.class);</span>
-<span class="fc bfc" id="L562" title="All 2 branches covered.">            if (extendsList != null) {</span>
-<span class="fc" id="L563">                List&lt;ASTClassOrInterfaceType&gt; types = extendsList.findChildrenOfType(ASTClassOrInterfaceType.class);</span>
-<span class="fc" id="L564">                SimpleTypedNameDeclaration type = convertToSimpleType(types);</span>
-<span class="pc bpc" id="L565" title="1 of 2 branches missed.">                if (result == null) {</span>
-<span class="fc" id="L566">                    result = type;</span>
+<span class="fc" id="L565">            ASTExtendsList extendsList = classDeclaration.getFirstChildOfType(ASTExtendsList.class);</span>
+<span class="fc bfc" id="L566" title="All 2 branches covered.">            if (extendsList != null) {</span>
+<span class="fc" id="L567">                List&lt;ASTClassOrInterfaceType&gt; types = extendsList.findChildrenOfType(ASTClassOrInterfaceType.class);</span>
+<span class="fc" id="L568">                SimpleTypedNameDeclaration type = convertToSimpleType(types);</span>
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">                if (result == null) {</span>
+<span class="fc" id="L570">                    result = type;</span>
                 } else {
-<span class="nc" id="L568">                    result.addNext(type);</span>
+<span class="nc" id="L572">                    result.addNext(type);</span>
                 }
             }
         }
-<span class="fc" id="L572">        return result;</span>
+<span class="fc" id="L576">        return result;</span>
     }
 
     private SimpleTypedNameDeclaration convertToSimpleType(List&lt;ASTClassOrInterfaceType&gt; types) {
-<span class="fc" id="L576">        SimpleTypedNameDeclaration result = null;</span>
-<span class="fc bfc" id="L577" title="All 2 branches covered.">        for (ASTClassOrInterfaceType t : types) {</span>
-<span class="fc" id="L578">            SimpleTypedNameDeclaration type = convertToSimpleType(t);</span>
-<span class="pc bpc" id="L579" title="1 of 2 branches missed.">            if (result == null) {</span>
-<span class="fc" id="L580">                result = type;</span>
+<span class="fc" id="L580">        SimpleTypedNameDeclaration result = null;</span>
+<span class="fc bfc" id="L581" title="All 2 branches covered.">        for (ASTClassOrInterfaceType t : types) {</span>
+<span class="fc" id="L582">            SimpleTypedNameDeclaration type = convertToSimpleType(t);</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">            if (result == null) {</span>
+<span class="fc" id="L584">                result = type;</span>
             } else {
-<span class="nc" id="L582">                result.addNext(type);</span>
+<span class="nc" id="L586">                result.addNext(type);</span>
             }
-<span class="fc" id="L584">        }</span>
-<span class="fc" id="L585">        return result;</span>
+<span class="fc" id="L588">        }</span>
+<span class="fc" id="L589">        return result;</span>
     }
 
     private SimpleTypedNameDeclaration convertToSimpleType(ASTClassOrInterfaceType t) {
-<span class="fc" id="L589">        String typeImage = t.getImage();</span>
-<span class="fc" id="L590">        typeImage = qualifyTypeName(typeImage);</span>
-<span class="fc" id="L591">        Node declaringNode = getEnclosingScope(SourceFileScope.class).getQualifiedTypeNames().get(typeImage);</span>
-<span class="fc" id="L592">        return new SimpleTypedNameDeclaration(typeImage,</span>
-                this.getEnclosingScope(SourceFileScope.class).resolveType(typeImage), determineSuper(declaringNode));
+<span class="fc" id="L593">        String typeImage = t.getImage();</span>
+<span class="fc" id="L594">        typeImage = qualifyTypeName(typeImage);</span>
+<span class="fc" id="L595">        Node declaringNode = getEnclosingScope(SourceFileScope.class).getQualifiedTypeNames().get(typeImage);</span>
+<span class="fc" id="L596">        return new SimpleTypedNameDeclaration(typeImage,</span>
+<span class="fc" id="L597">                this.getEnclosingScope(SourceFileScope.class).resolveType(typeImage), determineSuper(declaringNode));</span>
     }
 
     public Class&lt;?&gt; resolveType(final String name) {
-<span class="fc" id="L597">        return this.getEnclosingScope(SourceFileScope.class).resolveType(qualifyTypeName(name));</span>
+<span class="fc" id="L601">        return this.getEnclosingScope(SourceFileScope.class).resolveType(qualifyTypeName(name));</span>
     }
 
     /**
@@ -609,77 +613,77 @@ public class ClassScope extends AbstractJavaScope {
      * @return the resolved class or &lt;code&gt;null&lt;/code&gt; if nothing was found.
      */
     private Class&lt;?&gt; resolveGenericType(Node argument, String typeImage) {
-<span class="fc" id="L612">        List&lt;ASTTypeParameter&gt; types = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L616">        List&lt;ASTTypeParameter&gt; types = new ArrayList&lt;&gt;();</span>
         // first search only within the same method
-<span class="fc" id="L614">        ASTClassOrInterfaceBodyDeclaration firstParentOfType = argument</span>
-                .getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);
-<span class="fc bfc" id="L616" title="All 2 branches covered.">        if (firstParentOfType != null) {</span>
-<span class="fc" id="L617">            types.addAll(firstParentOfType.findDescendantsOfType(ASTTypeParameter.class));</span>
+<span class="fc" id="L618">        ASTClassOrInterfaceBodyDeclaration firstParentOfType = argument</span>
+<span class="fc" id="L619">                .getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);</span>
+<span class="fc bfc" id="L620" title="All 2 branches covered.">        if (firstParentOfType != null) {</span>
+<span class="fc" id="L621">            types.addAll(firstParentOfType.findDescendantsOfType(ASTTypeParameter.class));</span>
         }
 
         // then search class level types, from inner-most to outer-most
-<span class="fc" id="L621">        List&lt;ASTClassOrInterfaceDeclaration&gt; enclosingClasses = argument</span>
-                .getParentsOfType(ASTClassOrInterfaceDeclaration.class);
-<span class="fc bfc" id="L623" title="All 2 branches covered.">        for (ASTClassOrInterfaceDeclaration enclosing : enclosingClasses) {</span>
-<span class="fc" id="L624">            ASTTypeParameters classLevelTypeParameters = enclosing.getFirstChildOfType(ASTTypeParameters.class);</span>
-<span class="fc bfc" id="L625" title="All 2 branches covered.">            if (classLevelTypeParameters != null) {</span>
-<span class="fc" id="L626">                types.addAll(classLevelTypeParameters.findDescendantsOfType(ASTTypeParameter.class));</span>
+<span class="fc" id="L625">        List&lt;ASTClassOrInterfaceDeclaration&gt; enclosingClasses = argument</span>
+<span class="fc" id="L626">                .getParentsOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L627" title="All 2 branches covered.">        for (ASTClassOrInterfaceDeclaration enclosing : enclosingClasses) {</span>
+<span class="fc" id="L628">            ASTTypeParameters classLevelTypeParameters = enclosing.getFirstChildOfType(ASTTypeParameters.class);</span>
+<span class="fc bfc" id="L629" title="All 2 branches covered.">            if (classLevelTypeParameters != null) {</span>
+<span class="fc" id="L630">                types.addAll(classLevelTypeParameters.findDescendantsOfType(ASTTypeParameter.class));</span>
             }
-<span class="fc" id="L628">        }</span>
-<span class="fc" id="L629">        return resolveGenericType(typeImage, types);</span>
+<span class="fc" id="L632">        }</span>
+<span class="fc" id="L633">        return resolveGenericType(typeImage, types);</span>
     }
 
     private Class&lt;?&gt; resolveGenericType(String typeImage, List&lt;ASTTypeParameter&gt; types) {
-<span class="fc bfc" id="L633" title="All 2 branches covered.">        for (ASTTypeParameter type : types) {</span>
-<span class="fc bfc" id="L634" title="All 2 branches covered.">            if (typeImage.equals(type.getImage())) {</span>
-<span class="fc" id="L635">                ASTClassOrInterfaceType bound = type.getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
-<span class="fc bfc" id="L636" title="All 2 branches covered.">                if (bound != null) {</span>
-<span class="pc bpc" id="L637" title="1 of 2 branches missed.">                    if (bound.getType() != null) {</span>
-<span class="nc" id="L638">                        return bound.getType();</span>
+<span class="fc bfc" id="L637" title="All 2 branches covered.">        for (ASTTypeParameter type : types) {</span>
+<span class="fc bfc" id="L638" title="All 2 branches covered.">            if (typeImage.equals(type.getImage())) {</span>
+<span class="fc" id="L639">                ASTClassOrInterfaceType bound = type.getFirstDescendantOfType(ASTClassOrInterfaceType.class);</span>
+<span class="fc bfc" id="L640" title="All 2 branches covered.">                if (bound != null) {</span>
+<span class="pc bpc" id="L641" title="1 of 2 branches missed.">                    if (bound.getType() != null) {</span>
+<span class="nc" id="L642">                        return bound.getType();</span>
                     } else {
-<span class="fc" id="L640">                        return this.getEnclosingScope(SourceFileScope.class).resolveType(bound.getImage());</span>
+<span class="fc" id="L644">                        return this.getEnclosingScope(SourceFileScope.class).resolveType(bound.getImage());</span>
                     }
                 } else {
                     // type parameter found, but no binding.
-<span class="fc" id="L644">                    return Object.class;</span>
+<span class="fc" id="L648">                    return Object.class;</span>
                 }
             }
-<span class="fc" id="L647">        }</span>
-<span class="fc" id="L648">        return null;</span>
+<span class="fc" id="L651">        }</span>
+<span class="fc" id="L652">        return null;</span>
     }
 
     private Node getNextSibling(Node current) {
-<span class="pc bpc" id="L652" title="1 of 2 branches missed.">        if (current.jjtGetParent().jjtGetNumChildren() &gt; current.jjtGetChildIndex() + 1) {</span>
-<span class="fc" id="L653">            return current.jjtGetParent().jjtGetChild(current.jjtGetChildIndex() + 1);</span>
+<span class="pc bpc" id="L656" title="1 of 2 branches missed.">        if (current.jjtGetParent().jjtGetNumChildren() &gt; current.jjtGetChildIndex() + 1) {</span>
+<span class="fc" id="L657">            return current.jjtGetParent().jjtGetChild(current.jjtGetChildIndex() + 1);</span>
         }
-<span class="nc" id="L655">        return null;</span>
+<span class="nc" id="L659">        return null;</span>
     }
 
     public String toString() {
-<span class="nc" id="L659">        StringBuilder res = new StringBuilder(&quot;ClassScope (&quot;).append(className).append(&quot;): &quot;);</span>
-<span class="nc" id="L660">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classDeclarations = getClassDeclarations();</span>
-<span class="nc bnc" id="L661" title="All 2 branches missed.">        if (classDeclarations.isEmpty()) {</span>
-<span class="nc" id="L662">            res.append(&quot;Inner Classes &quot;).append(glomNames(classDeclarations.keySet())).append(&quot;; &quot;);</span>
+<span class="nc" id="L663">        StringBuilder res = new StringBuilder(&quot;ClassScope (&quot;).append(className).append(&quot;): &quot;);</span>
+<span class="nc" id="L664">        Map&lt;ClassNameDeclaration, List&lt;NameOccurrence&gt;&gt; classDeclarations = getClassDeclarations();</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">        if (classDeclarations.isEmpty()) {</span>
+<span class="nc" id="L666">            res.append(&quot;Inner Classes &quot;).append(glomNames(classDeclarations.keySet())).append(&quot;; &quot;);</span>
         }
-<span class="nc" id="L664">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
-<span class="nc bnc" id="L665" title="All 2 branches missed.">        if (!methodDeclarations.isEmpty()) {</span>
-<span class="nc bnc" id="L666" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
-<span class="nc" id="L667">                res.append(mnd.toString());</span>
-<span class="nc" id="L668">                int usages = methodDeclarations.get(mnd).size();</span>
-<span class="nc" id="L669">                res.append(&quot;(begins at line &quot;).append(mnd.getNode().getBeginLine()).append(&quot;, &quot;).append(usages)</span>
-                        .append(&quot; usages)&quot;);
-<span class="nc" id="L671">                res.append(&quot;, &quot;);</span>
-<span class="nc" id="L672">            }</span>
+<span class="nc" id="L668">        Map&lt;MethodNameDeclaration, List&lt;NameOccurrence&gt;&gt; methodDeclarations = getMethodDeclarations();</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">        if (!methodDeclarations.isEmpty()) {</span>
+<span class="nc bnc" id="L670" title="All 2 branches missed.">            for (MethodNameDeclaration mnd : methodDeclarations.keySet()) {</span>
+<span class="nc" id="L671">                res.append(mnd.toString());</span>
+<span class="nc" id="L672">                int usages = methodDeclarations.get(mnd).size();</span>
+<span class="nc" id="L673">                res.append(&quot;(begins at line &quot;).append(mnd.getNode().getBeginLine()).append(&quot;, &quot;).append(usages)</span>
+<span class="nc" id="L674">                        .append(&quot; usages)&quot;);</span>
+<span class="nc" id="L675">                res.append(&quot;, &quot;);</span>
+<span class="nc" id="L676">            }</span>
         }
-<span class="nc" id="L674">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
-<span class="nc bnc" id="L675" title="All 2 branches missed.">        if (!variableDeclarations.isEmpty()) {</span>
-<span class="nc" id="L676">            res.append(&quot;Variables &quot;).append(glomNames(variableDeclarations.keySet()));</span>
+<span class="nc" id="L678">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; variableDeclarations = getVariableDeclarations();</span>
+<span class="nc bnc" id="L679" title="All 2 branches missed.">        if (!variableDeclarations.isEmpty()) {</span>
+<span class="nc" id="L680">            res.append(&quot;Variables &quot;).append(glomNames(variableDeclarations.keySet()));</span>
         }
-<span class="nc" id="L678">        return res.toString();</span>
+<span class="nc" id="L682">        return res.toString();</span>
     }
 
     private String clipClassName(String s) {
-<span class="fc" id="L682">        return s.substring(s.indexOf('.') + 1);</span>
+<span class="fc" id="L686">        return s.substring(s.indexOf('.') + 1);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

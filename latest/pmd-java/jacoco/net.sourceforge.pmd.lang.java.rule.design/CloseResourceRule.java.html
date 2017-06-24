@@ -66,7 +66,7 @@ public class CloseResourceRule extends AbstractJavaRule {
             new String[] { &quot;java.sql.Connection&quot;, &quot;java.sql.Statement&quot;, &quot;java.sql.ResultSet&quot; }, 2.0f, ',');
 
 <span class="fc" id="L68">    private static final BooleanProperty USE_CLOSE_AS_DEFAULT_TARGET = new BooleanProperty(&quot;closeAsDefaultTarget&quot;,</span>
-            &quot;Consider 'close' as a target by default&quot;, true, 3.0f);
+<span class="fc" id="L69">            &quot;Consider 'close' as a target by default&quot;, true, 3.0f);</span>
 
 <span class="fc" id="L71">    public CloseResourceRule() {</span>
 <span class="fc" id="L72">        definePropertyDescriptor(CLOSE_TARGETS_DESCRIPTOR);</span>
@@ -127,10 +127,10 @@ public class CloseResourceRule extends AbstractJavaRule {
 <span class="pc bpc" id="L127" title="1 of 2 branches missed.">                if (ref.jjtGetChild(0) instanceof ASTClassOrInterfaceType) {</span>
 <span class="fc" id="L128">                    ASTClassOrInterfaceType clazz = (ASTClassOrInterfaceType) ref.jjtGetChild(0);</span>
 
-<span class="pc bpc" id="L130" title="2 of 14 branches missed.">                    if (clazz.getType() != null &amp;&amp; types.contains(clazz.getType().getName())</span>
-                            || clazz.getType() == null &amp;&amp; simpleTypes.contains(toSimpleType(clazz.getImage()))
-                                    &amp;&amp; !clazz.isReferenceToClassSameCompilationUnit()
-                            || types.contains(clazz.getImage()) &amp;&amp; !clazz.isReferenceToClassSameCompilationUnit()) {
+<span class="pc bpc" id="L130" title="1 of 4 branches missed.">                    if (clazz.getType() != null &amp;&amp; types.contains(clazz.getType().getName())</span>
+<span class="fc bfc" id="L131" title="All 4 branches covered.">                            || clazz.getType() == null &amp;&amp; simpleTypes.contains(toSimpleType(clazz.getImage()))</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">                                    &amp;&amp; !clazz.isReferenceToClassSameCompilationUnit()</span>
+<span class="pc bpc" id="L133" title="1 of 4 branches missed.">                            || types.contains(clazz.getImage()) &amp;&amp; !clazz.isReferenceToClassSameCompilationUnit()) {</span>
 
 <span class="fc" id="L135">                        ASTVariableDeclaratorId id = var.getFirstDescendantOfType(ASTVariableDeclaratorId.class);</span>
 <span class="fc" id="L136">                        ids.add(id);</span>
@@ -150,7 +150,7 @@ public class CloseResourceRule extends AbstractJavaRule {
 <span class="fc bfc" id="L150" title="All 2 branches covered.">        if (init != null) {</span>
             try {
 <span class="fc" id="L152">                List&lt;?&gt; nulls = init</span>
-                        .findChildNodesWithXPath(&quot;Expression/PrimaryExpression/PrimaryPrefix/Literal/NullLiteral&quot;);
+<span class="fc" id="L153">                        .findChildNodesWithXPath(&quot;Expression/PrimaryExpression/PrimaryPrefix/Literal/NullLiteral&quot;);</span>
 <span class="fc bfc" id="L154" title="All 2 branches covered.">                return !nulls.isEmpty();</span>
 <span class="nc" id="L155">            } catch (JaxenException e) {</span>
 <span class="nc" id="L156">                return false;</span>
@@ -198,7 +198,7 @@ public class CloseResourceRule extends AbstractJavaRule {
 <span class="fc bfc" id="L198" title="All 2 branches covered.">                for (int i = parentBlockIndex + 1; i &lt; tryBlockIndex; i++) {</span>
                     // assume variable declarations are not critical
 <span class="fc" id="L200">                    ASTLocalVariableDeclaration varDecl = blocks.get(i)</span>
-                            .getFirstDescendantOfType(ASTLocalVariableDeclaration.class);
+<span class="fc" id="L201">                            .getFirstDescendantOfType(ASTLocalVariableDeclaration.class);</span>
 <span class="fc bfc" id="L202" title="All 2 branches covered.">                    if (varDecl == null) {</span>
 <span class="fc" id="L203">                        criticalStatements = true;</span>
 <span class="fc" id="L204">                        break;</span>
@@ -219,8 +219,8 @@ public class CloseResourceRule extends AbstractJavaRule {
 <span class="pc bpc" id="L219" title="1 of 2 branches missed.">                        if (parts.length == 2) {</span>
 <span class="fc" id="L220">                            String methodName = parts[1];</span>
 <span class="fc" id="L221">                            String varName = parts[0];</span>
-<span class="fc bfc" id="L222" title="All 6 branches covered.">                            if (varName.equals(variableToClose) &amp;&amp; closeTargets.contains(methodName)</span>
-                                    &amp;&amp; nullCheckIfCondition(f, oName, varName)) {
+<span class="fc bfc" id="L222" title="All 4 branches covered.">                            if (varName.equals(variableToClose) &amp;&amp; closeTargets.contains(methodName)</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">                                    &amp;&amp; nullCheckIfCondition(f, oName, varName)) {</span>
 <span class="fc" id="L224">                                closed = true;</span>
 <span class="fc" id="L225">                                break;</span>
                             }

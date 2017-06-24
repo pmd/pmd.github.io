@@ -24,7 +24,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTTryStatement;
 import net.sourceforge.pmd.lang.java.ast.ASTVariableInitializer;
 import net.sourceforge.pmd.lang.java.ast.ASTWhileStatement;
 import net.sourceforge.pmd.lang.java.ast.AccessNode;
-import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+import net.sourceforge.pmd.lang.java.rule.AbstractLombokAwareRule;
 import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
@@ -32,7 +32,7 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 /**
  * @author Olander
  */
-<span class="fc" id="L35">public class ImmutableFieldRule extends AbstractJavaRule {</span>
+<span class="fc" id="L35">public class ImmutableFieldRule extends AbstractLombokAwareRule {</span>
 
 <span class="pc" id="L37">    private enum FieldImmutabilityType {</span>
         /** Variable is changed in methods and/or in lambdas */
@@ -45,96 +45,99 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc" id="L48">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = node.getScope()</span>
-                .getDeclarations(VariableNameDeclaration.class);
-<span class="fc" id="L50">        List&lt;ASTConstructorDeclaration&gt; constructors = findAllConstructors(node);</span>
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
-<span class="fc" id="L52">            VariableNameDeclaration field = entry.getKey();</span>
-<span class="fc" id="L53">            AccessNode accessNodeParent = field.getAccessNodeParent();</span>
-<span class="fc bfc" id="L54" title="All 8 branches covered.">            if (accessNodeParent.isStatic() || !accessNodeParent.isPrivate() || accessNodeParent.isFinal()</span>
-                    || accessNodeParent.isVolatile()) {
-<span class="fc" id="L56">                continue;</span>
+<span class="fc" id="L48">        Object result = super.visit(node, data);</span>
+
+<span class="fc" id="L50">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = node.getScope()</span>
+<span class="fc" id="L51">                .getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc" id="L52">        List&lt;ASTConstructorDeclaration&gt; constructors = findAllConstructors(node);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
+<span class="fc" id="L54">            VariableNameDeclaration field = entry.getKey();</span>
+<span class="fc" id="L55">            AccessNode accessNodeParent = field.getAccessNodeParent();</span>
+<span class="fc bfc" id="L56" title="All 6 branches covered.">            if (accessNodeParent.isStatic() || !accessNodeParent.isPrivate() || accessNodeParent.isFinal()</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                    || accessNodeParent.isVolatile()</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">                    || hasClassLombokAnnotation()) {</span>
+<span class="fc" id="L59">                continue;</span>
             }
 
-<span class="fc" id="L59">            FieldImmutabilityType result = initializedInConstructor(entry.getValue(), new HashSet&lt;&gt;(constructors));</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (result == FieldImmutabilityType.MUTABLE) {</span>
-<span class="fc" id="L61">                continue;</span>
+<span class="fc" id="L62">            FieldImmutabilityType type = initializedInConstructor(entry.getValue(), new HashSet&lt;&gt;(constructors));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (type == FieldImmutabilityType.MUTABLE) {</span>
+<span class="fc" id="L64">                continue;</span>
             }
-<span class="pc bpc" id="L63" title="1 of 6 branches missed.">            if (result == FieldImmutabilityType.IMMUTABLE || result == FieldImmutabilityType.CHECKDECL &amp;&amp; initializedWhenDeclared(field)) {</span>
-<span class="fc" id="L64">                addViolation(data, field.getNode(), field.getImage());</span>
+<span class="pc bpc" id="L66" title="1 of 6 branches missed.">            if (type == FieldImmutabilityType.IMMUTABLE || type == FieldImmutabilityType.CHECKDECL &amp;&amp; initializedWhenDeclared(field)) {</span>
+<span class="fc" id="L67">                addViolation(data, field.getNode(), field.getImage());</span>
             }
-<span class="fc" id="L66">        }</span>
-<span class="fc" id="L67">        return super.visit(node, data);</span>
+<span class="fc" id="L69">        }</span>
+<span class="fc" id="L70">        return result;</span>
     }
 
     private boolean initializedWhenDeclared(VariableNameDeclaration field) {
-<span class="fc" id="L71">        return ((Node) field.getAccessNodeParent()).hasDescendantOfType(ASTVariableInitializer.class);</span>
+<span class="fc" id="L74">        return ((Node) field.getAccessNodeParent()).hasDescendantOfType(ASTVariableInitializer.class);</span>
     }
 
     private FieldImmutabilityType initializedInConstructor(List&lt;NameOccurrence&gt; usages, Set&lt;ASTConstructorDeclaration&gt; allConstructors) {
-<span class="fc" id="L75">        FieldImmutabilityType result = FieldImmutabilityType.MUTABLE;</span>
-<span class="fc" id="L76">        int methodInitCount = 0;</span>
-<span class="fc" id="L77">        int lambdaUsage = 0;</span>
-<span class="fc" id="L78">        Set&lt;Node&gt; consSet = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (NameOccurrence occ : usages) {</span>
-<span class="fc" id="L80">            JavaNameOccurrence jocc = (JavaNameOccurrence) occ;</span>
-<span class="fc bfc" id="L81" title="All 4 branches covered.">            if (jocc.isOnLeftHandSide() || jocc.isSelfAssignment()) {</span>
-<span class="fc" id="L82">                Node node = jocc.getLocation();</span>
-<span class="fc" id="L83">                ASTConstructorDeclaration constructor = node.getFirstParentOfType(ASTConstructorDeclaration.class);</span>
-<span class="fc bfc" id="L84" title="All 2 branches covered.">                if (constructor != null) {</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">                    if (inLoopOrTry(node)) {</span>
-<span class="fc" id="L86">                        continue;</span>
+<span class="fc" id="L78">        FieldImmutabilityType result = FieldImmutabilityType.MUTABLE;</span>
+<span class="fc" id="L79">        int methodInitCount = 0;</span>
+<span class="fc" id="L80">        int lambdaUsage = 0;</span>
+<span class="fc" id="L81">        Set&lt;Node&gt; consSet = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        for (NameOccurrence occ : usages) {</span>
+<span class="fc" id="L83">            JavaNameOccurrence jocc = (JavaNameOccurrence) occ;</span>
+<span class="fc bfc" id="L84" title="All 4 branches covered.">            if (jocc.isOnLeftHandSide() || jocc.isSelfAssignment()) {</span>
+<span class="fc" id="L85">                Node node = jocc.getLocation();</span>
+<span class="fc" id="L86">                ASTConstructorDeclaration constructor = node.getFirstParentOfType(ASTConstructorDeclaration.class);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                if (constructor != null) {</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                    if (inLoopOrTry(node)) {</span>
+<span class="fc" id="L89">                        continue;</span>
                     }
                     // Check for assigns in if-statements, which can depend on
                     // constructor
                     // args or other runtime knowledge and can be a valid reason
                     // to instantiate
                     // in one constructor only
-<span class="fc bfc" id="L93" title="All 2 branches covered.">                    if (node.getFirstParentOfType(ASTIfStatement.class) != null) {</span>
-<span class="fc" id="L94">                        methodInitCount++;</span>
-                    }
-<span class="fc bfc" id="L96" title="All 2 branches covered.">                    if (inAnonymousInnerClass(node)) {</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                    if (node.getFirstParentOfType(ASTIfStatement.class) != null) {</span>
 <span class="fc" id="L97">                        methodInitCount++;</span>
+                    }
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                    if (inAnonymousInnerClass(node)) {</span>
+<span class="fc" id="L100">                        methodInitCount++;</span>
                     } else {
-<span class="fc" id="L99">                        consSet.add(constructor);</span>
+<span class="fc" id="L102">                        consSet.add(constructor);</span>
                     }
                 } else {
-<span class="fc bfc" id="L102" title="All 2 branches covered.">                    if (node.getFirstParentOfType(ASTMethodDeclaration.class) != null) {</span>
-<span class="fc" id="L103">                        methodInitCount++;</span>
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    } else if (node.getFirstParentOfType(ASTLambdaExpression.class) != null) {</span>
-<span class="fc" id="L105">                        lambdaUsage++;</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">                    if (node.getFirstParentOfType(ASTMethodDeclaration.class) != null) {</span>
+<span class="fc" id="L106">                        methodInitCount++;</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                    } else if (node.getFirstParentOfType(ASTLambdaExpression.class) != null) {</span>
+<span class="fc" id="L108">                        lambdaUsage++;</span>
                     }
                 }
             }
-<span class="fc" id="L109">        }</span>
-<span class="fc bfc" id="L110" title="All 8 branches covered.">        if (usages.isEmpty() || methodInitCount == 0 &amp;&amp; lambdaUsage == 0 &amp;&amp; consSet.isEmpty()) {</span>
-<span class="fc" id="L111">            result = FieldImmutabilityType.CHECKDECL;</span>
+<span class="fc" id="L112">        }</span>
+<span class="fc bfc" id="L113" title="All 8 branches covered.">        if (usages.isEmpty() || methodInitCount == 0 &amp;&amp; lambdaUsage == 0 &amp;&amp; consSet.isEmpty()) {</span>
+<span class="fc" id="L114">            result = FieldImmutabilityType.CHECKDECL;</span>
         } else {
-<span class="fc" id="L113">            allConstructors.removeAll(consSet);</span>
-<span class="fc bfc" id="L114" title="All 6 branches covered.">            if (allConstructors.isEmpty() &amp;&amp; methodInitCount == 0 &amp;&amp; lambdaUsage == 0) {</span>
-<span class="fc" id="L115">                result = FieldImmutabilityType.IMMUTABLE;</span>
+<span class="fc" id="L116">            allConstructors.removeAll(consSet);</span>
+<span class="fc bfc" id="L117" title="All 6 branches covered.">            if (allConstructors.isEmpty() &amp;&amp; methodInitCount == 0 &amp;&amp; lambdaUsage == 0) {</span>
+<span class="fc" id="L118">                result = FieldImmutabilityType.IMMUTABLE;</span>
             }
         }
-<span class="fc" id="L118">        return result;</span>
+<span class="fc" id="L121">        return result;</span>
     }
 
     private boolean inLoopOrTry(Node node) {
-<span class="pc bpc" id="L122" title="2 of 8 branches missed.">        return node.getFirstParentOfType(ASTTryStatement.class) != null</span>
-                || node.getFirstParentOfType(ASTForStatement.class) != null
-                || node.getFirstParentOfType(ASTWhileStatement.class) != null
-                || node.getFirstParentOfType(ASTDoStatement.class) != null;
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        return node.getFirstParentOfType(ASTTryStatement.class) != null</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                || node.getFirstParentOfType(ASTForStatement.class) != null</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">                || node.getFirstParentOfType(ASTWhileStatement.class) != null</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">                || node.getFirstParentOfType(ASTDoStatement.class) != null;</span>
     }
 
     private boolean inAnonymousInnerClass(Node node) {
-<span class="fc" id="L129">        ASTClassOrInterfaceBodyDeclaration parent = node.getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);</span>
-<span class="pc bpc" id="L130" title="1 of 4 branches missed.">        return parent != null &amp;&amp; parent.isAnonymousInnerClass();</span>
+<span class="fc" id="L132">        ASTClassOrInterfaceBodyDeclaration parent = node.getFirstParentOfType(ASTClassOrInterfaceBodyDeclaration.class);</span>
+<span class="pc bpc" id="L133" title="1 of 4 branches missed.">        return parent != null &amp;&amp; parent.isAnonymousInnerClass();</span>
     }
 
     private List&lt;ASTConstructorDeclaration&gt; findAllConstructors(ASTClassOrInterfaceDeclaration node) {
-<span class="fc" id="L134">        List&lt;ASTConstructorDeclaration&gt; cons = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L135">        node.getFirstChildOfType(ASTClassOrInterfaceBody.class).findDescendantsOfType(ASTConstructorDeclaration.class,</span>
+<span class="fc" id="L137">        List&lt;ASTConstructorDeclaration&gt; cons = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L138">        node.getFirstChildOfType(ASTClassOrInterfaceBody.class).findDescendantsOfType(ASTConstructorDeclaration.class,</span>
                 cons, false);
-<span class="fc" id="L137">        return cons;</span>
+<span class="fc" id="L140">        return cons;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

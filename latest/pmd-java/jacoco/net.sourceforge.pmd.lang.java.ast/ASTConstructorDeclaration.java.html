@@ -5,24 +5,25 @@
 
 package net.sourceforge.pmd.lang.java.ast;
 
-public class ASTConstructorDeclaration extends AbstractJavaAccessNode {
+public class ASTConstructorDeclaration extends AbstractJavaAccessNode implements ASTMethodOrConstructorDeclaration {
 
     private boolean containsComment;
+    private QualifiedName qualifiedName;
 
     public ASTConstructorDeclaration(int id) {
-<span class="fc" id="L13">        super(id);</span>
-<span class="fc" id="L14">    }</span>
+<span class="fc" id="L14">        super(id);</span>
+<span class="fc" id="L15">    }</span>
 
     public ASTConstructorDeclaration(JavaParser p, int id) {
-<span class="fc" id="L17">        super(p, id);</span>
-<span class="fc" id="L18">    }</span>
+<span class="fc" id="L18">        super(p, id);</span>
+<span class="fc" id="L19">    }</span>
 
     public ASTFormalParameters getParameters() {
-<span class="fc bfc" id="L21" title="All 2 branches covered.">        return (ASTFormalParameters) (jjtGetChild(0) instanceof ASTFormalParameters ? jjtGetChild(0) : jjtGetChild(1));</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        return (ASTFormalParameters) (jjtGetChild(0) instanceof ASTFormalParameters ? jjtGetChild(0) : jjtGetChild(1));</span>
     }
 
     public int getParameterCount() {
-<span class="fc" id="L25">        return getParameters().getParameterCount();</span>
+<span class="fc" id="L26">        return getParameters().getParameterCount();</span>
     }
 
     /**
@@ -30,15 +31,23 @@ public class ASTConstructorDeclaration extends AbstractJavaAccessNode {
      */
     @Override
     public Object jjtAccept(JavaParserVisitor visitor, Object data) {
-<span class="fc" id="L33">        return visitor.visit(this, data);</span>
+<span class="fc" id="L34">        return visitor.visit(this, data);</span>
     }
 
     public boolean containsComment() {
-<span class="fc" id="L37">        return this.containsComment;</span>
+<span class="fc" id="L38">        return this.containsComment;</span>
     }
 
     public void setContainsComment() {
-<span class="fc" id="L41">        this.containsComment = true;</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L42">        this.containsComment = true;</span>
+<span class="fc" id="L43">    }</span>
+
+    @Override
+    public QualifiedName getQualifiedName() {
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (qualifiedName == null) {</span>
+<span class="fc" id="L48">            qualifiedName = QualifiedName.makeOperationOf(this);</span>
+        }
+<span class="fc" id="L50">        return qualifiedName;</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Signature.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.oom.signature</a> &gt; <span class="el_source">Signature.java</span></div><h1>Signature.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.oom.signature;
+
+import net.sourceforge.pmd.lang.java.ast.AccessNode;
+
+/**
+ * Generic signature. This class is extended by classes specific to operations and fields.
+ *
+ * @author Clément Fournier
+ */
+public abstract class Signature {
+
+    public final Visibility visibility;
+
+<span class="fc" id="L18">    public Signature(Visibility visibility) {</span>
+<span class="fc" id="L19">        this.visibility = visibility;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L24" title="All 4 branches missed.">        return o instanceof Signature &amp;&amp; visibility == ((Signature) o).visibility;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L29">        return visibility.hashCode() * 2;</span>
+    }
+
+    /**
+     * The visibility of a node.
+     */
+<span class="pc" id="L35">    public enum Visibility {</span>
+<span class="fc" id="L36">        PUBLIC, PACKAGE, PROTECTED, PRIVATE;</span>
+
+        /**
+         * Returns the Visibility enum key for a node.
+         *
+         * @param node A node
+         *
+         * @return The visibility enum key for a node.
+         */
+        public static Visibility get(AccessNode node) {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (node.isPublic()) {</span>
+<span class="fc" id="L47">                return PUBLIC;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            } else if (node.isPackagePrivate()) {</span>
+<span class="fc" id="L49">                return PACKAGE;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            } else if (node.isProtected()) {</span>
+<span class="fc" id="L51">                return PROTECTED;</span>
+            } else {
+<span class="fc" id="L53">                return PRIVATE;</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

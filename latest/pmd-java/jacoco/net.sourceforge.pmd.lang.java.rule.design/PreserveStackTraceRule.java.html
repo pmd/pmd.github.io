@@ -54,76 +54,77 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 <span class="fc" id="L54">            ASTArgumentList args = throwStatement.getFirstDescendantOfType(ASTArgumentList.class);</span>
 <span class="fc bfc" id="L55" title="All 2 branches covered.">            if (args != null) {</span>
 <span class="fc" id="L56">                Node parent = args.jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L57" title="1 of 2 branches missed.">                if (parent instanceof ASTAllocationExpression) {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                if (parent instanceof ASTAllocationExpression) {</span>
                     // maybe it is used inside a anonymous class
 <span class="fc" id="L59">                    ck(data, target, throwStatement, parent);</span>
                 } else {
-<span class="nc" id="L61">                    ck(data, target, throwStatement, args);</span>
+                    // Check all arguments used in the throw statement 
+<span class="fc" id="L62">                    ck(data, target, throwStatement, throwStatement);</span>
                 }
-<span class="fc" id="L63">            } else {</span>
-<span class="fc" id="L64">                Node child = throwStatement.jjtGetChild(0);</span>
-<span class="pc bpc" id="L65" title="2 of 6 branches missed.">                while (child != null &amp;&amp; child.jjtGetNumChildren() &gt; 0 &amp;&amp; !(child instanceof ASTName)) {</span>
-<span class="fc" id="L66">                    child = child.jjtGetChild(0);</span>
+<span class="fc" id="L64">            } else {</span>
+<span class="fc" id="L65">                Node child = throwStatement.jjtGetChild(0);</span>
+<span class="pc bpc" id="L66" title="2 of 6 branches missed.">                while (child != null &amp;&amp; child.jjtGetNumChildren() &gt; 0 &amp;&amp; !(child instanceof ASTName)) {</span>
+<span class="fc" id="L67">                    child = child.jjtGetChild(0);</span>
                 }
-<span class="pc bpc" id="L68" title="1 of 2 branches missed.">                if (child != null) {</span>
-<span class="pc bpc" id="L69" title="1 of 6 branches missed.">                    if (child instanceof ASTName &amp;&amp; !target.equals(child.getImage())</span>
-                            &amp;&amp; !child.hasImageEqualTo(target + FILL_IN_STACKTRACE)) {
-<span class="fc" id="L71">                        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = ((ASTName) child).getScope()</span>
-                                .getDeclarations(VariableNameDeclaration.class);
-<span class="fc bfc" id="L73" title="All 2 branches covered.">                        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
-<span class="fc" id="L74">                            VariableNameDeclaration decl = entry.getKey();</span>
-<span class="fc" id="L75">                            List&lt;NameOccurrence&gt; occurrences = entry.getValue();</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">                            if (decl.getImage().equals(child.getImage())) {</span>
-<span class="fc bfc" id="L77" title="All 2 branches covered.">                                if (!isInitCauseCalled(target, occurrences)) {</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">                if (child != null) {</span>
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">                    if (child instanceof ASTName &amp;&amp; !target.equals(child.getImage())</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                            &amp;&amp; !child.hasImageEqualTo(target + FILL_IN_STACKTRACE)) {</span>
+<span class="fc" id="L72">                        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = ((ASTName) child).getScope()</span>
+<span class="fc" id="L73">                                .getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
+<span class="fc" id="L75">                            VariableNameDeclaration decl = entry.getKey();</span>
+<span class="fc" id="L76">                            List&lt;NameOccurrence&gt; occurrences = entry.getValue();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                            if (decl.getImage().equals(child.getImage())) {</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                                if (!isInitCauseCalled(target, occurrences)) {</span>
                                     // Check how the variable is initialized
-<span class="fc" id="L79">                                    ASTVariableInitializer initializer = decl.getNode().jjtGetParent()</span>
-                                            .getFirstDescendantOfType(ASTVariableInitializer.class);
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">                                    if (initializer != null) {</span>
-<span class="fc" id="L82">                                        args = initializer.getFirstDescendantOfType(ASTArgumentList.class);</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">                                        if (args != null) {</span>
+<span class="fc" id="L80">                                    ASTVariableInitializer initializer = decl.getNode().jjtGetParent()</span>
+<span class="fc" id="L81">                                            .getFirstDescendantOfType(ASTVariableInitializer.class);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                                    if (initializer != null) {</span>
+<span class="fc" id="L83">                                        args = initializer.getFirstDescendantOfType(ASTArgumentList.class);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                                        if (args != null) {</span>
                                             // constructor with args?
-<span class="fc" id="L85">                                            ck(data, target, throwStatement, args);</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">                                        } else if (!isFillInStackTraceCalled(target, initializer)) {</span>
-<span class="fc" id="L87">                                            addViolation(data, throwStatement);</span>
+<span class="fc" id="L86">                                            ck(data, target, throwStatement, args);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">                                        } else if (!isFillInStackTraceCalled(target, initializer)) {</span>
+<span class="fc" id="L88">                                            addViolation(data, throwStatement);</span>
                                         }
                                     }
                                 }
                             }
-<span class="fc" id="L92">                        }</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">                    } else if (child instanceof ASTClassOrInterfaceType) {</span>
-<span class="fc" id="L94">                        addViolation(data, throwStatement);</span>
+<span class="fc" id="L93">                        }</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                    } else if (child instanceof ASTClassOrInterfaceType) {</span>
+<span class="fc" id="L95">                        addViolation(data, throwStatement);</span>
                     }
                 }
             }
-<span class="fc" id="L98">        }</span>
-<span class="fc" id="L99">        return super.visit(catchStmt, data);</span>
+<span class="fc" id="L99">        }</span>
+<span class="fc" id="L100">        return super.visit(catchStmt, data);</span>
     }
 
     private boolean isFillInStackTraceCalled(final String target, final ASTVariableInitializer initializer) {
-<span class="fc" id="L103">        final ASTName astName = initializer.getFirstDescendantOfType(ASTName.class);</span>
-<span class="pc bpc" id="L104" title="1 of 4 branches missed.">        return astName != null &amp;&amp; astName.hasImageEqualTo(target + FILL_IN_STACKTRACE);</span>
+<span class="fc" id="L104">        final ASTName astName = initializer.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L105" title="1 of 4 branches missed.">        return astName != null &amp;&amp; astName.hasImageEqualTo(target + FILL_IN_STACKTRACE);</span>
     }
 
     private boolean isInitCauseCalled(String target, List&lt;NameOccurrence&gt; occurrences) {
-<span class="fc" id="L108">        boolean initCauseCalled = false;</span>
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (NameOccurrence occurrence : occurrences) {</span>
-<span class="fc" id="L110">            String image = null;</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">            if (occurrence.getLocation() != null) {</span>
-<span class="fc" id="L112">                image = occurrence.getLocation().getImage();</span>
+<span class="fc" id="L109">        boolean initCauseCalled = false;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (NameOccurrence occurrence : occurrences) {</span>
+<span class="fc" id="L111">            String image = null;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (occurrence.getLocation() != null) {</span>
+<span class="fc" id="L113">                image = occurrence.getLocation().getImage();</span>
             }
-<span class="pc bpc" id="L114" title="1 of 4 branches missed.">            if (image != null &amp;&amp; image.endsWith(&quot;initCause&quot;)) {</span>
-<span class="fc" id="L115">                ASTPrimaryExpression primaryExpression = occurrence.getLocation()</span>
-                        .getFirstParentOfType(ASTPrimaryExpression.class);
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">                if (primaryExpression != null) {</span>
-<span class="fc" id="L118">                    ASTArgumentList args2 = primaryExpression.getFirstDescendantOfType(ASTArgumentList.class);</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">                    if (checkForTargetUsage(target, args2)) {</span>
-<span class="fc" id="L120">                        initCauseCalled = true;</span>
-<span class="fc" id="L121">                        break;</span>
+<span class="pc bpc" id="L115" title="1 of 4 branches missed.">            if (image != null &amp;&amp; image.endsWith(&quot;initCause&quot;)) {</span>
+<span class="fc" id="L116">                ASTPrimaryExpression primaryExpression = occurrence.getLocation()</span>
+<span class="fc" id="L117">                        .getFirstParentOfType(ASTPrimaryExpression.class);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">                if (primaryExpression != null) {</span>
+<span class="fc" id="L119">                    ASTArgumentList args2 = primaryExpression.getFirstDescendantOfType(ASTArgumentList.class);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                    if (checkForTargetUsage(target, args2)) {</span>
+<span class="fc" id="L121">                        initCauseCalled = true;</span>
+<span class="fc" id="L122">                        break;</span>
                     }
                 }
             }
-<span class="fc" id="L125">        }</span>
-<span class="fc" id="L126">        return initCauseCalled;</span>
+<span class="fc" id="L126">        }</span>
+<span class="fc" id="L127">        return initCauseCalled;</span>
     }
 
     /**
@@ -134,24 +135,24 @@ import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
      * @param baseNode
      */
     private boolean checkForTargetUsage(String target, Node baseNode) {
-<span class="fc" id="L137">        boolean match = false;</span>
-<span class="pc bpc" id="L138" title="2 of 4 branches missed.">        if (target != null &amp;&amp; baseNode != null) {</span>
-<span class="fc" id="L139">            List&lt;ASTName&gt; nameNodes = baseNode.findDescendantsOfType(ASTName.class);</span>
-<span class="fc bfc" id="L140" title="All 2 branches covered.">            for (ASTName nameNode : nameNodes) {</span>
-<span class="fc bfc" id="L141" title="All 2 branches covered.">                if (target.equals(nameNode.getImage())) {</span>
-<span class="fc" id="L142">                    match = true;</span>
-<span class="fc" id="L143">                    break;</span>
+<span class="fc" id="L138">        boolean match = false;</span>
+<span class="pc bpc" id="L139" title="2 of 4 branches missed.">        if (target != null &amp;&amp; baseNode != null) {</span>
+<span class="fc" id="L140">            List&lt;ASTName&gt; nameNodes = baseNode.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            for (ASTName nameNode : nameNodes) {</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                if (target.equals(nameNode.getImage())) {</span>
+<span class="fc" id="L143">                    match = true;</span>
+<span class="fc" id="L144">                    break;</span>
                 }
-<span class="fc" id="L145">            }</span>
+<span class="fc" id="L146">            }</span>
         }
-<span class="fc" id="L147">        return match;</span>
+<span class="fc" id="L148">        return match;</span>
     }
 
     private void ck(Object data, String target, ASTThrowStatement throwStatement, Node baseNode) {
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (!checkForTargetUsage(target, baseNode)) {</span>
-<span class="fc" id="L152">            RuleContext ctx = (RuleContext) data;</span>
-<span class="fc" id="L153">            addViolation(ctx, throwStatement);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (!checkForTargetUsage(target, baseNode)) {</span>
+<span class="fc" id="L153">            RuleContext ctx = (RuleContext) data;</span>
+<span class="fc" id="L154">            addViolation(ctx, throwStatement);</span>
         }
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L156">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

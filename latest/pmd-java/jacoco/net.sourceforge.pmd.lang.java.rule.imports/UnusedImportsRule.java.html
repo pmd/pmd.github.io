@@ -36,10 +36,10 @@ import net.sourceforge.pmd.lang.rule.ImportWrapper;
      * @throws package.class label
      */
 <span class="fc" id="L38">    private static final Pattern SEE_PATTERN = Pattern</span>
-            .compile(&quot;@see\\s+(\\p{Alpha}\\w*)(?:#\\w*(?:\\(([\\w\\s,]*)\\))?)?&quot;);
+<span class="fc" id="L39">            .compile(&quot;@see\\s+(\\p{Alpha}\\w*)(?:#\\w*(?:\\(([\\w\\s,]*)\\))?)?&quot;);</span>
 
 <span class="fc" id="L41">    private static final Pattern LINK_PATTERNS = Pattern</span>
-            .compile(&quot;\\{@link(?:plain)?\\s+(\\p{Alpha}\\w*)(?:#\\w*(?:\\(([.\\w\\s,]*)\\))?)?[\\s\\}]&quot;);
+<span class="fc" id="L42">            .compile(&quot;\\{@link(?:plain)?\\s+(\\p{Alpha}\\w*)(?:#\\w*(?:\\(([.\\w\\s,]*)\\))?)?[\\s\\}]&quot;);</span>
 
 <span class="fc" id="L44">    private static final Pattern VALUE_PATTERN = Pattern.compile(&quot;\\{@value\\s+(\\p{Alpha}\\w*)[\\s#\\}]&quot;);</span>
 
@@ -86,67 +86,74 @@ import net.sourceforge.pmd.lang.rule.ImportWrapper;
 <span class="fc bfc" id="L86" title="All 2 branches covered.">                        if (s != null) {</span>
 <span class="fc" id="L87">                            String[] params = s.split(&quot;\\s*,\\s*&quot;);</span>
 <span class="fc bfc" id="L88" title="All 2 branches covered.">                            for (String param : params) {</span>
-<span class="fc" id="L89">                                imports.remove(new ImportWrapper(param, param, new DummyJavaNode(-1)));</span>
+<span class="fc" id="L89">                                final int firstDot = param.indexOf('.');</span>
+                                final String expectedImportName;
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                                if (firstDot == -1) {</span>
+<span class="fc" id="L92">                                    expectedImportName = param;</span>
+                                } else {
+<span class="fc" id="L94">                                    expectedImportName = param.substring(0, firstDot);</span>
+                                }
+<span class="fc" id="L96">                                imports.remove(new ImportWrapper(param, expectedImportName, new DummyJavaNode(-1)));</span>
                             }
                         }
                     }
 
-<span class="fc bfc" id="L94" title="All 2 branches covered.">                    if (imports.isEmpty()) {</span>
-<span class="fc" id="L95">                        return;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                    if (imports.isEmpty()) {</span>
+<span class="fc" id="L102">                        return;</span>
                     }
-<span class="fc" id="L97">                }</span>
+<span class="fc" id="L104">                }</span>
             }
-<span class="fc" id="L99">        }</span>
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L106">        }</span>
+<span class="fc" id="L107">    }</span>
 
     @Override
     public Object visit(ASTImportDeclaration node, Object data) {
-<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (!node.isImportOnDemand()) {</span>
-<span class="fc" id="L105">            ASTName importedType = (ASTName) node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">        if (!node.isImportOnDemand()) {</span>
+<span class="fc" id="L112">            ASTName importedType = (ASTName) node.jjtGetChild(0);</span>
             String className;
-<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (isQualifiedName(importedType)) {</span>
-<span class="fc" id="L108">                int lastDot = importedType.getImage().lastIndexOf('.') + 1;</span>
-<span class="fc" id="L109">                className = importedType.getImage().substring(lastDot);</span>
-<span class="fc" id="L110">            } else {</span>
-<span class="fc" id="L111">                className = importedType.getImage();</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            if (isQualifiedName(importedType)) {</span>
+<span class="fc" id="L115">                int lastDot = importedType.getImage().lastIndexOf('.') + 1;</span>
+<span class="fc" id="L116">                className = importedType.getImage().substring(lastDot);</span>
+<span class="fc" id="L117">            } else {</span>
+<span class="fc" id="L118">                className = importedType.getImage();</span>
             }
-<span class="fc" id="L113">            imports.add(new ImportWrapper(importedType.getImage(), className, node));</span>
+<span class="fc" id="L120">            imports.add(new ImportWrapper(importedType.getImage(), className, node));</span>
         }
 
-<span class="fc" id="L116">        return data;</span>
+<span class="fc" id="L123">        return data;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceType node, Object data) {
-<span class="fc" id="L121">        check(node);</span>
-<span class="fc" id="L122">        return super.visit(node, data);</span>
+<span class="fc" id="L128">        check(node);</span>
+<span class="fc" id="L129">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTName node, Object data) {
-<span class="fc" id="L127">        check(node);</span>
-<span class="fc" id="L128">        return data;</span>
+<span class="fc" id="L134">        check(node);</span>
+<span class="fc" id="L135">        return data;</span>
     }
 
     protected void check(Node node) {
-<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (imports.isEmpty()) {</span>
-<span class="fc" id="L133">            return;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        if (imports.isEmpty()) {</span>
+<span class="fc" id="L140">            return;</span>
         }
-<span class="fc" id="L135">        ImportWrapper candidate = getImportWrapper(node);</span>
-<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (imports.contains(candidate)) {</span>
-<span class="fc" id="L137">            imports.remove(candidate);</span>
+<span class="fc" id="L142">        ImportWrapper candidate = getImportWrapper(node);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (imports.contains(candidate)) {</span>
+<span class="fc" id="L144">            imports.remove(candidate);</span>
         }
-<span class="fc" id="L139">    }</span>
+<span class="fc" id="L146">    }</span>
 
     protected ImportWrapper getImportWrapper(Node node) {
         String name;
-<span class="fc bfc" id="L143" title="All 2 branches covered.">        if (!isQualifiedName(node)) {</span>
-<span class="fc" id="L144">            name = node.getImage();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (!isQualifiedName(node)) {</span>
+<span class="fc" id="L151">            name = node.getImage();</span>
         } else {
-<span class="fc" id="L146">            name = node.getImage().substring(0, node.getImage().indexOf('.'));</span>
+<span class="fc" id="L153">            name = node.getImage().substring(0, node.getImage().indexOf('.'));</span>
         }
-<span class="fc" id="L148">        ImportWrapper candidate = new ImportWrapper(node.getImage(), name);</span>
-<span class="fc" id="L149">        return candidate;</span>
+<span class="fc" id="L155">        ImportWrapper candidate = new ImportWrapper(node.getImage(), name);</span>
+<span class="fc" id="L156">        return candidate;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

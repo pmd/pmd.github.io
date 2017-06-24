@@ -19,6 +19,7 @@ import net.sourceforge.pmd.lang.java.ast.DumpFacade;
 import net.sourceforge.pmd.lang.java.ast.JavaNode;
 import net.sourceforge.pmd.lang.java.dfa.DataFlowFacade;
 import net.sourceforge.pmd.lang.java.dfa.JavaDFAGraphRule;
+import net.sourceforge.pmd.lang.java.oom.MetricsVisitorFacade;
 import net.sourceforge.pmd.lang.java.rule.JavaRuleViolationFactory;
 import net.sourceforge.pmd.lang.java.symboltable.SymbolFacade;
 import net.sourceforge.pmd.lang.java.typeresolution.TypeResolutionFacade;
@@ -35,79 +36,89 @@ import net.sf.saxon.sxpath.IndependentContext;
  *
  * @author pieter_van_raemdonck - Application Engineers NV/SA - www.ae.be
  */
-<span class="fc" id="L38">public abstract class AbstractJavaHandler extends AbstractLanguageVersionHandler {</span>
+<span class="fc" id="L39">public abstract class AbstractJavaHandler extends AbstractLanguageVersionHandler {</span>
 
     @Override
     public DataFlowHandler getDataFlowHandler() {
-<span class="fc" id="L42">        return new JavaDataFlowHandler();</span>
+<span class="fc" id="L43">        return new JavaDataFlowHandler();</span>
     }
 
     @Override
     public XPathHandler getXPathHandler() {
-<span class="fc" id="L47">        return new AbstractASTXPathHandler() {</span>
+<span class="fc" id="L48">        return new AbstractASTXPathHandler() {</span>
             public void initialize() {
-<span class="fc" id="L49">                TypeOfFunction.registerSelfInSimpleContext();</span>
-<span class="fc" id="L50">                GetCommentOnFunction.registerSelfInSimpleContext();</span>
-<span class="fc" id="L51">            }</span>
+<span class="fc" id="L50">                TypeOfFunction.registerSelfInSimpleContext();</span>
+<span class="fc" id="L51">                GetCommentOnFunction.registerSelfInSimpleContext();</span>
+<span class="fc" id="L52">            }</span>
 
             public void initialize(IndependentContext context) {
-<span class="fc" id="L54">                super.initialize(context, LanguageRegistry.getLanguage(JavaLanguageModule.NAME), JavaFunctions.class);</span>
-<span class="fc" id="L55">            }</span>
+<span class="fc" id="L55">                super.initialize(context, LanguageRegistry.getLanguage(JavaLanguageModule.NAME), JavaFunctions.class);</span>
+<span class="fc" id="L56">            }</span>
         };
     }
 
     public RuleViolationFactory getRuleViolationFactory() {
-<span class="fc" id="L60">        return JavaRuleViolationFactory.INSTANCE;</span>
+<span class="fc" id="L61">        return JavaRuleViolationFactory.INSTANCE;</span>
     }
 
     @Override
     public VisitorStarter getDataFlowFacade() {
-<span class="fc" id="L65">        return new VisitorStarter() {</span>
+<span class="fc" id="L66">        return new VisitorStarter() {</span>
             public void start(Node rootNode) {
-<span class="fc" id="L67">                new DataFlowFacade().initializeWith(getDataFlowHandler(), (ASTCompilationUnit) rootNode);</span>
-<span class="fc" id="L68">            }</span>
+<span class="fc" id="L68">                new DataFlowFacade().initializeWith(getDataFlowHandler(), (ASTCompilationUnit) rootNode);</span>
+<span class="fc" id="L69">            }</span>
         };
     }
 
     @Override
     public VisitorStarter getSymbolFacade() {
-<span class="fc" id="L74">        return new VisitorStarter() {</span>
+<span class="fc" id="L75">        return new VisitorStarter() {</span>
             public void start(Node rootNode) {
-<span class="fc" id="L76">                new SymbolFacade().initializeWith(null, (ASTCompilationUnit) rootNode);</span>
-<span class="fc" id="L77">            }</span>
+<span class="fc" id="L77">                new SymbolFacade().initializeWith(null, (ASTCompilationUnit) rootNode);</span>
+<span class="fc" id="L78">            }</span>
         };
     }
 
     @Override
     public VisitorStarter getSymbolFacade(final ClassLoader classLoader) {
-<span class="fc" id="L83">        return new VisitorStarter() {</span>
+<span class="fc" id="L84">        return new VisitorStarter() {</span>
             public void start(Node rootNode) {
-<span class="fc" id="L85">                new SymbolFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);</span>
-<span class="fc" id="L86">            }</span>
+<span class="fc" id="L86">                new SymbolFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);</span>
+<span class="fc" id="L87">            }</span>
         };
     }
 
     @Override
     public VisitorStarter getTypeResolutionFacade(final ClassLoader classLoader) {
-<span class="fc" id="L92">        return new VisitorStarter() {</span>
+<span class="fc" id="L93">        return new VisitorStarter() {</span>
             public void start(Node rootNode) {
-<span class="fc" id="L94">                new TypeResolutionFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);</span>
-<span class="fc" id="L95">            }</span>
+<span class="fc" id="L95">                new TypeResolutionFacade().initializeWith(classLoader, (ASTCompilationUnit) rootNode);</span>
+<span class="fc" id="L96">            }</span>
+        };
+    }
+
+    @Override
+    public VisitorStarter getMetricsVisitorFacade() {
+<span class="fc" id="L102">        return new VisitorStarter() {</span>
+            @Override
+            public void start(Node rootNode) {
+<span class="fc" id="L105">                new MetricsVisitorFacade().initializeWith((ASTCompilationUnit) rootNode);</span>
+<span class="fc" id="L106">            }</span>
         };
     }
 
     @Override
     public VisitorStarter getDumpFacade(final Writer writer, final String prefix, final boolean recurse) {
-<span class="nc" id="L101">        return new VisitorStarter() {</span>
+<span class="nc" id="L112">        return new VisitorStarter() {</span>
             public void start(Node rootNode) {
-<span class="nc" id="L103">                new DumpFacade().initializeWith(writer, prefix, recurse, (JavaNode) rootNode);</span>
-<span class="nc" id="L104">            }</span>
+<span class="nc" id="L114">                new DumpFacade().initializeWith(writer, prefix, recurse, (JavaNode) rootNode);</span>
+<span class="nc" id="L115">            }</span>
         };
     }
 
     @Override
     public DFAGraphRule getDFAGraphRule() {
-<span class="nc" id="L110">        return new JavaDFAGraphRule();</span>
+<span class="nc" id="L121">        return new JavaDFAGraphRule();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

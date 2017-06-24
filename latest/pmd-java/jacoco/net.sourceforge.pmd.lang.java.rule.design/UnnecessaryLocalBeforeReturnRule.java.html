@@ -29,7 +29,7 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
 <span class="fc" id="L29">    private static final BooleanProperty STATEMENT_ORDER_MATTERS = new BooleanProperty(&quot;statementOrderMatters&quot;,</span>
             &quot;If set to false this rule no longer requires the variable declaration and return statement to be &quot;
             + &quot;on consecutive lines. Any variable that is used solely in a return statement will be reported.&quot;,
-            true, 1.0f);
+<span class="fc" id="L32">            true, 1.0f);</span>
 
 <span class="fc" id="L34">    public UnnecessaryLocalBeforeReturnRule() {</span>
 <span class="fc" id="L35">        definePropertyDescriptor(STATEMENT_ORDER_MATTERS);</span>
@@ -53,13 +53,13 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
         }
 
         // skip 'complicated' expressions
-<span class="fc bfc" id="L56" title="All 6 branches covered.">        if (rtn.findDescendantsOfType(ASTExpression.class).size() &gt; 1</span>
-                || rtn.findDescendantsOfType(ASTPrimaryExpression.class).size() &gt; 1 || isMethodCall(rtn)) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (rtn.findDescendantsOfType(ASTExpression.class).size() &gt; 1</span>
+<span class="fc bfc" id="L57" title="All 4 branches covered.">                || rtn.findDescendantsOfType(ASTPrimaryExpression.class).size() &gt; 1 || isMethodCall(rtn)) {</span>
 <span class="fc" id="L58">            return data;</span>
         }
 
 <span class="fc" id="L61">        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; vars = name.getScope()</span>
-                .getDeclarations(VariableNameDeclaration.class);
+<span class="fc" id="L62">                .getDeclarations(VariableNameDeclaration.class);</span>
 <span class="fc bfc" id="L63" title="All 2 branches covered.">        for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : vars.entrySet()) {</span>
 <span class="fc" id="L64">            VariableNameDeclaration variableDeclaration = entry.getKey();</span>
 <span class="fc" id="L65">            List&lt;NameOccurrence&gt; usages = entry.getValue();</span>
@@ -74,8 +74,8 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
                     }
 
                     // Is the variable initialized with another member that is later used?
-<span class="fc bfc" id="L77" title="All 4 branches covered.">                    if (!isInitDataModifiedAfterInit(variableDeclaration, rtn)</span>
-                            &amp;&amp; !statementsBeforeReturn(variableDeclaration, rtn)) {
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                    if (!isInitDataModifiedAfterInit(variableDeclaration, rtn)</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                            &amp;&amp; !statementsBeforeReturn(variableDeclaration, rtn)) {</span>
 <span class="fc" id="L79">                        addViolation(data, rtn, var);</span>
                     }
                 }
@@ -102,7 +102,7 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
     private boolean isInitDataModifiedAfterInit(final VariableNameDeclaration variableDeclaration,
             final ASTReturnStatement rtn) {
 <span class="fc" id="L104">        final ASTVariableInitializer initializer = variableDeclaration.getAccessNodeParent()</span>
-                .getFirstDescendantOfType(ASTVariableInitializer.class);
+<span class="fc" id="L105">                .getFirstDescendantOfType(ASTVariableInitializer.class);</span>
 <span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (initializer != null) {</span>
 <span class="fc" id="L107">            final List&lt;ASTName&gt; referencedNames = initializer.findDescendantsOfType(ASTName.class);</span>
 <span class="fc bfc" id="L108" title="All 2 branches covered.">            for (final ASTName refName : referencedNames) {</span>
@@ -110,20 +110,20 @@ public class UnnecessaryLocalBeforeReturnRule extends AbstractJavaRule {
 <span class="fc" id="L110">                Scope scope = refName.getScope();</span>
                 do {
 <span class="fc" id="L112">                    final Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations = scope</span>
-                            .getDeclarations(VariableNameDeclaration.class);
+<span class="fc" id="L113">                            .getDeclarations(VariableNameDeclaration.class);</span>
 <span class="fc bfc" id="L114" title="All 2 branches covered.">                    for (final Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : declarations</span>
-                            .entrySet()) {
+<span class="fc" id="L115">                            .entrySet()) {</span>
 <span class="fc bfc" id="L116" title="All 2 branches covered.">                        if (entry.getKey().getName().equals(refName.getImage())) {</span>
                             // Variable found! Check usage locations
 <span class="fc bfc" id="L118" title="All 2 branches covered.">                            for (final NameOccurrence occ : entry.getValue()) {</span>
 <span class="fc" id="L119">                                final ScopedNode location = occ.getLocation();</span>
                                 // Is it used after initializing our &quot;unnecessary&quot; local but before the return statement?
                                 // TODO : should node define isAfter / isBefore helper methods?
-<span class="pc bpc" id="L122" title="6 of 12 branches missed.">                                if ((location.getBeginLine() &gt; initializer.getEndLine()</span>
-                                        || (location.getBeginLine() == initializer.getEndLine() &amp;&amp; location.getBeginColumn() &gt;= initializer.getEndColumn()))
-                                        &amp;&amp; (location.getEndLine() &lt; rtn.getBeginLine()
-                                                || (location.getEndLine() == rtn.getBeginLine()
-                                                        &amp;&amp; location.getEndColumn() &lt;= rtn.getEndColumn()))) {
+<span class="fc bfc" id="L122" title="All 2 branches covered.">                                if ((location.getBeginLine() &gt; initializer.getEndLine()</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">                                        || (location.getBeginLine() == initializer.getEndLine() &amp;&amp; location.getBeginColumn() &gt;= initializer.getEndColumn()))</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                                        &amp;&amp; (location.getEndLine() &lt; rtn.getBeginLine()</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                                                || (location.getEndLine() == rtn.getBeginLine()</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">                                                        &amp;&amp; location.getEndColumn() &lt;= rtn.getEndColumn()))) {</span>
 <span class="fc" id="L127">                                    return true;</span>
                                 }
 <span class="fc" id="L129">                            }</span>

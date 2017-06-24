@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTAnnotation;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTImportDeclaration;
@@ -23,53 +24,62 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
  * @since 1.2
  */
 
-<span class="fc" id="L26">public class SignatureDeclareThrowsExceptionRule extends AbstractJavaRule {</span>
+<span class="fc" id="L27">public class SignatureDeclareThrowsExceptionRule extends AbstractJavaRule {</span>
 
     private boolean junitImported;
 
     @Override
     public Object visit(ASTCompilationUnit node, Object o) {
-<span class="fc" id="L32">        junitImported = false;</span>
-<span class="fc" id="L33">        return super.visit(node, o);</span>
+<span class="fc" id="L33">        junitImported = false;</span>
+<span class="fc" id="L34">        return super.visit(node, o);</span>
     }
 
     @Override
     public Object visit(ASTImportDeclaration node, Object o) {
-<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (node.getImportedName().indexOf(&quot;junit&quot;) != -1) {</span>
-<span class="fc" id="L39">            junitImported = true;</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (node.getImportedName().indexOf(&quot;junit&quot;) != -1) {</span>
+<span class="fc" id="L40">            junitImported = true;</span>
         }
-<span class="fc" id="L41">        return super.visit(node, o);</span>
+<span class="fc" id="L42">        return super.visit(node, o);</span>
     }
 
     @Override
     public Object visit(ASTMethodDeclaration methodDeclaration, Object o) {
-<span class="fc bfc" id="L46" title="All 6 branches covered.">        if ((methodDeclaration.getMethodName().equals(&quot;setUp&quot;) || methodDeclaration.getMethodName().equals(&quot;tearDown&quot;))</span>
+<span class="fc bfc" id="L47" title="All 6 branches covered.">        if ((methodDeclaration.getMethodName().equals(&quot;setUp&quot;) || methodDeclaration.getMethodName().equals(&quot;tearDown&quot;))</span>
                 &amp;&amp; junitImported) {
-<span class="fc" id="L48">            return super.visit(methodDeclaration, o);</span>
+<span class="fc" id="L49">            return super.visit(methodDeclaration, o);</span>
         }
 
-<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (methodDeclaration.getMethodName().startsWith(&quot;test&quot;)) {</span>
-<span class="fc" id="L52">            return super.visit(methodDeclaration, o);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (methodDeclaration.getMethodName().startsWith(&quot;test&quot;)) {</span>
+<span class="fc" id="L53">            return super.visit(methodDeclaration, o);</span>
         }
+        
+        // Ignore overridden methods, the issue should be marked on the method definition
+<span class="fc" id="L57">        final List&lt;ASTAnnotation&gt; methodAnnotations = methodDeclaration.jjtGetParent().findChildrenOfType(ASTAnnotation.class);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        for (final ASTAnnotation annotation : methodAnnotations) {</span>
+<span class="fc" id="L59">            final ASTName annotationName = annotation.getFirstDescendantOfType(ASTName.class);</span>
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">            if (annotationName.hasImageEqualTo(&quot;Override&quot;) || annotationName.hasImageEqualTo(&quot;java.lang.Override&quot;)) {</span>
+<span class="fc" id="L61">                return super.visit(methodDeclaration, o);</span>
+            }
+<span class="fc" id="L63">        }</span>
 
-<span class="fc" id="L55">        List&lt;ASTName&gt; exceptionList = Collections.emptyList();</span>
-<span class="fc" id="L56">        ASTNameList nameList = methodDeclaration.getFirstChildOfType(ASTNameList.class);</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (nameList != null) {</span>
-<span class="fc" id="L58">            exceptionList = nameList.findDescendantsOfType(ASTName.class);</span>
+<span class="fc" id="L65">        List&lt;ASTName&gt; exceptionList = Collections.emptyList();</span>
+<span class="fc" id="L66">        ASTNameList nameList = methodDeclaration.getFirstChildOfType(ASTNameList.class);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (nameList != null) {</span>
+<span class="fc" id="L68">            exceptionList = nameList.findDescendantsOfType(ASTName.class);</span>
         }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
-<span class="fc" id="L61">            evaluateExceptions(exceptionList, o);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
+<span class="fc" id="L71">            evaluateExceptions(exceptionList, o);</span>
         }
-<span class="fc" id="L63">        return super.visit(methodDeclaration, o);</span>
+<span class="fc" id="L73">        return super.visit(methodDeclaration, o);</span>
     }
 
     @Override
     public Object visit(ASTConstructorDeclaration constructorDeclaration, Object o) {
-<span class="fc" id="L68">        List&lt;ASTName&gt; exceptionList = constructorDeclaration.findDescendantsOfType(ASTName.class);</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
-<span class="fc" id="L70">            evaluateExceptions(exceptionList, o);</span>
+<span class="fc" id="L78">        List&lt;ASTName&gt; exceptionList = constructorDeclaration.findDescendantsOfType(ASTName.class);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (!exceptionList.isEmpty()) {</span>
+<span class="fc" id="L80">            evaluateExceptions(exceptionList, o);</span>
         }
-<span class="fc" id="L72">        return super.visit(constructorDeclaration, o);</span>
+<span class="fc" id="L82">        return super.visit(constructorDeclaration, o);</span>
     }
 
     /**
@@ -81,12 +91,12 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * @param context
      */
     private void evaluateExceptions(List&lt;ASTName&gt; exceptionList, Object context) {
-<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (ASTName exception : exceptionList) {</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (hasDeclaredExceptionInSignature(exception)) {</span>
-<span class="fc" id="L86">                addViolation(context, exception);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        for (ASTName exception : exceptionList) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (hasDeclaredExceptionInSignature(exception)) {</span>
+<span class="fc" id="L96">                addViolation(context, exception);</span>
             }
-<span class="fc" id="L88">        }</span>
-<span class="fc" id="L89">    }</span>
+<span class="fc" id="L98">        }</span>
+<span class="fc" id="L99">    }</span>
 
     /**
      * Checks if the given value is defined as &lt;code&gt;Exception&lt;/code&gt; and the
@@ -97,7 +107,7 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * @return true if &lt;code&gt;Exception&lt;/code&gt; is declared and has proper parents
      */
     private boolean hasDeclaredExceptionInSignature(ASTName exception) {
-<span class="pc bpc" id="L100" title="1 of 4 branches missed.">        return exception.hasImageEqualTo(&quot;Exception&quot;) &amp;&amp; isParentSignatureDeclaration(exception);</span>
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        return exception.hasImageEqualTo(&quot;Exception&quot;) &amp;&amp; isParentSignatureDeclaration(exception);</span>
     }
 
     /**
@@ -109,8 +119,8 @@ import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
      * @return true if parent node is either a method or constructor declaration
      */
     private boolean isParentSignatureDeclaration(ASTName exception) {
-<span class="fc" id="L112">        Node parent = exception.jjtGetParent().jjtGetParent();</span>
-<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        return parent instanceof ASTMethodDeclaration || parent instanceof ASTConstructorDeclaration;</span>
+<span class="fc" id="L122">        Node parent = exception.jjtGetParent().jjtGetParent();</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">        return parent instanceof ASTMethodDeclaration || parent instanceof ASTConstructorDeclaration;</span>
     }
 
 }

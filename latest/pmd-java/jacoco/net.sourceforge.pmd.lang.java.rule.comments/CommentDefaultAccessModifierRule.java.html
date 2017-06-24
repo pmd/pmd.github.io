@@ -63,7 +63,7 @@ public class CommentDefaultAccessModifierRule extends AbstractCommentRule {
     public Object visit(final ASTMethodDeclaration decl, final Object data) {
 <span class="fc bfc" id="L64" title="All 2 branches covered.">        if (shouldReport(decl)) {</span>
 <span class="fc" id="L65">            addViolationWithMessage(data, decl,</span>
-                    String.format(MESSAGE, decl.getFirstChildOfType(ASTMethodDeclarator.class).getImage(), &quot;method&quot;));
+<span class="fc" id="L66">                    String.format(MESSAGE, decl.getFirstChildOfType(ASTMethodDeclarator.class).getImage(), &quot;method&quot;));</span>
         }
 <span class="fc" id="L68">        return super.visit(decl, data);</span>
     }
@@ -72,7 +72,7 @@ public class CommentDefaultAccessModifierRule extends AbstractCommentRule {
     public Object visit(final ASTFieldDeclaration decl, final Object data) {
 <span class="fc bfc" id="L73" title="All 2 branches covered.">        if (shouldReport(decl)) {</span>
 <span class="fc" id="L74">            addViolationWithMessage(data, decl, String.format(MESSAGE,</span>
-                    decl.getFirstDescendantOfType(ASTVariableDeclaratorId.class).getImage(), &quot;field&quot;));
+<span class="fc" id="L75">                    decl.getFirstDescendantOfType(ASTVariableDeclaratorId.class).getImage(), &quot;field&quot;));</span>
         }
 <span class="fc" id="L77">        return super.visit(decl, data);</span>
     }
@@ -88,17 +88,17 @@ public class CommentDefaultAccessModifierRule extends AbstractCommentRule {
 
     private boolean shouldReport(final AbstractJavaAccessNode decl) {
 <span class="fc" id="L90">        List&lt;ASTClassOrInterfaceDeclaration&gt; parentClassOrInterface = decl</span>
-                .getParentsOfType(ASTClassOrInterfaceDeclaration.class);
+<span class="fc" id="L91">                .getParentsOfType(ASTClassOrInterfaceDeclaration.class);</span>
         // ignore if is a Interface
-<span class="fc bfc" id="L93" title="All 10 branches covered.">        return (!parentClassOrInterface.isEmpty() &amp;&amp; !parentClassOrInterface.get(0).isInterface())</span>
+<span class="fc bfc" id="L93" title="All 4 branches covered.">        return (!parentClassOrInterface.isEmpty() &amp;&amp; !parentClassOrInterface.get(0).isInterface())</span>
                 // check if the field/method/nested class has a default access
                 // modifier
-                &amp;&amp; decl.isPackagePrivate()
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                &amp;&amp; decl.isPackagePrivate()</span>
                 // if is a default access modifier check if there is a comment
                 // in this line
-                &amp;&amp; !interestingLineNumberComments.contains(decl.getBeginLine())
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                &amp;&amp; !interestingLineNumberComments.contains(decl.getBeginLine())</span>
                 // that it is not annotated with @VisibleForTesting
-                &amp;&amp; hasNoVisibleForTestingAnnotation(decl);
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                &amp;&amp; hasNoVisibleForTestingAnnotation(decl);</span>
     }
 
     private boolean hasNoVisibleForTestingAnnotation(AbstractJavaAccessNode decl) {
