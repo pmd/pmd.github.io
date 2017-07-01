@@ -4,72 +4,167 @@
 
 package net.sourceforge.pmd.lang.java.typeresolution.typedefinition;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class JavaTypeDefinition implements TypeDefinition {
-    private final Class&lt;?&gt; clazz;
-    private List&lt;JavaTypeDefinition&gt; genericArgs;
     // contains TypeDefs where only the clazz field is used
-<span class="fc" id="L18">    private static Map&lt;Class&lt;?&gt;, JavaTypeDefinition&gt; onlyClassTypeDef = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L19">    private static final Map&lt;Class&lt;?&gt;, JavaTypeDefinition&gt; CLASS_TYPE_DEF_CACHE = new HashMap&lt;&gt;();</span>
 
-    public Class&lt;?&gt; getType() {
-<span class="fc" id="L21">        return clazz;</span>
-    }
+    private final Class&lt;?&gt; clazz;
+    private final List&lt;JavaTypeDefinition&gt; genericArgs;
+    private final boolean isGeneric;
+    
+<span class="fc" id="L25">    private JavaTypeDefinition(final Class&lt;?&gt; clazz) {</span>
+<span class="fc" id="L26">        this.clazz = clazz;</span>
 
-    public List&lt;JavaTypeDefinition&gt; getGenericArgs() {
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (genericArgs == null) {</span>
-<span class="fc" id="L26">            genericArgs = Collections.unmodifiableList(new ArrayList&lt;JavaTypeDefinition&gt;());</span>
-        }
-
-<span class="fc" id="L29">        return genericArgs;</span>
-    }
-
-<span class="fc" id="L32">    private JavaTypeDefinition(Class&lt;?&gt; clazz, List&lt;JavaTypeDefinition&gt; genericArgs) {</span>
-<span class="fc" id="L33">        this.clazz = clazz;</span>
-
-<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (genericArgs != null) {</span>
-<span class="fc" id="L36">            this.genericArgs = Collections.unmodifiableList(genericArgs);</span>
-        }
-<span class="fc" id="L38">    }</span>
-
-    //           builder part of the class
-
-    public static JavaTypeDefinition build(Class&lt;?&gt; clazz) {
-<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (onlyClassTypeDef.containsKey(clazz)) {</span>
-<span class="fc" id="L44">            return onlyClassTypeDef.get(clazz);</span>
-        }
-
-<span class="fc" id="L47">        JavaTypeDefinition typeDef = new JavaTypeDefinition(clazz, null);</span>
-
-<span class="fc" id="L49">        onlyClassTypeDef.put(clazz, typeDef);</span>
-
-<span class="fc" id="L51">        return typeDef;</span>
-    }
-
-    /**
-     * @param genericArgs This package private method expects that the genericArgs list has not been leaked,
-     *                    meaning the other references have been discarded to ensure immutability.
-     */
-    /* default */ static JavaTypeDefinition build(Class&lt;?&gt; clazz, List&lt;JavaTypeDefinition&gt; genericArgs) {
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (genericArgs == null) {</span>
-<span class="nc" id="L60">            return build(clazz);</span>
+        final TypeVariable&lt;?&gt;[] typeParameters;
+        // the anonymous class can't have generics, but we may be binding generics from super classes
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        if (clazz.isAnonymousClass()) {</span>
+            // is this an anonymous class based on an interface or a class?
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (clazz.getSuperclass() == Object.class) {</span>
+<span class="fc" id="L33">                typeParameters = clazz.getInterfaces()[0].getTypeParameters();</span>
+            } else {
+<span class="fc" id="L35">                typeParameters = clazz.getSuperclass().getTypeParameters();</span>
+            }
+        } else {
+<span class="fc" id="L38">            typeParameters = clazz.getTypeParameters();</span>
         }
         
-<span class="fc" id="L63">        return new JavaTypeDefinition(clazz, genericArgs);</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        isGeneric = typeParameters.length != 0;</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (isGeneric) {</span>
+            // Generics will be lazily loaded
+<span class="fc" id="L44">            this.genericArgs = new ArrayList&lt;JavaTypeDefinition&gt;(typeParameters.length);</span>
+        } else {
+<span class="fc" id="L46">            this.genericArgs = Collections.emptyList();</span>
+        }
+<span class="fc" id="L48">    }</span>
+    
+    public static JavaTypeDefinition forClass(final Class&lt;?&gt; clazz) {
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if (clazz == null) {</span>
+<span class="nc" id="L52">            return null;</span>
+        }
+        
+<span class="fc" id="L55">        final JavaTypeDefinition typeDef = CLASS_TYPE_DEF_CACHE.get(clazz);</span>
+        
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (typeDef != null) {</span>
+<span class="fc" id="L58">            return typeDef;</span>
+        }
+        
+<span class="fc" id="L61">        final JavaTypeDefinition newDef = new JavaTypeDefinition(clazz);</span>
+
+        // We can only cache types without generics, since their values are context-based
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (!newDef.isGeneric) {</span>
+<span class="fc" id="L65">            CLASS_TYPE_DEF_CACHE.put(clazz, newDef);</span>
+        }
+        
+<span class="fc" id="L68">        return newDef;</span>
+    }
+    
+    public static JavaTypeDefinition forClass(final Class&lt;?&gt; clazz, final JavaTypeDefinition... boundGenerics) {
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (clazz == null) {</span>
+<span class="fc" id="L73">            return null;</span>
+        }
+        
+        // With generics there is no cache
+<span class="fc" id="L77">        final JavaTypeDefinition typeDef = new JavaTypeDefinition(clazz);</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (final JavaTypeDefinition generic : boundGenerics) {</span>
+<span class="fc" id="L80">            typeDef.genericArgs.add(generic);</span>
+        }
+        
+<span class="fc" id="L83">        return typeDef;</span>
+    }
+    
+    @Override
+    public Class&lt;?&gt; getType() {
+<span class="fc" id="L88">        return clazz;</span>
+    }
+    
+    public boolean isGeneric() {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        return !genericArgs.isEmpty();</span>
     }
 
-    public static JavaTypeDefinitionBuilder builder(Class&lt;?&gt; clazz) {
-<span class="fc" id="L67">        return new JavaTypeDefinitionBuilder().setType(clazz);</span>
+    public JavaTypeDefinition getGenericType(final String parameterName) {
+<span class="fc" id="L96">        final TypeVariable&lt;?&gt;[] typeParameters = clazz.getTypeParameters();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        for (int i = 0; i &lt; typeParameters.length; i++) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">            if (typeParameters[i].getName().equals(parameterName)) {</span>
+<span class="fc" id="L99">                return getGenericType(i);</span>
+            }
+        }
+        
+<span class="nc" id="L103">        throw new IllegalArgumentException(&quot;No generic parameter by name &quot; + parameterName</span>
+<span class="nc" id="L104">                + &quot; on class &quot; + clazz.getSimpleName());</span>
     }
 
+    public JavaTypeDefinition getGenericType(final int index) {
+        // Check if it has been lazily initialized first
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (genericArgs.size() &gt; index) {</span>
+<span class="fc" id="L110">            final JavaTypeDefinition cachedDefinition = genericArgs.get(index);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (cachedDefinition != null) {</span>
+<span class="fc" id="L112">                return cachedDefinition;</span>
+            }
+        }
+        
+        // Force the list to have enough elements
+<span class="fc bfc" id="L117" title="All 2 branches covered.">        for (int i = genericArgs.size(); i &lt;= index; i++) {</span>
+<span class="fc" id="L118">            genericArgs.add(null);</span>
+        }
+        
+        /*
+         * Set a default to circuit-brake any recursions (ie: raw types with no generic info)
+         * Object.class is a right answer in those scenarios
+         */
+<span class="fc" id="L125">        genericArgs.set(index, forClass(Object.class));</span>
+        
+<span class="fc" id="L127">        final TypeVariable&lt;?&gt; typeVariable = clazz.getTypeParameters()[index];</span>
+<span class="fc" id="L128">        final JavaTypeDefinition typeDefinition = resolveTypeDefinition(typeVariable.getBounds()[0]);</span>
+        
+        // cache result
+<span class="fc" id="L131">        genericArgs.set(index, typeDefinition);</span>
+<span class="fc" id="L132">        return typeDefinition;</span>
+    }
 
-    public static JavaTypeDefinitionBuilder builder() {
-<span class="nc" id="L72">        return new JavaTypeDefinitionBuilder();</span>
+    public JavaTypeDefinition resolveTypeDefinition(final Type type) {
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (type == null) {</span>
+            // Without more info, this is all we can tell...
+<span class="fc" id="L138">            return forClass(Object.class);</span>
+        }
+
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        if (type instanceof Class) { // Raw types take this branch as well</span>
+<span class="fc" id="L142">            return forClass((Class&lt;?&gt;) type);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        } else if (type instanceof ParameterizedType) {</span>
+<span class="fc" id="L144">            final ParameterizedType parameterizedType = (ParameterizedType) type;</span>
+
+            // recursively determine each type argument's type def.
+<span class="fc" id="L147">            final Type[] typeArguments = parameterizedType.getActualTypeArguments();</span>
+<span class="fc" id="L148">            final JavaTypeDefinition[] genericBounds = new JavaTypeDefinition[typeArguments.length];</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            for (int i = 0; i &lt; typeArguments.length; i++) {</span>
+<span class="fc" id="L150">                genericBounds[i] = resolveTypeDefinition(typeArguments[i]);</span>
+            }
+            
+            // TODO : is this cast safe?
+<span class="fc" id="L154">            return forClass((Class&lt;?&gt;) parameterizedType.getRawType(), genericBounds);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        } else if (type instanceof TypeVariable) {</span>
+<span class="fc" id="L156">            return getGenericType(((TypeVariable&lt;?&gt;) type).getName());</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        } else if (type instanceof WildcardType) {</span>
+<span class="fc" id="L158">            final Type[] wildcardUpperBounds = ((WildcardType) type).getUpperBounds();</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">            if (wildcardUpperBounds.length != 0) { // upper bound wildcard</span>
+<span class="fc" id="L160">                return resolveTypeDefinition(wildcardUpperBounds[0]);</span>
+            } else { // lower bound wildcard
+<span class="nc" id="L162">                return forClass(Object.class);</span>
+            }
+        }
+
+        // TODO : Shall we throw here?
+<span class="nc" id="L167">        return forClass(Object.class);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

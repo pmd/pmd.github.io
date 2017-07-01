@@ -6,10 +6,6 @@ package net.sourceforge.pmd.lang.java.typeresolution;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +14,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sourceforge.pmd.lang.ast.AbstractNode;
 import net.sourceforge.pmd.lang.ast.Node;
 import net.sourceforge.pmd.lang.java.ast.ASTAdditiveExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTAllocationExpression;
@@ -28,6 +23,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTArguments;
 import net.sourceforge.pmd.lang.java.ast.ASTArrayDimsAndInits;
 import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
 import net.sourceforge.pmd.lang.java.ast.ASTCastExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBody;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceType;
 import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
@@ -35,6 +31,7 @@ import net.sourceforge.pmd.lang.java.ast.ASTConditionalAndExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConditionalOrExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumBody;
 import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
 import net.sourceforge.pmd.lang.java.ast.ASTEqualityExpression;
 import net.sourceforge.pmd.lang.java.ast.ASTExclusiveOrExpression;
@@ -81,7 +78,6 @@ import net.sourceforge.pmd.lang.java.ast.TypeNode;
 import net.sourceforge.pmd.lang.java.symboltable.ClassScope;
 import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
 import net.sourceforge.pmd.lang.java.typeresolution.typedefinition.JavaTypeDefinition;
-import net.sourceforge.pmd.lang.java.typeresolution.typedefinition.JavaTypeDefinitionBuilder;
 import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
 import net.sourceforge.pmd.lang.symboltable.Scope;
 
@@ -93,7 +89,7 @@ import net.sourceforge.pmd.lang.symboltable.Scope;
 
 public class ClassTypeResolver extends JavaParserVisitorAdapter {
 
-<span class="fc" id="L96">    private static final Logger LOG = Logger.getLogger(ClassTypeResolver.class.getName());</span>
+<span class="fc" id="L92">    private static final Logger LOG = Logger.getLogger(ClassTypeResolver.class.getName());</span>
 
     private static final Map&lt;String, Class&lt;?&gt;&gt; PRIMITIVE_TYPES;
     private static final Map&lt;String, String&gt; JAVA_LANG;
@@ -101,232 +97,277 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
     static {
         // Note: Assumption here that primitives come from same parent
         // ClassLoader regardless of what ClassLoader we are passed
-<span class="fc" id="L104">        Map&lt;String, Class&lt;?&gt;&gt; thePrimitiveTypes = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L105">        thePrimitiveTypes.put(&quot;void&quot;, Void.TYPE);</span>
-<span class="fc" id="L106">        thePrimitiveTypes.put(&quot;boolean&quot;, Boolean.TYPE);</span>
-<span class="fc" id="L107">        thePrimitiveTypes.put(&quot;byte&quot;, Byte.TYPE);</span>
-<span class="fc" id="L108">        thePrimitiveTypes.put(&quot;char&quot;, Character.TYPE);</span>
-<span class="fc" id="L109">        thePrimitiveTypes.put(&quot;short&quot;, Short.TYPE);</span>
-<span class="fc" id="L110">        thePrimitiveTypes.put(&quot;int&quot;, Integer.TYPE);</span>
-<span class="fc" id="L111">        thePrimitiveTypes.put(&quot;long&quot;, Long.TYPE);</span>
-<span class="fc" id="L112">        thePrimitiveTypes.put(&quot;float&quot;, Float.TYPE);</span>
-<span class="fc" id="L113">        thePrimitiveTypes.put(&quot;double&quot;, Double.TYPE);</span>
-<span class="fc" id="L114">        PRIMITIVE_TYPES = Collections.unmodifiableMap(thePrimitiveTypes);</span>
+<span class="fc" id="L100">        Map&lt;String, Class&lt;?&gt;&gt; thePrimitiveTypes = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L101">        thePrimitiveTypes.put(&quot;void&quot;, Void.TYPE);</span>
+<span class="fc" id="L102">        thePrimitiveTypes.put(&quot;boolean&quot;, Boolean.TYPE);</span>
+<span class="fc" id="L103">        thePrimitiveTypes.put(&quot;byte&quot;, Byte.TYPE);</span>
+<span class="fc" id="L104">        thePrimitiveTypes.put(&quot;char&quot;, Character.TYPE);</span>
+<span class="fc" id="L105">        thePrimitiveTypes.put(&quot;short&quot;, Short.TYPE);</span>
+<span class="fc" id="L106">        thePrimitiveTypes.put(&quot;int&quot;, Integer.TYPE);</span>
+<span class="fc" id="L107">        thePrimitiveTypes.put(&quot;long&quot;, Long.TYPE);</span>
+<span class="fc" id="L108">        thePrimitiveTypes.put(&quot;float&quot;, Float.TYPE);</span>
+<span class="fc" id="L109">        thePrimitiveTypes.put(&quot;double&quot;, Double.TYPE);</span>
+<span class="fc" id="L110">        PRIMITIVE_TYPES = Collections.unmodifiableMap(thePrimitiveTypes);</span>
 
-<span class="fc" id="L116">        Map&lt;String, String&gt; theJavaLang = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L117">        theJavaLang.put(&quot;Boolean&quot;, &quot;java.lang.Boolean&quot;);</span>
-<span class="fc" id="L118">        theJavaLang.put(&quot;Byte&quot;, &quot;java.lang.Byte&quot;);</span>
-<span class="fc" id="L119">        theJavaLang.put(&quot;Character&quot;, &quot;java.lang.Character&quot;);</span>
-<span class="fc" id="L120">        theJavaLang.put(&quot;CharSequence&quot;, &quot;java.lang.CharSequence&quot;);</span>
-<span class="fc" id="L121">        theJavaLang.put(&quot;Class&quot;, &quot;java.lang.Class&quot;);</span>
-<span class="fc" id="L122">        theJavaLang.put(&quot;ClassLoader&quot;, &quot;java.lang.ClassLoader&quot;);</span>
-<span class="fc" id="L123">        theJavaLang.put(&quot;Cloneable&quot;, &quot;java.lang.Cloneable&quot;);</span>
-<span class="fc" id="L124">        theJavaLang.put(&quot;Comparable&quot;, &quot;java.lang.Comparable&quot;);</span>
-<span class="fc" id="L125">        theJavaLang.put(&quot;Compiler&quot;, &quot;java.lang.Compiler&quot;);</span>
-<span class="fc" id="L126">        theJavaLang.put(&quot;Double&quot;, &quot;java.lang.Double&quot;);</span>
-<span class="fc" id="L127">        theJavaLang.put(&quot;Float&quot;, &quot;java.lang.Float&quot;);</span>
-<span class="fc" id="L128">        theJavaLang.put(&quot;InheritableThreadLocal&quot;, &quot;java.lang.InheritableThreadLocal&quot;);</span>
-<span class="fc" id="L129">        theJavaLang.put(&quot;Integer&quot;, &quot;java.lang.Integer&quot;);</span>
-<span class="fc" id="L130">        theJavaLang.put(&quot;Long&quot;, &quot;java.lang.Long&quot;);</span>
-<span class="fc" id="L131">        theJavaLang.put(&quot;Math&quot;, &quot;java.lang.Math&quot;);</span>
-<span class="fc" id="L132">        theJavaLang.put(&quot;Number&quot;, &quot;java.lang.Number&quot;);</span>
-<span class="fc" id="L133">        theJavaLang.put(&quot;Object&quot;, &quot;java.lang.Object&quot;);</span>
-<span class="fc" id="L134">        theJavaLang.put(&quot;Package&quot;, &quot;java.lang.Package&quot;);</span>
-<span class="fc" id="L135">        theJavaLang.put(&quot;Process&quot;, &quot;java.lang.Process&quot;);</span>
-<span class="fc" id="L136">        theJavaLang.put(&quot;Runnable&quot;, &quot;java.lang.Runnable&quot;);</span>
-<span class="fc" id="L137">        theJavaLang.put(&quot;Runtime&quot;, &quot;java.lang.Runtime&quot;);</span>
-<span class="fc" id="L138">        theJavaLang.put(&quot;RuntimePermission&quot;, &quot;java.lang.RuntimePermission&quot;);</span>
-<span class="fc" id="L139">        theJavaLang.put(&quot;SecurityManager&quot;, &quot;java.lang.SecurityManager&quot;);</span>
-<span class="fc" id="L140">        theJavaLang.put(&quot;Short&quot;, &quot;java.lang.Short&quot;);</span>
-<span class="fc" id="L141">        theJavaLang.put(&quot;StackTraceElement&quot;, &quot;java.lang.StackTraceElement&quot;);</span>
-<span class="fc" id="L142">        theJavaLang.put(&quot;StrictMath&quot;, &quot;java.lang.StrictMath&quot;);</span>
-<span class="fc" id="L143">        theJavaLang.put(&quot;String&quot;, &quot;java.lang.String&quot;);</span>
-<span class="fc" id="L144">        theJavaLang.put(&quot;StringBuffer&quot;, &quot;java.lang.StringBuffer&quot;);</span>
-<span class="fc" id="L145">        theJavaLang.put(&quot;System&quot;, &quot;java.lang.System&quot;);</span>
-<span class="fc" id="L146">        theJavaLang.put(&quot;Thread&quot;, &quot;java.lang.Thread&quot;);</span>
-<span class="fc" id="L147">        theJavaLang.put(&quot;ThreadGroup&quot;, &quot;java.lang.ThreadGroup&quot;);</span>
-<span class="fc" id="L148">        theJavaLang.put(&quot;ThreadLocal&quot;, &quot;java.lang.ThreadLocal&quot;);</span>
-<span class="fc" id="L149">        theJavaLang.put(&quot;Throwable&quot;, &quot;java.lang.Throwable&quot;);</span>
-<span class="fc" id="L150">        theJavaLang.put(&quot;Void&quot;, &quot;java.lang.Void&quot;);</span>
-<span class="fc" id="L151">        JAVA_LANG = Collections.unmodifiableMap(theJavaLang);</span>
-<span class="fc" id="L152">    }</span>
+<span class="fc" id="L112">        Map&lt;String, String&gt; theJavaLang = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L113">        theJavaLang.put(&quot;Boolean&quot;, &quot;java.lang.Boolean&quot;);</span>
+<span class="fc" id="L114">        theJavaLang.put(&quot;Byte&quot;, &quot;java.lang.Byte&quot;);</span>
+<span class="fc" id="L115">        theJavaLang.put(&quot;Character&quot;, &quot;java.lang.Character&quot;);</span>
+<span class="fc" id="L116">        theJavaLang.put(&quot;CharSequence&quot;, &quot;java.lang.CharSequence&quot;);</span>
+<span class="fc" id="L117">        theJavaLang.put(&quot;Class&quot;, &quot;java.lang.Class&quot;);</span>
+<span class="fc" id="L118">        theJavaLang.put(&quot;ClassLoader&quot;, &quot;java.lang.ClassLoader&quot;);</span>
+<span class="fc" id="L119">        theJavaLang.put(&quot;Cloneable&quot;, &quot;java.lang.Cloneable&quot;);</span>
+<span class="fc" id="L120">        theJavaLang.put(&quot;Comparable&quot;, &quot;java.lang.Comparable&quot;);</span>
+<span class="fc" id="L121">        theJavaLang.put(&quot;Compiler&quot;, &quot;java.lang.Compiler&quot;);</span>
+<span class="fc" id="L122">        theJavaLang.put(&quot;Double&quot;, &quot;java.lang.Double&quot;);</span>
+<span class="fc" id="L123">        theJavaLang.put(&quot;Float&quot;, &quot;java.lang.Float&quot;);</span>
+<span class="fc" id="L124">        theJavaLang.put(&quot;InheritableThreadLocal&quot;, &quot;java.lang.InheritableThreadLocal&quot;);</span>
+<span class="fc" id="L125">        theJavaLang.put(&quot;Integer&quot;, &quot;java.lang.Integer&quot;);</span>
+<span class="fc" id="L126">        theJavaLang.put(&quot;Long&quot;, &quot;java.lang.Long&quot;);</span>
+<span class="fc" id="L127">        theJavaLang.put(&quot;Math&quot;, &quot;java.lang.Math&quot;);</span>
+<span class="fc" id="L128">        theJavaLang.put(&quot;Number&quot;, &quot;java.lang.Number&quot;);</span>
+<span class="fc" id="L129">        theJavaLang.put(&quot;Object&quot;, &quot;java.lang.Object&quot;);</span>
+<span class="fc" id="L130">        theJavaLang.put(&quot;Package&quot;, &quot;java.lang.Package&quot;);</span>
+<span class="fc" id="L131">        theJavaLang.put(&quot;Process&quot;, &quot;java.lang.Process&quot;);</span>
+<span class="fc" id="L132">        theJavaLang.put(&quot;Runnable&quot;, &quot;java.lang.Runnable&quot;);</span>
+<span class="fc" id="L133">        theJavaLang.put(&quot;Runtime&quot;, &quot;java.lang.Runtime&quot;);</span>
+<span class="fc" id="L134">        theJavaLang.put(&quot;RuntimePermission&quot;, &quot;java.lang.RuntimePermission&quot;);</span>
+<span class="fc" id="L135">        theJavaLang.put(&quot;SecurityManager&quot;, &quot;java.lang.SecurityManager&quot;);</span>
+<span class="fc" id="L136">        theJavaLang.put(&quot;Short&quot;, &quot;java.lang.Short&quot;);</span>
+<span class="fc" id="L137">        theJavaLang.put(&quot;StackTraceElement&quot;, &quot;java.lang.StackTraceElement&quot;);</span>
+<span class="fc" id="L138">        theJavaLang.put(&quot;StrictMath&quot;, &quot;java.lang.StrictMath&quot;);</span>
+<span class="fc" id="L139">        theJavaLang.put(&quot;String&quot;, &quot;java.lang.String&quot;);</span>
+<span class="fc" id="L140">        theJavaLang.put(&quot;StringBuffer&quot;, &quot;java.lang.StringBuffer&quot;);</span>
+<span class="fc" id="L141">        theJavaLang.put(&quot;System&quot;, &quot;java.lang.System&quot;);</span>
+<span class="fc" id="L142">        theJavaLang.put(&quot;Thread&quot;, &quot;java.lang.Thread&quot;);</span>
+<span class="fc" id="L143">        theJavaLang.put(&quot;ThreadGroup&quot;, &quot;java.lang.ThreadGroup&quot;);</span>
+<span class="fc" id="L144">        theJavaLang.put(&quot;ThreadLocal&quot;, &quot;java.lang.ThreadLocal&quot;);</span>
+<span class="fc" id="L145">        theJavaLang.put(&quot;Throwable&quot;, &quot;java.lang.Throwable&quot;);</span>
+<span class="fc" id="L146">        theJavaLang.put(&quot;Void&quot;, &quot;java.lang.Void&quot;);</span>
+<span class="fc" id="L147">        JAVA_LANG = Collections.unmodifiableMap(theJavaLang);</span>
+<span class="fc" id="L148">    }</span>
 
     private final PMDASMClassLoader pmdClassLoader;
     private Map&lt;String, String&gt; importedClasses;
     private List&lt;String&gt; importedOnDemand;
-<span class="fc" id="L157">    private int anonymousClassCounter = 0;</span>
-
-    /**
-     * Contains Class -&gt; JavaTypeDefinitions map for raw Class types. Also helps to avoid infinite recursion
-     * when determining default upper bounds.
-     */
-<span class="fc" id="L163">    private Map&lt;Class&lt;?&gt;, JavaTypeDefinition&gt; classToDefaultUpperBounds = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L153">    private Map&lt;Node, AnonymousClassMetadata&gt; anonymousClassMetadata = new HashMap&lt;&gt;();</span>
+    
+    private static class AnonymousClassMetadata {
+        public final String name;
+        public int anonymousClassCounter;
+        
+<span class="fc" id="L159">        AnonymousClassMetadata(final String className) {</span>
+<span class="fc" id="L160">            this.name = className;</span>
+<span class="fc" id="L161">        }</span>
+    }
 
     public ClassTypeResolver() {
-<span class="fc" id="L166">        this(ClassTypeResolver.class.getClassLoader());</span>
-<span class="fc" id="L167">    }</span>
+<span class="fc" id="L165">        this(ClassTypeResolver.class.getClassLoader());</span>
+<span class="fc" id="L166">    }</span>
 
-<span class="fc" id="L169">    public ClassTypeResolver(ClassLoader classLoader) {</span>
-<span class="fc" id="L170">        pmdClassLoader = PMDASMClassLoader.getInstance(classLoader);</span>
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L168">    public ClassTypeResolver(ClassLoader classLoader) {</span>
+<span class="fc" id="L169">        pmdClassLoader = PMDASMClassLoader.getInstance(classLoader);</span>
+<span class="fc" id="L170">    }</span>
 
     // FUTURE ASTCompilationUnit should not be a TypeNode. Clean this up
     // accordingly.
     @Override
     public Object visit(ASTCompilationUnit node, Object data) {
-<span class="fc" id="L177">        String className = null;</span>
+<span class="fc" id="L176">        String className = null;</span>
         try {
-<span class="fc" id="L179">            importedOnDemand = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L180">            importedClasses = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L181">            className = getClassName(node);</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">            if (className != null) {</span>
-<span class="fc" id="L183">                populateClassName(node, className);</span>
+<span class="fc" id="L178">            importedOnDemand = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L179">            importedClasses = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L180">            className = getClassName(node);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (className != null) {</span>
+<span class="fc" id="L182">                populateClassName(node, className);</span>
             }
-<span class="fc" id="L185">        } catch (ClassNotFoundException e) {</span>
-<span class="fc bfc" id="L186" title="All 2 branches covered.">            if (LOG.isLoggable(Level.FINE)) {</span>
-<span class="fc" id="L187">                LOG.log(Level.FINE, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
+<span class="fc" id="L184">        } catch (ClassNotFoundException e) {</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (LOG.isLoggable(Level.FINE)) {</span>
+<span class="fc" id="L186">                LOG.log(Level.FINE, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
             }
-<span class="nc" id="L189">        } catch (NoClassDefFoundError e) {</span>
-<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (LOG.isLoggable(Level.FINE)) {</span>
-<span class="nc" id="L191">                LOG.log(Level.FINE, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
+<span class="nc" id="L188">        } catch (NoClassDefFoundError e) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (LOG.isLoggable(Level.FINE)) {</span>
+<span class="nc" id="L190">                LOG.log(Level.FINE, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
             }
-<span class="nc" id="L193">        } catch (LinkageError e) {</span>
-<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (LOG.isLoggable(Level.WARNING)) {</span>
-<span class="nc" id="L195">                LOG.log(Level.WARNING, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
+<span class="nc" id="L192">        } catch (LinkageError e) {</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">            if (LOG.isLoggable(Level.WARNING)) {</span>
+<span class="nc" id="L194">                LOG.log(Level.WARNING, &quot;Could not find class &quot; + className + &quot;, due to: &quot; + e);</span>
             }
         } finally {
-<span class="pc" id="L198">            populateImports(node);</span>
-<span class="pc" id="L199">        }</span>
-<span class="fc" id="L200">        return super.visit(node, data);</span>
+<span class="pc" id="L197">            populateImports(node);</span>
+<span class="pc" id="L198">        }</span>
+<span class="fc" id="L199">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTPackageDeclaration node, Object data) {
         // no need to visit children, the only child, ASTName, will have no type
-<span class="fc" id="L206">        return data;</span>
+<span class="fc" id="L205">        return data;</span>
     }
 
     @Override
     public Object visit(ASTImportDeclaration node, Object data) {
-<span class="fc" id="L211">        ASTName importedType = (ASTName) node.jjtGetChild(0);</span>
+<span class="fc" id="L210">        ASTName importedType = (ASTName) node.jjtGetChild(0);</span>
 
-<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (importedType.getType() != null) {</span>
-<span class="nc" id="L214">            node.setType(importedType.getType());</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">        if (importedType.getType() != null) {</span>
+<span class="nc" id="L213">            node.setType(importedType.getType());</span>
         } else {
-<span class="fc" id="L216">            populateType(node, importedType.getImage());</span>
+<span class="fc" id="L215">            populateType(node, importedType.getImage());</span>
         }
 
-<span class="fc bfc" id="L219" title="All 2 branches covered.">        if (node.getType() != null) {</span>
-<span class="fc" id="L220">            node.setPackage(node.getType().getPackage());</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (node.getType() != null) {</span>
+<span class="fc" id="L219">            node.setPackage(node.getType().getPackage());</span>
         }
 
         // no need to visit children, the only child, ASTName, will have no type
-<span class="fc" id="L224">        return data;</span>
+<span class="fc" id="L223">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTypeDeclaration node, Object data) {
-<span class="fc" id="L229">        super.visit(node, data);</span>
-<span class="fc" id="L230">        rollupTypeUnary(node);</span>
-<span class="fc" id="L231">        return data;</span>
+<span class="fc" id="L228">        super.visit(node, data);</span>
+<span class="fc" id="L229">        rollupTypeUnary(node);</span>
+<span class="fc" id="L230">        return data;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceType node, Object data) {
-<span class="fc" id="L236">        super.visit(node, data);</span>
+<span class="fc" id="L235">        super.visit(node, data);</span>
 
-<span class="fc" id="L238">        String typeName = node.getImage();</span>
+<span class="fc" id="L237">        String typeName = node.getImage();</span>
 
-<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (node.isAnonymousClass()) {</span>
-<span class="fc" id="L241">            anonymousClassCounter++;</span>
-<span class="fc" id="L242">            AbstractNode parent = node.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L243" title="All 2 branches covered.">            if (parent == null) {</span>
-<span class="fc" id="L244">                parent = node.getFirstParentOfType(ASTEnumDeclaration.class);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (node.isAnonymousClass()) {</span>
+<span class="fc" id="L240">            final AnonymousClassMetadata parentAnonymousClassMetadata = getParentAnonymousClassMetadata(node);</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            if (parentAnonymousClassMetadata != null) {</span>
+<span class="fc" id="L242">                typeName = parentAnonymousClassMetadata.name + &quot;$&quot; + ++parentAnonymousClassMetadata.anonymousClassCounter;</span>
+<span class="fc" id="L243">                anonymousClassMetadata.put(node, new AnonymousClassMetadata(typeName));</span>
             }
-<span class="fc" id="L246">            typeName = parent.getImage() + &quot;$&quot; + anonymousClassCounter;</span>
         }
 
-<span class="fc" id="L249">        populateType(node, typeName);</span>
+<span class="fc" id="L247">        populateType(node, typeName);</span>
 
-<span class="fc" id="L251">        ASTTypeArguments typeArguments = node.getFirstChildOfType(ASTTypeArguments.class);</span>
+<span class="fc" id="L249">        ASTTypeArguments typeArguments = node.getFirstChildOfType(ASTTypeArguments.class);</span>
 
-<span class="fc bfc" id="L253" title="All 2 branches covered.">        if (typeArguments != null) {</span>
-<span class="fc" id="L254">            JavaTypeDefinitionBuilder builder = JavaTypeDefinition.builder(node.getType());</span>
-
-<span class="fc bfc" id="L256" title="All 2 branches covered.">            for (int index = 0; index &lt; typeArguments.jjtGetNumChildren(); ++index) {</span>
-<span class="fc" id="L257">                builder.addTypeArg(((TypeNode) typeArguments.jjtGetChild(index)).getTypeDefinition());</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (typeArguments != null) {</span>
+<span class="fc" id="L252">            final JavaTypeDefinition[] boundGenerics = new JavaTypeDefinition[typeArguments.jjtGetNumChildren()];</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            for (int i = 0; i &lt; typeArguments.jjtGetNumChildren(); ++i) {</span>
+<span class="fc" id="L254">                boundGenerics[i] = ((TypeNode) typeArguments.jjtGetChild(i)).getTypeDefinition();</span>
             }
 
-<span class="fc" id="L260">            node.setTypeDefinition(builder.build());</span>
-<span class="fc bfc" id="L261" title="All 4 branches covered.">        } else if (isGeneric(node.getType()) &amp;&amp; node.getTypeDefinition().getGenericArgs().size() == 0) {</span>
-<span class="fc" id="L262">            node.setTypeDefinition(getDefaultUpperBounds(null, node.getType()));</span>
+<span class="fc" id="L257">            node.setTypeDefinition(JavaTypeDefinition.forClass(node.getType(), boundGenerics));</span>
         }
 
-<span class="fc" id="L265">        return data;</span>
+<span class="fc" id="L260">        return data;</span>
+    }
+
+    private AnonymousClassMetadata getParentAnonymousClassMetadata(final ASTClassOrInterfaceType node) {
+<span class="fc" id="L264">        Node parent = node;</span>
+        do {
+<span class="fc" id="L266">            parent = parent.jjtGetParent();</span>
+<span class="pc bpc" id="L267" title="1 of 6 branches missed.">        } while (parent != null &amp;&amp; !(parent instanceof ASTClassOrInterfaceBody) &amp;&amp; !(parent instanceof ASTEnumBody));</span>
+
+        // TODO : Should never happen, but add this for safety until we are sure to cover all possible scenarios in unit testing
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (parent == null) {</span>
+<span class="nc" id="L271">            return null;</span>
+        }
+
+<span class="fc" id="L274">        parent = parent.jjtGetParent();</span>
+
+        TypeNode typedParent;
+        // The parent may now be an ASTEnumConstant, an ASTAllocationExpression, an ASTEnumDeclaration or an ASTClassOrInterfaceDeclaration
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (parent instanceof ASTAllocationExpression) {</span>
+<span class="fc" id="L279">            typedParent = parent.getFirstChildOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L280" title="1 of 4 branches missed.">        } else if (parent instanceof ASTClassOrInterfaceDeclaration || parent instanceof ASTEnumDeclaration) {</span>
+<span class="fc" id="L281">            typedParent = (TypeNode) parent;</span>
+        } else {
+<span class="nc" id="L283">            typedParent = parent.getFirstParentOfType(ASTEnumDeclaration.class);</span>
+        }
+
+<span class="fc" id="L286">        final AnonymousClassMetadata metadata = anonymousClassMetadata.get(typedParent);</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">        if (metadata != null) {</span>
+<span class="fc" id="L288">            return metadata;</span>
+        }
+
+        final AnonymousClassMetadata newMetadata;
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">        if (typedParent instanceof ASTClassOrInterfaceType) {</span>
+<span class="nc" id="L293">            ASTClassOrInterfaceType parentTypeNode = (ASTClassOrInterfaceType) typedParent;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">            if (parentTypeNode.isAnonymousClass()) {</span>
+<span class="nc" id="L295">                final AnonymousClassMetadata parentMetadata = getParentAnonymousClassMetadata(parentTypeNode);</span>
+<span class="nc" id="L296">                newMetadata = new AnonymousClassMetadata(parentMetadata.name + &quot;$&quot; + ++parentMetadata.anonymousClassCounter);</span>
+<span class="nc" id="L297">            } else {</span>
+<span class="nc" id="L298">                newMetadata = new AnonymousClassMetadata(parentTypeNode.getImage());</span>
+            }
+<span class="nc" id="L300">        } else {</span>
+<span class="fc" id="L301">            newMetadata = new AnonymousClassMetadata(typedParent.getImage());</span>
+        }
+
+<span class="fc" id="L304">        anonymousClassMetadata.put(typedParent, newMetadata);</span>
+
+<span class="fc" id="L306">        return newMetadata;</span>
     }
 
     @Override
     public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
-<span class="fc" id="L270">        populateType(node, node.getImage());</span>
-<span class="fc" id="L271">        return super.visit(node, data);</span>
+<span class="fc" id="L311">        populateType(node, node.getImage());</span>
+<span class="fc" id="L312">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTEnumDeclaration node, Object data) {
-<span class="fc" id="L276">        populateType(node, node.getImage());</span>
-<span class="fc" id="L277">        return super.visit(node, data);</span>
+<span class="fc" id="L317">        populateType(node, node.getImage());</span>
+<span class="fc" id="L318">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTAnnotationTypeDeclaration node, Object data) {
-<span class="fc" id="L282">        populateType(node, node.getImage());</span>
-<span class="fc" id="L283">        return super.visit(node, data);</span>
+<span class="fc" id="L323">        populateType(node, node.getImage());</span>
+<span class="fc" id="L324">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTName node, Object data) {
-<span class="fc" id="L288">        Class&lt;?&gt; accessingClass = getEnclosingTypeDeclaration(node);</span>
+<span class="fc" id="L329">        Class&lt;?&gt; accessingClass = getEnclosingTypeDeclaration(node);</span>
 
-<span class="fc" id="L290">        String[] dotSplitImage = node.getImage().split(&quot;\\.&quot;);</span>
-<span class="fc" id="L291">        JavaTypeDefinition previousType</span>
-<span class="fc" id="L292">                = getTypeDefinitionOfVariableFromScope(node.getScope(), dotSplitImage[0], accessingClass);</span>
+<span class="fc" id="L331">        String[] dotSplitImage = node.getImage().split(&quot;\\.&quot;);</span>
+<span class="fc" id="L332">        JavaTypeDefinition previousType</span>
+<span class="fc" id="L333">                = getTypeDefinitionOfVariableFromScope(node.getScope(), dotSplitImage[0], accessingClass);</span>
 
 
-<span class="fc bfc" id="L295" title="All 4 branches covered.">        if (node.getNameDeclaration() != null</span>
+<span class="fc bfc" id="L336" title="All 4 branches covered.">        if (node.getNameDeclaration() != null</span>
                 &amp;&amp; previousType == null // if it's not null, then let other code handle things
-<span class="fc bfc" id="L297" title="All 2 branches covered.">                &amp;&amp; node.getNameDeclaration().getNode() instanceof TypeNode) {</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">                &amp;&amp; node.getNameDeclaration().getNode() instanceof TypeNode) {</span>
             // Carry over the type from the declaration
-<span class="fc" id="L299">            Class&lt;?&gt; nodeType = ((TypeNode) node.getNameDeclaration().getNode()).getType();</span>
-            // generic classes and class with generic super types could have the wrong type assigned here
-<span class="fc bfc" id="L301" title="All 6 branches covered.">            if (nodeType != null &amp;&amp; !isGeneric(nodeType) &amp;&amp; !isGeneric(nodeType.getSuperclass())) {</span>
-<span class="fc" id="L302">                node.setType(nodeType);</span>
+<span class="fc" id="L340">            Class&lt;?&gt; nodeType = ((TypeNode) node.getNameDeclaration().getNode()).getType();</span>
+            // FIXME : generic classes and class with generic super types could have the wrong type assigned here
+<span class="fc bfc" id="L342" title="All 2 branches covered.">            if (nodeType != null) {</span>
+<span class="fc" id="L343">                node.setType(nodeType);</span>
             }
         }
 
-<span class="fc bfc" id="L306" title="All 2 branches covered.">        if (node.getType() == null) {</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        if (node.getType() == null) {</span>
             // TODO: handle cases where static fields are accessed in a fully qualified way
             //       make sure it handles same name classes and packages
             // TODO: handle generic static field cases
 
             // handles cases where first part is a fully qualified name
-<span class="fc" id="L312">            populateType(node, node.getImage());</span>
+<span class="fc" id="L353">            populateType(node, node.getImage());</span>
 
-<span class="fc bfc" id="L314" title="All 2 branches covered.">            if (node.getType() == null) {</span>
-<span class="fc bfc" id="L315" title="All 2 branches covered.">                for (int i = 1; i &lt; dotSplitImage.length; ++i) {</span>
-<span class="fc bfc" id="L316" title="All 2 branches covered.">                    if (previousType == null) {</span>
-<span class="fc" id="L317">                        break;</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">            if (node.getType() == null) {</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">                for (int i = 1; i &lt; dotSplitImage.length; ++i) {</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">                    if (previousType == null) {</span>
+<span class="fc" id="L358">                        break;</span>
                     }
 
-<span class="fc" id="L320">                    previousType = getFieldType(previousType, dotSplitImage[i], accessingClass);</span>
+<span class="fc" id="L361">                    previousType = getFieldType(previousType, dotSplitImage[i], accessingClass);</span>
                 }
 
-<span class="fc bfc" id="L323" title="All 2 branches covered.">                if (previousType != null) {</span>
-<span class="fc" id="L324">                    node.setTypeDefinition(previousType);</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">                if (previousType != null) {</span>
+<span class="fc" id="L365">                    node.setTypeDefinition(previousType);</span>
                 }
             }
         }
 
-<span class="fc" id="L329">        return super.visit(node, data);</span>
+<span class="fc" id="L370">        return super.visit(node, data);</span>
     }
 
     /**
@@ -341,19 +382,24 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      */
     private JavaTypeDefinition getFieldType(JavaTypeDefinition typeToSearch, String fieldImage, Class&lt;?&gt;
             accessingClass) {
-<span class="fc bfc" id="L344" title="All 2 branches covered.">        while (typeToSearch != null) {</span>
+<span class="fc bfc" id="L385" title="All 4 branches covered.">        while (typeToSearch != null &amp;&amp; typeToSearch.getType() != Object.class) {</span>
             try {
-<span class="fc" id="L346">                Field field = typeToSearch.getType().getDeclaredField(fieldImage);</span>
-<span class="fc bfc" id="L347" title="All 2 branches covered.">                if (isMemberVisibleFromClass(typeToSearch.getType(), field.getModifiers(), accessingClass)) {</span>
-<span class="fc" id="L348">                    return getNextTypeDefinition(typeToSearch, field.getGenericType());</span>
+<span class="fc" id="L387">                final Field field = typeToSearch.getType().getDeclaredField(fieldImage);</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">                if (isMemberVisibleFromClass(typeToSearch.getType(), field.getModifiers(), accessingClass)) {</span>
+<span class="fc" id="L389">                    return typeToSearch.resolveTypeDefinition(field.getGenericType());</span>
                 }
-<span class="fc" id="L350">            } catch (NoSuchFieldException e) { /* swallow */ }</span>
+<span class="fc" id="L391">            } catch (final NoSuchFieldException ignored) {</span>
+                // swallow
+<span class="nc" id="L393">            } catch (final NoClassDefFoundError e) {</span>
+                // TODO : report a missing class once we start doing that...
+<span class="nc" id="L395">                return null;</span>
+<span class="fc" id="L396">            }</span>
 
             // transform the type into it's supertype
-<span class="fc" id="L353">            typeToSearch = getNextTypeDefinition(typeToSearch, typeToSearch.getType().getGenericSuperclass());</span>
+<span class="fc" id="L399">            typeToSearch = typeToSearch.resolveTypeDefinition(typeToSearch.getType().getGenericSuperclass());</span>
         }
 
-<span class="fc" id="L356">        return null;</span>
+<span class="fc" id="L402">        return null;</span>
     }
 
     /**
@@ -367,165 +413,53 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      */
     private JavaTypeDefinition getTypeDefinitionOfVariableFromScope(Scope scope, String image, Class&lt;?&gt;
             accessingClass) {
-<span class="fc bfc" id="L370" title="All 2 branches covered.">        if (accessingClass == null) {</span>
-<span class="fc" id="L371">            return null;</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        if (accessingClass == null) {</span>
+<span class="fc" id="L417">            return null;</span>
         }
 
-<span class="fc bfc" id="L374" title="All 2 branches covered.">        for (/* empty */; scope != null; scope = scope.getParent()) {</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">        for (/* empty */; scope != null; scope = scope.getParent()) {</span>
             // search each enclosing scope one by one
             for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry
-<span class="fc bfc" id="L377" title="All 2 branches covered.">                    : scope.getDeclarations(VariableNameDeclaration.class).entrySet()) {</span>
-<span class="fc bfc" id="L378" title="All 2 branches covered.">                if (entry.getKey().getImage().equals(image)) {</span>
-<span class="fc" id="L379">                    ASTType typeNode = entry.getKey().getDeclaratorId().getTypeNode();</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">                    : scope.getDeclarations(VariableNameDeclaration.class).entrySet()) {</span>
+<span class="fc bfc" id="L424" title="All 2 branches covered.">                if (entry.getKey().getImage().equals(image)) {</span>
+<span class="fc" id="L425">                    ASTType typeNode = entry.getKey().getDeclaratorId().getTypeNode();</span>
 
-<span class="pc bpc" id="L381" title="1 of 2 branches missed.">                    if (typeNode == null) {</span>
+<span class="pc bpc" id="L427" title="1 of 2 branches missed.">                    if (typeNode == null) {</span>
                         // TODO : Type is infered, ie, this is a lambda such as (var) -&gt; var.equals(other)
-<span class="nc" id="L383">                        return null;</span>
+<span class="nc" id="L429">                        return null;</span>
                     }
-                    
-<span class="fc bfc" id="L386" title="All 2 branches covered.">                    if (typeNode.jjtGetChild(0) instanceof ASTReferenceType) {</span>
-<span class="fc" id="L387">                        return ((TypeNode) typeNode.jjtGetChild(0)).getTypeDefinition();</span>
+
+<span class="fc bfc" id="L432" title="All 2 branches covered.">                    if (typeNode.jjtGetChild(0) instanceof ASTReferenceType) {</span>
+<span class="fc" id="L433">                        return ((TypeNode) typeNode.jjtGetChild(0)).getTypeDefinition();</span>
                     } else { // primitive type
-<span class="fc" id="L389">                        return JavaTypeDefinition.build(typeNode.getType());</span>
+<span class="fc" id="L435">                        return JavaTypeDefinition.forClass(typeNode.getType());</span>
                     }
                 }
-<span class="fc" id="L392">            }</span>
+<span class="fc" id="L438">            }</span>
 
             // Nested class' inherited fields shadow enclosing variables
-<span class="fc bfc" id="L395" title="All 2 branches covered.">            if (scope instanceof ClassScope) {</span>
+<span class="fc bfc" id="L441" title="All 2 branches covered.">            if (scope instanceof ClassScope) {</span>
                 try {
                     // get the superclass type def. ot the Class the ClassScope belongs to
-<span class="fc" id="L398">                    JavaTypeDefinition superClass</span>
-<span class="fc" id="L399">                            = getSuperClassTypeDefinition(((ClassScope) scope).getClassDeclaration().getNode(),</span>
+<span class="fc" id="L444">                    JavaTypeDefinition superClass</span>
+<span class="fc" id="L445">                            = getSuperClassTypeDefinition(((ClassScope) scope).getClassDeclaration().getNode(),</span>
                                                           null);
                     // TODO: check if anonymous classes are class scope
 
                     // try searching this type def.
-<span class="fc" id="L404">                    JavaTypeDefinition foundTypeDef = getFieldType(superClass, image, accessingClass);</span>
+<span class="fc" id="L450">                    JavaTypeDefinition foundTypeDef = getFieldType(superClass, image, accessingClass);</span>
 
-<span class="fc bfc" id="L406" title="All 2 branches covered.">                    if (foundTypeDef != null) { // if null, then it's not an inherited field</span>
-<span class="fc" id="L407">                        return foundTypeDef;</span>
+<span class="fc bfc" id="L452" title="All 2 branches covered.">                    if (foundTypeDef != null) { // if null, then it's not an inherited field</span>
+<span class="fc" id="L453">                        return foundTypeDef;</span>
                     }
-<span class="nc" id="L409">                } catch (ClassCastException e) {</span>
+<span class="nc" id="L455">                } catch (ClassCastException e) {</span>
                     // if there is an anonymous class, getClassDeclaration().getType() will throw
                     // TODO: maybe there is a better way to handle this, maybe this hides bugs
-<span class="fc" id="L412">                }</span>
+<span class="fc" id="L458">                }</span>
             }
         }
 
-<span class="fc" id="L416">        return null;</span>
-    }
-
-    /**
-     * Given a type def. and a Type, resolves the type into a JavaTypeDefinition. Takes into account
-     * simple Classes, TypeVariables, ParameterizedTypes and WildCards types. Can resolve nested Generic
-     * type arguments.
-     *
-     * @param context     The JavaTypeDefinition in which the {@code genericType} was declared.
-     * @param genericType The Type to resolve.
-     * @return JavaTypeDefinition of the {@code genericType}.
-     */
-    private JavaTypeDefinition getNextTypeDefinition(JavaTypeDefinition context, Type genericType) {
-<span class="fc bfc" id="L429" title="All 2 branches covered.">        if (genericType == null) {</span>
-<span class="fc" id="L430">            return null;</span>
-        }
-
-<span class="fc bfc" id="L433" title="All 2 branches covered.">        if (genericType instanceof Class) { // Raw types take this branch as well</span>
-<span class="fc" id="L434">            return getDefaultUpperBounds(context, (Class) genericType);</span>
-<span class="fc bfc" id="L435" title="All 2 branches covered.">        } else if (genericType instanceof ParameterizedType) {</span>
-
-<span class="fc" id="L437">            ParameterizedType parameterizedType = (ParameterizedType) genericType;</span>
-<span class="fc" id="L438">            JavaTypeDefinitionBuilder typeDef = JavaTypeDefinition.builder((Class) parameterizedType.getRawType());</span>
-
-            // recursively determine each type argument's type def.
-<span class="fc bfc" id="L441" title="All 2 branches covered.">            for (Type type : parameterizedType.getActualTypeArguments()) {</span>
-<span class="fc" id="L442">                typeDef.addTypeArg(getNextTypeDefinition(context, type));</span>
-            }
-
-<span class="fc" id="L445">            return typeDef.build();</span>
-<span class="fc bfc" id="L446" title="All 2 branches covered.">        } else if (genericType instanceof TypeVariable) {</span>
-<span class="fc" id="L447">            int ordinal = getTypeParameterOrdinal(context.getType(), ((TypeVariable) genericType).getName());</span>
-<span class="pc bpc" id="L448" title="1 of 2 branches missed.">            if (ordinal != -1) {</span>
-<span class="fc" id="L449">                return context.getGenericArgs().get(ordinal);</span>
-            }
-<span class="pc bpc" id="L451" title="1 of 2 branches missed.">        } else if (genericType instanceof WildcardType) {</span>
-<span class="fc" id="L452">            Type[] wildcardUpperBounds = ((WildcardType) genericType).getUpperBounds();</span>
-<span class="pc bpc" id="L453" title="1 of 2 branches missed.">            if (wildcardUpperBounds.length != 0) { // upper bound wildcard</span>
-<span class="fc" id="L454">                return getNextTypeDefinition(context, wildcardUpperBounds[0]);</span>
-            } else { // lower bound wildcard
-<span class="nc" id="L456">                return JavaTypeDefinition.build(Object.class);</span>
-            }
-        }
-
-<span class="nc" id="L460">        return null;</span>
-    }
-
-    /**
-     * Returns the ordinal of the type parameter with the name {@code parameterName} in {@code clazz}.
-     *
-     * @param clazz         The Class with the type parameters.
-     * @param parameterName The name of the type parameter.
-     * @return The ordinal of the type parameter.
-     */
-    private int getTypeParameterOrdinal(Class&lt;?&gt; clazz, String parameterName) {
-<span class="fc" id="L471">        TypeVariable[] classTypeParameters = clazz.getTypeParameters();</span>
-
-<span class="pc bpc" id="L473" title="1 of 2 branches missed.">        for (int index = 0; index &lt; classTypeParameters.length; ++index) {</span>
-<span class="fc bfc" id="L474" title="All 2 branches covered.">            if (classTypeParameters[index].getName().equals(parameterName)) {</span>
-<span class="fc" id="L475">                return index;</span>
-            }
-        }
-
-<span class="nc" id="L479">        return -1;</span>
-    }
-
-    /**
-     * Returns true if the class is generic.
-     *
-     * @param clazz The Class to examine.
-     * @return True if the Class is generic.
-     */
-    private boolean isGeneric(Class&lt;?&gt; clazz) {
-<span class="fc bfc" id="L489" title="All 2 branches covered.">        if (clazz != null) {</span>
-<span class="fc bfc" id="L490" title="All 2 branches covered.">            return clazz.getTypeParameters().length != 0;</span>
-        }
-
-<span class="fc" id="L493">        return false;</span>
-    }
-
-    /**
-     * Given a Class, returns the type def. for when the Class stands without type arguments, meaning it
-     * is a raw type. Determines the generic types by looking at the upper bounds of it's generic parameters.
-     *
-     * @param context            Synthetic parameter for recursion, pass {@code null}.
-     * @param clazzWithDefBounds The raw Class type.
-     * @return The type def. of the raw Class.
-     */
-    private JavaTypeDefinition getDefaultUpperBounds(JavaTypeDefinition context, Class&lt;?&gt; clazzWithDefBounds) {
-<span class="fc" id="L505">        JavaTypeDefinitionBuilder typeDef = JavaTypeDefinition.builder(clazzWithDefBounds);</span>
-
-        // helps avoid infinite recursion with Something&lt;.... E extends Something (&lt;- same raw type)... &gt;
-<span class="fc bfc" id="L508" title="All 2 branches covered.">        if (classToDefaultUpperBounds.containsKey(clazzWithDefBounds)) {</span>
-<span class="fc" id="L509">            return classToDefaultUpperBounds.get(clazzWithDefBounds);</span>
-        } else {
-<span class="fc" id="L511">            classToDefaultUpperBounds.put(clazzWithDefBounds, typeDef.build());</span>
-        }
-
-<span class="fc bfc" id="L514" title="All 2 branches covered.">        if (isGeneric(clazzWithDefBounds)) {</span>
-            // Recursion, outer call should pass in null.
-            // Recursive calls will get the first JavaTypeDefinition to be able to resolve cases like
-            // ... &lt; T extends Something ... E extends Other&lt;T&gt; ... &gt;
-<span class="pc bpc" id="L518" title="1 of 2 branches missed.">            if (context == null) {</span>
-<span class="fc" id="L519">                context = typeDef.build();</span>
-            }
-
-<span class="fc bfc" id="L522" title="All 2 branches covered.">            for (TypeVariable parameter : clazzWithDefBounds.getTypeParameters()) {</span>
-                // TODO: fix self reference &quot;&lt; ... E extends Something&lt;E&gt; ... &gt;&quot;
-<span class="fc" id="L524">                typeDef.addTypeArg(getNextTypeDefinition(context, parameter.getBounds()[0]));</span>
-            }
-        }
-
-<span class="fc" id="L528">        return typeDef.build();</span>
+<span class="fc" id="L462">        return null;</span>
     }
 
     /**
@@ -538,290 +472,289 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      * @return True if the member is visible from the accessingClass Class.
      */
     private boolean isMemberVisibleFromClass(Class&lt;?&gt; classWithMember, int modifiers, Class&lt;?&gt; accessingClass) {
-<span class="fc bfc" id="L541" title="All 2 branches covered.">        if (accessingClass == null) {</span>
-<span class="fc" id="L542">            return false;</span>
+<span class="fc bfc" id="L475" title="All 2 branches covered.">        if (accessingClass == null) {</span>
+<span class="fc" id="L476">            return false;</span>
         }
 
         // public members
-<span class="fc bfc" id="L546" title="All 2 branches covered.">        if (Modifier.isPublic(modifiers)) {</span>
-<span class="fc" id="L547">            return true;</span>
+<span class="fc bfc" id="L480" title="All 2 branches covered.">        if (Modifier.isPublic(modifiers)) {</span>
+<span class="fc" id="L481">            return true;</span>
         }
 
         boolean areInTheSamePackage;
-<span class="pc bpc" id="L551" title="1 of 2 branches missed.">        if (accessingClass.getPackage() != null) {</span>
-<span class="fc" id="L552">            areInTheSamePackage = accessingClass.getPackage().getName().startsWith(</span>
-<span class="fc" id="L553">                    classWithMember.getPackage().getName());</span>
+<span class="pc bpc" id="L485" title="1 of 2 branches missed.">        if (accessingClass.getPackage() != null) {</span>
+<span class="fc" id="L486">            areInTheSamePackage = accessingClass.getPackage().getName().startsWith(</span>
+<span class="fc" id="L487">                    classWithMember.getPackage().getName());</span>
         } else {
-<span class="nc" id="L555">            return false; // if the package information is null, we can't do nothin'</span>
+<span class="nc" id="L489">            return false; // if the package information is null, we can't do nothin'</span>
         }
 
         // protected members
-<span class="fc bfc" id="L559" title="All 2 branches covered.">        if (Modifier.isProtected(modifiers)) {</span>
-<span class="pc bpc" id="L560" title="1 of 4 branches missed.">            if (areInTheSamePackage || classWithMember.isAssignableFrom(accessingClass)) {</span>
-<span class="fc" id="L561">                return true;</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">        if (Modifier.isProtected(modifiers)) {</span>
+<span class="pc bpc" id="L494" title="1 of 4 branches missed.">            if (areInTheSamePackage || classWithMember.isAssignableFrom(accessingClass)) {</span>
+<span class="fc" id="L495">                return true;</span>
             }
             // private members
-<span class="fc bfc" id="L564" title="All 2 branches covered.">        } else if (Modifier.isPrivate(modifiers)) {</span>
-<span class="fc bfc" id="L565" title="All 2 branches covered.">            if (classWithMember.equals(accessingClass)) {</span>
-<span class="fc" id="L566">                return true;</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">        } else if (Modifier.isPrivate(modifiers)) {</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">            if (classWithMember.equals(accessingClass)) {</span>
+<span class="fc" id="L500">                return true;</span>
             }
             // package private members
-<span class="pc bpc" id="L569" title="1 of 2 branches missed.">        } else if (areInTheSamePackage) {</span>
-<span class="fc" id="L570">            return true;</span>
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">        } else if (areInTheSamePackage) {</span>
+<span class="fc" id="L504">            return true;</span>
         }
 
-<span class="fc" id="L573">        return false;</span>
+<span class="fc" id="L507">        return false;</span>
     }
 
 
     @Override
     public Object visit(ASTFieldDeclaration node, Object data) {
-<span class="fc" id="L579">        super.visit(node, data);</span>
-<span class="fc" id="L580">        rollupTypeUnary(node);</span>
-<span class="fc" id="L581">        return data;</span>
+<span class="fc" id="L513">        super.visit(node, data);</span>
+<span class="fc" id="L514">        rollupTypeUnary(node);</span>
+<span class="fc" id="L515">        return data;</span>
     }
 
     @Override
     public Object visit(ASTVariableDeclarator node, Object data) {
-<span class="fc" id="L586">        super.visit(node, data);</span>
-<span class="fc" id="L587">        rollupTypeUnary(node);</span>
-<span class="fc" id="L588">        return data;</span>
+<span class="fc" id="L520">        super.visit(node, data);</span>
+<span class="fc" id="L521">        rollupTypeUnary(node);</span>
+<span class="fc" id="L522">        return data;</span>
     }
 
     @Override
     public Object visit(ASTVariableDeclaratorId node, Object data) {
-<span class="pc bpc" id="L593" title="2 of 4 branches missed.">        if (node == null || node.getNameDeclaration() == null) {</span>
-<span class="nc" id="L594">            return super.visit(node, data);</span>
+<span class="pc bpc" id="L527" title="2 of 4 branches missed.">        if (node == null || node.getNameDeclaration() == null) {</span>
+<span class="nc" id="L528">            return super.visit(node, data);</span>
         }
-<span class="fc" id="L596">        String name = node.getNameDeclaration().getTypeImage();</span>
-<span class="fc bfc" id="L597" title="All 2 branches covered.">        if (name != null) {</span>
-<span class="fc" id="L598">            populateType(node, name);</span>
+<span class="fc" id="L530">        String name = node.getNameDeclaration().getTypeImage();</span>
+<span class="fc bfc" id="L531" title="All 2 branches covered.">        if (name != null) {</span>
+<span class="fc" id="L532">            populateType(node, name);</span>
         }
-<span class="fc" id="L600">        return super.visit(node, data);</span>
+<span class="fc" id="L534">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTType node, Object data) {
-<span class="fc" id="L605">        super.visit(node, data);</span>
-<span class="fc" id="L606">        rollupTypeUnary(node);</span>
-<span class="fc" id="L607">        return data;</span>
+<span class="fc" id="L539">        super.visit(node, data);</span>
+<span class="fc" id="L540">        rollupTypeUnary(node);</span>
+<span class="fc" id="L541">        return data;</span>
     }
 
     @Override
     public Object visit(ASTReferenceType node, Object data) {
-<span class="fc" id="L612">        super.visit(node, data);</span>
-<span class="fc" id="L613">        rollupTypeUnary(node);</span>
-<span class="fc" id="L614">        return data;</span>
+<span class="fc" id="L546">        super.visit(node, data);</span>
+<span class="fc" id="L547">        rollupTypeUnary(node);</span>
+<span class="fc" id="L548">        return data;</span>
     }
 
     @Override
     public Object visit(ASTPrimitiveType node, Object data) {
-<span class="fc" id="L619">        populateType(node, node.getImage());</span>
-<span class="fc" id="L620">        return super.visit(node, data);</span>
+<span class="fc" id="L553">        populateType(node, node.getImage());</span>
+<span class="fc" id="L554">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTExpression node, Object data) {
-<span class="fc" id="L625">        super.visit(node, data);</span>
-<span class="fc" id="L626">        rollupTypeUnary(node);</span>
-<span class="fc" id="L627">        return data;</span>
+<span class="fc" id="L559">        super.visit(node, data);</span>
+<span class="fc" id="L560">        rollupTypeUnary(node);</span>
+<span class="fc" id="L561">        return data;</span>
     }
 
     @Override
     public Object visit(ASTConditionalExpression node, Object data) {
-<span class="fc" id="L632">        super.visit(node, data);</span>
-<span class="pc bpc" id="L633" title="1 of 2 branches missed.">        if (node.isTernary()) {</span>
+<span class="fc" id="L566">        super.visit(node, data);</span>
+<span class="pc bpc" id="L567" title="1 of 2 branches missed.">        if (node.isTernary()) {</span>
             // TODO Rules for Ternary are complex
         } else {
-<span class="nc" id="L636">            rollupTypeUnary(node);</span>
+<span class="nc" id="L570">            rollupTypeUnary(node);</span>
         }
-<span class="fc" id="L638">        return data;</span>
+<span class="fc" id="L572">        return data;</span>
     }
 
     @Override
     public Object visit(ASTConditionalOrExpression node, Object data) {
-<span class="fc" id="L643">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L644">        return super.visit(node, data);</span>
+<span class="fc" id="L577">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L578">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTConditionalAndExpression node, Object data) {
-<span class="fc" id="L649">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L650">        return super.visit(node, data);</span>
+<span class="fc" id="L583">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L584">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTInclusiveOrExpression node, Object data) {
-<span class="fc" id="L655">        super.visit(node, data);</span>
-<span class="fc" id="L656">        rollupTypeBinaryNumericPromotion(node);</span>
-<span class="fc" id="L657">        return data;</span>
+<span class="fc" id="L589">        super.visit(node, data);</span>
+<span class="fc" id="L590">        rollupTypeBinaryNumericPromotion(node);</span>
+<span class="fc" id="L591">        return data;</span>
     }
 
     @Override
     public Object visit(ASTExclusiveOrExpression node, Object data) {
-<span class="fc" id="L662">        super.visit(node, data);</span>
-<span class="fc" id="L663">        rollupTypeBinaryNumericPromotion(node);</span>
-<span class="fc" id="L664">        return data;</span>
+<span class="fc" id="L596">        super.visit(node, data);</span>
+<span class="fc" id="L597">        rollupTypeBinaryNumericPromotion(node);</span>
+<span class="fc" id="L598">        return data;</span>
     }
 
     @Override
     public Object visit(ASTAndExpression node, Object data) {
-<span class="fc" id="L669">        super.visit(node, data);</span>
-<span class="fc" id="L670">        rollupTypeBinaryNumericPromotion(node);</span>
-<span class="fc" id="L671">        return data;</span>
+<span class="fc" id="L603">        super.visit(node, data);</span>
+<span class="fc" id="L604">        rollupTypeBinaryNumericPromotion(node);</span>
+<span class="fc" id="L605">        return data;</span>
     }
 
     @Override
     public Object visit(ASTEqualityExpression node, Object data) {
-<span class="fc" id="L676">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L677">        return super.visit(node, data);</span>
+<span class="fc" id="L610">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L611">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTInstanceOfExpression node, Object data) {
-<span class="fc" id="L682">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L683">        return super.visit(node, data);</span>
+<span class="fc" id="L616">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L617">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTRelationalExpression node, Object data) {
-<span class="fc" id="L688">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L689">        return super.visit(node, data);</span>
+<span class="fc" id="L622">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L623">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTShiftExpression node, Object data) {
-<span class="fc" id="L694">        super.visit(node, data);</span>
+<span class="fc" id="L628">        super.visit(node, data);</span>
         // Unary promotion on LHS is type of a shift operation
-<span class="fc" id="L696">        rollupTypeUnaryNumericPromotion(node);</span>
-<span class="fc" id="L697">        return data;</span>
+<span class="fc" id="L630">        rollupTypeUnaryNumericPromotion(node);</span>
+<span class="fc" id="L631">        return data;</span>
     }
 
     @Override
     public Object visit(ASTAdditiveExpression node, Object data) {
-<span class="fc" id="L702">        super.visit(node, data);</span>
-<span class="fc" id="L703">        rollupTypeBinaryNumericPromotion(node);</span>
-<span class="fc" id="L704">        return data;</span>
+<span class="fc" id="L636">        super.visit(node, data);</span>
+<span class="fc" id="L637">        rollupTypeBinaryNumericPromotion(node);</span>
+<span class="fc" id="L638">        return data;</span>
     }
 
     @Override
     public Object visit(ASTMultiplicativeExpression node, Object data) {
-<span class="fc" id="L709">        super.visit(node, data);</span>
-<span class="fc" id="L710">        rollupTypeBinaryNumericPromotion(node);</span>
-<span class="fc" id="L711">        return data;</span>
+<span class="fc" id="L643">        super.visit(node, data);</span>
+<span class="fc" id="L644">        rollupTypeBinaryNumericPromotion(node);</span>
+<span class="fc" id="L645">        return data;</span>
     }
 
     @Override
     public Object visit(ASTUnaryExpression node, Object data) {
-<span class="fc" id="L716">        super.visit(node, data);</span>
-<span class="fc" id="L717">        rollupTypeUnaryNumericPromotion(node);</span>
-<span class="fc" id="L718">        return data;</span>
+<span class="fc" id="L650">        super.visit(node, data);</span>
+<span class="fc" id="L651">        rollupTypeUnaryNumericPromotion(node);</span>
+<span class="fc" id="L652">        return data;</span>
     }
 
     @Override
     public Object visit(ASTPreIncrementExpression node, Object data) {
-<span class="fc" id="L723">        super.visit(node, data);</span>
-<span class="fc" id="L724">        rollupTypeUnary(node);</span>
-<span class="fc" id="L725">        return data;</span>
+<span class="fc" id="L657">        super.visit(node, data);</span>
+<span class="fc" id="L658">        rollupTypeUnary(node);</span>
+<span class="fc" id="L659">        return data;</span>
     }
 
     @Override
     public Object visit(ASTPreDecrementExpression node, Object data) {
-<span class="fc" id="L730">        super.visit(node, data);</span>
-<span class="fc" id="L731">        rollupTypeUnary(node);</span>
-<span class="fc" id="L732">        return data;</span>
+<span class="fc" id="L664">        super.visit(node, data);</span>
+<span class="fc" id="L665">        rollupTypeUnary(node);</span>
+<span class="fc" id="L666">        return data;</span>
     }
 
     @Override
     public Object visit(ASTUnaryExpressionNotPlusMinus node, Object data) {
-<span class="fc" id="L737">        super.visit(node, data);</span>
-<span class="fc bfc" id="L738" title="All 2 branches covered.">        if (&quot;!&quot;.equals(node.getImage())) {</span>
-<span class="fc" id="L739">            populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L671">        super.visit(node, data);</span>
+<span class="fc bfc" id="L672" title="All 2 branches covered.">        if (&quot;!&quot;.equals(node.getImage())) {</span>
+<span class="fc" id="L673">            populateType(node, &quot;boolean&quot;);</span>
         } else {
-<span class="fc" id="L741">            rollupTypeUnary(node);</span>
+<span class="fc" id="L675">            rollupTypeUnary(node);</span>
         }
-<span class="fc" id="L743">        return data;</span>
+<span class="fc" id="L677">        return data;</span>
     }
 
     @Override
     public Object visit(ASTPostfixExpression node, Object data) {
-<span class="fc" id="L748">        super.visit(node, data);</span>
-<span class="fc" id="L749">        rollupTypeUnary(node);</span>
-<span class="fc" id="L750">        return data;</span>
+<span class="fc" id="L682">        super.visit(node, data);</span>
+<span class="fc" id="L683">        rollupTypeUnary(node);</span>
+<span class="fc" id="L684">        return data;</span>
     }
 
     @Override
     public Object visit(ASTCastExpression node, Object data) {
-<span class="fc" id="L755">        super.visit(node, data);</span>
-<span class="fc" id="L756">        rollupTypeUnary(node);</span>
-<span class="fc" id="L757">        return data;</span>
+<span class="fc" id="L689">        super.visit(node, data);</span>
+<span class="fc" id="L690">        rollupTypeUnary(node);</span>
+<span class="fc" id="L691">        return data;</span>
     }
 
 
     @Override
     public Object visit(ASTPrimaryExpression primaryNode, Object data) {
-<span class="fc" id="L763">        super.visit(primaryNode, data);</span>
+<span class="fc" id="L697">        super.visit(primaryNode, data);</span>
 
-<span class="fc" id="L765">        JavaTypeDefinition primaryNodeType = null;</span>
-<span class="fc" id="L766">        AbstractJavaTypeNode previousChild = null;</span>
-<span class="fc" id="L767">        Class&lt;?&gt; accessingClass = getEnclosingTypeDeclaration(primaryNode);</span>
+<span class="fc" id="L699">        JavaTypeDefinition primaryNodeType = null;</span>
+<span class="fc" id="L700">        AbstractJavaTypeNode previousChild = null;</span>
+<span class="fc" id="L701">        Class&lt;?&gt; accessingClass = getEnclosingTypeDeclaration(primaryNode);</span>
 
-<span class="fc bfc" id="L769" title="All 2 branches covered.">        for (int childIndex = 0; childIndex &lt; primaryNode.jjtGetNumChildren(); ++childIndex) {</span>
-<span class="fc" id="L770">            AbstractJavaTypeNode currentChild = (AbstractJavaTypeNode) primaryNode.jjtGetChild(childIndex);</span>
+<span class="fc bfc" id="L703" title="All 2 branches covered.">        for (int childIndex = 0; childIndex &lt; primaryNode.jjtGetNumChildren(); ++childIndex) {</span>
+<span class="fc" id="L704">            AbstractJavaTypeNode currentChild = (AbstractJavaTypeNode) primaryNode.jjtGetChild(childIndex);</span>
 
             // skip children which already have their type assigned
-<span class="fc bfc" id="L773" title="All 2 branches covered.">            if (currentChild.getType() == null) {</span>
+<span class="fc bfc" id="L707" title="All 2 branches covered.">            if (currentChild.getType() == null) {</span>
                 // Last token, because if 'this' is a Suffix, it'll have tokens '.' and 'this'
-<span class="fc bfc" id="L775" title="All 2 branches covered.">                if (currentChild.jjtGetLastToken().toString().equals(&quot;this&quot;)) {</span>
+<span class="fc bfc" id="L709" title="All 2 branches covered.">                if (currentChild.jjtGetLastToken().toString().equals(&quot;this&quot;)) {</span>
 
-<span class="fc bfc" id="L777" title="All 2 branches covered.">                    if (previousChild != null) { // Qualified 'this' expression</span>
-<span class="fc" id="L778">                        currentChild.setType(previousChild.getType());</span>
+<span class="fc bfc" id="L711" title="All 2 branches covered.">                    if (previousChild != null) { // Qualified 'this' expression</span>
+<span class="fc" id="L712">                        currentChild.setTypeDefinition(previousChild.getTypeDefinition());</span>
                     } else { // simple 'this' expression
-<span class="fc" id="L780">                        ASTClassOrInterfaceDeclaration typeDeclaration</span>
-<span class="fc" id="L781">                                = currentChild.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc" id="L714">                        ASTClassOrInterfaceDeclaration typeDeclaration</span>
+<span class="fc" id="L715">                                = currentChild.getFirstParentOfType(ASTClassOrInterfaceDeclaration.class);</span>
 
-<span class="fc bfc" id="L783" title="All 2 branches covered.">                        if (typeDeclaration != null) {</span>
-<span class="fc" id="L784">                            currentChild.setTypeDefinition(typeDeclaration.getTypeDefinition());</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">                        if (typeDeclaration != null) {</span>
+<span class="fc" id="L718">                            currentChild.setTypeDefinition(typeDeclaration.getTypeDefinition());</span>
                         }
-<span class="fc" id="L786">                    }</span>
+<span class="fc" id="L720">                    }</span>
 
                     // Last token, because if 'super' is a Suffix, it'll have tokens '.' and 'super'
-<span class="fc bfc" id="L789" title="All 2 branches covered.">                } else if (currentChild.jjtGetLastToken().toString().equals(&quot;super&quot;)) {</span>
+<span class="fc bfc" id="L723" title="All 2 branches covered.">                } else if (currentChild.jjtGetLastToken().toString().equals(&quot;super&quot;)) {</span>
 
-<span class="fc bfc" id="L791" title="All 2 branches covered.">                    if (previousChild != null) { // Qualified 'super' expression</span>
+<span class="fc bfc" id="L725" title="All 2 branches covered.">                    if (previousChild != null) { // Qualified 'super' expression</span>
                         // anonymous classes can't have qualified super expression, thus
                         // getSuperClassTypeDefinition's second argumet isn't null, but we are not
                         // looking for enclosing super types
-<span class="fc" id="L795">                        currentChild.setTypeDefinition(</span>
-<span class="fc" id="L796">                                getSuperClassTypeDefinition(currentChild, previousChild.getType()));</span>
+<span class="fc" id="L729">                        currentChild.setTypeDefinition(</span>
+<span class="fc" id="L730">                                getSuperClassTypeDefinition(currentChild, previousChild.getType()));</span>
                     } else { // simple 'super' expression
-<span class="fc" id="L798">                        currentChild.setTypeDefinition(getSuperClassTypeDefinition(currentChild, null));</span>
+<span class="fc" id="L732">                        currentChild.setTypeDefinition(getSuperClassTypeDefinition(currentChild, null));</span>
                     }
 
-<span class="pc bpc" id="L801" title="1 of 4 branches missed.">                } else if (previousChild != null &amp;&amp; previousChild.getType() != null</span>
-<span class="fc bfc" id="L802" title="All 2 branches covered.">                        &amp;&amp; currentChild.getImage() != null) {</span>
+<span class="pc bpc" id="L735" title="1 of 4 branches missed.">                } else if (previousChild != null &amp;&amp; previousChild.getType() != null</span>
+<span class="fc bfc" id="L736" title="All 2 branches covered.">                        &amp;&amp; currentChild.getImage() != null) {</span>
 
-<span class="fc" id="L804">                    currentChild.setTypeDefinition(getFieldType(previousChild.getTypeDefinition(),</span>
-<span class="fc" id="L805">                                                                currentChild.getImage(),</span>
-                                                                accessingClass));
+<span class="fc" id="L738">                    currentChild.setTypeDefinition(getFieldType(previousChild.getTypeDefinition(),</span>
+<span class="fc" id="L739">                                        currentChild.getImage(), accessingClass));</span>
                 }
             }
 
 
-<span class="fc bfc" id="L811" title="All 2 branches covered.">            if (currentChild.getType() != null) {</span>
-<span class="fc" id="L812">                primaryNodeType = currentChild.getTypeDefinition();</span>
+<span class="fc bfc" id="L744" title="All 2 branches covered.">            if (currentChild.getType() != null) {</span>
+<span class="fc" id="L745">                primaryNodeType = currentChild.getTypeDefinition();</span>
             } else {
                 // avoid falsely passing tests
-<span class="fc" id="L815">                primaryNodeType = null;</span>
-<span class="fc" id="L816">                break;</span>
+<span class="fc" id="L748">                primaryNodeType = null;</span>
+<span class="fc" id="L749">                break;</span>
             }
 
-<span class="fc" id="L819">            previousChild = currentChild;</span>
+<span class="fc" id="L752">            previousChild = currentChild;</span>
         }
 
-<span class="fc" id="L822">        primaryNode.setTypeDefinition(primaryNodeType);</span>
+<span class="fc" id="L755">        primaryNode.setTypeDefinition(primaryNodeType);</span>
 
-<span class="fc" id="L824">        return data;</span>
+<span class="fc" id="L757">        return data;</span>
     }
 
     /**
@@ -832,25 +765,25 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      * @return The JavaTypeDefinition of the enclosing Class declaration.
      */
     private Class&lt;?&gt; getEnclosingTypeDeclaration(Node node) {
-<span class="fc" id="L835">        Node previousNode = null;</span>
-<span class="fc bfc" id="L836" title="All 2 branches covered.">        while (node != null) {</span>
-<span class="fc bfc" id="L837" title="All 2 branches covered.">            if (node instanceof ASTClassOrInterfaceDeclaration) {</span>
-<span class="fc" id="L838">                return ((TypeNode) node).getType();</span>
+<span class="fc" id="L768">        Node previousNode = null;</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">        while (node != null) {</span>
+<span class="fc bfc" id="L770" title="All 2 branches covered.">            if (node instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="fc" id="L771">                return ((TypeNode) node).getType();</span>
                 // anonymous class declaration
-<span class="fc bfc" id="L840" title="All 2 branches covered.">            } else if (node instanceof ASTAllocationExpression // is anonymous class declaration</span>
-<span class="fc bfc" id="L841" title="All 4 branches covered.">                    &amp;&amp; node.getFirstChildOfType(ASTArrayDimsAndInits.class) == null // array cant anonymous</span>
+<span class="fc bfc" id="L773" title="All 2 branches covered.">            } else if (node instanceof ASTAllocationExpression // is anonymous class declaration</span>
+<span class="fc bfc" id="L774" title="All 4 branches covered.">                    &amp;&amp; node.getFirstChildOfType(ASTArrayDimsAndInits.class) == null // array cant anonymous</span>
                     &amp;&amp; !(previousNode instanceof ASTArguments)) { // we might come out of the constructor
-<span class="fc" id="L843">                ASTClassOrInterfaceType typeDecl = node.getFirstChildOfType(ASTClassOrInterfaceType.class);</span>
-<span class="pc bpc" id="L844" title="1 of 2 branches missed.">                if (typeDecl != null) {</span>
-<span class="fc" id="L845">                    return typeDecl.getType();</span>
+<span class="fc" id="L776">                ASTClassOrInterfaceType typeDecl = node.getFirstChildOfType(ASTClassOrInterfaceType.class);</span>
+<span class="pc bpc" id="L777" title="1 of 2 branches missed.">                if (typeDecl != null) {</span>
+<span class="fc" id="L778">                    return typeDecl.getType();</span>
                 }
             }
 
-<span class="fc" id="L849">            previousNode = node;</span>
-<span class="fc" id="L850">            node = node.jjtGetParent();</span>
+<span class="fc" id="L782">            previousNode = node;</span>
+<span class="fc" id="L783">            node = node.jjtGetParent();</span>
         }
 
-<span class="fc" id="L853">        return null;</span>
+<span class="fc" id="L786">        return null;</span>
     }
 
     /**
@@ -863,141 +796,140 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      * @return The TypeDefinition of the superclass.
      */
     private JavaTypeDefinition getSuperClassTypeDefinition(Node node, Class&lt;?&gt; clazz) {
-<span class="fc" id="L866">        Node previousNode = null;</span>
-<span class="fc bfc" id="L867" title="All 2 branches covered.">        for (; node != null; previousNode = node, node = node.jjtGetParent()) {</span>
-<span class="fc bfc" id="L868" title="All 2 branches covered.">            if (node instanceof ASTClassOrInterfaceDeclaration // class declaration</span>
+<span class="fc" id="L799">        Node previousNode = null;</span>
+<span class="fc bfc" id="L800" title="All 2 branches covered.">        for (; node != null; previousNode = node, node = node.jjtGetParent()) {</span>
+<span class="fc bfc" id="L801" title="All 2 branches covered.">            if (node instanceof ASTClassOrInterfaceDeclaration // class declaration</span>
                     // is the class we are looking for or caller requested first class
-<span class="fc bfc" id="L870" title="All 4 branches covered.">                    &amp;&amp; (((TypeNode) node).getType() == clazz || clazz == null)) {</span>
+<span class="fc bfc" id="L803" title="All 4 branches covered.">                    &amp;&amp; (((TypeNode) node).getType() == clazz || clazz == null)) {</span>
 
-<span class="fc" id="L872">                ASTExtendsList extendsList = node.getFirstChildOfType(ASTExtendsList.class);</span>
+<span class="fc" id="L805">                ASTExtendsList extendsList = node.getFirstChildOfType(ASTExtendsList.class);</span>
 
-<span class="fc bfc" id="L874" title="All 2 branches covered.">                if (extendsList != null) {</span>
-<span class="fc" id="L875">                    return ((TypeNode) extendsList.jjtGetChild(0)).getTypeDefinition();</span>
+<span class="fc bfc" id="L807" title="All 2 branches covered.">                if (extendsList != null) {</span>
+<span class="fc" id="L808">                    return ((TypeNode) extendsList.jjtGetChild(0)).getTypeDefinition();</span>
                 } else {
-<span class="fc" id="L877">                    return JavaTypeDefinition.build(Object.class);</span>
+<span class="fc" id="L810">                    return JavaTypeDefinition.forClass(Object.class);</span>
                 }
                 // anonymous class declaration
 
-<span class="fc bfc" id="L881" title="All 4 branches covered.">            } else if (clazz == null // callers requested any class scope</span>
+<span class="fc bfc" id="L814" title="All 4 branches covered.">            } else if (clazz == null // callers requested any class scope</span>
                     &amp;&amp; node instanceof ASTAllocationExpression // is anonymous class decl
-<span class="pc bpc" id="L883" title="2 of 4 branches missed.">                    &amp;&amp; node.getFirstChildOfType(ASTArrayDimsAndInits.class) == null // arrays can't be anonymous</span>
+<span class="pc bpc" id="L816" title="2 of 4 branches missed.">                    &amp;&amp; node.getFirstChildOfType(ASTArrayDimsAndInits.class) == null // arrays can't be anonymous</span>
                     &amp;&amp; !(previousNode instanceof ASTArguments)) { // we might come out of the constructor
-<span class="fc" id="L885">                return node.getFirstChildOfType(ASTClassOrInterfaceType.class).getTypeDefinition();</span>
+<span class="fc" id="L818">                return node.getFirstChildOfType(ASTClassOrInterfaceType.class).getTypeDefinition();</span>
             }
         }
 
-<span class="fc" id="L889">        return null;</span>
+<span class="fc" id="L822">        return null;</span>
     }
 
     @Override
     public Object visit(ASTPrimaryPrefix node, Object data) {
-<span class="fc" id="L894">        super.visit(node, data);</span>
-<span class="fc" id="L895">        rollupTypeUnary(node);</span>
+<span class="fc" id="L827">        super.visit(node, data);</span>
+<span class="fc" id="L828">        rollupTypeUnary(node);</span>
 
-<span class="fc" id="L897">        return data;</span>
+<span class="fc" id="L830">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTypeArgument node, Object data) {
-<span class="fc" id="L902">        super.visit(node, data);</span>
-<span class="fc" id="L903">        rollupTypeUnary(node);</span>
+<span class="fc" id="L835">        super.visit(node, data);</span>
+<span class="fc" id="L836">        rollupTypeUnary(node);</span>
 
-<span class="fc bfc" id="L905" title="All 2 branches covered.">        if (node.getType() == null) {</span>
+<span class="fc bfc" id="L838" title="All 2 branches covered.">        if (node.getType() == null) {</span>
             // ? extends Something
-<span class="pc bpc" id="L907" title="1 of 2 branches missed.">            if (node.jjtGetFirstToken() instanceof Token</span>
-<span class="fc bfc" id="L908" title="All 2 branches covered.">                    &amp;&amp; ((Token) node.jjtGetFirstToken()).next.image.equals(&quot;extends&quot;)) {</span>
+<span class="pc bpc" id="L840" title="1 of 2 branches missed.">            if (node.jjtGetFirstToken() instanceof Token</span>
+<span class="fc bfc" id="L841" title="All 2 branches covered.">                    &amp;&amp; ((Token) node.jjtGetFirstToken()).next.image.equals(&quot;extends&quot;)) {</span>
 
-<span class="fc" id="L910">                populateType(node, node.jjtGetLastToken().toString());</span>
+<span class="fc" id="L843">                populateType(node, node.jjtGetLastToken().toString());</span>
 
             } else {  // ? or ? super Something
-<span class="fc" id="L913">                node.setType(Object.class);</span>
+<span class="fc" id="L846">                node.setType(Object.class);</span>
             }
         }
 
-<span class="fc" id="L917">        return data;</span>
+<span class="fc" id="L850">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTypeParameters node, Object data) {
-<span class="fc" id="L922">        super.visit(node, data);</span>
+<span class="fc" id="L855">        super.visit(node, data);</span>
 
-<span class="fc bfc" id="L924" title="All 2 branches covered.">        if (node.jjtGetParent() instanceof ASTClassOrInterfaceDeclaration) {</span>
-<span class="fc" id="L925">            TypeNode parent = (TypeNode) node.jjtGetParent();</span>
+<span class="fc bfc" id="L857" title="All 2 branches covered.">        if (node.jjtGetParent() instanceof ASTClassOrInterfaceDeclaration) {</span>
+<span class="fc" id="L858">            TypeNode parent = (TypeNode) node.jjtGetParent();</span>
 
-<span class="fc" id="L927">            JavaTypeDefinitionBuilder builder = JavaTypeDefinition.builder(parent.getType());</span>
-
-<span class="fc bfc" id="L929" title="All 2 branches covered.">            for (int childIndex = 0; childIndex &lt; node.jjtGetNumChildren(); ++childIndex) {</span>
-<span class="fc" id="L930">                builder.addTypeArg(((TypeNode) node.jjtGetChild(childIndex)).getTypeDefinition());</span>
+<span class="fc" id="L860">            final JavaTypeDefinition[] boundGenerics = new JavaTypeDefinition[node.jjtGetNumChildren()];</span>
+<span class="fc bfc" id="L861" title="All 2 branches covered.">            for (int i = 0; i &lt; node.jjtGetNumChildren(); ++i) {</span>
+<span class="fc" id="L862">                boundGenerics[i] = ((TypeNode) node.jjtGetChild(i)).getTypeDefinition();</span>
             }
 
-<span class="fc" id="L933">            parent.setTypeDefinition(builder.build());</span>
+<span class="fc" id="L865">            parent.setTypeDefinition(JavaTypeDefinition.forClass(parent.getType(), boundGenerics));</span>
         }
 
-<span class="fc" id="L936">        return data;</span>
+<span class="fc" id="L868">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTypeParameter node, Object data) {
-<span class="fc" id="L941">        super.visit(node, data);</span>
-<span class="fc" id="L942">        rollupTypeUnary(node);</span>
+<span class="fc" id="L873">        super.visit(node, data);</span>
+<span class="fc" id="L874">        rollupTypeUnary(node);</span>
 
-<span class="fc bfc" id="L944" title="All 2 branches covered.">        if (node.getType() == null) {</span>
-<span class="fc" id="L945">            node.setType(Object.class);</span>
+<span class="fc bfc" id="L876" title="All 2 branches covered.">        if (node.getType() == null) {</span>
+<span class="fc" id="L877">            node.setType(Object.class);</span>
         }
 
-<span class="fc" id="L948">        return data;</span>
+<span class="fc" id="L880">        return data;</span>
     }
 
     @Override
     public Object visit(ASTTypeBound node, Object data) {
-<span class="fc" id="L953">        super.visit(node, data);</span>
-<span class="fc" id="L954">        rollupTypeUnary(node);</span>
-<span class="fc" id="L955">        return data;</span>
+<span class="fc" id="L885">        super.visit(node, data);</span>
+<span class="fc" id="L886">        rollupTypeUnary(node);</span>
+<span class="fc" id="L887">        return data;</span>
     }
 
     @Override
     public Object visit(ASTNullLiteral node, Object data) {
         // No explicit type
-<span class="fc" id="L961">        return super.visit(node, data);</span>
+<span class="fc" id="L893">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTBooleanLiteral node, Object data) {
-<span class="fc" id="L966">        populateType(node, &quot;boolean&quot;);</span>
-<span class="fc" id="L967">        return super.visit(node, data);</span>
+<span class="fc" id="L898">        populateType(node, &quot;boolean&quot;);</span>
+<span class="fc" id="L899">        return super.visit(node, data);</span>
     }
 
     @Override
     public Object visit(ASTLiteral node, Object data) {
-<span class="fc" id="L972">        super.visit(node, data);</span>
-<span class="fc bfc" id="L973" title="All 2 branches covered.">        if (node.jjtGetNumChildren() != 0) {</span>
-<span class="fc" id="L974">            rollupTypeUnary(node);</span>
+<span class="fc" id="L904">        super.visit(node, data);</span>
+<span class="fc bfc" id="L905" title="All 2 branches covered.">        if (node.jjtGetNumChildren() != 0) {</span>
+<span class="fc" id="L906">            rollupTypeUnary(node);</span>
         } else {
-<span class="fc bfc" id="L976" title="All 2 branches covered.">            if (node.isIntLiteral()) {</span>
-<span class="fc" id="L977">                populateType(node, &quot;int&quot;);</span>
-<span class="fc bfc" id="L978" title="All 2 branches covered.">            } else if (node.isLongLiteral()) {</span>
-<span class="fc" id="L979">                populateType(node, &quot;long&quot;);</span>
-<span class="fc bfc" id="L980" title="All 2 branches covered.">            } else if (node.isFloatLiteral()) {</span>
-<span class="fc" id="L981">                populateType(node, &quot;float&quot;);</span>
-<span class="fc bfc" id="L982" title="All 2 branches covered.">            } else if (node.isDoubleLiteral()) {</span>
-<span class="fc" id="L983">                populateType(node, &quot;double&quot;);</span>
-<span class="fc bfc" id="L984" title="All 2 branches covered.">            } else if (node.isCharLiteral()) {</span>
-<span class="fc" id="L985">                populateType(node, &quot;char&quot;);</span>
-<span class="pc bpc" id="L986" title="1 of 2 branches missed.">            } else if (node.isStringLiteral()) {</span>
-<span class="fc" id="L987">                populateType(node, &quot;java.lang.String&quot;);</span>
+<span class="fc bfc" id="L908" title="All 2 branches covered.">            if (node.isIntLiteral()) {</span>
+<span class="fc" id="L909">                populateType(node, &quot;int&quot;);</span>
+<span class="fc bfc" id="L910" title="All 2 branches covered.">            } else if (node.isLongLiteral()) {</span>
+<span class="fc" id="L911">                populateType(node, &quot;long&quot;);</span>
+<span class="fc bfc" id="L912" title="All 2 branches covered.">            } else if (node.isFloatLiteral()) {</span>
+<span class="fc" id="L913">                populateType(node, &quot;float&quot;);</span>
+<span class="fc bfc" id="L914" title="All 2 branches covered.">            } else if (node.isDoubleLiteral()) {</span>
+<span class="fc" id="L915">                populateType(node, &quot;double&quot;);</span>
+<span class="fc bfc" id="L916" title="All 2 branches covered.">            } else if (node.isCharLiteral()) {</span>
+<span class="fc" id="L917">                populateType(node, &quot;char&quot;);</span>
+<span class="pc bpc" id="L918" title="1 of 2 branches missed.">            } else if (node.isStringLiteral()) {</span>
+<span class="fc" id="L919">                populateType(node, &quot;java.lang.String&quot;);</span>
             } else {
-<span class="nc" id="L989">                throw new IllegalStateException(&quot;PMD error, unknown literal type!&quot;);</span>
+<span class="nc" id="L921">                throw new IllegalStateException(&quot;PMD error, unknown literal type!&quot;);</span>
             }
         }
-<span class="fc" id="L992">        return data;</span>
+<span class="fc" id="L924">        return data;</span>
     }
 
     @Override
     public Object visit(ASTAllocationExpression node, Object data) {
-<span class="fc" id="L997">        super.visit(node, data);</span>
+<span class="fc" id="L929">        super.visit(node, data);</span>
 
-<span class="pc bpc" id="L999" title="1 of 4 branches missed.">        if (node.jjtGetNumChildren() &gt;= 2 &amp;&amp; node.jjtGetChild(1) instanceof ASTArrayDimsAndInits</span>
-<span class="pc bpc" id="L1000" title="1 of 4 branches missed.">                || node.jjtGetNumChildren() &gt;= 3 &amp;&amp; node.jjtGetChild(2) instanceof ASTArrayDimsAndInits) {</span>
+<span class="pc bpc" id="L931" title="1 of 4 branches missed.">        if (node.jjtGetNumChildren() &gt;= 2 &amp;&amp; node.jjtGetChild(1) instanceof ASTArrayDimsAndInits</span>
+<span class="pc bpc" id="L932" title="1 of 4 branches missed.">                || node.jjtGetNumChildren() &gt;= 3 &amp;&amp; node.jjtGetChild(2) instanceof ASTArrayDimsAndInits) {</span>
             //
             // Classes for Array types cannot be found directly using
             // reflection.
@@ -1029,191 +961,191 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
             // be
             // incorrect.
         } else {
-<span class="fc" id="L1032">            rollupTypeUnary(node);</span>
+<span class="fc" id="L964">            rollupTypeUnary(node);</span>
         }
-<span class="fc" id="L1034">        return data;</span>
+<span class="fc" id="L966">        return data;</span>
     }
 
     @Override
     public Object visit(ASTStatementExpression node, Object data) {
-<span class="fc" id="L1039">        super.visit(node, data);</span>
-<span class="fc" id="L1040">        rollupTypeUnary(node);</span>
-<span class="fc" id="L1041">        return data;</span>
+<span class="fc" id="L971">        super.visit(node, data);</span>
+<span class="fc" id="L972">        rollupTypeUnary(node);</span>
+<span class="fc" id="L973">        return data;</span>
     }
 
     @Override
     public Object visit(ASTNormalAnnotation node, Object data) {
-<span class="fc" id="L1046">        super.visit(node, data);</span>
-<span class="fc" id="L1047">        rollupTypeUnary(node);</span>
-<span class="fc" id="L1048">        return data;</span>
+<span class="fc" id="L978">        super.visit(node, data);</span>
+<span class="fc" id="L979">        rollupTypeUnary(node);</span>
+<span class="fc" id="L980">        return data;</span>
     }
 
     @Override
     public Object visit(ASTMarkerAnnotation node, Object data) {
-<span class="fc" id="L1053">        super.visit(node, data);</span>
-<span class="fc" id="L1054">        rollupTypeUnary(node);</span>
-<span class="fc" id="L1055">        return data;</span>
+<span class="fc" id="L985">        super.visit(node, data);</span>
+<span class="fc" id="L986">        rollupTypeUnary(node);</span>
+<span class="fc" id="L987">        return data;</span>
     }
 
     @Override
     public Object visit(ASTSingleMemberAnnotation node, Object data) {
-<span class="fc" id="L1060">        super.visit(node, data);</span>
-<span class="fc" id="L1061">        rollupTypeUnary(node);</span>
-<span class="fc" id="L1062">        return data;</span>
+<span class="fc" id="L992">        super.visit(node, data);</span>
+<span class="fc" id="L993">        rollupTypeUnary(node);</span>
+<span class="fc" id="L994">        return data;</span>
     }
 
     // Roll up the type based on type of the first child node.
     private void rollupTypeUnary(TypeNode typeNode) {
-<span class="fc" id="L1067">        Node node = typeNode;</span>
-<span class="fc bfc" id="L1068" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt;= 1) {</span>
-<span class="fc" id="L1069">            Node child = node.jjtGetChild(0);</span>
-<span class="fc bfc" id="L1070" title="All 2 branches covered.">            if (child instanceof TypeNode) {</span>
-<span class="fc" id="L1071">                typeNode.setTypeDefinition(((TypeNode) child).getTypeDefinition());</span>
+<span class="fc" id="L999">        Node node = typeNode;</span>
+<span class="fc bfc" id="L1000" title="All 2 branches covered.">        if (node.jjtGetNumChildren() &gt;= 1) {</span>
+<span class="fc" id="L1001">            Node child = node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L1002" title="All 2 branches covered.">            if (child instanceof TypeNode) {</span>
+<span class="fc" id="L1003">                typeNode.setTypeDefinition(((TypeNode) child).getTypeDefinition());</span>
             }
         }
-<span class="fc" id="L1074">    }</span>
+<span class="fc" id="L1006">    }</span>
 
     // Roll up the type based on type of the first child node using Unary
     // Numeric Promotion per JLS 5.6.1
     private void rollupTypeUnaryNumericPromotion(TypeNode typeNode) {
-<span class="fc" id="L1079">        Node node = typeNode;</span>
-<span class="pc bpc" id="L1080" title="1 of 2 branches missed.">        if (node.jjtGetNumChildren() &gt;= 1) {</span>
-<span class="fc" id="L1081">            Node child = node.jjtGetChild(0);</span>
-<span class="pc bpc" id="L1082" title="1 of 2 branches missed.">            if (child instanceof TypeNode) {</span>
-<span class="fc" id="L1083">                Class&lt;?&gt; type = ((TypeNode) child).getType();</span>
-<span class="pc bpc" id="L1084" title="1 of 2 branches missed.">                if (type != null) {</span>
-<span class="fc bfc" id="L1085" title="All 4 branches covered.">                    if (&quot;byte&quot;.equals(type.getName()) || &quot;short&quot;.equals(type.getName())</span>
-<span class="fc bfc" id="L1086" title="All 2 branches covered.">                            || &quot;char&quot;.equals(type.getName())) {</span>
-<span class="fc" id="L1087">                        populateType(typeNode, &quot;int&quot;);</span>
+<span class="fc" id="L1011">        Node node = typeNode;</span>
+<span class="pc bpc" id="L1012" title="1 of 2 branches missed.">        if (node.jjtGetNumChildren() &gt;= 1) {</span>
+<span class="fc" id="L1013">            Node child = node.jjtGetChild(0);</span>
+<span class="pc bpc" id="L1014" title="1 of 2 branches missed.">            if (child instanceof TypeNode) {</span>
+<span class="fc" id="L1015">                Class&lt;?&gt; type = ((TypeNode) child).getType();</span>
+<span class="pc bpc" id="L1016" title="1 of 2 branches missed.">                if (type != null) {</span>
+<span class="fc bfc" id="L1017" title="All 4 branches covered.">                    if (&quot;byte&quot;.equals(type.getName()) || &quot;short&quot;.equals(type.getName())</span>
+<span class="fc bfc" id="L1018" title="All 2 branches covered.">                            || &quot;char&quot;.equals(type.getName())) {</span>
+<span class="fc" id="L1019">                        populateType(typeNode, &quot;int&quot;);</span>
                     } else {
-<span class="fc" id="L1089">                        typeNode.setType(((TypeNode) child).getType());</span>
+<span class="fc" id="L1021">                        typeNode.setType(((TypeNode) child).getType());</span>
                     }
                 }
             }
         }
-<span class="fc" id="L1094">    }</span>
+<span class="fc" id="L1026">    }</span>
 
     // Roll up the type based on type of the first and second child nodes using
     // Binary Numeric Promotion per JLS 5.6.2
     private void rollupTypeBinaryNumericPromotion(TypeNode typeNode) {
-<span class="fc" id="L1099">        Node node = typeNode;</span>
-<span class="pc bpc" id="L1100" title="1 of 2 branches missed.">        if (node.jjtGetNumChildren() &gt;= 2) {</span>
-<span class="fc" id="L1101">            Node child1 = node.jjtGetChild(0);</span>
-<span class="fc" id="L1102">            Node child2 = node.jjtGetChild(1);</span>
-<span class="pc bpc" id="L1103" title="2 of 4 branches missed.">            if (child1 instanceof TypeNode &amp;&amp; child2 instanceof TypeNode) {</span>
-<span class="fc" id="L1104">                Class&lt;?&gt; type1 = ((TypeNode) child1).getType();</span>
-<span class="fc" id="L1105">                Class&lt;?&gt; type2 = ((TypeNode) child2).getType();</span>
-<span class="fc bfc" id="L1106" title="All 4 branches covered.">                if (type1 != null &amp;&amp; type2 != null) {</span>
+<span class="fc" id="L1031">        Node node = typeNode;</span>
+<span class="pc bpc" id="L1032" title="1 of 2 branches missed.">        if (node.jjtGetNumChildren() &gt;= 2) {</span>
+<span class="fc" id="L1033">            Node child1 = node.jjtGetChild(0);</span>
+<span class="fc" id="L1034">            Node child2 = node.jjtGetChild(1);</span>
+<span class="pc bpc" id="L1035" title="2 of 4 branches missed.">            if (child1 instanceof TypeNode &amp;&amp; child2 instanceof TypeNode) {</span>
+<span class="fc" id="L1036">                Class&lt;?&gt; type1 = ((TypeNode) child1).getType();</span>
+<span class="fc" id="L1037">                Class&lt;?&gt; type2 = ((TypeNode) child2).getType();</span>
+<span class="fc bfc" id="L1038" title="All 4 branches covered.">                if (type1 != null &amp;&amp; type2 != null) {</span>
                     // Yeah, String is not numeric, but easiest place to handle
                     // it, only affects ASTAdditiveExpression
-<span class="fc bfc" id="L1109" title="All 4 branches covered.">                    if (&quot;java.lang.String&quot;.equals(type1.getName()) || &quot;java.lang.String&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1110">                        populateType(typeNode, &quot;java.lang.String&quot;);</span>
-<span class="pc bpc" id="L1111" title="1 of 4 branches missed.">                    } else if (&quot;boolean&quot;.equals(type1.getName()) || &quot;boolean&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1112">                        populateType(typeNode, &quot;boolean&quot;);</span>
-<span class="fc bfc" id="L1113" title="All 4 branches covered.">                    } else if (&quot;double&quot;.equals(type1.getName()) || &quot;double&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1114">                        populateType(typeNode, &quot;double&quot;);</span>
-<span class="fc bfc" id="L1115" title="All 4 branches covered.">                    } else if (&quot;float&quot;.equals(type1.getName()) || &quot;float&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1116">                        populateType(typeNode, &quot;float&quot;);</span>
-<span class="fc bfc" id="L1117" title="All 4 branches covered.">                    } else if (&quot;long&quot;.equals(type1.getName()) || &quot;long&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1118">                        populateType(typeNode, &quot;long&quot;);</span>
+<span class="fc bfc" id="L1041" title="All 4 branches covered.">                    if (&quot;java.lang.String&quot;.equals(type1.getName()) || &quot;java.lang.String&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1042">                        populateType(typeNode, &quot;java.lang.String&quot;);</span>
+<span class="pc bpc" id="L1043" title="1 of 4 branches missed.">                    } else if (&quot;boolean&quot;.equals(type1.getName()) || &quot;boolean&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1044">                        populateType(typeNode, &quot;boolean&quot;);</span>
+<span class="fc bfc" id="L1045" title="All 4 branches covered.">                    } else if (&quot;double&quot;.equals(type1.getName()) || &quot;double&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1046">                        populateType(typeNode, &quot;double&quot;);</span>
+<span class="fc bfc" id="L1047" title="All 4 branches covered.">                    } else if (&quot;float&quot;.equals(type1.getName()) || &quot;float&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1048">                        populateType(typeNode, &quot;float&quot;);</span>
+<span class="fc bfc" id="L1049" title="All 4 branches covered.">                    } else if (&quot;long&quot;.equals(type1.getName()) || &quot;long&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1050">                        populateType(typeNode, &quot;long&quot;);</span>
                     } else {
-<span class="fc" id="L1120">                        populateType(typeNode, &quot;int&quot;);</span>
+<span class="fc" id="L1052">                        populateType(typeNode, &quot;int&quot;);</span>
                     }
-<span class="fc bfc" id="L1122" title="All 4 branches covered.">                } else if (type1 != null || type2 != null) {</span>
+<span class="fc bfc" id="L1054" title="All 4 branches covered.">                } else if (type1 != null || type2 != null) {</span>
                     // If one side is known to be a String, then the result is a
                     // String
                     // Yeah, String is not numeric, but easiest place to handle
                     // it, only affects ASTAdditiveExpression
-<span class="fc bfc" id="L1127" title="All 6 branches covered.">                    if (type1 != null &amp;&amp; &quot;java.lang.String&quot;.equals(type1.getName())</span>
-<span class="fc bfc" id="L1128" title="All 2 branches covered.">                            || type2 != null &amp;&amp; &quot;java.lang.String&quot;.equals(type2.getName())) {</span>
-<span class="fc" id="L1129">                        populateType(typeNode, &quot;java.lang.String&quot;);</span>
+<span class="fc bfc" id="L1059" title="All 6 branches covered.">                    if (type1 != null &amp;&amp; &quot;java.lang.String&quot;.equals(type1.getName())</span>
+<span class="fc bfc" id="L1060" title="All 2 branches covered.">                            || type2 != null &amp;&amp; &quot;java.lang.String&quot;.equals(type2.getName())) {</span>
+<span class="fc" id="L1061">                        populateType(typeNode, &quot;java.lang.String&quot;);</span>
                     }
                 }
             }
         }
-<span class="fc" id="L1134">    }</span>
+<span class="fc" id="L1066">    }</span>
 
     private void populateType(TypeNode node, String className) {
 
-<span class="fc" id="L1138">        String qualifiedName = className;</span>
-<span class="fc" id="L1139">        Class&lt;?&gt; myType = PRIMITIVE_TYPES.get(className);</span>
-<span class="pc bpc" id="L1140" title="1 of 4 branches missed.">        if (myType == null &amp;&amp; importedClasses != null) {</span>
-<span class="fc bfc" id="L1141" title="All 2 branches covered.">            if (importedClasses.containsKey(className)) {</span>
-<span class="fc" id="L1142">                qualifiedName = importedClasses.get(className);</span>
-<span class="fc bfc" id="L1143" title="All 2 branches covered.">            } else if (importedClasses.containsValue(className)) {</span>
-<span class="fc" id="L1144">                qualifiedName = className;</span>
+<span class="fc" id="L1070">        String qualifiedName = className;</span>
+<span class="fc" id="L1071">        Class&lt;?&gt; myType = PRIMITIVE_TYPES.get(className);</span>
+<span class="pc bpc" id="L1072" title="1 of 4 branches missed.">        if (myType == null &amp;&amp; importedClasses != null) {</span>
+<span class="fc bfc" id="L1073" title="All 2 branches covered.">            if (importedClasses.containsKey(className)) {</span>
+<span class="fc" id="L1074">                qualifiedName = importedClasses.get(className);</span>
+<span class="fc bfc" id="L1075" title="All 2 branches covered.">            } else if (importedClasses.containsValue(className)) {</span>
+<span class="fc" id="L1076">                qualifiedName = className;</span>
             }
-<span class="pc bpc" id="L1146" title="1 of 2 branches missed.">            if (qualifiedName != null) {</span>
+<span class="pc bpc" id="L1078" title="1 of 2 branches missed.">            if (qualifiedName != null) {</span>
                 try {
                     /*
                      * TODO - the map right now contains just class names. if we
                      * use a map of classname/class then we don't have to hit
                      * the class loader for every type - much faster
                      */
-<span class="fc" id="L1153">                    myType = pmdClassLoader.loadClass(qualifiedName);</span>
-<span class="fc" id="L1154">                } catch (ClassNotFoundException e) {</span>
-<span class="fc" id="L1155">                    myType = processOnDemand(qualifiedName);</span>
-<span class="nc" id="L1156">                } catch (NoClassDefFoundError e) {</span>
-<span class="nc" id="L1157">                    myType = processOnDemand(qualifiedName);</span>
-<span class="nc" id="L1158">                } catch (LinkageError e) {</span>
-<span class="nc" id="L1159">                    myType = processOnDemand(qualifiedName);</span>
-<span class="pc" id="L1160">                }</span>
+<span class="fc" id="L1085">                    myType = pmdClassLoader.loadClass(qualifiedName);</span>
+<span class="fc" id="L1086">                } catch (ClassNotFoundException e) {</span>
+<span class="fc" id="L1087">                    myType = processOnDemand(qualifiedName);</span>
+<span class="nc" id="L1088">                } catch (NoClassDefFoundError e) {</span>
+<span class="nc" id="L1089">                    myType = processOnDemand(qualifiedName);</span>
+<span class="nc" id="L1090">                } catch (LinkageError e) {</span>
+<span class="nc" id="L1091">                    myType = processOnDemand(qualifiedName);</span>
+<span class="pc" id="L1092">                }</span>
             }
         }
-<span class="pc bpc" id="L1163" title="1 of 6 branches missed.">        if (myType == null &amp;&amp; qualifiedName != null &amp;&amp; qualifiedName.contains(&quot;.&quot;)) {</span>
+<span class="pc bpc" id="L1095" title="1 of 6 branches missed.">        if (myType == null &amp;&amp; qualifiedName != null &amp;&amp; qualifiedName.contains(&quot;.&quot;)) {</span>
             // try if the last part defines a inner class
-<span class="fc" id="L1165">            String qualifiedNameInner = qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) + &quot;$&quot;</span>
-<span class="fc" id="L1166">                    + qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);</span>
+<span class="fc" id="L1097">            String qualifiedNameInner = qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) + &quot;$&quot;</span>
+<span class="fc" id="L1098">                    + qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);</span>
             try {
-<span class="fc" id="L1168">                myType = pmdClassLoader.loadClass(qualifiedNameInner);</span>
-<span class="fc" id="L1169">            } catch (Exception e) {</span>
+<span class="fc" id="L1100">                myType = pmdClassLoader.loadClass(qualifiedNameInner);</span>
+<span class="fc" id="L1101">            } catch (Exception e) {</span>
                 // ignored
-<span class="fc" id="L1171">            }</span>
+<span class="fc" id="L1103">            }</span>
         }
-<span class="pc bpc" id="L1173" title="1 of 6 branches missed.">        if (myType == null &amp;&amp; qualifiedName != null &amp;&amp; !qualifiedName.contains(&quot;.&quot;)) {</span>
+<span class="pc bpc" id="L1105" title="1 of 6 branches missed.">        if (myType == null &amp;&amp; qualifiedName != null &amp;&amp; !qualifiedName.contains(&quot;.&quot;)) {</span>
             // try again with java.lang....
             try {
-<span class="fc" id="L1176">                myType = pmdClassLoader.loadClass(&quot;java.lang.&quot; + qualifiedName);</span>
-<span class="fc" id="L1177">            } catch (Exception e) {</span>
+<span class="fc" id="L1108">                myType = pmdClassLoader.loadClass(&quot;java.lang.&quot; + qualifiedName);</span>
+<span class="fc" id="L1109">            } catch (Exception e) {</span>
                 // ignored
-<span class="fc" id="L1179">            }</span>
+<span class="fc" id="L1111">            }</span>
         }
 
         // try generics
         // TODO: generic declarations can shadow type declarations ... :(
-<span class="fc bfc" id="L1184" title="All 2 branches covered.">        if (myType == null) {</span>
-<span class="fc" id="L1185">            ASTTypeParameter parameter = getTypeParameterDeclaration(node, className);</span>
-<span class="fc bfc" id="L1186" title="All 2 branches covered.">            if (parameter != null) {</span>
-<span class="fc" id="L1187">                node.setTypeDefinition(parameter.getTypeDefinition());</span>
+<span class="fc bfc" id="L1116" title="All 2 branches covered.">        if (myType == null) {</span>
+<span class="fc" id="L1117">            ASTTypeParameter parameter = getTypeParameterDeclaration(node, className);</span>
+<span class="fc bfc" id="L1118" title="All 2 branches covered.">            if (parameter != null) {</span>
+<span class="fc" id="L1119">                node.setTypeDefinition(parameter.getTypeDefinition());</span>
             }
-<span class="fc" id="L1189">        } else {</span>
-<span class="fc" id="L1190">            node.setType(myType);</span>
+<span class="fc" id="L1121">        } else {</span>
+<span class="fc" id="L1122">            node.setType(myType);</span>
         }
-<span class="fc" id="L1192">    }</span>
+<span class="fc" id="L1124">    }</span>
 
     private ASTTypeParameter getTypeParameterDeclaration(Node startNode, String image) {
-<span class="fc bfc" id="L1195" title="All 2 branches covered.">        for (Node parent = startNode.jjtGetParent(); parent != null; parent = parent.jjtGetParent()) {</span>
-<span class="fc" id="L1196">            ASTTypeParameters typeParameters = null;</span>
+<span class="fc bfc" id="L1127" title="All 2 branches covered.">        for (Node parent = startNode.jjtGetParent(); parent != null; parent = parent.jjtGetParent()) {</span>
+<span class="fc" id="L1128">            ASTTypeParameters typeParameters = null;</span>
 
-<span class="fc bfc" id="L1198" title="All 2 branches covered.">            if (parent instanceof ASTTypeParameters) { // if type parameter defined in the same &lt; &gt;</span>
-<span class="fc" id="L1199">                typeParameters = (ASTTypeParameters) parent;</span>
-<span class="fc bfc" id="L1200" title="All 6 branches covered.">            } else if (parent instanceof ASTConstructorDeclaration</span>
+<span class="fc bfc" id="L1130" title="All 2 branches covered.">            if (parent instanceof ASTTypeParameters) { // if type parameter defined in the same &lt; &gt;</span>
+<span class="fc" id="L1131">                typeParameters = (ASTTypeParameters) parent;</span>
+<span class="fc bfc" id="L1132" title="All 6 branches covered.">            } else if (parent instanceof ASTConstructorDeclaration</span>
                     || parent instanceof ASTMethodDeclaration
                     || parent instanceof ASTClassOrInterfaceDeclaration) {
-<span class="fc" id="L1203">                typeParameters = parent.getFirstChildOfType(ASTTypeParameters.class);</span>
+<span class="fc" id="L1135">                typeParameters = parent.getFirstChildOfType(ASTTypeParameters.class);</span>
             }
 
-<span class="fc bfc" id="L1206" title="All 2 branches covered.">            if (typeParameters != null) {</span>
-<span class="fc bfc" id="L1207" title="All 2 branches covered.">                for (int index = 0; index &lt; typeParameters.jjtGetNumChildren(); ++index) {</span>
-<span class="fc" id="L1208">                    String imageToCompareTo = typeParameters.jjtGetChild(index).getImage();</span>
-<span class="pc bpc" id="L1209" title="1 of 4 branches missed.">                    if (imageToCompareTo != null &amp;&amp; imageToCompareTo.equals(image)) {</span>
-<span class="fc" id="L1210">                        return (ASTTypeParameter) typeParameters.jjtGetChild(index);</span>
+<span class="fc bfc" id="L1138" title="All 2 branches covered.">            if (typeParameters != null) {</span>
+<span class="fc bfc" id="L1139" title="All 2 branches covered.">                for (int index = 0; index &lt; typeParameters.jjtGetNumChildren(); ++index) {</span>
+<span class="fc" id="L1140">                    String imageToCompareTo = typeParameters.jjtGetChild(index).getImage();</span>
+<span class="pc bpc" id="L1141" title="1 of 4 branches missed.">                    if (imageToCompareTo != null &amp;&amp; imageToCompareTo.equals(image)) {</span>
+<span class="fc" id="L1142">                        return (ASTTypeParameter) typeParameters.jjtGetChild(index);</span>
                     }
                 }
             }
         }
 
-<span class="fc" id="L1216">        return null;</span>
+<span class="fc" id="L1148">        return null;</span>
     }
 
     /**
@@ -1221,45 +1153,45 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      */
     public boolean classNameExists(String fullyQualifiedClassName) {
         try {
-<span class="fc" id="L1224">            pmdClassLoader.loadClass(fullyQualifiedClassName);</span>
-<span class="fc" id="L1225">            return true; // Class found</span>
-<span class="fc" id="L1226">        } catch (ClassNotFoundException e) {</span>
-<span class="fc" id="L1227">            return false;</span>
-<span class="nc" id="L1228">        } catch (NoClassDefFoundError e) {</span>
-<span class="nc" id="L1229">            return false;</span>
+<span class="fc" id="L1156">            pmdClassLoader.loadClass(fullyQualifiedClassName);</span>
+<span class="fc" id="L1157">            return true; // Class found</span>
+<span class="fc" id="L1158">        } catch (ClassNotFoundException e) {</span>
+<span class="fc" id="L1159">            return false;</span>
+<span class="nc" id="L1160">        } catch (NoClassDefFoundError e) {</span>
+<span class="nc" id="L1161">            return false;</span>
         }
     }
 
     public Class&lt;?&gt; loadClass(String fullyQualifiedClassName) {
         try {
-<span class="fc" id="L1235">            return pmdClassLoader.loadClass(fullyQualifiedClassName);</span>
-<span class="nc" id="L1236">        } catch (ClassNotFoundException e) {</span>
-<span class="nc" id="L1237">            return null;</span>
+<span class="fc" id="L1167">            return pmdClassLoader.loadClass(fullyQualifiedClassName);</span>
+<span class="nc" id="L1168">        } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L1169">            return null;</span>
         }
     }
 
     private Class&lt;?&gt; processOnDemand(String qualifiedName) {
-<span class="fc bfc" id="L1242" title="All 2 branches covered.">        for (String entry : importedOnDemand) {</span>
+<span class="fc bfc" id="L1174" title="All 2 branches covered.">        for (String entry : importedOnDemand) {</span>
             try {
-<span class="fc" id="L1244">                return pmdClassLoader.loadClass(entry + &quot;.&quot; + qualifiedName);</span>
-<span class="fc" id="L1245">            } catch (Throwable e) {</span>
+<span class="fc" id="L1176">                return pmdClassLoader.loadClass(entry + &quot;.&quot; + qualifiedName);</span>
+<span class="fc" id="L1177">            } catch (Throwable e) {</span>
             }
-<span class="fc" id="L1247">        }</span>
-<span class="fc" id="L1248">        return null;</span>
+<span class="fc" id="L1179">        }</span>
+<span class="fc" id="L1180">        return null;</span>
     }
 
     private String getClassName(ASTCompilationUnit node) {
-<span class="fc" id="L1252">        ASTClassOrInterfaceDeclaration classDecl = node.getFirstDescendantOfType(ASTClassOrInterfaceDeclaration.class);</span>
-<span class="fc bfc" id="L1253" title="All 2 branches covered.">        if (classDecl == null) {</span>
+<span class="fc" id="L1184">        ASTClassOrInterfaceDeclaration classDecl = node.getFirstDescendantOfType(ASTClassOrInterfaceDeclaration.class);</span>
+<span class="fc bfc" id="L1185" title="All 2 branches covered.">        if (classDecl == null) {</span>
             // Happens if this compilation unit only contains an enum
-<span class="fc" id="L1255">            return null;</span>
+<span class="fc" id="L1187">            return null;</span>
         }
-<span class="fc bfc" id="L1257" title="All 2 branches covered.">        if (node.declarationsAreInDefaultPackage()) {</span>
-<span class="fc" id="L1258">            return classDecl.getImage();</span>
+<span class="fc bfc" id="L1189" title="All 2 branches covered.">        if (node.declarationsAreInDefaultPackage()) {</span>
+<span class="fc" id="L1190">            return classDecl.getImage();</span>
         }
-<span class="fc" id="L1260">        ASTPackageDeclaration pkgDecl = node.getPackageDeclaration();</span>
-<span class="fc" id="L1261">        importedOnDemand.add(pkgDecl.getPackageNameImage());</span>
-<span class="fc" id="L1262">        return pkgDecl.getPackageNameImage() + &quot;.&quot; + classDecl.getImage();</span>
+<span class="fc" id="L1192">        ASTPackageDeclaration pkgDecl = node.getPackageDeclaration();</span>
+<span class="fc" id="L1193">        importedOnDemand.add(pkgDecl.getPackageNameImage());</span>
+<span class="fc" id="L1194">        return pkgDecl.getPackageNameImage() + &quot;.&quot; + classDecl.getImage();</span>
     }
 
     /**
@@ -1268,27 +1200,27 @@ public class ClassTypeResolver extends JavaParserVisitorAdapter {
      * @param node
      */
     private void populateImports(ASTCompilationUnit node) {
-<span class="fc" id="L1271">        List&lt;ASTImportDeclaration&gt; theImportDeclarations = node.findChildrenOfType(ASTImportDeclaration.class);</span>
+<span class="fc" id="L1203">        List&lt;ASTImportDeclaration&gt; theImportDeclarations = node.findChildrenOfType(ASTImportDeclaration.class);</span>
 
-<span class="fc" id="L1273">        importedClasses.putAll(JAVA_LANG);</span>
+<span class="fc" id="L1205">        importedClasses.putAll(JAVA_LANG);</span>
 
         // go through the imports
-<span class="fc bfc" id="L1276" title="All 2 branches covered.">        for (ASTImportDeclaration anImportDeclaration : theImportDeclarations) {</span>
-<span class="fc" id="L1277">            String strPackage = anImportDeclaration.getPackageName();</span>
-<span class="fc bfc" id="L1278" title="All 2 branches covered.">            if (anImportDeclaration.isImportOnDemand()) {</span>
-<span class="fc" id="L1279">                importedOnDemand.add(strPackage);</span>
-<span class="pc bpc" id="L1280" title="1 of 2 branches missed.">            } else if (!anImportDeclaration.isImportOnDemand()) {</span>
-<span class="fc" id="L1281">                String strName = anImportDeclaration.getImportedName();</span>
-<span class="fc" id="L1282">                importedClasses.put(strName, strName);</span>
-<span class="fc" id="L1283">                importedClasses.put(strName.substring(strPackage.length() + 1), strName);</span>
+<span class="fc bfc" id="L1208" title="All 2 branches covered.">        for (ASTImportDeclaration anImportDeclaration : theImportDeclarations) {</span>
+<span class="fc" id="L1209">            String strPackage = anImportDeclaration.getPackageName();</span>
+<span class="fc bfc" id="L1210" title="All 2 branches covered.">            if (anImportDeclaration.isImportOnDemand()) {</span>
+<span class="fc" id="L1211">                importedOnDemand.add(strPackage);</span>
+<span class="pc bpc" id="L1212" title="1 of 2 branches missed.">            } else if (!anImportDeclaration.isImportOnDemand()) {</span>
+<span class="fc" id="L1213">                String strName = anImportDeclaration.getImportedName();</span>
+<span class="fc" id="L1214">                importedClasses.put(strName, strName);</span>
+<span class="fc" id="L1215">                importedClasses.put(strName.substring(strPackage.length() + 1), strName);</span>
             }
-<span class="fc" id="L1285">        }</span>
-<span class="fc" id="L1286">    }</span>
+<span class="fc" id="L1217">        }</span>
+<span class="fc" id="L1218">    }</span>
 
     private void populateClassName(ASTCompilationUnit node, String className) throws ClassNotFoundException {
-<span class="fc" id="L1289">        node.setType(pmdClassLoader.loadClass(className));</span>
-<span class="fc" id="L1290">        importedClasses.putAll(pmdClassLoader.getImportedClasses(className));</span>
-<span class="fc" id="L1291">    }</span>
+<span class="fc" id="L1221">        node.setType(pmdClassLoader.loadClass(className));</span>
+<span class="fc" id="L1222">        importedClasses.putAll(pmdClassLoader.getImportedClasses(className));</span>
+<span class="fc" id="L1223">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
