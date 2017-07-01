@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>LanguageFactory.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.cpd</a> &gt; <span class="el_source">LanguageFactory.java</span></div><h1>LanguageFactory.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.cpd;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceLoader;
+
+public final class LanguageFactory {
+
+    public static final String EXTENSION = &quot;extension&quot;;
+    public static final String BY_EXTENSION = &quot;by_extension&quot;;
+
+<span class="fc" id="L24">    private static LanguageFactory instance = new LanguageFactory();</span>
+
+    public static String[] supportedLanguages;
+
+    static {
+<span class="fc" id="L29">        supportedLanguages = instance.languages.keySet().toArray(new String[instance.languages.size()]);</span>
+<span class="fc" id="L30">    }</span>
+
+<span class="fc" id="L32">    private Map&lt;String, Language&gt; languages = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L34">    private LanguageFactory() {</span>
+<span class="fc" id="L35">        List&lt;Language&gt; languagesList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L36">        ServiceLoader&lt;Language&gt; languageLoader = ServiceLoader.load(Language.class);</span>
+<span class="fc" id="L37">        Iterator&lt;Language&gt; iterator = languageLoader.iterator();</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        while (iterator.hasNext()) {</span>
+            try {
+<span class="fc" id="L40">                Language language = iterator.next();</span>
+<span class="fc" id="L41">                languagesList.add(language);</span>
+<span class="nc" id="L42">            } catch (UnsupportedClassVersionError e) {</span>
+                // Some languages require java8 and are therefore only available
+                // if java8 or later is used as runtime.
+<span class="nc" id="L45">                System.err.println(&quot;Ignoring language for CPD: &quot; + e.toString());</span>
+<span class="pc" id="L46">            }</span>
+        }
+
+        // sort languages by terse name. Avoiding differences in the order of languages
+        // across JVM versions / OS.
+<span class="fc" id="L51">        Collections.sort(languagesList, new Comparator&lt;Language&gt;() {</span>
+            @Override
+            public int compare(Language o1, Language o2) {
+<span class="nc" id="L54">                return o1.getTerseName().compareToIgnoreCase(o2.getTerseName());</span>
+            }
+        });
+
+        // using a linked hash map to maintain insertion order
+<span class="fc" id="L59">        languages = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (Language language : languagesList) {</span>
+<span class="fc" id="L61">            languages.put(language.getTerseName().toLowerCase(Locale.ROOT), language);</span>
+<span class="fc" id="L62">        }</span>
+
+<span class="fc" id="L64">    }</span>
+
+    public static Language createLanguage(String language) {
+<span class="fc" id="L67">        return createLanguage(language, new Properties());</span>
+    }
+
+    public static Language createLanguage(String language, Properties properties) {
+        Language implementation;
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (BY_EXTENSION.equals(language)) {</span>
+<span class="nc" id="L73">            implementation = instance.getLanguageByExtension(properties.getProperty(EXTENSION));</span>
+        } else {
+<span class="fc" id="L75">            implementation = instance.languages.get(instance.languageAliases(language).toLowerCase());</span>
+        }
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (implementation == null) {</span>
+            // No proper implementation
+            // FIXME: We should log a warning, shouldn't we ?
+<span class="fc" id="L80">            implementation = new AnyLanguage(language);</span>
+        }
+<span class="fc" id="L82">        implementation.setProperties(properties);</span>
+<span class="fc" id="L83">        return implementation;</span>
+    }
+
+    private String languageAliases(String language) {
+        // CPD and C language share the same parser
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (&quot;c&quot;.equals(language)) {</span>
+<span class="nc" id="L89">            return &quot;cpp&quot;;</span>
+        }
+<span class="fc" id="L91">        return language;</span>
+    }
+
+    private Language getLanguageByExtension(String extension) {
+<span class="nc" id="L95">        Language result = null;</span>
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (Language language : languages.values()) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (language.getExtensions().contains(extension)) {</span>
+<span class="nc" id="L99">                result = language;</span>
+<span class="nc" id="L100">                break;</span>
+            }
+<span class="nc" id="L102">        }</span>
+<span class="nc" id="L103">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

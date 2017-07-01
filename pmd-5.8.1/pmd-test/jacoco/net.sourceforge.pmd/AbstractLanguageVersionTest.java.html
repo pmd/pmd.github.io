@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractLanguageVersionTest.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Test Framework</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd</a> &gt; <span class="el_source">AbstractLanguageVersionTest.java</span></div><h1>AbstractLanguageVersionTest.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.InputStream;
+import java.util.Properties;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import net.sourceforge.pmd.ant.SourceLanguage;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageRegistry;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.util.ResourceLoader;
+
+/**
+ * Base test class for {@link LanguageVersion} implementations. &lt;br&gt;
+ * Each language implementation should subclass this and provide a data method.
+ * 
+ * &lt;pre&gt;
+ * &amp;#64;Parameters
+ *     public static Collection&amp;lt;Object[]&amp;gt; data() {
+ *       return Arrays.asList(new Object[][] {
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.1&quot;,
+ *              LanguageRegistry.getLanguage(MyLanguageModule.NAME).getVersion(&quot;1.1&quot;) },
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.2&quot;,
+ *              LanguageRegistry.getLanguage(MyLanguageModule.NAME).getVersion(&quot;1.2&quot;) },
+ *
+ *            // doesn't exist
+ *            { MyLanguageModule.NAME, MyLanguageModule.TERSE_NAME, &quot;1.3&quot;,
+ *              null }
+ *       });
+ * &lt;/pre&gt;
+ * 
+ * &lt;p&gt;For the parameters, see the constructor
+ * {@link #AbstractLanguageVersionTest(String, String, String, LanguageVersion)}.&lt;/p&gt;
+ */
+@RunWith(Parameterized.class)
+public class AbstractLanguageVersionTest {
+
+    private String name;
+    private String version;
+    private String simpleTerseName;
+    private String terseName;
+    private LanguageVersion expected;
+
+    /**
+     * Creates a new {@link AbstractLanguageVersionTest}
+     * 
+     * @param name
+     *            the name under which the language module is registered
+     * @param terseName
+     *            the terse name under which the language module is registered
+     * @param version
+     *            the specific version of the language version
+     * @param expected
+     *            the expected {@link LanguageVersion} instance
+     */
+<span class="nc" id="L66">    public AbstractLanguageVersionTest(String name, String terseName, String version, LanguageVersion expected) {</span>
+<span class="nc" id="L67">        this.name = name;</span>
+<span class="nc" id="L68">        this.version = version;</span>
+<span class="nc" id="L69">        this.simpleTerseName = terseName;</span>
+<span class="nc" id="L70">        this.terseName = terseName;</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">        if (version != null &amp;&amp; !version.isEmpty()) {</span>
+<span class="nc" id="L72">            this.terseName += &quot; &quot; + version;</span>
+        }
+<span class="nc" id="L74">        this.expected = expected;</span>
+<span class="nc" id="L75">    }</span>
+
+    /**
+     * Checks that the expected {@link LanguageVersion} can be found by the
+     * combination of {@link #terseName} and {@link #version}.
+     */
+    @Test
+    public void testGetLanguageVersionForTerseName() {
+<span class="nc" id="L83">        assertEquals(expected, LanguageRegistry.findLanguageVersionByTerseName(terseName));</span>
+<span class="nc" id="L84">    }</span>
+
+    /**
+     * Checks that the expected {@link LanguageVersion} can be found via
+     * {@link #name} and {@link #version}.
+     */
+    @Test
+    public void testFindVersionsForLanguageNameAndVersion() {
+<span class="nc" id="L92">        SourceLanguage sourceLanguage = new SourceLanguage();</span>
+<span class="nc" id="L93">        sourceLanguage.setName(name);</span>
+<span class="nc" id="L94">        sourceLanguage.setVersion(version);</span>
+
+<span class="nc" id="L96">        Language language = LanguageRegistry.getLanguage(sourceLanguage.getName());</span>
+<span class="nc" id="L97">        LanguageVersion languageVersion = null;</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (language != null) {</span>
+<span class="nc" id="L99">            languageVersion = language.getVersion(sourceLanguage.getVersion());</span>
+        }
+
+<span class="nc" id="L102">        assertEquals(expected, languageVersion);</span>
+<span class="nc" id="L103">    }</span>
+
+    /**
+     * Makes sure, that for each language a &quot;rulesets.properties&quot; file exists.
+     * 
+     * @throws Exception
+     *             any error
+     */
+    @Test
+    public void testRegisteredRulesets() throws Exception {
+        // only check for languages, that support rules
+<span class="nc bnc" id="L114" title="All 4 branches missed.">        if (expected == null || expected.getLanguage().getRuleChainVisitorClass() == null) {</span>
+<span class="nc" id="L115">            return;</span>
+        }
+
+<span class="nc" id="L118">        Properties props = new Properties();</span>
+<span class="nc" id="L119">        String rulesetsProperties = &quot;rulesets/&quot; + simpleTerseName + &quot;/rulesets.properties&quot;;</span>
+<span class="nc" id="L120">        try (InputStream inputStream = ResourceLoader.loadResourceAsStream(rulesetsProperties);) {</span>
+<span class="nc" id="L121">            props.load(inputStream);</span>
+<span class="nc bnc" id="L122" title="All 8 branches missed.">        }</span>
+<span class="nc" id="L123">        String rulesetFilenames = props.getProperty(&quot;rulesets.filenames&quot;);</span>
+<span class="nc" id="L124">        assertNotNull(rulesetFilenames);</span>
+
+<span class="nc" id="L126">        RuleSetFactory factory = new RuleSetFactory();</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (rulesetFilenames.trim().isEmpty()) {</span>
+<span class="nc" id="L129">            return;</span>
+        }
+
+<span class="nc" id="L132">        String[] rulesets = rulesetFilenames.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        for (String r : rulesets) {</span>
+<span class="nc" id="L134">            InputStream stream = ResourceLoader.loadResourceAsStream(r);</span>
+<span class="nc" id="L135">            assertNotNull(stream);</span>
+<span class="nc" id="L136">            stream.close();</span>
+<span class="nc" id="L137">            RuleSet ruleset = factory.createRuleSet(r);</span>
+<span class="nc" id="L138">            assertNotNull(ruleset);</span>
+        }
+<span class="nc" id="L140">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

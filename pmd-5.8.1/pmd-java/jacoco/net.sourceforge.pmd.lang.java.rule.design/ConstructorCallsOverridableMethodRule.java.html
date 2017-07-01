@@ -1,0 +1,1081 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConstructorCallsOverridableMethodRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.rule.design</a> &gt; <span class="el_source">ConstructorCallsOverridableMethodRule.java</span></div><h1>ConstructorCallsOverridableMethodRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.rule.design;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.java.ast.ASTArgumentList;
+import net.sourceforge.pmd.lang.java.ast.ASTArguments;
+import net.sourceforge.pmd.lang.java.ast.ASTBooleanLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTCompilationUnit;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTEnumDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTExplicitConstructorInvocation;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTLiteral;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclarator;
+import net.sourceforge.pmd.lang.java.ast.ASTName;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryExpression;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimaryPrefix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimarySuffix;
+import net.sourceforge.pmd.lang.java.ast.ASTPrimitiveType;
+import net.sourceforge.pmd.lang.java.ast.ASTReferenceType;
+import net.sourceforge.pmd.lang.java.ast.ASTType;
+import net.sourceforge.pmd.lang.java.ast.AccessNode;
+import net.sourceforge.pmd.lang.java.rule.AbstractJavaRule;
+
+/**
+ * Searches through all methods and constructors called from constructors. It
+ * marks as dangerous any call to overridable methods from non-private
+ * constructors. It marks as dangerous any calls to dangerous private
+ * constructors from non-private constructors.
+ *
+ * @author CL Gilbert (dnoyeb@users.sourceforge.net)
+ *
+ *         TODO match parameter types. Aggressively strips off any package
+ *         names. Normal compares the names as is. TODO What about interface
+ *         declarations which can have internal classes
+ */
+<span class="fc" id="L51">public final class ConstructorCallsOverridableMethodRule extends AbstractJavaRule {</span>
+    /**
+     * 2: method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;method&quot;
+     * ASTPrimarySuffix
+     * *ASTArguments
+     * 3: a.method();
+     * ASTPrimaryPrefix -&gt;
+     * ASTName image = &quot;a.method&quot; ???
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 3: this.method();
+     * ASTPrimaryPrefix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; method
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * &lt;p/&gt;
+     * super.method();
+     * ASTPrimaryPrefix -&gt; image = &quot;method&quot;
+     * ASTPrimarySuffix -&gt; image = null
+     * ASTArguments -&gt;
+     * &lt;p/&gt;
+     * super.a.method();
+     * ASTPrimaryPrefix -&gt; image = &quot;a&quot;
+     * ASTPrimarySuffix -&gt; image = &quot;method&quot;
+     * ASTPrimarySuffix -&gt; image = null
+     * ASTArguments -&gt;
+     * &lt;p/&gt;
+     * &lt;p/&gt;
+     * 4: this.a.method();
+     * ASTPrimaryPrefix -&gt; image = null
+     * ASTPrimarySuffix -&gt; image = &quot;a&quot;
+     * ASTPrimarySuffix -&gt; image = &quot;method&quot;
+     * ASTPrimarySuffix -&gt;
+     * ASTArguments
+     * &lt;p/&gt;
+     * 4: ClassName.this.method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;ClassName&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; image = &quot;method&quot;
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 5: ClassName.this.a.method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;ClassName&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; image=&quot;a&quot;
+     * ASTPrimarySuffix -&gt; image=&quot;method&quot;
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 5: Package.ClassName.this.method();
+     * ASTPrimaryPrefix
+     * ASTName image =&quot;Package.ClassName&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; image=&quot;method&quot;
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 6: Package.ClassName.this.a.method();
+     * ASTPrimaryPrefix
+     * ASTName image =&quot;Package.ClassName&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; a
+     * ASTPrimarySuffix -&gt; method
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 5: OuterClass.InnerClass.this.method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;OuterClass.InnerClass&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; method
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * 6: OuterClass.InnerClass.this.a.method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;OuterClass.InnerClass&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; a
+     * ASTPrimarySuffix -&gt; method
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * &lt;p/&gt;
+     * OuterClass.InnerClass.this.a.method().method().method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;OuterClass.InnerClass&quot;
+     * ASTPrimarySuffix -&gt; this image=null
+     * ASTPrimarySuffix -&gt; a image='a'
+     * ASTPrimarySuffix -&gt; method image='method'
+     * ASTPrimarySuffix -&gt; () image=null
+     * ASTArguments
+     * ASTPrimarySuffix -&gt; method image='method'
+     * ASTPrimarySuffix -&gt; () image=null
+     * ASTArguments
+     * ASTPrimarySuffix -&gt; method image='method'
+     * ASTPrimarySuffix -&gt; () image=null
+     * ASTArguments
+     * &lt;p/&gt;
+     * 3..n: Class.InnerClass[0].InnerClass[n].this.method();
+     * ASTPrimaryPrefix
+     * ASTName image = &quot;Class[0]..InnerClass[n]&quot;
+     * ASTPrimarySuffix -&gt; image=null
+     * ASTPrimarySuffix -&gt; method
+     * ASTPrimarySuffix -&gt; ()
+     * ASTArguments
+     * &lt;p/&gt;
+     * super.aMethod();
+     * ASTPrimaryPrefix -&gt; aMethod
+     * ASTPrimarySuffix -&gt; ()
+     * &lt;p/&gt;
+     * Evaluate right to left
+     */
+
+<span class="fc" id="L164">    private static final NullEvalPackage NULL_EVAL_PACKAGE = new NullEvalPackage();</span>
+
+    /**
+     * 1 package per class.
+     */
+    // could use java.util.Stack
+<span class="fc" id="L170">    private final List&lt;EvalPackage&gt; evalPackages = new ArrayList&lt;&gt;();</span>
+
+    private static class MethodInvocation {
+        private String name;
+        private ASTPrimaryExpression ape;
+        private List&lt;String&gt; referenceNames;
+        private List&lt;String&gt; qualifierNames;
+        private int argumentSize;
+        private List&lt;String&gt; argumentTypes;
+        private boolean superCall;
+
+        private MethodInvocation(ASTPrimaryExpression ape, List&lt;String&gt; qualifierNames, List&lt;String&gt; referenceNames,
+<span class="fc" id="L182">                String name, int argumentSize, List&lt;String&gt; argumentTypes, boolean superCall) {</span>
+<span class="fc" id="L183">            this.ape = ape;</span>
+<span class="fc" id="L184">            this.qualifierNames = qualifierNames;</span>
+<span class="fc" id="L185">            this.referenceNames = referenceNames;</span>
+<span class="fc" id="L186">            this.name = name;</span>
+<span class="fc" id="L187">            this.argumentSize = argumentSize;</span>
+<span class="fc" id="L188">            this.argumentTypes = argumentTypes;</span>
+<span class="fc" id="L189">            this.superCall = superCall;</span>
+<span class="fc" id="L190">        }</span>
+
+        public boolean isSuper() {
+<span class="fc" id="L193">            return superCall;</span>
+        }
+
+        public String getName() {
+<span class="fc" id="L197">            return name;</span>
+        }
+
+        public int getArgumentCount() {
+<span class="fc" id="L201">            return argumentSize;</span>
+        }
+
+        public List&lt;String&gt; getArgumentTypes() {
+<span class="fc" id="L205">            return argumentTypes;</span>
+        }
+
+        public List&lt;String&gt; getReferenceNames() {
+<span class="fc" id="L209">            return referenceNames; // new ArrayList(variableNames);</span>
+        }
+
+        public List&lt;String&gt; getQualifierNames() {
+<span class="fc" id="L213">            return qualifierNames;</span>
+        }
+
+        public ASTPrimaryExpression getASTPrimaryExpression() {
+<span class="fc" id="L217">            return ape;</span>
+        }
+
+        public static MethodInvocation getMethod(ASTPrimaryExpression node) {
+<span class="fc" id="L221">            MethodInvocation meth = null;</span>
+<span class="fc" id="L222">            int i = node.jjtGetNumChildren();</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (i &gt; 1) {</span>
+                // should always be at least 2, probably can eliminate this check
+                // start at end which is guaranteed, work backwards
+<span class="fc" id="L226">                Node lastNode = node.jjtGetChild(i - 1);</span>
+                // could be ASTExpression for instance 'a[4] = 5';
+<span class="fc bfc" id="L228" title="All 4 branches covered.">                if (lastNode.jjtGetNumChildren() == 1 &amp;&amp; lastNode.jjtGetChild(0) instanceof ASTArguments) {</span>
+                    // start putting method together
+                    // System.out.println(&quot;Putting method together now&quot;);
+<span class="fc" id="L231">                    List&lt;String&gt; varNames = new ArrayList&lt;&gt;();</span>
+                    // look in JLS for better name here
+<span class="fc" id="L233">                    List&lt;String&gt; packagesAndClasses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L234">                    String methodName = null;</span>
+<span class="fc" id="L235">                    ASTArguments args = (ASTArguments) lastNode.jjtGetChild(0);</span>
+<span class="fc" id="L236">                    int numOfArguments = args.getArgumentCount();</span>
+<span class="fc" id="L237">                    List&lt;String&gt; argumentTypes = ConstructorCallsOverridableMethodRule.getArgumentTypes(args);</span>
+<span class="fc" id="L238">                    boolean superFirst = false;</span>
+<span class="fc" id="L239">                    int thisIndex = -1;</span>
+
+                    FIND_SUPER_OR_THIS: {
+                        // search all nodes except last for 'this' or 'super'.
+                        // will be at: (node 0 | node 1 | nowhere)
+                        // this is an ASTPrimarySuffix with a null image and
+                        // does not have child (which will be of type
+                        // ASTArguments)
+                        // this is an ASTPrimaryPrefix with a null image and an
+                        // ASTName that has a null image
+                        // super is an ASTPrimarySuffix with a null image and
+                        // does not have child (which will be of type
+                        // ASTArguments)
+                        // super is an ASTPrimaryPrefix with a non-null image
+<span class="fc bfc" id="L253" title="All 2 branches covered.">                        for (int x = 0; x &lt; i - 1; x++) {</span>
+<span class="fc" id="L254">                            Node child = node.jjtGetChild(x);</span>
+                            // check suffix type match
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                            if (child instanceof ASTPrimarySuffix) {</span>
+<span class="fc" id="L257">                                ASTPrimarySuffix child2 = (ASTPrimarySuffix) child;</span>
+                                // String name =
+                                // getNameFromSuffix((ASTPrimarySuffix)child);
+                                // System.out.println(&quot;found name suffix of : &quot;
+                                // + name);
+<span class="fc bfc" id="L262" title="All 4 branches covered.">                                if (child2.getImage() == null &amp;&amp; child2.jjtGetNumChildren() == 0) {</span>
+<span class="fc" id="L263">                                    thisIndex = x;</span>
+<span class="fc" id="L264">                                    break;</span>
+                                }
+                                // could be super, could be this. currently we
+                                // cant tell difference so we miss super when
+                                // XYZ.ClassName.super.method();
+                                // still works though.
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">                            } else if (child instanceof ASTPrimaryPrefix) {</span>
+                                // check prefix type match
+<span class="fc" id="L272">                                ASTPrimaryPrefix child2 = (ASTPrimaryPrefix) child;</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">                                if (getNameFromPrefix(child2) == null) {</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">                                    if (child2.getImage() == null) {</span>
+<span class="fc" id="L275">                                        thisIndex = x;</span>
+<span class="fc" id="L276">                                        break;</span>
+                                    } else {
+                                        // happens when super is used
+                                        // [super.method(): image = 'method']
+<span class="nc" id="L280">                                        superFirst = true;</span>
+<span class="nc" id="L281">                                        thisIndex = x;</span>
+                                        // the true super is at an unusable
+                                        // index because super.method() has only
+                                        // 2 nodes [method=0,()=1]
+                                        // as opposed to the 3 you might expect
+                                        // and which this.method() actually has.
+                                        // [this=0,method=1.()=2]
+<span class="nc" id="L288">                                        break;</span>
+                                    }
+                                }
+                            }
+                            // else{
+                            // System.err.println(&quot;Bad Format error&quot;); //throw
+                            // exception, quit evaluating this compilation node
+                            // }
+                        }
+                    }
+
+<span class="fc bfc" id="L299" title="All 2 branches covered.">                    if (thisIndex != -1) {</span>
+                        // System.out.println(&quot;Found this or super: &quot; +
+                        // thisIndex);
+                        // Hack that must be removed if and when the patters of
+                        // super.method() begins to logically match the rest of
+                        // the patterns !!!
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">                        if (superFirst) {</span>
+                            // this is when super is the first
+                            // node of statement. no qualifiers,
+                            // all variables or method
+                            // System.out.println(&quot;super first&quot;);
+                            FIRSTNODE: {
+<span class="nc" id="L311">                                ASTPrimaryPrefix child = (ASTPrimaryPrefix) node.jjtGetChild(0);</span>
+<span class="nc" id="L312">                                String name = child.getImage(); // special case</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">                                if (i == 2) { // last named node = method name</span>
+<span class="nc" id="L314">                                    methodName = name;</span>
+                                } else {
+                                    // not the last named node so its only
+                                    // var name
+<span class="nc" id="L318">                                    varNames.add(name);</span>
+                                }
+                            }
+                            OTHERNODES: { // variables
+<span class="nc bnc" id="L322" title="All 2 branches missed.">                                for (int x = 1; x &lt; i - 1; x++) {</span>
+<span class="nc" id="L323">                                    Node child = node.jjtGetChild(x);</span>
+<span class="nc" id="L324">                                    ASTPrimarySuffix ps = (ASTPrimarySuffix) child;</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">                                    if (!ps.isArguments()) {</span>
+<span class="nc" id="L326">                                        String name = ((ASTPrimarySuffix) child).getImage();</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">                                        if (x == i - 2) { // last node</span>
+<span class="nc" id="L328">                                            methodName = name;</span>
+                                        } else {
+                                            // not the last named node so
+                                            // its only var name
+<span class="nc" id="L332">                                            varNames.add(name);</span>
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // not super call
+                            FIRSTNODE: {
+<span class="fc bfc" id="L340" title="All 2 branches covered.">                                if (thisIndex == 1) { // qualifiers in node 0</span>
+<span class="fc" id="L341">                                    ASTPrimaryPrefix child = (ASTPrimaryPrefix) node.jjtGetChild(0);</span>
+<span class="fc" id="L342">                                    String toParse = getNameFromPrefix(child);</span>
+                                    // System.out.println(&quot;parsing for
+                                    // class/package names in : &quot; + toParse);
+<span class="fc" id="L345">                                    java.util.StringTokenizer st = new java.util.StringTokenizer(toParse, &quot;.&quot;);</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">                                    while (st.hasMoreTokens()) {</span>
+<span class="fc" id="L347">                                        packagesAndClasses.add(st.nextToken());</span>
+                                    }
+                                }
+                            }
+                            OTHERNODES: {
+                                // other methods called in this
+                                // statement are grabbed here
+                                // this is at 0, then no Qualifiers
+                                // this is at 1, the node 0 contains qualifiers
+<span class="fc bfc" id="L356" title="All 2 branches covered.">                                for (int x = thisIndex + 1; x &lt; i - 1; x++) {</span>
+                                    // everything after this is var name or method name
+<span class="fc" id="L358">                                    ASTPrimarySuffix child = (ASTPrimarySuffix) node.jjtGetChild(x);</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">                                    if (!child.isArguments()) {</span>
+                                        // skip the () of method calls
+<span class="fc" id="L361">                                        String name = child.getImage();</span>
+                                        // System.out.println(&quot;Found suffix: &quot; +
+                                        // suffixName);
+<span class="fc bfc" id="L364" title="All 2 branches covered.">                                        if (x == i - 2) {</span>
+<span class="fc" id="L365">                                            methodName = name;</span>
+                                        } else {
+<span class="fc" id="L367">                                            varNames.add(name);</span>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // if no this or super found, everything is method
+                        // name or variable
+                        // System.out.println(&quot;no this found:&quot;);
+                        FIRSTNODE: {
+                            // variable names are in the prefix + the
+                            // first method call [a.b.c.x()]
+<span class="fc" id="L380">                            ASTPrimaryPrefix child = (ASTPrimaryPrefix) node.jjtGetChild(0);</span>
+<span class="fc" id="L381">                            String toParse = getNameFromPrefix(child);</span>
+                            // System.out.println(&quot;parsing for var names in : &quot;
+                            // + toParse);
+<span class="fc" id="L384">                            java.util.StringTokenizer st = new java.util.StringTokenizer(toParse, &quot;.&quot;);</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                            while (st.hasMoreTokens()) {</span>
+<span class="fc" id="L386">                                String value = st.nextToken();</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">                                if (!st.hasMoreTokens()) {</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">                                    if (i == 2) {</span>
+                                        // if this expression is 2
+                                        // nodes long, then the last
+                                        // part of prefix is method
+                                        // name
+<span class="fc" id="L393">                                        methodName = value;</span>
+                                    } else {
+<span class="fc" id="L395">                                        varNames.add(value);</span>
+                                    }
+                                } else { // variable name
+<span class="fc" id="L398">                                    varNames.add(value);</span>
+                                }
+<span class="fc" id="L400">                            }</span>
+                        }
+                        OTHERNODES: {
+                            // other methods called in this statement
+                            // are grabbed here
+<span class="fc bfc" id="L405" title="All 2 branches covered.">                            for (int x = 1; x &lt; i - 1; x++) {</span>
+<span class="fc" id="L406">                                ASTPrimarySuffix child = (ASTPrimarySuffix) node.jjtGetChild(x);</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">                                if (!child.isArguments()) {</span>
+<span class="fc" id="L408">                                    String name = child.getImage();</span>
+<span class="fc bfc" id="L409" title="All 2 branches covered.">                                    if (x == i - 2) {</span>
+<span class="fc" id="L410">                                        methodName = name;</span>
+                                    } else {
+<span class="fc" id="L412">                                        varNames.add(name);</span>
+                                    }
+                                }
+                            }
+                        }
+                    }
+<span class="fc" id="L418">                    meth = new MethodInvocation(node, packagesAndClasses, varNames, methodName, numOfArguments,</span>
+                            argumentTypes, superFirst);
+                    // meth.show();
+                }
+            }
+<span class="fc" id="L423">            return meth;</span>
+        }
+
+        public void show() {
+<span class="nc" id="L427">            System.out.println(&quot;&lt;MethodInvocation&gt;&quot;);</span>
+<span class="nc" id="L428">            System.out.println(&quot;  &lt;Qualifiers&gt;&quot;);</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">            for (String name : getQualifierNames()) {</span>
+<span class="nc" id="L430">                System.out.println(&quot;    &quot; + name);</span>
+<span class="nc" id="L431">            }</span>
+<span class="nc" id="L432">            System.out.println(&quot;  &lt;/Qualifiers&gt;&quot;);</span>
+<span class="nc" id="L433">            System.out.println(&quot;  &lt;Super&gt;&quot; + isSuper() + &quot;&lt;/Super&gt;&quot;);</span>
+<span class="nc" id="L434">            System.out.println(&quot;  &lt;References&gt;&quot;);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">            for (String name : getReferenceNames()) {</span>
+<span class="nc" id="L436">                System.out.println(&quot;    &quot; + name);</span>
+<span class="nc" id="L437">            }</span>
+<span class="nc" id="L438">            System.out.println(&quot;  &lt;/References&gt;&quot;);</span>
+<span class="nc" id="L439">            System.out.println(&quot;  &lt;Name&gt;&quot; + getName() + &quot;&lt;/Name&gt;&quot;);</span>
+<span class="nc" id="L440">            System.out.println(&quot;  &lt;ArgumentCount&gt;&quot; + getArgumentCount() + &quot;&lt;/ArgumentCount&gt;&quot;);</span>
+<span class="nc" id="L441">            System.out.println(&quot;  &lt;ArgumentTypes&gt;&quot; + getArgumentTypes() + &quot;&lt;/ArgumentTypes&gt;&quot;);</span>
+<span class="nc" id="L442">            System.out.println(&quot;&lt;/MethodInvocation&gt;&quot;);</span>
+<span class="nc" id="L443">        }</span>
+    }
+
+    private static final class ConstructorInvocation {
+        private ASTExplicitConstructorInvocation eci;
+        private String name;
+<span class="fc" id="L449">        private int count = 0;</span>
+<span class="fc" id="L450">        private List&lt;String&gt; argumentTypes = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L452">        ConstructorInvocation(ASTExplicitConstructorInvocation eci) {</span>
+<span class="fc" id="L453">            this.eci = eci;</span>
+<span class="fc" id="L454">            List&lt;ASTArguments&gt; l = eci.findChildrenOfType(ASTArguments.class);</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">            if (!l.isEmpty()) {</span>
+<span class="fc" id="L456">                ASTArguments aa = l.get(0);</span>
+<span class="fc" id="L457">                count = aa.getArgumentCount();</span>
+<span class="fc" id="L458">                argumentTypes = ConstructorCallsOverridableMethodRule.getArgumentTypes(aa);</span>
+            }
+<span class="fc" id="L460">            name = eci.getImage();</span>
+<span class="fc" id="L461">        }</span>
+
+        public ASTExplicitConstructorInvocation getASTExplicitConstructorInvocation() {
+<span class="fc" id="L464">            return eci;</span>
+        }
+
+        public int getArgumentCount() {
+<span class="fc" id="L468">            return count;</span>
+        }
+
+        public List&lt;String&gt; getArgumentTypes() {
+<span class="nc" id="L472">            return argumentTypes;</span>
+        }
+
+        public String getName() {
+<span class="nc" id="L476">            return name;</span>
+        }
+    }
+
+    private static final class MethodHolder {
+        private ASTMethodDeclarator amd;
+        private boolean dangerous;
+        private String called;
+
+<span class="fc" id="L485">        MethodHolder(ASTMethodDeclarator amd) {</span>
+<span class="fc" id="L486">            this.amd = amd;</span>
+<span class="fc" id="L487">        }</span>
+
+        public void setCalledMethod(String name) {
+<span class="fc" id="L490">            this.called = name;</span>
+<span class="fc" id="L491">        }</span>
+
+        public String getCalled() {
+<span class="fc" id="L494">            return this.called;</span>
+        }
+
+        public ASTMethodDeclarator getASTMethodDeclarator() {
+<span class="fc" id="L498">            return amd;</span>
+        }
+
+        public boolean isDangerous() {
+<span class="fc" id="L502">            return dangerous;</span>
+        }
+
+        public void setDangerous() {
+<span class="fc" id="L506">            dangerous = true;</span>
+<span class="fc" id="L507">        }</span>
+    }
+
+    private static final class ConstructorHolder {
+        private ASTConstructorDeclaration cd;
+        private boolean dangerous;
+        private ConstructorInvocation ci;
+        private boolean ciInitialized;
+
+<span class="fc" id="L516">        ConstructorHolder(ASTConstructorDeclaration cd) {</span>
+<span class="fc" id="L517">            this.cd = cd;</span>
+<span class="fc" id="L518">        }</span>
+
+        public ASTConstructorDeclaration getASTConstructorDeclaration() {
+<span class="fc" id="L521">            return cd;</span>
+        }
+
+        public ConstructorInvocation getCalledConstructor() {
+<span class="fc bfc" id="L525" title="All 2 branches covered.">            if (!ciInitialized) {</span>
+<span class="fc" id="L526">                initCI();</span>
+            }
+<span class="fc" id="L528">            return ci;</span>
+        }
+
+        public ASTExplicitConstructorInvocation getASTExplicitConstructorInvocation() {
+<span class="fc" id="L532">            ASTExplicitConstructorInvocation eci = null;</span>
+<span class="pc bpc" id="L533" title="1 of 2 branches missed.">            if (!ciInitialized) {</span>
+<span class="fc" id="L534">                initCI();</span>
+            }
+<span class="fc bfc" id="L536" title="All 2 branches covered.">            if (ci != null) {</span>
+<span class="fc" id="L537">                eci = ci.getASTExplicitConstructorInvocation();</span>
+            }
+<span class="fc" id="L539">            return eci;</span>
+        }
+
+        private void initCI() {
+            // only 1...
+<span class="fc" id="L544">            List&lt;ASTExplicitConstructorInvocation&gt; expressions = cd</span>
+<span class="fc" id="L545">                    .findChildrenOfType(ASTExplicitConstructorInvocation.class);</span>
+<span class="fc bfc" id="L546" title="All 2 branches covered.">            if (!expressions.isEmpty()) {</span>
+<span class="fc" id="L547">                ASTExplicitConstructorInvocation eci = expressions.get(0);</span>
+<span class="fc" id="L548">                ci = new ConstructorInvocation(eci);</span>
+                // System.out.println(&quot;Const call &quot; + eci.getImage()); //super
+                // or this???
+            }
+<span class="fc" id="L552">            ciInitialized = true;</span>
+<span class="fc" id="L553">        }</span>
+
+        public boolean isDangerous() {
+<span class="fc" id="L556">            return dangerous;</span>
+        }
+
+        public void setDangerous(boolean dangerous) {
+<span class="fc" id="L560">            this.dangerous = dangerous;</span>
+<span class="fc" id="L561">        }</span>
+    }
+
+    private static int compareNodes(Node n1, Node n2) {
+<span class="fc" id="L565">        int l1 = n1.getBeginLine();</span>
+<span class="fc" id="L566">        int l2 = n2.getBeginLine();</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">        if (l1 == l2) {</span>
+<span class="fc" id="L568">            return n1.getBeginColumn() - n2.getBeginColumn();</span>
+        }
+<span class="fc" id="L570">        return l1 - l2;</span>
+    }
+
+<span class="fc" id="L573">    private static class MethodHolderComparator implements Comparator&lt;MethodHolder&gt; {</span>
+        @Override
+        public int compare(MethodHolder o1, MethodHolder o2) {
+<span class="fc" id="L576">            return compareNodes(o1.getASTMethodDeclarator(), o2.getASTMethodDeclarator());</span>
+        }
+    }
+
+<span class="fc" id="L580">    private static class ConstructorHolderComparator implements Comparator&lt;ConstructorHolder&gt; {</span>
+        @Override
+        public int compare(ConstructorHolder o1, ConstructorHolder o2) {
+<span class="fc" id="L583">            return compareNodes(o1.getASTConstructorDeclaration(), o2.getASTConstructorDeclaration());</span>
+        }
+    }
+
+    /**
+     * 1 package per class. holds info for evaluating a single class.
+     */
+    private static class EvalPackage {
+
+        public String className;
+        public List&lt;MethodInvocation&gt; calledMethods;
+        public Map&lt;MethodHolder, List&lt;MethodInvocation&gt;&gt; allMethodsOfClass;
+
+        public List&lt;ConstructorInvocation&gt; calledConstructors;
+        public Map&lt;ConstructorHolder, List&lt;MethodInvocation&gt;&gt; allPrivateConstructorsOfClass;
+
+<span class="fc" id="L599">        EvalPackage() {</span>
+<span class="fc" id="L600">        }</span>
+
+<span class="fc" id="L602">        EvalPackage(String className) {</span>
+<span class="fc" id="L603">            this.className = className;</span>
+            // meths called from constructor
+<span class="fc" id="L605">            this.calledMethods = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L606">            this.allMethodsOfClass = new TreeMap&lt;&gt;(new MethodHolderComparator());</span>
+            // all constructors called from constructor
+<span class="fc" id="L608">            this.calledConstructors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L609">            this.allPrivateConstructorsOfClass = new TreeMap&lt;&gt;(new ConstructorHolderComparator());</span>
+<span class="fc" id="L610">        }</span>
+
+    }
+
+    private static final class NullEvalPackage extends EvalPackage {
+<span class="fc" id="L615">        NullEvalPackage() {</span>
+<span class="fc" id="L616">            className = &quot;&quot;;</span>
+<span class="fc" id="L617">            calledMethods = Collections.emptyList();</span>
+<span class="fc" id="L618">            allMethodsOfClass = Collections.emptyMap();</span>
+<span class="fc" id="L619">            calledConstructors = Collections.emptyList();</span>
+<span class="fc" id="L620">            allPrivateConstructorsOfClass = Collections.emptyMap();</span>
+<span class="fc" id="L621">        }</span>
+    }
+
+    private EvalPackage getCurrentEvalPackage() {
+<span class="fc" id="L625">        return evalPackages.get(evalPackages.size() - 1);</span>
+    }
+
+    /**
+     * Adds and evaluation package and makes it current
+     */
+    private void putEvalPackage(EvalPackage ep) {
+<span class="fc" id="L632">        evalPackages.add(ep);</span>
+<span class="fc" id="L633">    }</span>
+
+    private void removeCurrentEvalPackage() {
+<span class="fc" id="L636">        evalPackages.remove(evalPackages.size() - 1);</span>
+<span class="fc" id="L637">    }</span>
+
+    private void clearEvalPackages() {
+<span class="fc" id="L640">        evalPackages.clear();</span>
+<span class="fc" id="L641">    }</span>
+
+    /**
+     * This check must be evaluated independently for each class. Inner classes
+     * get their own EvalPackage in order to perform independent evaluation.
+     */
+    private Object visitClassDec(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc" id="L648">        String className = node.getImage();</span>
+<span class="fc bfc" id="L649" title="All 2 branches covered.">        if (!node.isFinal()) {</span>
+<span class="fc" id="L650">            putEvalPackage(new EvalPackage(className));</span>
+        } else {
+<span class="fc" id="L652">            putEvalPackage(NULL_EVAL_PACKAGE);</span>
+        }
+        // store any errors caught from other passes.
+<span class="fc" id="L655">        super.visit(node, data);</span>
+
+        // skip this class if it has no evaluation package
+<span class="fc bfc" id="L658" title="All 2 branches covered.">        if (!(getCurrentEvalPackage() instanceof NullEvalPackage)) {</span>
+            // evaluate danger of all methods in class, this method will return
+            // false when all methods have been evaluated
+<span class="fc bfc" id="L661" title="All 2 branches covered.">            while (evaluateDangerOfMethods(getCurrentEvalPackage().allMethodsOfClass)) {</span>
+            } // NOPMD
+
+            // evaluate danger of constructors
+<span class="fc" id="L665">            evaluateDangerOfConstructors1(getCurrentEvalPackage().allPrivateConstructorsOfClass,</span>
+<span class="fc" id="L666">                    getCurrentEvalPackage().allMethodsOfClass.keySet());</span>
+<span class="pc bpc" id="L667" title="1 of 2 branches missed.">            while (evaluateDangerOfConstructors2(getCurrentEvalPackage().allPrivateConstructorsOfClass)) {</span>
+            } // NOPMD
+
+            // get each method called on this object from a non-private
+            // constructor, if its dangerous flag it
+<span class="fc bfc" id="L672" title="All 2 branches covered.">            for (MethodInvocation meth : getCurrentEvalPackage().calledMethods) {</span>
+                // check against each dangerous method in class
+<span class="fc bfc" id="L674" title="All 2 branches covered.">                for (MethodHolder h : getCurrentEvalPackage().allMethodsOfClass.keySet()) {</span>
+<span class="fc bfc" id="L675" title="All 2 branches covered.">                    if (h.isDangerous()) {</span>
+<span class="fc" id="L676">                        String methName = h.getASTMethodDeclarator().getImage();</span>
+<span class="fc" id="L677">                        int count = h.getASTMethodDeclarator().getParameterCount();</span>
+<span class="fc" id="L678">                        List&lt;String&gt; parameterTypes = getMethodDeclaratorParameterTypes(h.getASTMethodDeclarator());</span>
+<span class="pc bpc" id="L679" title="1 of 4 branches missed.">                        if (methName.equals(meth.getName()) &amp;&amp; meth.getArgumentCount() == count</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">                                &amp;&amp; parameterTypes.equals(meth.getArgumentTypes())) {</span>
+<span class="fc" id="L681">                            addViolation(data, meth.getASTPrimaryExpression(), &quot;method '&quot; + h.getCalled() + &quot;'&quot;);</span>
+                        }
+                    }
+<span class="fc" id="L684">                }</span>
+<span class="fc" id="L685">            }</span>
+            // get each unsafe private constructor, and check if its called from
+            // any non private constructors
+<span class="fc bfc" id="L688" title="All 2 branches covered.">            for (ConstructorHolder ch : getCurrentEvalPackage().allPrivateConstructorsOfClass.keySet()) {</span>
+<span class="fc bfc" id="L689" title="All 2 branches covered.">                if (ch.isDangerous()) {</span>
+                    // if its dangerous check if its called
+                    // from any non-private constructors
+                    // System.out.println(&quot;visitClassDec Evaluating dangerous
+                    // constructor with &quot; +
+                    // ch.getASTConstructorDeclaration().getParameterCount() + &quot;
+                    // params&quot;);
+<span class="fc" id="L696">                    int paramCount = ch.getASTConstructorDeclaration().getParameterCount();</span>
+<span class="fc bfc" id="L697" title="All 2 branches covered.">                    for (ConstructorInvocation ci : getCurrentEvalPackage().calledConstructors) {</span>
+<span class="pc bpc" id="L698" title="1 of 2 branches missed.">                        if (ci.getArgumentCount() == paramCount) {</span>
+                            // match name super / this !?
+<span class="fc" id="L700">                            addViolation(data, ci.getASTExplicitConstructorInvocation(), &quot;constructor&quot;);</span>
+                        }
+<span class="fc" id="L702">                    }</span>
+                }
+<span class="fc" id="L704">            }</span>
+        }
+        // finished evaluating this class, move up a level
+<span class="fc" id="L707">        removeCurrentEvalPackage();</span>
+<span class="fc" id="L708">        return data;</span>
+    }
+
+    /**
+     * Check the methods called on this class by each of the methods on this
+     * class. If a method calls an unsafe method, mark the calling method as
+     * unsafe. This changes the list of unsafe methods which necessitates
+     * another pass. Keep passing until you make a clean pass in which no
+     * methods are changed to unsafe. For speed it is possible to limit the
+     * number of passes.
+     * &lt;p/&gt;
+     * Impossible to tell type of arguments to method, so forget method matching
+     * on types. just use name and num of arguments. will be some false hits,
+     * but oh well.
+     *
+     * TODO investigate limiting the number of passes through config.
+     */
+    private boolean evaluateDangerOfMethods(Map&lt;MethodHolder, List&lt;MethodInvocation&gt;&gt; classMethodMap) {
+        // check each method if it calls overridable method
+<span class="fc" id="L727">        boolean found = false;</span>
+<span class="fc bfc" id="L728" title="All 2 branches covered.">        for (Map.Entry&lt;MethodHolder, List&lt;MethodInvocation&gt;&gt; entry : classMethodMap.entrySet()) {</span>
+<span class="fc" id="L729">            MethodHolder h = entry.getKey();</span>
+<span class="fc" id="L730">            List&lt;MethodInvocation&gt; calledMeths = entry.getValue();</span>
+<span class="fc bfc" id="L731" title="All 2 branches covered.">            for (Iterator&lt;MethodInvocation&gt; calledMethsIter = calledMeths.iterator(); calledMethsIter.hasNext()</span>
+<span class="fc bfc" id="L732" title="All 2 branches covered.">                    &amp;&amp; !h.isDangerous();) {</span>
+                // if this method matches one of our dangerous methods, mark it
+                // dangerous
+<span class="fc" id="L735">                MethodInvocation meth = calledMethsIter.next();</span>
+                // System.out.println(&quot;Called meth is &quot; + meth);
+<span class="fc bfc" id="L737" title="All 2 branches covered.">                for (MethodHolder h3 : classMethodMap.keySet()) {</span>
+                    // need to skip self here h == h3
+<span class="fc bfc" id="L739" title="All 2 branches covered.">                    if (h3.isDangerous()) {</span>
+<span class="fc" id="L740">                        String matchMethodName = h3.getASTMethodDeclarator().getImage();</span>
+<span class="fc" id="L741">                        int matchMethodParamCount = h3.getASTMethodDeclarator().getParameterCount();</span>
+<span class="fc" id="L742">                        List&lt;String&gt; parameterTypes = getMethodDeclaratorParameterTypes(h3.getASTMethodDeclarator());</span>
+                        // System.out.println(&quot;matching &quot; + matchMethodName + &quot;
+                        // to &quot; + meth.getName());
+<span class="pc bpc" id="L745" title="1 of 4 branches missed.">                        if (matchMethodName.equals(meth.getName()) &amp;&amp; matchMethodParamCount == meth.getArgumentCount()</span>
+<span class="pc bpc" id="L746" title="1 of 2 branches missed.">                                &amp;&amp; parameterTypes.equals(meth.getArgumentTypes())) {</span>
+<span class="fc" id="L747">                            h.setDangerous();</span>
+<span class="fc" id="L748">                            h.setCalledMethod(matchMethodName);</span>
+<span class="fc" id="L749">                            found = true;</span>
+<span class="fc" id="L750">                            break;</span>
+                        }
+                    }
+<span class="fc" id="L753">                }</span>
+<span class="fc" id="L754">            }</span>
+<span class="fc" id="L755">        }</span>
+<span class="fc" id="L756">        return found;</span>
+    }
+
+    /**
+     * marks constructors dangerous if they call any dangerous methods Requires
+     * only a single pass as methods are already marked
+     *
+     * TODO optimize by having methods already evaluated somehow!?
+     */
+    private void evaluateDangerOfConstructors1(Map&lt;ConstructorHolder, List&lt;MethodInvocation&gt;&gt; classConstructorMap,
+            Set&lt;MethodHolder&gt; evaluatedMethods) {
+        // check each constructor in the class
+<span class="fc bfc" id="L768" title="All 2 branches covered.">        for (Map.Entry&lt;ConstructorHolder, List&lt;MethodInvocation&gt;&gt; entry : classConstructorMap.entrySet()) {</span>
+<span class="fc" id="L769">            ConstructorHolder ch = entry.getKey();</span>
+<span class="pc bpc" id="L770" title="1 of 2 branches missed.">            if (!ch.isDangerous()) {</span>
+                // if its not dangerous then evaluate if it
+                // should be
+                // if it calls dangerous method mark it as dangerous
+<span class="fc" id="L774">                List&lt;MethodInvocation&gt; calledMeths = entry.getValue();</span>
+                // check each method it calls
+<span class="fc bfc" id="L776" title="All 2 branches covered.">                for (Iterator&lt;MethodInvocation&gt; calledMethsIter = calledMeths.iterator(); calledMethsIter.hasNext()</span>
+<span class="pc bpc" id="L777" title="1 of 2 branches missed.">                        &amp;&amp; !ch.isDangerous();) {</span>
+                    // but thee are diff objects
+                    // which represent same thing
+                    // but were never evaluated,
+                    // they need reevaluation
+<span class="fc" id="L782">                    MethodInvocation meth = calledMethsIter.next(); // CCE</span>
+<span class="fc" id="L783">                    String methName = meth.getName();</span>
+<span class="fc" id="L784">                    int methArgCount = meth.getArgumentCount();</span>
+                    // check each of the already evaluated methods: need to
+                    // optimize this out
+<span class="pc bpc" id="L787" title="1 of 2 branches missed.">                    for (MethodHolder h : evaluatedMethods) {</span>
+<span class="pc bpc" id="L788" title="1 of 2 branches missed.">                        if (h.isDangerous()) {</span>
+<span class="fc" id="L789">                            String matchName = h.getASTMethodDeclarator().getImage();</span>
+<span class="fc" id="L790">                            int matchParamCount = h.getASTMethodDeclarator().getParameterCount();</span>
+<span class="fc" id="L791">                            List&lt;String&gt; parameterTypes = getMethodDeclaratorParameterTypes(h.getASTMethodDeclarator());</span>
+<span class="pc bpc" id="L792" title="2 of 4 branches missed.">                            if (methName.equals(matchName) &amp;&amp; methArgCount == matchParamCount</span>
+<span class="pc bpc" id="L793" title="1 of 2 branches missed.">                                    &amp;&amp; parameterTypes.equals(meth.getArgumentTypes())) {</span>
+<span class="fc" id="L794">                                ch.setDangerous(true);</span>
+                                // System.out.println(&quot;evaluateDangerOfConstructors1
+                                // setting dangerous constructor with &quot; +
+                                // ch.getASTConstructorDeclaration().getParameterCount()
+                                // + &quot; params&quot;);
+<span class="fc" id="L799">                                break;</span>
+                            }
+                        }
+<span class="nc" id="L802">                    }</span>
+<span class="fc" id="L803">                }</span>
+            }
+<span class="fc" id="L805">        }</span>
+<span class="fc" id="L806">    }</span>
+
+    /**
+     * Constructor map should contain a key for each private constructor, and
+     * maps to a List which contains all called constructors of that key. marks
+     * dangerous if call dangerous private constructor we ignore all non-private
+     * constructors here. That is, the map passed in should not contain any
+     * non-private constructors. we return boolean in order to limit the number
+     * of passes through this method but it seems as if we can forgo that and
+     * just process it till its done.
+     */
+    private boolean evaluateDangerOfConstructors2(Map&lt;ConstructorHolder, List&lt;MethodInvocation&gt;&gt; classConstructorMap) {
+<span class="fc" id="L818">        boolean found = false; // triggers on danger state change</span>
+        // check each constructor in the class
+<span class="fc bfc" id="L820" title="All 2 branches covered.">        for (ConstructorHolder ch : classConstructorMap.keySet()) {</span>
+<span class="fc" id="L821">            ConstructorInvocation calledC = ch.getCalledConstructor();</span>
+<span class="pc bpc" id="L822" title="3 of 4 branches missed.">            if (calledC == null || ch.isDangerous()) {</span>
+<span class="nc" id="L823">                continue;</span>
+            }
+            // if its not dangerous then evaluate if it should be
+            // if it calls dangerous constructor mark it as dangerous
+<span class="nc" id="L827">            int cCount = calledC.getArgumentCount();</span>
+<span class="nc" id="L828">            for (Iterator&lt;ConstructorHolder&gt; innerConstIter = classConstructorMap.keySet().iterator(); innerConstIter</span>
+<span class="nc bnc" id="L829" title="All 4 branches missed.">                    .hasNext() &amp;&amp; !ch.isDangerous();) {</span>
+                // forget skipping self because that introduces another
+                // check for each, but only 1 hit
+<span class="nc" id="L832">                ConstructorHolder h2 = innerConstIter.next();</span>
+<span class="nc bnc" id="L833" title="All 2 branches missed.">                if (h2.isDangerous()) {</span>
+<span class="nc" id="L834">                    int matchConstArgCount = h2.getASTConstructorDeclaration().getParameterCount();</span>
+<span class="nc" id="L835">                    List&lt;String&gt; parameterTypes = getMethodDeclaratorParameterTypes(h2.getASTConstructorDeclaration());</span>
+<span class="nc bnc" id="L836" title="All 4 branches missed.">                    if (matchConstArgCount == cCount &amp;&amp; parameterTypes.equals(calledC.getArgumentTypes())) {</span>
+<span class="nc" id="L837">                        ch.setDangerous(true);</span>
+<span class="nc" id="L838">                        found = true;</span>
+                        // System.out.println(&quot;evaluateDangerOfConstructors2
+                        // setting dangerous constructor with &quot; +
+                        // ch.getASTConstructorDeclaration().getParameterCount()
+                        // + &quot; params&quot;);
+                    }
+                }
+<span class="nc" id="L845">            }</span>
+<span class="nc" id="L846">        }</span>
+<span class="fc" id="L847">        return found;</span>
+    }
+
+    @Override
+    public Object visit(ASTCompilationUnit node, Object data) {
+<span class="fc" id="L852">        clearEvalPackages();</span>
+<span class="fc" id="L853">        return super.visit(node, data);</span>
+    }
+
+    @Override
+    public Object visit(ASTEnumDeclaration node, Object data) {
+        // just skip Enums
+<span class="fc" id="L859">        return data;</span>
+    }
+
+    /**
+     * This check must be evaluated independently for each class. Inner classes
+     * get their own EvalPackage in order to perform independent evaluation.
+     */
+    @Override
+    public Object visit(ASTClassOrInterfaceDeclaration node, Object data) {
+<span class="fc bfc" id="L868" title="All 2 branches covered.">        if (!node.isInterface()) {</span>
+<span class="fc" id="L869">            return visitClassDec(node, data);</span>
+        } else {
+<span class="fc" id="L871">            putEvalPackage(NULL_EVAL_PACKAGE);</span>
+            // interface may have inner
+            // classes, possible? if not just
+            // skip whole interface
+<span class="fc" id="L875">            Object o = super.visit(node, data);</span>
+<span class="fc" id="L876">            removeCurrentEvalPackage();</span>
+<span class="fc" id="L877">            return o;</span>
+        }
+    }
+
+    /**
+     * Non-private constructor's methods are added to a list for later safety
+     * evaluation. Non-private constructor's calls on private constructors are
+     * added to a list for later safety evaluation. Private constructors are
+     * added to a list so their safety to be called can be later evaluated.
+     *
+     * &lt;p&gt;Note: We are not checking private constructor's calls on non-private
+     * constructors because all non-private constructors will be evaluated for
+     * safety anyway. This means we wont flag a private constructor as unsafe
+     * just because it calls an unsafe public constructor. We want to show only
+     * 1 instance of an error, and this would be 2 instances of the same error.&lt;/p&gt;
+     *
+     * &lt;p&gt;TODO eliminate the redundancy&lt;/p&gt;
+     */
+    @Override
+    public Object visit(ASTConstructorDeclaration node, Object data) {
+<span class="fc bfc" id="L897" title="All 2 branches covered.">        if (!(getCurrentEvalPackage() instanceof NullEvalPackage)) {</span>
+            // only evaluate if we have an eval package for this class
+<span class="fc" id="L899">            List&lt;MethodInvocation&gt; calledMethodsOfConstructor = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L900">            ConstructorHolder ch = new ConstructorHolder(node);</span>
+<span class="fc" id="L901">            addCalledMethodsOfNode(node, calledMethodsOfConstructor, getCurrentEvalPackage().className);</span>
+<span class="fc bfc" id="L902" title="All 2 branches covered.">            if (!node.isPrivate()) {</span>
+                // these calledMethods are what we will evaluate for being
+                // called badly
+<span class="fc" id="L905">                getCurrentEvalPackage().calledMethods.addAll(calledMethodsOfConstructor);</span>
+                // these called private constructors are what we will evaluate
+                // for being called badly
+                // we add all constructors invoked by non-private constructors
+                // but we are only interested in the private ones. We just can't
+                // tell the difference here
+<span class="fc" id="L911">                ASTExplicitConstructorInvocation eci = ch.getASTExplicitConstructorInvocation();</span>
+<span class="fc bfc" id="L912" title="All 4 branches covered.">                if (eci != null &amp;&amp; eci.isThis()) {</span>
+<span class="fc" id="L913">                    getCurrentEvalPackage().calledConstructors.add(ch.getCalledConstructor());</span>
+                }
+<span class="fc" id="L915">            } else {</span>
+                // add all private constructors to list for later evaluation on
+                // if they are safe to call from another constructor
+                // store this constructorHolder for later evaluation
+<span class="fc" id="L919">                getCurrentEvalPackage().allPrivateConstructorsOfClass.put(ch, calledMethodsOfConstructor);</span>
+            }
+        }
+<span class="fc" id="L922">        return super.visit(node, data);</span>
+    }
+
+    /**
+     * Create a MethodHolder to hold the method. Store the MethodHolder in the
+     * Map as the key Store each method called by the current method as a List
+     * in the Map as the Object
+     */
+    @Override
+    public Object visit(ASTMethodDeclarator node, Object data) {
+<span class="fc bfc" id="L932" title="All 2 branches covered.">        if (!(getCurrentEvalPackage() instanceof NullEvalPackage)) {</span>
+            // only evaluate if we have an eval package for this class
+<span class="fc" id="L934">            AccessNode parent = (AccessNode) node.jjtGetParent();</span>
+<span class="fc" id="L935">            MethodHolder h = new MethodHolder(node);</span>
+<span class="fc bfc" id="L936" title="All 8 branches covered.">            if (!parent.isAbstract() &amp;&amp; !parent.isPrivate() &amp;&amp; !parent.isStatic() &amp;&amp; !parent.isFinal()) {</span>
+                // Skip abstract methods, have a separate rule for that
+<span class="fc" id="L938">                h.setDangerous(); // this method is overridable</span>
+<span class="fc" id="L939">                ASTMethodDeclaration decl = node.getFirstParentOfType(ASTMethodDeclaration.class);</span>
+<span class="fc" id="L940">                h.setCalledMethod(decl.getMethodName());</span>
+            }
+<span class="fc" id="L942">            List&lt;MethodInvocation&gt; l = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L943">            addCalledMethodsOfNode(parent, l, getCurrentEvalPackage().className);</span>
+<span class="fc" id="L944">            getCurrentEvalPackage().allMethodsOfClass.put(h, l);</span>
+        }
+<span class="fc" id="L946">        return super.visit(node, data);</span>
+    }
+
+    /**
+     * Adds all methods called on this instance from within this Node.
+     */
+    private static void addCalledMethodsOfNode(Node node, List&lt;MethodInvocation&gt; calledMethods, String className) {
+<span class="fc" id="L953">        List&lt;ASTPrimaryExpression&gt; expressions = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L954" title="1 of 2 branches missed.">        node.findDescendantsOfType(ASTPrimaryExpression.class, expressions, !(node instanceof AccessNode));</span>
+<span class="fc" id="L955">        addCalledMethodsOfNodeImpl(expressions, calledMethods, className);</span>
+<span class="fc" id="L956">    }</span>
+
+    private static void addCalledMethodsOfNodeImpl(List&lt;ASTPrimaryExpression&gt; expressions,
+            List&lt;MethodInvocation&gt; calledMethods, String className) {
+<span class="fc bfc" id="L960" title="All 2 branches covered.">        for (ASTPrimaryExpression ape : expressions) {</span>
+<span class="fc" id="L961">            MethodInvocation meth = findMethod(ape, className);</span>
+<span class="fc bfc" id="L962" title="All 2 branches covered.">            if (meth != null) {</span>
+                // System.out.println(&quot;Adding call &quot; + methName);
+<span class="fc" id="L964">                calledMethods.add(meth);</span>
+            }
+<span class="fc" id="L966">        }</span>
+<span class="fc" id="L967">    }</span>
+
+    /**
+     * @return A method call on the class passed in, or null if no method call
+     *         is found. TODO Need a better way to match the class and package
+     *         name to the actual method being called.
+     */
+    private static MethodInvocation findMethod(ASTPrimaryExpression node, String className) {
+<span class="pc bpc" id="L975" title="1 of 4 branches missed.">        if (node.jjtGetNumChildren() &gt; 0 &amp;&amp; node.jjtGetChild(0).jjtGetNumChildren() &gt; 0</span>
+<span class="fc bfc" id="L976" title="All 2 branches covered.">                &amp;&amp; node.jjtGetChild(0).jjtGetChild(0) instanceof ASTLiteral) {</span>
+<span class="fc" id="L977">            return null;</span>
+        }
+<span class="fc" id="L979">        MethodInvocation meth = MethodInvocation.getMethod(node);</span>
+<span class="fc" id="L980">        boolean found = false;</span>
+        // if(meth != null){
+        // meth.show();
+        // }
+<span class="fc bfc" id="L984" title="All 2 branches covered.">        if (meth != null) {</span>
+            // if it's a call on a variable, or on its superclass ignore it.
+<span class="pc bpc" id="L986" title="1 of 4 branches missed.">            if (meth.getReferenceNames().isEmpty() &amp;&amp; !meth.isSuper()) {</span>
+                // if this list does not contain our class name, then its not
+                // referencing our class
+                // this is a cheezy test... but it errs on the side of less
+                // false hits.
+<span class="fc" id="L991">                List&lt;String&gt; packClass = meth.getQualifierNames();</span>
+<span class="fc bfc" id="L992" title="All 2 branches covered.">                if (!packClass.isEmpty()) {</span>
+<span class="fc bfc" id="L993" title="All 2 branches covered.">                    for (String name : packClass) {</span>
+<span class="pc bpc" id="L994" title="1 of 2 branches missed.">                        if (name.equals(className)) {</span>
+<span class="nc" id="L995">                            found = true;</span>
+<span class="nc" id="L996">                            break;</span>
+                        }
+<span class="fc" id="L998">                    }</span>
+                } else {
+<span class="fc" id="L1000">                    found = true;</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L1005" title="All 2 branches covered.">        return found ? meth : null;</span>
+    }
+
+    /**
+     * ASTPrimaryPrefix has name in child node of ASTName
+     */
+    private static String getNameFromPrefix(ASTPrimaryPrefix node) {
+<span class="fc" id="L1012">        String name = null;</span>
+        // should only be 1 child, if more I need more knowledge
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">        if (node.jjtGetNumChildren() == 1) { // safety check</span>
+<span class="fc" id="L1015">            Node nnode = node.jjtGetChild(0);</span>
+<span class="fc bfc" id="L1016" title="All 2 branches covered.">            if (nnode instanceof ASTName) {</span>
+                // just as easy as null check and it
+                // should be an ASTName anyway
+<span class="fc" id="L1019">                name = ((ASTName) nnode).getImage();</span>
+            }
+        }
+<span class="fc" id="L1022">        return name;</span>
+    }
+
+    private static List&lt;String&gt; getMethodDeclaratorParameterTypes(Node methodOrConstructorDeclarator) {
+<span class="fc" id="L1026">        List&lt;ASTFormalParameter&gt; parameters = methodOrConstructorDeclarator</span>
+<span class="fc" id="L1027">                .findDescendantsOfType(ASTFormalParameter.class);</span>
+<span class="fc" id="L1028">        List&lt;String&gt; parameterTypes = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L1029" title="1 of 2 branches missed.">        if (parameters != null) {</span>
+<span class="fc bfc" id="L1030" title="All 2 branches covered.">            for (ASTFormalParameter p : parameters) {</span>
+<span class="fc" id="L1031">                ASTType type = p.getFirstChildOfType(ASTType.class);</span>
+<span class="fc bfc" id="L1032" title="All 2 branches covered.">                if (type.jjtGetChild(0) instanceof ASTPrimitiveType) {</span>
+<span class="fc" id="L1033">                    parameterTypes.add(type.jjtGetChild(0).getImage());</span>
+<span class="pc bpc" id="L1034" title="1 of 2 branches missed.">                } else if (type.jjtGetChild(0) instanceof ASTReferenceType) {</span>
+<span class="fc" id="L1035">                    parameterTypes.add(&quot;ref&quot;);</span>
+                } else {
+<span class="nc" id="L1037">                    parameterTypes.add(&quot;&lt;unkown&gt;&quot;);</span>
+                }
+<span class="fc" id="L1039">            }</span>
+        }
+<span class="fc" id="L1041">        return parameterTypes;</span>
+    }
+
+    private static List&lt;String&gt; getArgumentTypes(ASTArguments args) {
+<span class="fc" id="L1045">        List&lt;String&gt; argumentTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1046">        ASTArgumentList argumentList = args.getFirstChildOfType(ASTArgumentList.class);</span>
+<span class="fc bfc" id="L1047" title="All 2 branches covered.">        if (argumentList != null) {</span>
+<span class="fc bfc" id="L1048" title="All 2 branches covered.">            for (int a = 0; a &lt; argumentList.jjtGetNumChildren(); a++) {</span>
+<span class="fc" id="L1049">                Node expression = argumentList.jjtGetChild(a);</span>
+<span class="fc" id="L1050">                ASTPrimaryPrefix arg = expression.getFirstDescendantOfType(ASTPrimaryPrefix.class);</span>
+<span class="fc" id="L1051">                String type = &quot;&lt;unknown&gt;&quot;;</span>
+<span class="pc bpc" id="L1052" title="1 of 4 branches missed.">                if (arg != null &amp;&amp; arg.jjtGetNumChildren() &gt; 0) {</span>
+<span class="fc bfc" id="L1053" title="All 2 branches covered.">                    if (arg.jjtGetChild(0) instanceof ASTLiteral) {</span>
+<span class="fc" id="L1054">                        ASTLiteral lit = (ASTLiteral) arg.jjtGetChild(0);</span>
+<span class="fc bfc" id="L1055" title="All 2 branches covered.">                        if (lit.isCharLiteral()) {</span>
+<span class="fc" id="L1056">                            type = &quot;char&quot;;</span>
+<span class="pc bpc" id="L1057" title="1 of 2 branches missed.">                        } else if (lit.isFloatLiteral()) {</span>
+<span class="nc" id="L1058">                            type = &quot;float&quot;;</span>
+<span class="fc bfc" id="L1059" title="All 2 branches covered.">                        } else if (lit.isIntLiteral()) {</span>
+<span class="fc" id="L1060">                            type = &quot;int&quot;;</span>
+<span class="fc bfc" id="L1061" title="All 2 branches covered.">                        } else if (lit.isStringLiteral()) {</span>
+<span class="fc" id="L1062">                            type = &quot;String&quot;;</span>
+<span class="fc bfc" id="L1063" title="All 4 branches covered.">                        } else if (lit.jjtGetNumChildren() &gt; 0 &amp;&amp; lit.jjtGetChild(0) instanceof ASTBooleanLiteral) {</span>
+<span class="fc" id="L1064">                            type = &quot;boolean&quot;;</span>
+<span class="fc bfc" id="L1065" title="All 2 branches covered.">                        } else if (lit.isDoubleLiteral()) {</span>
+<span class="fc" id="L1066">                            type = &quot;double&quot;;</span>
+<span class="pc bpc" id="L1067" title="1 of 2 branches missed.">                        } else if (lit.isLongLiteral()) {</span>
+<span class="nc" id="L1068">                            type = &quot;long&quot;;</span>
+                        }
+<span class="fc bfc" id="L1070" title="All 2 branches covered.">                    } else if (arg.jjtGetChild(0) instanceof ASTName) {</span>
+                        // ASTName n = (ASTName)arg.jjtGetChild(0);
+<span class="fc" id="L1072">                        type = &quot;ref&quot;;</span>
+                    }
+                }
+<span class="fc" id="L1075">                argumentTypes.add(type);</span>
+            }
+        }
+<span class="fc" id="L1078">        return argumentTypes;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

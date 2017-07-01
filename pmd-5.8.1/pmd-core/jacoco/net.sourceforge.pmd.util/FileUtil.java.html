@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FileUtil.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.util</a> &gt; <span class="el_source">FileUtil.java</span></div><h1>FileUtil.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.util;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import net.sourceforge.pmd.util.datasource.DataSource;
+import net.sourceforge.pmd.util.datasource.FileDataSource;
+import net.sourceforge.pmd.util.datasource.ZipDataSource;
+import net.sourceforge.pmd.util.filter.AndFilter;
+import net.sourceforge.pmd.util.filter.Filter;
+import net.sourceforge.pmd.util.filter.Filters;
+import net.sourceforge.pmd.util.filter.OrFilter;
+
+/**
+ * This is a utility class for working with Files.
+ */
+public final class FileUtil {
+
+<span class="nc" id="L36">    private FileUtil() {</span>
+<span class="nc" id="L37">    }</span>
+
+    /**
+     * Helper method to get a filename without its extension
+     *
+     * @param fileName
+     *            String
+     * @return String
+     */
+    public static String getFileNameWithoutExtension(String fileName) {
+<span class="nc" id="L47">        String name = fileName;</span>
+
+<span class="nc" id="L49">        int index = fileName.lastIndexOf('.');</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (index != -1) {</span>
+<span class="nc" id="L51">            name = fileName.substring(0, index);</span>
+        }
+
+<span class="nc" id="L54">        return name;</span>
+    }
+
+    /**
+     * Normalizes the filename by taking the casing into account, e.g. on
+     * Windows, the filename is changed to lowercase only.
+     *
+     * @param fileName
+     *            the file name
+     * @return the normalized file name
+     */
+    public static String normalizeFilename(String fileName) {
+<span class="pc bpc" id="L66" title="2 of 4 branches missed.">        if (fileName != null &amp;&amp; File.separatorChar == '\\') {</span>
+            // windows
+<span class="nc" id="L68">            return fileName.toLowerCase(Locale.ROOT);</span>
+        }
+<span class="fc" id="L70">        return fileName;</span>
+    }
+
+    /**
+     * Collects a list of DataSources using a comma separated list of input file
+     * locations to process. If a file location is a directory, the directory
+     * hierarchy will be traversed to look for files. If a file location is a
+     * ZIP or Jar the archive will be scanned looking for files. If a file
+     * location is a file, it will be used. For each located file, a
+     * FilenameFilter is used to decide whether to return a DataSource.
+     *
+     * @param fileLocations
+     *            A comma-separated list of file locations.
+     * @param filenameFilter
+     *            The FilenameFilter to apply to files.
+     * @return A list of DataSources, one for each file collected.
+     */
+    public static List&lt;DataSource&gt; collectFiles(String fileLocations, FilenameFilter filenameFilter) {
+<span class="fc" id="L88">        List&lt;DataSource&gt; dataSources = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (String fileLocation : fileLocations.split(&quot;,&quot;)) {</span>
+<span class="fc" id="L90">            collect(dataSources, fileLocation, filenameFilter);</span>
+        }
+<span class="fc" id="L92">        return dataSources;</span>
+    }
+
+    private static List&lt;DataSource&gt; collect(List&lt;DataSource&gt; dataSources, String fileLocation,
+            FilenameFilter filenameFilter) {
+<span class="fc" id="L97">        File file = new File(fileLocation);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (!file.exists()) {</span>
+<span class="nc" id="L99">            throw new RuntimeException(&quot;File &quot; + file.getName() + &quot; doesn't exist&quot;);</span>
+        }
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if (!file.isDirectory()) {</span>
+<span class="pc bpc" id="L102" title="2 of 4 branches missed.">            if (fileLocation.endsWith(&quot;.zip&quot;) || fileLocation.endsWith(&quot;.jar&quot;)) {</span>
+                ZipFile zipFile;
+                try {
+<span class="nc" id="L105">                    zipFile = new ZipFile(fileLocation);</span>
+<span class="nc" id="L106">                    Enumeration&lt;? extends ZipEntry&gt; e = zipFile.entries();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                    while (e.hasMoreElements()) {</span>
+<span class="nc" id="L108">                        ZipEntry zipEntry = e.nextElement();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">                        if (filenameFilter.accept(null, zipEntry.getName())) {</span>
+<span class="nc" id="L110">                            dataSources.add(new ZipDataSource(zipFile, zipEntry));</span>
+                        }
+<span class="nc" id="L112">                    }</span>
+<span class="nc" id="L113">                } catch (IOException ze) {</span>
+<span class="nc" id="L114">                    throw new RuntimeException(&quot;Archive file &quot; + file.getName() + &quot; can't be opened&quot;);</span>
+<span class="nc" id="L115">                }</span>
+<span class="nc" id="L116">            } else {</span>
+<span class="fc" id="L117">                dataSources.add(new FileDataSource(file));</span>
+            }
+        } else {
+            // Match files, or directories which are not excluded.
+            // FUTURE Make the excluded directories be some configurable option
+<span class="nc" id="L122">            Filter&lt;File&gt; filter = new OrFilter&lt;&gt;(Filters.toFileFilter(filenameFilter),</span>
+                    new AndFilter&lt;&gt;(Filters.getDirectoryFilter(), Filters.toNormalizedFileFilter(
+                            Filters.buildRegexFilterExcludeOverInclude(null, Collections.singletonList(&quot;SCCS&quot;)))));
+<span class="nc" id="L125">            FileFinder finder = new FileFinder();</span>
+<span class="nc" id="L126">            List&lt;File&gt; files = finder.findFilesFrom(file, Filters.toFilenameFilter(filter), true);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            for (File f : files) {</span>
+<span class="nc" id="L128">                dataSources.add(new FileDataSource(f));</span>
+<span class="nc" id="L129">            }</span>
+        }
+<span class="fc" id="L131">        return dataSources;</span>
+    }
+
+    /**
+     * Handy method to find a certain pattern into a file. While this method
+     * lives in the FileUtils, it was designed with with unit test in mind (to
+     * check result redirected into a file)
+     *
+     * @param file
+     * @param pattern
+     * @return
+     */
+    public static boolean findPatternInFile(final File file, final String pattern) {
+
+<span class="nc" id="L145">        Pattern regexp = Pattern.compile(pattern);</span>
+<span class="nc" id="L146">        Matcher matcher = regexp.matcher(&quot;&quot;);</span>
+
+<span class="nc" id="L148">        FileIterable it = new FileIterable(file);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        for (String line : it) {</span>
+<span class="nc" id="L150">            matcher.reset(line); // reset the input</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (matcher.find()) {</span>
+<span class="nc" id="L152">                return true;</span>
+            }
+<span class="nc" id="L154">        }</span>
+<span class="nc" id="L155">        return false;</span>
+    }
+
+    /**
+     * Reads the file, which contains the filelist. This is used for the
+     * command line arguments --filelist/-filelist for both PMD and CPD.
+     * The separator in the filelist is a command and/or newlines.
+     * 
+     * @param filelist the file which contains the list of path names
+     * @return a comma-separated list of file paths
+     * @throws IOException if the file couldn't be read
+     */
+    public static String readFilelist(File filelist) throws IOException {
+<span class="fc" id="L168">        String filePaths = FileUtils.readFileToString(filelist);</span>
+<span class="fc" id="L169">        filePaths = StringUtils.trimToEmpty(filePaths);</span>
+<span class="fc" id="L170">        filePaths = filePaths.replaceAll(&quot;\\r?\\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L171">        filePaths = filePaths.replaceAll(&quot;,+&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L172">        return filePaths;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

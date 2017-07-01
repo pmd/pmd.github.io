@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>AbstractDelegateRule.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.rule</a> &gt; <span class="el_source">AbstractDelegateRule.java</span></div><h1>AbstractDelegateRule.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.rule;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.PropertyDescriptor;
+import net.sourceforge.pmd.PropertySource;
+import net.sourceforge.pmd.Rule;
+import net.sourceforge.pmd.RuleContext;
+import net.sourceforge.pmd.RulePriority;
+import net.sourceforge.pmd.lang.Language;
+import net.sourceforge.pmd.lang.LanguageVersion;
+import net.sourceforge.pmd.lang.ParserOptions;
+import net.sourceforge.pmd.lang.ast.Node;
+
+/**
+ * Base class for Rule implementations which delegate to another Rule instance.
+ */
+<span class="fc" id="L24">public abstract class AbstractDelegateRule implements Rule {</span>
+
+    private Rule rule;
+
+    public Rule getRule() {
+<span class="fc" id="L29">        return rule;</span>
+    }
+
+    public void setRule(Rule rule) {
+<span class="fc" id="L33">        this.rule = rule;</span>
+<span class="fc" id="L34">    }</span>
+
+    @Override
+    public Language getLanguage() {
+<span class="fc" id="L38">        return rule.getLanguage();</span>
+    }
+
+    @Override
+    public void setLanguage(Language language) {
+<span class="fc" id="L43">        rule.setLanguage(language);</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public LanguageVersion getMinimumLanguageVersion() {
+<span class="fc" id="L48">        return rule.getMinimumLanguageVersion();</span>
+    }
+
+    @Override
+    public void setMinimumLanguageVersion(LanguageVersion minimumlanguageVersion) {
+<span class="fc" id="L53">        rule.setMinimumLanguageVersion(minimumlanguageVersion);</span>
+<span class="fc" id="L54">    }</span>
+
+    @Override
+    public LanguageVersion getMaximumLanguageVersion() {
+<span class="fc" id="L58">        return rule.getMaximumLanguageVersion();</span>
+    }
+
+    @Override
+    public void setMaximumLanguageVersion(LanguageVersion maximumlanguageVersion) {
+<span class="fc" id="L63">        rule.setMaximumLanguageVersion(maximumlanguageVersion);</span>
+<span class="fc" id="L64">    }</span>
+
+    @Override
+    public boolean isDeprecated() {
+<span class="nc" id="L68">        return rule.isDeprecated();</span>
+    }
+
+    @Override
+    public void setDeprecated(boolean deprecated) {
+<span class="nc" id="L73">        rule.setDeprecated(deprecated);</span>
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * @see PropertySource#dysfunctionReason()
+     */
+    @Override
+    public String dysfunctionReason() {
+<span class="nc" id="L81">        return rule.dysfunctionReason();</span>
+    }
+
+    @Override
+    public Set&lt;PropertyDescriptor&lt;?&gt;&gt; ignoredProperties() {
+<span class="nc" id="L86">        return rule.ignoredProperties();</span>
+    }
+
+    @Override
+    public String getName() {
+<span class="fc" id="L91">        return rule.getName();</span>
+    }
+
+    @Override
+    public void setName(String name) {
+<span class="nc" id="L96">        rule.setName(name);</span>
+<span class="nc" id="L97">    }</span>
+
+    @Override
+    public String getSince() {
+<span class="nc" id="L101">        return rule.getSince();</span>
+    }
+
+    @Override
+    public void setSince(String since) {
+<span class="nc" id="L106">        rule.setSince(since);</span>
+<span class="nc" id="L107">    }</span>
+
+    @Override
+    public String getRuleClass() {
+<span class="fc" id="L111">        return rule.getRuleClass();</span>
+    }
+
+    @Override
+    public void setRuleClass(String ruleClass) {
+<span class="nc" id="L116">        rule.setRuleClass(ruleClass);</span>
+<span class="nc" id="L117">    }</span>
+
+    @Override
+    public String getRuleSetName() {
+<span class="nc" id="L121">        return rule.getRuleSetName();</span>
+    }
+
+    @Override
+    public void setRuleSetName(String name) {
+<span class="nc" id="L126">        rule.setRuleSetName(name);</span>
+<span class="nc" id="L127">    }</span>
+
+    @Override
+    public String getMessage() {
+<span class="fc" id="L131">        return rule.getMessage();</span>
+    }
+
+    @Override
+    public void setMessage(String message) {
+<span class="fc" id="L136">        rule.setMessage(message);</span>
+<span class="fc" id="L137">    }</span>
+
+    @Override
+    public String getDescription() {
+<span class="fc" id="L141">        return rule.getDescription();</span>
+    }
+
+    @Override
+    public void setDescription(String description) {
+<span class="fc" id="L146">        rule.setDescription(description);</span>
+<span class="fc" id="L147">    }</span>
+
+    @Override
+    public List&lt;String&gt; getExamples() {
+<span class="fc" id="L151">        return rule.getExamples();</span>
+    }
+
+    @Override
+    public void addExample(String example) {
+<span class="fc" id="L156">        rule.addExample(example);</span>
+<span class="fc" id="L157">    }</span>
+
+    @Override
+    public String getExternalInfoUrl() {
+<span class="fc" id="L161">        return rule.getExternalInfoUrl();</span>
+    }
+
+    @Override
+    public void setExternalInfoUrl(String url) {
+<span class="fc" id="L166">        rule.setExternalInfoUrl(url);</span>
+<span class="fc" id="L167">    }</span>
+
+    @Override
+    public RulePriority getPriority() {
+<span class="fc" id="L171">        return rule.getPriority();</span>
+    }
+
+    @Override
+    public void setPriority(RulePriority priority) {
+<span class="fc" id="L176">        rule.setPriority(priority);</span>
+<span class="fc" id="L177">    }</span>
+
+    @Override
+    public ParserOptions getParserOptions() {
+<span class="nc" id="L181">        return rule.getParserOptions();</span>
+    }
+
+    @Override
+    public void definePropertyDescriptor(PropertyDescriptor&lt;?&gt; propertyDescriptor) throws IllegalArgumentException {
+<span class="fc" id="L186">        rule.definePropertyDescriptor(propertyDescriptor);</span>
+<span class="fc" id="L187">    }</span>
+
+    @Override
+    public PropertyDescriptor&lt;?&gt; getPropertyDescriptor(String name) {
+<span class="fc" id="L191">        return rule.getPropertyDescriptor(name);</span>
+    }
+
+    @Override
+    public List&lt;PropertyDescriptor&lt;?&gt;&gt; getPropertyDescriptors() {
+<span class="fc" id="L196">        return rule.getPropertyDescriptors();</span>
+    }
+
+    @Override
+    public &lt;T&gt; T getProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor) {
+<span class="fc" id="L201">        return rule.getProperty(propertyDescriptor);</span>
+    }
+
+    @Override
+    public &lt;T&gt; void setProperty(PropertyDescriptor&lt;T&gt; propertyDescriptor, T value) {
+<span class="fc" id="L206">        rule.setProperty(propertyDescriptor, value);</span>
+<span class="fc" id="L207">    }</span>
+
+    @Override
+    public Map&lt;PropertyDescriptor&lt;?&gt;, Object&gt; getPropertiesByPropertyDescriptor() {
+<span class="fc" id="L211">        return rule.getPropertiesByPropertyDescriptor();</span>
+    }
+
+    @Override
+    public void setUsesDFA() {
+<span class="nc" id="L216">        rule.setUsesDFA();</span>
+<span class="nc" id="L217">    }</span>
+
+    @Override
+    public boolean usesDFA() {
+<span class="nc" id="L221">        return rule.usesDFA();</span>
+    }
+
+    @Override
+    public void setUsesTypeResolution() {
+<span class="nc" id="L226">        rule.setUsesTypeResolution();</span>
+<span class="nc" id="L227">    }</span>
+
+    @Override
+    public boolean usesTypeResolution() {
+<span class="nc" id="L231">        return rule.usesTypeResolution();</span>
+    }
+
+    @Override
+    public void setUsesMetrics() {
+<span class="nc" id="L236">        rule.setUsesMetrics();</span>
+<span class="nc" id="L237">    }</span>
+
+    @Override
+    public boolean usesMetrics() {
+<span class="nc" id="L241">        return rule.usesMetrics();</span>
+    }
+
+    @Override
+    public boolean usesRuleChain() {
+<span class="nc" id="L246">        return rule.usesRuleChain();</span>
+    }
+
+    @Override
+    public List&lt;String&gt; getRuleChainVisits() {
+<span class="nc" id="L251">        return rule.getRuleChainVisits();</span>
+    }
+
+    @Override
+    public void addRuleChainVisit(Class&lt;? extends Node&gt; nodeClass) {
+<span class="nc" id="L256">        rule.addRuleChainVisit(nodeClass);</span>
+<span class="nc" id="L257">    }</span>
+
+    @Override
+    public void addRuleChainVisit(String astNodeName) {
+<span class="nc" id="L261">        rule.addRuleChainVisit(astNodeName);</span>
+<span class="nc" id="L262">    }</span>
+
+    @Override
+    public void start(RuleContext ctx) {
+<span class="nc" id="L266">        rule.start(ctx);</span>
+<span class="nc" id="L267">    }</span>
+
+    @Override
+    public void apply(List&lt;? extends Node&gt; nodes, RuleContext ctx) {
+<span class="nc" id="L271">        rule.apply(nodes, ctx);</span>
+<span class="nc" id="L272">    }</span>
+
+    @Override
+    public void end(RuleContext ctx) {
+<span class="nc" id="L276">        rule.end(ctx);</span>
+<span class="nc" id="L277">    }</span>
+
+    /**
+     * @see Rule#hasDescriptor(PropertyDescriptor)
+     */
+    @Override
+    public boolean hasDescriptor(PropertyDescriptor&lt;?&gt; descriptor) {
+<span class="nc" id="L284">        return rule.hasDescriptor(descriptor);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

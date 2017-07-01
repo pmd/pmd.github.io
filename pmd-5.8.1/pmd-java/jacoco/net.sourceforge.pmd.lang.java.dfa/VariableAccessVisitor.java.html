@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>VariableAccessVisitor.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Java</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.java.dfa</a> &gt; <span class="el_source">VariableAccessVisitor.java</span></div><h1>VariableAccessVisitor.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.java.dfa;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.sourceforge.pmd.lang.ast.Node;
+import net.sourceforge.pmd.lang.dfa.DataFlowNode;
+import net.sourceforge.pmd.lang.dfa.StartOrEndDataFlowNode;
+import net.sourceforge.pmd.lang.dfa.VariableAccess;
+import net.sourceforge.pmd.lang.java.ast.ASTClassOrInterfaceBodyDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTConstructorDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTFormalParameter;
+import net.sourceforge.pmd.lang.java.ast.ASTMethodDeclaration;
+import net.sourceforge.pmd.lang.java.ast.ASTVariableInitializer;
+import net.sourceforge.pmd.lang.java.ast.JavaNode;
+import net.sourceforge.pmd.lang.java.ast.JavaParserVisitorAdapter;
+import net.sourceforge.pmd.lang.java.symboltable.JavaNameOccurrence;
+import net.sourceforge.pmd.lang.java.symboltable.VariableNameDeclaration;
+import net.sourceforge.pmd.lang.symboltable.NameOccurrence;
+
+/**
+ * Searches for special nodes and computes based on the sequence, the type of
+ * access of a variable.
+ * 
+ * @since Created on 14.07.2004
+ * @author raik, Sven Jacob
+ */
+<span class="fc" id="L35">public class VariableAccessVisitor extends JavaParserVisitorAdapter {</span>
+
+    public void compute(ASTMethodDeclaration node) {
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (node.jjtGetParent() instanceof ASTClassOrInterfaceBodyDeclaration) {</span>
+<span class="fc" id="L39">            this.computeNow(node);</span>
+        }
+<span class="fc" id="L41">    }</span>
+
+    public void compute(ASTConstructorDeclaration node) {
+<span class="fc" id="L44">        this.computeNow(node);</span>
+<span class="fc" id="L45">    }</span>
+
+    private void computeNow(Node node) {
+<span class="fc" id="L48">        DataFlowNode inode = node.getDataFlowNode();</span>
+
+<span class="fc" id="L50">        List&lt;VariableAccess&gt; undefinitions = markUsages(inode);</span>
+
+        // all variables are first in state undefinition
+<span class="fc" id="L53">        DataFlowNode firstINode = inode.getFlow().get(0);</span>
+<span class="fc" id="L54">        firstINode.setVariableAccess(undefinitions);</span>
+
+        // all variables are getting undefined when leaving scope
+<span class="fc" id="L57">        DataFlowNode lastINode = inode.getFlow().get(inode.getFlow().size() - 1);</span>
+<span class="fc" id="L58">        lastINode.setVariableAccess(undefinitions);</span>
+<span class="fc" id="L59">    }</span>
+
+    private List&lt;VariableAccess&gt; markUsages(DataFlowNode inode) {
+        // undefinitions was once a field... seems like it works fine as a local
+<span class="fc" id="L63">        List&lt;VariableAccess&gt; undefinitions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L64">        Set&lt;Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; variableDeclarations = collectDeclarations(inode);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        for (Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; declarations : variableDeclarations) {</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            for (Map.Entry&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; entry : declarations.entrySet()) {</span>
+<span class="fc" id="L67">                VariableNameDeclaration vnd = entry.getKey();</span>
+
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                if (vnd.getAccessNodeParent() instanceof ASTFormalParameter) {</span>
+                    // no definition/undefinition/references for parameters
+<span class="fc" id="L71">                    continue;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                } else if (vnd.getAccessNodeParent().getFirstDescendantOfType(ASTVariableInitializer.class) != null) {</span>
+                    // add definition for initialized variables
+<span class="fc" id="L74">                    addVariableAccess(vnd.getNode(), new VariableAccess(VariableAccess.DEFINITION, vnd.getImage()),</span>
+<span class="fc" id="L75">                            inode.getFlow());</span>
+                }
+<span class="fc" id="L77">                undefinitions.add(new VariableAccess(VariableAccess.UNDEFINITION, vnd.getImage()));</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                for (NameOccurrence occurrence : entry.getValue()) {</span>
+<span class="fc" id="L80">                    addAccess((JavaNameOccurrence) occurrence, inode);</span>
+<span class="fc" id="L81">                }</span>
+<span class="fc" id="L82">            }</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">        return undefinitions;</span>
+    }
+
+    private Set&lt;Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; collectDeclarations(DataFlowNode inode) {
+<span class="fc" id="L88">        Set&lt;Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt;&gt; decls = new HashSet&lt;&gt;();</span>
+        Map&lt;VariableNameDeclaration, List&lt;NameOccurrence&gt;&gt; varDecls;
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (int i = 0; i &lt; inode.getFlow().size(); i++) {</span>
+<span class="fc" id="L91">            DataFlowNode n = inode.getFlow().get(i);</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (n instanceof StartOrEndDataFlowNode) {</span>
+<span class="fc" id="L93">                continue;</span>
+            }
+<span class="fc" id="L95">            varDecls = ((JavaNode) n.getNode()).getScope().getDeclarations(VariableNameDeclaration.class);</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            if (!decls.contains(varDecls)) {</span>
+<span class="fc" id="L97">                decls.add(varDecls);</span>
+            }
+        }
+<span class="fc" id="L100">        return decls;</span>
+    }
+
+    private void addAccess(JavaNameOccurrence occurrence, DataFlowNode inode) {
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if (occurrence.isOnLeftHandSide()) {</span>
+<span class="fc" id="L105">            this.addVariableAccess(occurrence.getLocation(),</span>
+<span class="fc" id="L106">                    new VariableAccess(VariableAccess.DEFINITION, occurrence.getImage()), inode.getFlow());</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        } else if (occurrence.isOnRightHandSide()</span>
+<span class="pc bpc" id="L108" title="2 of 4 branches missed.">                || !occurrence.isOnLeftHandSide() &amp;&amp; !occurrence.isOnRightHandSide()) {</span>
+<span class="fc" id="L109">            this.addVariableAccess(occurrence.getLocation(),</span>
+<span class="fc" id="L110">                    new VariableAccess(VariableAccess.REFERENCING, occurrence.getImage()), inode.getFlow());</span>
+        }
+<span class="fc" id="L112">    }</span>
+
+    /**
+     * Adds a VariableAccess to a dataflow node.
+     * 
+     * @param node
+     *            location of the access of a variable
+     * @param va
+     *            variable access to add
+     * @param flow
+     *            dataflownodes that can contain the node.
+     */
+    private void addVariableAccess(Node node, VariableAccess va, List&lt;DataFlowNode&gt; flow) {
+        // backwards to find the right inode (not a method declaration)
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        for (int i = flow.size() - 1; i &gt; 0; i--) {</span>
+<span class="fc" id="L127">            DataFlowNode inode = flow.get(i);</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (inode.getNode() == null) {</span>
+<span class="fc" id="L129">                continue;</span>
+            }
+
+<span class="fc" id="L132">            List&lt;? extends Node&gt; children = inode.getNode().findDescendantsOfType(node.getClass());</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            for (Node n : children) {</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">                if (node.equals(n)) {</span>
+<span class="fc" id="L135">                    List&lt;VariableAccess&gt; v = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L136">                    v.add(va);</span>
+<span class="fc" id="L137">                    inode.setVariableAccess(v);</span>
+<span class="fc" id="L138">                    return;</span>
+                }
+<span class="fc" id="L140">            }</span>
+        }
+<span class="nc" id="L142">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

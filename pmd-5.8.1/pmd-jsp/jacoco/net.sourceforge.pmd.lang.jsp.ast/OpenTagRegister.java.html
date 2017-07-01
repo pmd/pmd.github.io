@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>OpenTagRegister.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD JSP</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.lang.jsp.ast</a> &gt; <span class="el_source">OpenTagRegister.java</span></div><h1>OpenTagRegister.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.lang.jsp.ast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.sourceforge.pmd.util.StringUtil;
+
+/**
+ * Utility class to keep track of unclosed tags. The mechanism is rather simple.
+ * If a end tag (&amp;lt;/x&amp;gt;) is encountered, it will iterate through the open
+ * tag list and it will mark the first tag named 'x' as closed. If other tags
+ * have been opened after 'x' ( &amp;lt;x&amp;gt; &amp;lt;y&amp;gt; &amp;lt;z&amp;gt; &amp;lt;/x&amp;gt;) it
+ * will mark y and z as unclosed.
+ * 
+ * @author Victor Bucutea
+ * 
+ */
+<span class="fc" id="L22">public class OpenTagRegister {</span>
+
+<span class="fc" id="L24">    private List&lt;ASTElement&gt; tagList = new ArrayList&lt;&gt;();</span>
+
+    public void openTag(ASTElement elm) {
+<span class="pc bpc" id="L27" title="2 of 4 branches missed.">        if (elm == null || StringUtil.isEmpty(elm.getName())) {</span>
+<span class="nc" id="L28">            throw new IllegalStateException(&quot;Tried to open a tag with empty name&quot;);</span>
+        }
+
+<span class="fc" id="L31">        tagList.add(elm);</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * 
+     * @param closingTagName
+     * @return true if a matching tag was found. False if no tag with this name
+     *         was ever opened ( or registered )
+     */
+    public boolean closeTag(String closingTagName) {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (StringUtil.isEmpty(closingTagName)) {</span>
+<span class="nc" id="L42">            throw new IllegalStateException(&quot;Tried to close a tag with empty name&quot;);</span>
+        }
+
+<span class="fc" id="L45">        int lastRegisteredTagIdx = tagList.size() - 1;</span>
+        /*
+         * iterate from top to bottom and look for the last tag with the same
+         * name as element
+         */
+<span class="fc" id="L50">        boolean matchingTagFound = false;</span>
+<span class="fc" id="L51">        List&lt;ASTElement&gt; processedElmnts = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (int i = lastRegisteredTagIdx; i &gt;= 0; i--) {</span>
+<span class="fc" id="L53">            ASTElement parent = tagList.get(i);</span>
+<span class="fc" id="L54">            String parentName = parent.getName();</span>
+
+<span class="fc" id="L56">            processedElmnts.add(parent);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (parentName.equals(closingTagName)) {</span>
+                // mark this tag as being closed
+<span class="fc" id="L59">                parent.setUnclosed(false);</span>
+                // tag has children it cannot be empty
+<span class="fc" id="L61">                parent.setEmpty(false);</span>
+<span class="fc" id="L62">                matchingTagFound = true;</span>
+<span class="fc" id="L63">                break;</span>
+            } else {
+                // only mark as unclosed if tag is not
+                // empty (e.g. &lt;tag/&gt; is empty and properly closed)
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                if (!parent.isEmpty()) {</span>
+<span class="fc" id="L68">                    parent.setUnclosed(true);</span>
+                }
+
+<span class="fc" id="L71">                parent.setEmpty(true);</span>
+            }
+        }
+
+        /*
+         * remove all processed tags. We should look for rogue tags which have
+         * no start (unopened tags) e.g. &quot; &lt;a&gt; &lt;b&gt; &lt;b&gt; &lt;/z&gt; &lt;/a&gt;&quot; if &quot;&lt;/z&gt;&quot; has
+         * no open tag in the list (and in the whole document) we will consider
+         * &lt;/a&gt; as the closing tag for &lt;a&gt;.If on the other hand tags are
+         * interleaved: &lt;x&gt; &lt;a&gt; &lt;b&gt; &lt;b&gt; &lt;/x&gt; &lt;/a&gt; then we will consider &lt;/x&gt; the
+         * closing tag of &lt;x&gt; and &lt;/a&gt; a rogue tag or the closing tag of a
+         * potentially open &lt;a&gt; parent tag ( but not the one after the &lt;x&gt; )
+         */
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (matchingTagFound) {</span>
+<span class="fc" id="L85">            tagList.removeAll(processedElmnts);</span>
+        }
+
+<span class="fc" id="L88">        return matchingTagFound;</span>
+    }
+
+    public void closeTag(ASTElement z) {
+<span class="fc" id="L92">        closeTag(z.getName());</span>
+<span class="fc" id="L93">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>UsageGraph.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMD Core</a> &gt; <a href="index.source.html" class="el_package">net.sourceforge.pmd.dcd.graph</a> &gt; <span class="el_source">UsageGraph.java</span></div><h1>UsageGraph.java</h1><pre class="source lang-java linenums">/**
+ * BSD-style license; for more info see http://pmd.sourceforge.net/license.html
+ */
+
+package net.sourceforge.pmd.dcd.graph;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import net.sourceforge.pmd.dcd.ClassLoaderUtil;
+import net.sourceforge.pmd.util.filter.Filter;
+
+/**
+ * A UsageGraph tracks usage references between Java classes, based upon a
+ * parsing of the class files. Once the UsageGraph is built, it may be visited
+ * to perform additional post-processing, or usage relationship analysis.
+ * &lt;p&gt;
+ * The UsageGraph is composed of ClassNodes. Each ClassNode has various
+ * MemberNodes, specifically ConstructorNodes, FieldNodes, and MethodNodes. Each
+ * of these MemberNodes keeps track of other MemberNodes which it &lt;em&gt;uses&lt;/em&gt;
+ * and other MemberNodes which are &lt;em&gt;users&lt;/em&gt; of it. In this sense, the
+ * graph can navigated bi-directionally across the &lt;em&gt;use&lt;/em&gt; relationship
+ * between MemberNodes.
+ * &lt;p&gt;
+ * Great effort is taken to keep the bookkeeping of the UsageGraph as tight as
+ * possible, so that rather large code bases can be analyzed. While nodes can
+ * grant access to the underlying Java Reflection APIs (e.g. Class, Constructor,
+ * Field, Member), the results are stored using WeakReferences to assist with
+ * memory usage.
+ * &lt;p&gt;
+ * A class Filter can be specified to limit the set of classes on which usage
+ * references will be tracked. This is often done to limit memory usage to
+ * interesting classes. For example, the &lt;code&gt;java.util&lt;/code&gt; package is very
+ * often used, and tracking usages would require a massive bookkeeping effort
+ * which has little value.
+ *
+ * @see UsageGraphBuilder
+ * @see ClassNode
+ * @see MemberNode
+ * @see ConstructorNode
+ * @see FieldNode
+ * @see MethodNode
+ * @see NodeVisitor
+ * @see NodeVisitorAcceptor
+ */
+public class UsageGraph implements NodeVisitorAcceptor {
+
+<span class="nc" id="L49">    private final List&lt;ClassNode&gt; classNodes = new ArrayList&lt;&gt;();</span>
+
+    protected final Filter&lt;String&gt; classFilter;
+
+<span class="nc" id="L53">    public UsageGraph(Filter&lt;String&gt; classFilter) {</span>
+<span class="nc" id="L54">        this.classFilter = classFilter;</span>
+<span class="nc" id="L55">    }</span>
+
+    @Override
+    public Object accept(NodeVisitor visitor, Object data) {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">        for (ClassNode classNode : classNodes) {</span>
+<span class="nc" id="L60">            visitor.visit(classNode, data);</span>
+<span class="nc" id="L61">        }</span>
+<span class="nc" id="L62">        return data;</span>
+    }
+
+    public boolean isClass(String className) {
+<span class="nc" id="L66">        checkClassName(className);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        return Collections.binarySearch(classNodes, className, ClassNodeComparator.INSTANCE) &gt;= 0;</span>
+    }
+
+    public ClassNode defineClass(String className) {
+<span class="nc" id="L71">        checkClassName(className);</span>
+<span class="nc" id="L72">        int index = Collections.binarySearch(classNodes, className, ClassNodeComparator.INSTANCE);</span>
+        ClassNode classNode;
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (index &gt;= 0) {</span>
+<span class="nc" id="L75">            classNode = classNodes.get(index);</span>
+        } else {
+<span class="nc" id="L77">            classNode = new ClassNode(className);</span>
+<span class="nc" id="L78">            classNodes.add(-(index + 1), classNode);</span>
+        }
+<span class="nc" id="L80">        return classNode;</span>
+    }
+
+    public FieldNode defineField(String className, String name, String desc) {
+<span class="nc" id="L84">        ClassNode classNode = defineClass(className);</span>
+<span class="nc" id="L85">        return classNode.defineField(name, desc);</span>
+    }
+
+    public MemberNode defineConstructor(String className, String name, String desc) {
+<span class="nc" id="L89">        ClassNode classNode = defineClass(className);</span>
+<span class="nc" id="L90">        return classNode.defineConstructor(name, desc);</span>
+    }
+
+    public MemberNode defineMethod(String className, String name, String desc) {
+<span class="nc" id="L94">        ClassNode classNode = defineClass(className);</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">        if (ClassLoaderUtil.CLINIT.equals(name) || ClassLoaderUtil.INIT.equals(name)) {</span>
+<span class="nc" id="L96">            return classNode.defineConstructor(name, desc);</span>
+        } else {
+<span class="nc" id="L98">            return classNode.defineMethod(name, desc);</span>
+        }
+    }
+
+    public void usageField(String className, String name, String desc, MemberNode usingMemberNode) {
+<span class="nc" id="L103">        checkClassName(className);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (classFilter.filter(className)) {</span>
+<span class="nc" id="L105">            FieldNode fieldNode = defineField(className, name, desc);</span>
+<span class="nc" id="L106">            usage(fieldNode, usingMemberNode);</span>
+        }
+<span class="nc" id="L108">    }</span>
+
+    public void usageMethod(String className, String name, String desc, MemberNode usingMemberNode) {
+<span class="nc" id="L111">        checkClassName(className);</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (classFilter.filter(className)) {</span>
+            MemberNode memberNode;
+<span class="nc bnc" id="L114" title="All 4 branches missed.">            if (ClassLoaderUtil.CLINIT.equals(name) || ClassLoaderUtil.INIT.equals(name)) {</span>
+<span class="nc" id="L115">                memberNode = defineConstructor(className, name, desc);</span>
+            } else {
+<span class="nc" id="L117">                memberNode = defineMethod(className, name, desc);</span>
+            }
+<span class="nc" id="L119">            usage(memberNode, usingMemberNode);</span>
+        }
+<span class="nc" id="L121">    }</span>
+
+    private void usage(MemberNode use, MemberNode user) {
+<span class="nc" id="L124">        use.addUser(user);</span>
+<span class="nc" id="L125">        user.addUse(use);</span>
+<span class="nc" id="L126">    }</span>
+
+    private void checkClassName(String className) {
+        // Make sure it's not in byte code internal format, or file system path.
+<span class="nc bnc" id="L130" title="All 4 branches missed.">        if (className.indexOf('/') &gt;= 0 || className.indexOf('\\') &gt;= 0) {</span>
+<span class="nc" id="L131">            throw new IllegalArgumentException(&quot;Invalid class name: &quot; + className);</span>
+        }
+<span class="nc" id="L133">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
