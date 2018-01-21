@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.0.0</li>
+    <li class="sidebarTitle">PMD 6.0.1</li>
     
     
     
@@ -1240,9 +1240,8 @@ $('#toc').on('click', 'a', function() {
 <p>Writing PMD rules is cool because you don’t have to wait for us to get around to implementing feature requests.</p>
 
 <h2 id="get-a-development-environment-set-up-first">Get a development environment set up first</h2>
-<div class="highlighter-rouge"><pre class="highlight"><code>[Here’s some initial information on compiling PMD]
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[Here’s some initial information on compiling PMD]
+</code></pre></div></div>
 
 <h2 id="java-or-xpath">Java or XPath?</h2>
 
@@ -1259,14 +1258,13 @@ $('#toc').on('click', 'a', function() {
 
 <p>Lets’s figure out what problem we want to spot. We can use “While loops must use braces” as an example. In the source code below, it’s easy to get lost visually - it’s kind of hard to tell what the curly braces belong to.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Example</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Example</span> <span class="o">{</span>
 	<span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
 		<span class="k">while</span> <span class="o">(</span><span class="n">baz</span><span class="o">)</span>
 		<span class="n">buz</span><span class="o">.</span><span class="na">doSomething</span><span class="o">();</span>
 	<span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>So we know what an example in source code looks like, which is half the battle.</p>
 
@@ -1274,7 +1272,7 @@ $('#toc').on('click', 'a', function() {
 
 <p>PMD doesn’t use the source code directly; it uses a <code class="highlighter-rouge">JavaCC</code> generated parser to parse the source code and produce an AST (Abstract Syntax Tree). The AST for the code above looks like this:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>CompilationUnit
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CompilationUnit
  TypeDeclaration
   ClassDeclaration:(package private)
    UnmodifiedClassDeclaration(Example)
@@ -1299,8 +1297,7 @@ $('#toc').on('click', 'a', function() {
                Name:buz.doSomething
               PrimarySuffix
                Arguments
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>You can generate this yourself by:</p>
 
@@ -1313,30 +1310,28 @@ $('#toc').on('click', 'a', function() {
 
 <p>So you can see in the example above that the AST for a <code class="highlighter-rouge">WhileStatement</code> looks kind of like this (excluding that expression gibberish for clarity):</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>WhileStatement
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>WhileStatement
  Expression
  Statement
   StatementExpression
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>If you were to add curly braces around the call to <code class="highlighter-rouge">buz.doSomething()</code> and click “Go” again, you’d see that the AST would change a bit. It’d look like this:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>WhileStatement
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>WhileStatement
  Expression
  Statement
   Block
    BlockStatement
     Statement
      StatementExpression
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Ah ha! We see that the curly braces add a couple more AST nodes - a <code class="highlighter-rouge">Block</code> and a <code class="highlighter-rouge">BlockStatement</code>. So all we have to do is write a rule to detect a <code class="highlighter-rouge">WhileStatement</code> that has a <code class="highlighter-rouge">Statement</code> that’s not followed by a <code class="highlighter-rouge">Block</code>, and we’ve got a rule violation.</p>
 
 <p>By the way, all this structural information - i.e., the fact that a Statement may be followed a Block - is concisely defined in the <a href="https://github.com/pmd/pmd/blob/master/pmd-java/etc/grammar/Java.jjt">EBNF grammar</a>. So, for example, the Statement definition looks like this:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>void Statement() :
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>void Statement() :
 {}
 {
   LOOKAHEAD( { isNextTokenAnAssert() } ) AssertStatement()
@@ -1356,8 +1351,7 @@ $('#toc').on('click', 'a', function() {
 | SynchronizedStatement()
 | TryStatement()
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>showing that a Statement may be followed by all sorts of stuff.</p>
 
@@ -1365,15 +1359,14 @@ $('#toc').on('click', 'a', function() {
 
 <p>Create a new Java class that extends <code class="highlighter-rouge">net.sourceforge.pmd.lang.java.rule.AbstractJavaRule</code>:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.*</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.*</span><span class="o">;</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">WhileLoopsMustUseBracesRule</span> <span class="kd">extends</span> <span class="n">AbstractJavaRule</span> <span class="o">{</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>That was easy. PMD works by creating the AST and then traverses it recursively so a rule can get a callback for any type it’s interested in. So let’s make sure our rule gets called whenever the AST traversal finds a <code class="highlighter-rouge">WhileStatement</code>:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.*</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.ast.*</span><span class="o">;</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">WhileLoopsMustUseBracesRule</span> <span class="kd">extends</span> <span class="n">AbstractJavaRule</span> <span class="o">{</span>
     <span class="kd">public</span> <span class="n">Object</span> <span class="nf">visit</span><span class="o">(</span><span class="n">ASTWhileStatement</span> <span class="n">node</span><span class="o">,</span> <span class="n">Object</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
@@ -1381,8 +1374,7 @@ $('#toc').on('click', 'a', function() {
         <span class="k">return</span> <span class="n">data</span><span class="o">;</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>We stuck a <code class="highlighter-rouge">println()</code> in there for now so we can see when our rule gets hit.</p>
 
@@ -1400,7 +1392,7 @@ $('#toc').on('click', 'a', function() {
 
 <p>The whole ruleset file should look something like this:</p>
 
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0"?&gt;</span>
 <span class="nt">&lt;ruleset</span> <span class="na">name=</span><span class="s">"My custom rules"</span>
 		<span class="na">xmlns=</span><span class="s">"http://pmd.sourceforge.net/ruleset/2.0.0"</span>
 		<span class="na">xmlns:xsi=</span><span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span>
@@ -1423,8 +1415,7 @@ $('#toc').on('click', 'a', function() {
 		<span class="nt">&lt;/example&gt;</span>
 	<span class="nt">&lt;/rule&gt;</span>
 <span class="nt">&lt;/ruleset&gt;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="run-pmd-using-your-new-ruleset">Run PMD using your new ruleset</h2>
 
@@ -1439,7 +1430,7 @@ $('#toc').on('click', 'a', function() {
 
 <p>Now that we’ve identified our problem, recognized the AST pattern that illustrates the problem, written a new rule, and plugged it into a ruleset, we need to actually make our rule find the problem, create a <code class="highlighter-rouge">RuleViolation</code>, and put it in the <code class="highlighter-rouge">Report</code>, which is attached to the <code class="highlighter-rouge">RuleContext</code>. Like this:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.ast.*</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.ast.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.ast.*</span><span class="o">;</span>
 <span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.*</span><span class="o">;</span>
 
@@ -1455,8 +1446,7 @@ $('#toc').on('click', 'a', function() {
         <span class="k">return</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">jjtGetNumChildren</span><span class="o">()</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">jjtGetChild</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span> <span class="k">instanceof</span> <span class="n">ASTBlock</span><span class="o">));</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>TODO - if you don’t understand the code for the rule, post a message to <a href="http://sourceforge.net/p/pmd/discussion/188192">the forum</a> so we can improve this document :-)</p>
 
@@ -1470,13 +1460,12 @@ $('#toc').on('click', 'a', function() {
 
 <p>Note that for XPath rules you’ll need to set the <code class="highlighter-rouge">class</code> attribute in the rule definition to <code class="highlighter-rouge">net.sourceforge.pmd.lang.rule.XPathRule.</code> Like this:</p>
 
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">name=</span><span class="s">"EmptyCatchBlock"</span>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">name=</span><span class="s">"EmptyCatchBlock"</span>
       <span class="na">message=</span><span class="s">"Avoid empty catch blocks"</span>
       <span class="na">class=</span><span class="s">"net.sourceforge.pmd.lang.rule.XPathRule"</span><span class="nt">&gt;</span>
   <span class="nt">&lt;description&gt;</span>
   etc., etc.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>Note that access modifiers are held as attributes, so, for example,</p>
 
@@ -1492,7 +1481,7 @@ $('#toc').on('click', 'a', function() {
 
 <p>You realize quite simply. You just have to add static field to the RulesContext, as an attribute, and uses Rule.start() and Rule.end() hook to initialized and finalize your rule’s implementation:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">package</span> <span class="n">net</span><span class="o">.</span><span class="na">sourceforge</span><span class="o">.</span><span class="na">pmd</span><span class="o">.</span><span class="na">rules</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">net</span><span class="o">.</span><span class="na">sourceforge</span><span class="o">.</span><span class="na">pmd</span><span class="o">.</span><span class="na">rules</span><span class="o">;</span>
 
 <span class="kn">import</span> <span class="nn">java.util.concurrent.atomic.AtomicLong</span><span class="o">;</span>
 
@@ -1527,8 +1516,7 @@ $('#toc').on('click', 'a', function() {
                <span class="kd">super</span><span class="o">.</span><span class="na">end</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>
        <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>As you can see in this example, the method start will be call the first time the rule is going to be used, so you can initialize properly your rule here. Once the rule will have finished to parses the source code, the method end() will be invoke you can assert there if, or not, your rule has been violated.</p>
 
@@ -1551,17 +1539,16 @@ $('#toc').on('click', 'a', function() {
 
 <p>This query will match on such source code:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">junit.framework.TestCase</span><span class="o">;</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">junit.framework.TestCase</span><span class="o">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="kd">extends</span> <span class="n">TestCase</span> <span class="o">{</span> <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h3 id="with-java-code">With Java code</h3>
 
 <p>Below an other sample of use of type resolution inside a java code:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="cm">/**
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
  * A simple to detect the use of the class 'com.forbidden.class'.
  */</span>
 <span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unchecked"</span><span class="o">)</span>
@@ -1572,8 +1559,7 @@ $('#toc').on('click', 'a', function() {
     <span class="o">}</span>
     <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">visit</span><span class="o">(</span><span class="n">type</span><span class="o">,</span> <span class="n">ruleCtx</span><span class="o">);</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <blockquote>
   <p>Note, that this will only work, if the auxiliary classpath for PMD is setup correctly, so that PMD can actually find the (compiled) class “com.forbidden.class” and you get the actual Class instance by calling getType().</p>
@@ -1627,8 +1613,8 @@ $('#toc').on('click', 'a', function() {
 <footer>
             <div class="row">
                 <div class="col-lg-12 footer">
-               &copy;2017 PMD Open Source Project. All rights reserved. <br />
-<span>Page last updated:</span> July 3, 2016<br/> Site last generated: Dec 15, 2017 <br />
+               &copy;2018 PMD Open Source Project. All rights reserved. <br />
+<span>Page last updated:</span> July 3, 2016<br/> Site last generated: Jan 21, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

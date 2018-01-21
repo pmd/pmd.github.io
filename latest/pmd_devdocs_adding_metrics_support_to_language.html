@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.0.0</li>
+    <li class="sidebarTitle">PMD 6.0.1</li>
     
     
     
@@ -1235,9 +1235,7 @@ $('#toc').on('click', 'a', function() {
 
     
 
-  <div class="alert alert-danger" role="alert"><i class="fa fa-exclamation-circle"></i> <b>Warning:</b> WIP, unstable API</div>
-
-<h2 id="internal-architecture-of-the-metrics-framework">Internal architecture of the metrics framework</h2>
+  <h2 id="internal-architecture-of-the-metrics-framework">Internal architecture of the metrics framework</h2>
 
 <h3 id="overview-of-the-java-framework">Overview of the Java framework</h3>
 
@@ -1263,48 +1261,23 @@ project mirror, while the façade only handles parameters.</p>
 Internally, metric keys (<code class="highlighter-rouge">MetricKey&lt;N&gt;</code>) are parameterized with their version (<code class="highlighter-rouge">MetricVersion</code>) to index memoisation
 maps (see <code class="highlighter-rouge">ParameterizedMetricKey&lt;N&gt;</code>). This allows us to memoise several versions of the same metric without conflict.</p>
 
-<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> <b>Important:</b> The following will be moved when multifile analysis and metrics are separated</div>
-<!-- We should probably create a dedicated page about the architecture of multifile analysis/ signature matching and how
- to implement that -->
-
 <p>At the very least, a metrics framework has those two components and is just a convenient way to compute and memoize
-metrics on a single file. Yet, one of the goals of the metrics framework is to allow for <strong>multi-file analysis</strong>, which
-make it possible, for instance, to compute the coupling between two classes. This feature uses two major
-components:</p>
-<ul>
-  <li>
-    <p>A <strong>project mirror</strong>. This data structure that stores info about all classes and operations (and other relevant
-entities, such as fields, packages, etc.) of the analysed project. This is implemented by <code class="highlighter-rouge">PackageStats</code> in the Java
-framework. The role of this structure is to make info about other files available to rules. It’s filled by a visitor before rules apply.</p>
-
-    <p>The information stored in this data structure that’s accessible to metrics is mainly comprised of method and field
-signatures (e.g. <code class="highlighter-rouge">JavaOperationSignature</code>), which describes concisely the characteristics of the method or field
-(roughly, its modifiers).</p>
-  </li>
-  <li>
-    <p>Some kind of method and field <strong>usage resolution</strong>, i.e. some way to find the fully qualified name of a method from a
-method call expression node. This is the trickiest part to implement. In Java it depends on type resolution.</p>
-  </li>
-</ul>
+metrics on a single file. The expressive power of metrics can be improved by implementing <em>signature matching</em> capabilities,
+which allows a metric to count signatures matching a specific pattern (a mask) over a whole class. This was originally
+designed to work across files, given a working usage resolution. However, making that work with incremental analysis is
+harder than it looks, and has been rescheduled to another project.</p>
 
 <h3 id="abstraction-layer">Abstraction layer</h3>
 
 <p>As you may have seen, most of the functionality of the first two components are abstracted into <code class="highlighter-rouge">pmd-core</code>. This
 allows us to implement new metrics frameworks quite quickly. These abstract components are parameterized by the
-node types of the class and operation AST nodes. Moreover, it makes the external behaviour of the framework is very
+node types of the class and operation AST nodes. Moreover, it makes the external behaviour of the framework very
 stable across languages, yet each component can easily be customized by adding methods or overriding existing ones.</p>
 
 <p>The signature matching aspect is framed by generic interfaces, but it can’t really be abstracted more
-than that. For instance, the project mirror is very language specific. Java’s implementation uses the natural structure
-provided by the language’s package system to structure the project’s content. Apex, on the other, has no package
-system and thus can’t use the same mechanism. That explains why the interfaces framing the project mirror are very
-loose. Their main goal is to provide type safety through generics.</p>
-
-<p>Moreover, usage resolution depends on the availability of type resolution for the given language, which is only implemented in
-Java. For these reasons, signature matching is considered an optional feature of the metrics framework. But despite
-this limitation, signature matching still provides a elegant way to find information about the class we’re in. This
-feature requires no usage resolution and can be used to implement sophisticated metrics, that already give access to
-detection strategies.</p>
+than that. The info given in the signatures is usually very language specific, as it includes info about e.g.
+visibility modifiers. So more work is required to implement that, but it can already be used to implement
+sophisticated metrics, that already give access to detection strategies.</p>
 
 <h2 id="implementation-of-a-new-framework">Implementation of a new framework</h2>
 
@@ -1314,52 +1287,36 @@ detection strategies.</p>
   <li>Create a class implementing <code class="highlighter-rouge">QualifiedName</code>. This implementation must be tailored to the target language so
 that it can indentify unambiguously any class and operation in the analysed project. You
 must implement <code class="highlighter-rouge">equals</code>, <code class="highlighter-rouge">hashCode</code> and <code class="highlighter-rouge">toString</code>.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/ast/JavaQualifiedName.java">Example</a></li>
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/ast/JavaQualifiedName.java">Example</a></li>
   <li>Determine the AST nodes that correspond to class and method declaration in your language. These types are
 referred hereafter as <code class="highlighter-rouge">T</code> and <code class="highlighter-rouge">O</code>, respectively. Both these types must implement the interface <code class="highlighter-rouge">QualifiableNode</code>,
 which means they must expose a <code class="highlighter-rouge">getQualifiedName</code> method to give access to their qualified name.</li>
 </ul>
 
-<h3 id="2-implement-and-wire-the-project-memoizer">2. Implement and wire the project memoizer</h3>
-<ul>
-  <li>Create a class extending <code class="highlighter-rouge">BasicProjectMemoizer&lt;T, O&gt;</code>. There’s no abstract functionality to implement.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaProjectMemoizer.java">Example</a></li>
-  <li>Create an AST visitor that fills the project memoizer with memoizers. For that, you use <code class="highlighter-rouge">BasicProjectMemoizer</code>’s
-<code class="highlighter-rouge">addClassMemoizer</code> and <code class="highlighter-rouge">addOperationMemoizer</code> methods with a qualified name.
-<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsVisitor.java">Example</a></li>
-  <li>Create a façade class for your visitor. This class extends a <code class="highlighter-rouge">*ParserVisitorAdapter</code> class and only overrides the
-<code class="highlighter-rouge">initializeWith(Node)</code> method. It’s supposed to make your real visitor accept the node in parameter.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsVisitorFacade.java">Example</a></li>
-  <li>Override the <code class="highlighter-rouge">getMetricsVisitorFacade()</code> method in your language’s handler (e.g. <code class="highlighter-rouge">ApexHandler</code>). This method gives
-back a <code class="highlighter-rouge">VisitorStarter</code> which initializes your façade with a <code class="highlighter-rouge">Node</code>.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/AbstractJavaHandler.java#L100-L108">Example</a></li>
-  <li>Your project memoizer should now get filled when the <code class="highlighter-rouge">metrics</code> attribute is set to <code class="highlighter-rouge">true</code> in the rule XML.</li>
-</ul>
-
-<h3 id="3-implement-the-façade">3. Implement the façade</h3>
+<h3 id="2-implement-the-façade">2. Implement the façade</h3>
 <ul>
   <li>Create a class extending <code class="highlighter-rouge">AbstractMetricsComputer&lt;T, O&gt;</code>. This object will be responsible for calculating metrics
 given a memoizer, a node and info about the metric. Typically, this object is stateless so you might as well make it
-a singleton.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsComputer.java">Example</a></li>
+a singleton.</li>
+  <li>Create a class extending <code class="highlighter-rouge">BasicProjectMemoizer&lt;T, O&gt;</code>. There’s no abstract functionality to implement.
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaProjectMemoizer.java">Example</a>
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsComputer.java">Example</a></li>
   <li>Create a class extending <code class="highlighter-rouge">AbstractMetricsFacade&lt;T, O&gt;</code>. This class needs a reference to your <code class="highlighter-rouge">ProjectMemoizer</code> and
 your <code class="highlighter-rouge">MetricsComputer</code>. It backs the real end user façade, and handles user provided parameters before delegating to
 your <code class="highlighter-rouge">MetricsComputer</code>.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsFacade.java">Example</a></li>
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetricsFacade.java">Example</a></li>
   <li>Create the static façade of your framework. This one has an instance of your <code class="highlighter-rouge">MetricsFaçade</code> object and delegates
 static methods to that instance.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetrics.java">Example</a></li>
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/JavaMetrics.java">Example</a></li>
   <li>Create classes <code class="highlighter-rouge">AbstractOperationMetric</code> and <code class="highlighter-rouge">AbstractClassMetric</code>. These must implement <code class="highlighter-rouge">Metric&lt;T&gt;</code> and
 <code class="highlighter-rouge">Metric&lt;O&gt;</code>, respectively. They typically provide defaults for the <code class="highlighter-rouge">supports</code> method of each metric.
-<a href="https://github.com/pmd/pmd/blob/52d78d2fa97913cf73814d0307a1c1ae6125a437/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/impl/AbstractJavaOperationMetric.java">Example</a></li>
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/impl/AbstractJavaOperationMetric.java">Example</a></li>
   <li>Create enums <code class="highlighter-rouge">ClassMetricKey</code> and <code class="highlighter-rouge">OperationMetricKey</code>. These must implement <code class="highlighter-rouge">MetricKey&lt;T&gt;</code> and <code class="highlighter-rouge">MetricKey&lt;O&gt;</code>. The
 enums list all available metric keys for your language.
 <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/api/JavaOperationMetricKey.java">Example</a></li>
   <li>Create metrics by extending your base classes, reference them in your enums, and you can start using them with your
 façade!</li>
 </ul>
-
-<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> <b>Important:</b> The following section will be moved when multifile analysis and metrics are separated</div>
 
 <h3 id="optional-signature-matching">Optional: Signature matching</h3>
 
@@ -1375,12 +1332,10 @@ build a <code class="highlighter-rouge">Signature&lt;N&gt;</code> from a <code c
   <li>Create signature masks. A mask is an object that matches some signatures based on their features. For example, with
  the Java framework, you can build a <code class="highlighter-rouge">JavaOperationSigMask</code> that matches all method signatures with visibility
  <code class="highlighter-rouge">public</code>. A sigmask implements <code class="highlighter-rouge">SigMask&lt;S&gt;</code>, where <code class="highlighter-rouge">S</code> is the type of signature your mask handles.</li>
-  <li>Typically, the project mirror stores the signatures, so you have to implement it in a way that makes it possible to
- associate a signature with the qualified name of its node.</li>
-  <li>If you want to implement signature matching, create an <code class="highlighter-rouge">AbstractMetric</code> class, which gives access to a
-<code class="highlighter-rouge">SignatureMatcher</code> to your metrics. Typically, your implementation of <code class="highlighter-rouge">ProjectMirror</code> implements a
-custom <code class="highlighter-rouge">SignatureMatcher</code> interface, and your façade can give back its instance of the project mirror.</li>
+  <li>Create utility methods in your abstract class metric class to count signatures matching a specific mask.
+<a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/metrics/AbstractJavaClassMetric.java#L50">Example</a></li>
 </ul>
+
 
 
     <div class="tags">
@@ -1404,8 +1359,8 @@ custom <code class="highlighter-rouge">SignatureMatcher</code> interface, and y
 <footer>
             <div class="row">
                 <div class="col-lg-12 footer">
-               &copy;2017 PMD Open Source Project. All rights reserved. <br />
-<span>Page last updated:</span> August 2017<br/> Site last generated: Dec 15, 2017 <br />
+               &copy;2018 PMD Open Source Project. All rights reserved. <br />
+<span>Page last updated:</span> December 2017<br/> Site last generated: Jan 21, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

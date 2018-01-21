@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.0.0</li>
+    <li class="sidebarTitle">PMD 6.0.1</li>
     
     
     
@@ -1236,13 +1236,728 @@ $('#toc').on('click', 'a', function() {
   <p>Previous versions of PMD can be downloaded here:
 http://sourceforge.net/projects/pmd/files/pmd/</p>
 
+<h2 id="15-december-2017---600">15-December-2017 - 6.0.0</h2>
+
+<p>The PMD team is pleased to announce PMD 6.0.0.</p>
+
+<p>This is a major release.</p>
+
+<h3 id="table-of-contents">Table Of Contents</h3>
+
+<ul>
+  <li><a href="#new-and-noteworthy">New and noteworthy</a>
+    <ul>
+      <li><a href="#new-rule-designer">New Rule Designer</a></li>
+      <li><a href="#java-9-support">Java 9 support</a></li>
+      <li><a href="#revamped-apex-cpd">Revamped Apex CPD</a></li>
+      <li><a href="#java-type-resolution">Java Type Resolution</a></li>
+      <li><a href="#metrics-framework">Metrics Framework</a></li>
+      <li><a href="#error-reporting">Error Reporting</a></li>
+      <li><a href="#apex-rule-suppression">Apex Rule Suppression</a></li>
+      <li><a href="#rule-categories">Rule Categories</a></li>
+      <li><a href="#new-rules">New Rules</a></li>
+      <li><a href="#modified-rules">Modified Rules</a></li>
+      <li><a href="#deprecated-rules">Deprecated Rules</a></li>
+      <li><a href="#removed-rules">Removed Rules</a></li>
+      <li><a href="#java-symbol-table">Java Symbol Table</a></li>
+      <li><a href="#apex-parser-update">Apex Parser Update</a></li>
+      <li><a href="#incremental-analysis">Incremental Analysis</a></li>
+      <li><a href="#rule-and-report-properties">Rule and Report Properties</a></li>
+    </ul>
+  </li>
+  <li><a href="#fixed-issues">Fixed Issues</a></li>
+  <li><a href="#api-changes">API Changes</a></li>
+  <li><a href="#external-contributions">External Contributions</a></li>
+</ul>
+
+<h3 id="new-and-noteworthy">New and noteworthy</h3>
+
+<h4 id="new-rule-designer">New Rule Designer</h4>
+
+<p>Thanks to <a href="https://github.com/oowekyala">Clément Fournier</a>, we now have a new rule designer GUI, which
+is based on JavaFX. It replaces the old designer and can be started via</p>
+
+<ul>
+  <li><code class="highlighter-rouge">bin/run.sh designer</code> (on Unix-like platform such as Linux and Mac OS X)</li>
+  <li><code class="highlighter-rouge">bin\designer.bat</code> (on Windows)</li>
+</ul>
+
+<p>Note: At least Java8 is required for the designer. The old designer is still available
+as <code class="highlighter-rouge">designerold</code> but will be removed with the next major release.</p>
+
+<h4 id="java-9-support">Java 9 support</h4>
+
+<p>The Java grammar has been updated to support analyzing Java 9 projects:</p>
+
+<ul>
+  <li>private methods in interfaces are possible</li>
+  <li>The underscore “_” is considered an invalid identifier</li>
+  <li>Diamond operator for anonymous classes</li>
+  <li>The module declarations in <code class="highlighter-rouge">module-info.java</code> can be parsed</li>
+  <li>Concise try-with-resources statements are supported</li>
+</ul>
+
+<p>Java 9 support is enabled by default. You can switch back to an older java version
+via the command line, e.g. <code class="highlighter-rouge">-language java -version 1.8</code>.</p>
+
+<h4 id="revamped-apex-cpd">Revamped Apex CPD</h4>
+
+<p>We are now using the Apex Jorje Lexer to tokenize Apex code for CPD. This change means:</p>
+
+<ul>
+  <li>All comments are now ignored for CPD. This is consistent with how other languages such as Java and Groovy work.</li>
+  <li>Tokenization honors the language specification, which improves accuracy.</li>
+</ul>
+
+<p>CPD will therefore have less false positives and false negatives.</p>
+
+<h4 id="java-type-resolution">Java Type Resolution</h4>
+
+<p>As part of Google Summer of Code 2017, <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a> worked on type resolution
+for Java. For this release he has extended support for method calls for both instance and static methods.</p>
+
+<p>Method shadowing and overloading are supported, as are varargs. However, the selection of the target method upon
+the presence of generics and type inference is still work in progress. Expect it in forecoming releases.</p>
+
+<p>As for fields, the basic support was in place for release 5.8.0, but has now been expanded to support static fields.</p>
+
+<h4 id="metrics-framework">Metrics Framework</h4>
+
+<p>As part of Google Summer of Code 2017, <a href="https://github.com/oowekyala">Clément Fournier</a> is worked
+on the new metrics framework for object-oriented metrics.</p>
+
+<p>There are already a couple of metrics (e.g. ATFD, WMC, Cyclo, LoC) implemented. More metrics are planned.
+Based on those metrics, rules like “GodClass” detection could be implemented more easily.
+The following rules benefit from the metrics framework: NcssCount (java), NPathComplexity (java),
+CyclomaticComplexity (both java and apex).</p>
+
+<p>The Metrics framework has been abstracted and is available in <code class="highlighter-rouge">pmd-core</code> for other languages. With this
+PMD release, the metrics framework is supported for both Java and Apex.</p>
+
+<h4 id="error-reporting">Error Reporting</h4>
+
+<p>A number of improvements on error reporting have taken place, meaning changes to some of the report formats.</p>
+
+<p>Also of note, the xml report now provides a XML Schema definition, allowing easier parsing and validation.</p>
+
+<h5 id="processing-errors">Processing Errors</h5>
+
+<p>Processing errors can now provide not only the message previously included on some reports, but also a full stacktrace.
+This will allow better error reports when providing feedback to the PMD team and help in debugging issues.</p>
+
+<p>The report formats providing full stacktrace of errors are:</p>
+
+<ul>
+  <li>html</li>
+  <li>summaryhtml</li>
+  <li>textcolor</li>
+  <li>vbhtml</li>
+  <li>xml</li>
+</ul>
+
+<h5 id="configuration-errors">Configuration Errors</h5>
+
+<p>For a long time reports have been notified of configuration errors on rules, but they have remained hidden.
+On a push to make these more evident to users, and help them get the best results out of PMD, we have started
+to include them on the reports.</p>
+
+<p>So far, only reports that include processing errors are showing configuration errors. In other words, the report formats
+providing configuration error reporting are:</p>
+
+<ul>
+  <li>csv</li>
+  <li>html</li>
+  <li>summaryhtml</li>
+  <li>text</li>
+  <li>textcolor</li>
+  <li>vbhtml</li>
+  <li>xml</li>
+</ul>
+
+<p>As we move forward we will be able to detect and report more configuration errors (ie: incomplete <code class="highlighter-rouge">auxclasspath</code>)
+and include them to such reports.</p>
+
+<h4 id="apex-rule-suppression">Apex Rule Suppression</h4>
+
+<p>Apex violations can now be suppressed very similarly to how it’s done in Java, by making use of a
+<code class="highlighter-rouge">@SuppressWarnings</code> annotation.</p>
+
+<p>Supported syntax includes:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@SupressWarnings('PMD') // to supress all Apex rules
+@SupressWarnings('all') // to supress all Apex rules
+@SupressWarnings('PMD.ARuleName') // to supress only the rule named ARuleName
+@SupressWarnings('PMD.ARuleName, PMD.AnotherRuleName') // to supress only the rule named ARuleName or AnotherRuleName
+</code></pre></div></div>
+
+<p>Notice this last scenario is slightly different to the Java syntax. This is due to differences in the Apex grammar for annotations.</p>
+
+<h4 id="rule-categories">Rule Categories</h4>
+
+<p>All built-in rules have been sorted into one of eight categories:</p>
+
+<ol>
+  <li><strong>Best Practices</strong>: These are rules which enforce generally accepted best practices.</li>
+  <li><strong>Code Style</strong>: These rules enforce a specific coding style.</li>
+  <li><strong>Design</strong>: Rules that help you discover design issues.</li>
+  <li><strong>Documentation</strong>: These rules are related to code documentation.</li>
+  <li><strong>Error Prone</strong>: Rules to detect constructs that are either broken, extremely confusing or prone to runtime errors.</li>
+  <li><strong>Multithreading</strong>: These are rules that flag issues when dealing with multiple threads of execution.</li>
+  <li><strong>Performance</strong>: Rules that flag suboptimal code.</li>
+  <li><strong>Security</strong>: Rules that flag potential security flaws.</li>
+</ol>
+
+<p>These categories help you to find rules and figure out the relevance and impact for your project.</p>
+
+<p>All rules have been moved accordingly, e.g. the rule “JumbledIncrementer”, which was previously defined in the
+ruleset “java-basic” has now been moved to the “Error Prone” category. The new rule reference to be used is
+<code class="highlighter-rouge">&lt;rule ref="category/java/errorprone.xml/JumbledIncrementer"/&gt;</code>.</p>
+
+<p>The old rulesets like “java-basic” are still kept for backwards-compatibility but will be removed eventually.
+The rule reference documentation has been updated to reflect these changes.</p>
+
+<h4 id="new-rules">New Rules</h4>
+
+<ul>
+  <li>
+    <p>The new Java rule <code class="highlighter-rouge">NcssCount</code> (category <code class="highlighter-rouge">design</code>) replaces the three rules “NcssConstructorCount”, “NcssMethodCount”,
+and “NcssTypeCount”. The new rule uses the metrics framework to achieve the same. It has two properties, to
+define the report level for method and class sizes separately. Constructors and methods are considered the same.</p>
+  </li>
+  <li>
+    <p>The new Java rule <code class="highlighter-rouge">DoNotExtendJavaLangThrowable</code> (category <code class="highlighter-rouge">errorprone</code>) is a companion for the
+<code class="highlighter-rouge">java-strictexception.xml/DoNotExtendJavaLangError</code>, detecting direct extensions of <code class="highlighter-rouge">java.lang.Throwable</code>.</p>
+  </li>
+  <li>
+    <p>The new Java rule <code class="highlighter-rouge">ForLoopCanBeForeach</code> (category <code class="highlighter-rouge">errorprone</code>) helps to identify those for-loops that can
+be safely refactored into for-each-loops available since java 1.5.</p>
+  </li>
+  <li>
+    <p>The new Java rule <code class="highlighter-rouge">AvoidFileStream</code> (category <code class="highlighter-rouge">performance</code>) helps to identify code relying on <code class="highlighter-rouge">FileInputStream</code> / <code class="highlighter-rouge">FileOutputStream</code>
+which, by using a finalizer, produces extra / unnecessary overhead to garbage collection, and should be replaced with
+<code class="highlighter-rouge">Files.newInputStream</code> / <code class="highlighter-rouge">Files.newOutputStream</code> available since java 1.7.</p>
+  </li>
+  <li>
+    <p>The new Java rule <code class="highlighter-rouge">DataClass</code> (category <code class="highlighter-rouge">design</code>) detects simple data-holders without behaviour. This might indicate
+that the behaviour is scattered elsewhere and the data class exposes the internal data structure,
+which breaks encapsulation.</p>
+  </li>
+  <li>
+    <p>The new Apex rule <code class="highlighter-rouge">AvoidDirectAccessTriggerMap</code> (category <code class="highlighter-rouge">errorprone</code>) helps to identify direct array access to triggers,
+which can produce bugs by either accessing non-existing indexes, or leaving them out. You should use for-each-loops
+instead.</p>
+  </li>
+  <li>
+    <p>The new Apex rule <code class="highlighter-rouge">AvoidHardcodingId</code> (category <code class="highlighter-rouge">errorprone</code>) detects hardcoded strings that look like identifiers
+and flags them. Record IDs change between environments, meaning hardcoded ids are bound to fail under a different
+setup.</p>
+  </li>
+  <li>
+    <p>The new Apex rule <code class="highlighter-rouge">CyclomaticComplexity</code> (category <code class="highlighter-rouge">design</code>) detects overly complex classes and methods. The
+report threshold can be configured separately for classes and methods.</p>
+  </li>
+  <li>A whole bunch of new rules has been added to Apex. They all fit into the category <code class="highlighter-rouge">errorprone</code>.
+The 5 rules are migrated for Apex from the equivalent Java rules and include:
+    <ul>
+      <li><code class="highlighter-rouge">EmptyCatchBlock</code> to detect catch blocks completely ignoring exceptions.</li>
+      <li><code class="highlighter-rouge">EmptyIfStmt</code> for if blocks with no content, that can be safely removed.</li>
+      <li><code class="highlighter-rouge">EmptyTryOrFinallyBlock</code> for empty try / finally blocks that can be safely removed.</li>
+      <li><code class="highlighter-rouge">EmptyWhileStmt</code> for empty while loops that can be safely removed.</li>
+      <li><code class="highlighter-rouge">EmptyStatementBlock</code> for empty code blocks that can be safely removed.</li>
+    </ul>
+  </li>
+  <li>The new Apex rule <code class="highlighter-rouge">AvoidSoslInLoops</code> (category <code class="highlighter-rouge">performance</code>) is the companion of the old
+<code class="highlighter-rouge">AvoidSoqlInLoops</code> rule, flagging SOSL (Salesforce Object Search Language) queries when within
+loops, to avoid governor issues, and hitting the database too often.</li>
+</ul>
+
+<h4 id="modified-rules">Modified Rules</h4>
+
+<ul>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnnecessaryFinalModifier</code> (category <code class="highlighter-rouge">codestyle</code>, former ruleset <code class="highlighter-rouge">java-unnecessarycode</code>)
+has been merged into the rule <code class="highlighter-rouge">UnnecessaryModifier</code>. As part of this, the rule  has been revamped to detect more cases.
+It will now flag anonymous class’ methods marked as final (can’t be overridden, so it’s pointless), along with
+final methods overridden / defined within enum instances. It will also flag <code class="highlighter-rouge">final</code> modifiers on try-with-resources.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnnecessaryParentheses</code> (category <code class="highlighter-rouge">codestyle</code>, former ruleset <code class="highlighter-rouge">java-controversial</code>)
+has been merged into <code class="highlighter-rouge">UselessParentheses</code> (category <code class="highlighter-rouge">codestyle</code>, former ruleset <code class="highlighter-rouge">java-unnecessary</code>).
+The rule covers all scenarios previously covered by either rule.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UncommentedEmptyConstructor</code> (category <code class="highlighter-rouge">documentation</code>, former ruleset <code class="highlighter-rouge">java-design</code>)
+ will now ignore empty constructors annotated with <code class="highlighter-rouge">javax.inject.Inject</code>.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">AbstractClassWithoutAnyMethod</code> (category <code class="highlighter-rouge">bestpractices</code>, former ruleset <code class="highlighter-rouge">java-design</code>)
+will now ignore classes annotated with <code class="highlighter-rouge">com.google.auto.value.AutoValue</code>.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">GodClass</code> (category <code class="highlighter-rouge">design', former ruleset </code>java-design`) has been revamped to use
+the new metrics framework.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">LooseCoupling</code> (category <code class="highlighter-rouge">bestpractices</code>, former ruleset <code class="highlighter-rouge">java-coupling</code>) has been
+replaced by the typeresolution-based implementation.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">CloneMethodMustImplementCloneable</code> (category <code class="highlighter-rouge">errorprone</code>, former ruleset <code class="highlighter-rouge">java-clone</code>)
+has been replaced by the typeresolution-based
+implementation and is now able to detect cases if a class implements or extends a Cloneable class/interface.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnusedImports</code> (category <code class="highlighter-rouge">bestpractices</code>, former ruleset <code class="highlighter-rouge">java-imports</code>) has been
+replaced by the typeresolution-based
+implementation and is now able to detect unused on-demand imports.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">SignatureDeclareThrowsException</code> (category <code class="highlighter-rouge">design</code>, former ruleset ‘java-strictexception’)
+has been replaced by the
+typeresolution-based implementation. It has a new property <code class="highlighter-rouge">IgnoreJUnitCompletely</code>, which allows all
+methods in a JUnit testcase to throw exceptions.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">NPathComplexity</code> (category <code class="highlighter-rouge">design</code>, former ruleset <code class="highlighter-rouge">java-codesize</code>) has been revamped
+to use the new metrics framework.
+Its report threshold can be configured via the property <code class="highlighter-rouge">reportLevel</code>, which replaces the now
+deprecated property <code class="highlighter-rouge">minimum</code>.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">CyclomaticComplexity</code> (category <code class="highlighter-rouge">design</code>, former ruleset <code class="highlighter-rouge">java-codesize</code>) has been
+revamped to use the new metrics framework.
+Its report threshold can be configured via the properties <code class="highlighter-rouge">classReportLevel</code> and <code class="highlighter-rouge">methodReportLevel</code> separately.
+The old property <code class="highlighter-rouge">reportLevel</code>, which configured the level for both total class and method complexity,
+is deprecated.</p>
+  </li>
+  <li>The Java rule <code class="highlighter-rouge">CommentRequired</code> (category <code class="highlighter-rouge">documentation</code>, former ruleset <code class="highlighter-rouge">java-comments</code>)
+has been revamped to include 2 new properties:
+    <ul>
+      <li><code class="highlighter-rouge">accessorCommentRequirement</code> to specify documentation requirements for getters and setters (default to <code class="highlighter-rouge">ignored</code>)</li>
+      <li><code class="highlighter-rouge">methodWithOverrideCommentRequirement</code> to specify documentation requirements for methods annotated with <code class="highlighter-rouge">@Override</code> (default to <code class="highlighter-rouge">ignored</code>)</li>
+    </ul>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">EmptyCatchBlock</code> (category <code class="highlighter-rouge">errorprone</code>, former ruleset <code class="highlighter-rouge">java-empty</code>) has been changed to ignore
+exceptions named <code class="highlighter-rouge">ignore</code> or <code class="highlighter-rouge">expected</code> by default. You can still override this behaviour by setting the <code class="highlighter-rouge">allowExceptionNameRegex</code> property.</p>
+  </li>
+  <li>The Java rule <code class="highlighter-rouge">OptimizableToArrayCall</code> (category <code class="highlighter-rouge">performance</code>, former ruleset <code class="highlighter-rouge">design</code>) has been
+modified to fit for the current JVM implementations: It basically detects now the opposite and suggests to
+use <code class="highlighter-rouge">Collection.toArray(new E[0])</code> with a zero-sized array.
+See <a href="https://shipilev.net/blog/2016/arrays-wisdom-ancients/">Arrays of Wisdom of the Ancients</a>.</li>
+</ul>
+
+<h4 id="deprecated-rules">Deprecated Rules</h4>
+
+<ul>
+  <li>
+    <p>The Java rules <code class="highlighter-rouge">NcssConstructorCount</code>, <code class="highlighter-rouge">NcssMethodCount</code>, and <code class="highlighter-rouge">NcssTypeCount</code> (ruleset <code class="highlighter-rouge">java-codesize</code>) have been
+deprecated. They will be replaced by the new rule <code class="highlighter-rouge">NcssCount</code> in the category <code class="highlighter-rouge">design</code>.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">LooseCoupling</code> in ruleset <code class="highlighter-rouge">java-typeresolution</code> is deprecated. Use the rule with the same name
+from category <code class="highlighter-rouge">bestpractices</code> instead.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">CloneMethodMustImplementCloneable</code> in ruleset <code class="highlighter-rouge">java-typeresolution</code> is deprecated. Use the rule with
+the same name from category <code class="highlighter-rouge">errorprone</code> instead.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnusedImports</code> in ruleset <code class="highlighter-rouge">java-typeresolution</code> is deprecated. Use the rule with
+the same name from category <code class="highlighter-rouge">bestpractices</code> instead.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">SignatureDeclareThrowsException</code> in ruleset <code class="highlighter-rouge">java-typeresolution</code> is deprecated. Use the rule
+with the same name from category <code class="highlighter-rouge">design</code> instead.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">EmptyStaticInitializer</code> in ruleset <code class="highlighter-rouge">java-empty</code> is deprecated. Use the rule <code class="highlighter-rouge">EmptyInitializer</code>
+from the category <code class="highlighter-rouge">errorprone</code>, which covers both static and non-static empty initializers.`</p>
+  </li>
+  <li>
+    <p>The Java rules <code class="highlighter-rouge">GuardDebugLogging</code> (ruleset <code class="highlighter-rouge">java-logging-jakarta-commons</code>) and <code class="highlighter-rouge">GuardLogStatementJavaUtil</code>
+(ruleset <code class="highlighter-rouge">java-logging-java</code>) have been deprecated. Use the rule <code class="highlighter-rouge">GuardLogStatement</code> from the
+category <code class="highlighter-rouge">bestpractices</code>, which covers all cases regardless of the logging framework.</p>
+  </li>
+</ul>
+
+<h4 id="removed-rules">Removed Rules</h4>
+
+<ul>
+  <li>The deprecated Java rule <code class="highlighter-rouge">UseSingleton</code> has been removed from the ruleset <code class="highlighter-rouge">java-design</code>. The rule has been renamed
+long time ago to <code class="highlighter-rouge">UseUtilityClass</code> (category <code class="highlighter-rouge">design</code>).</li>
+</ul>
+
+<h4 id="java-symbol-table">Java Symbol Table</h4>
+
+<p>A <a href="https://github.com/pmd/pmd/pull/549/commits/0958621ca884a8002012fc7738308c8dfc24b97c">bug in symbol table</a> prevented
+the symbol table analysis to properly match primitive arrays types. The issue <a href="https://github.com/pmd/pmd/issues/521">affected the <code class="highlighter-rouge">java-unsedcode/UnusedPrivateMethod</code></a>
+rule, but other rules may now produce improved results as consequence of this fix.</p>
+
+<h4 id="apex-parser-update">Apex Parser Update</h4>
+
+<p>The Apex parser version was bumped, from <code class="highlighter-rouge">1.0-sfdc-187</code> to <code class="highlighter-rouge">210-SNAPSHOT</code>. This update let us take full advantage
+of the latest improvements from Salesforce, but introduces some breaking changes:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">BlockStatements</code> are now created for all control structures, even if no brace is used. We have therefore added
+a <code class="highlighter-rouge">hasCurlyBrace</code> method to differentiate between both scenarios.</li>
+  <li>New AST node types are available. In particular <code class="highlighter-rouge">CastExpression</code>, <code class="highlighter-rouge">ConstructorPreamble</code>, <code class="highlighter-rouge">IllegalStoreExpression</code>,
+<code class="highlighter-rouge">MethodBlockStatement</code>, <code class="highlighter-rouge">Modifier</code>, <code class="highlighter-rouge">MultiStatement</code>, <code class="highlighter-rouge">NestedExpression</code>, <code class="highlighter-rouge">NestedStoreExpression</code>,
+<code class="highlighter-rouge">NewKeyValueObjectExpression</code> and <code class="highlighter-rouge">StatementExecuted</code></li>
+  <li>Some nodes have been removed. Such is the case of <code class="highlighter-rouge">TestNode</code>, <code class="highlighter-rouge">DottedExpression</code> and <code class="highlighter-rouge">NewNameValueObjectExpression</code>
+(replaced by <code class="highlighter-rouge">NewKeyValueObjectExpression</code>)</li>
+</ul>
+
+<p>All existing rules have been updated to reflect these changes. If you have custom rules, be sure to update them.</p>
+
+<p>For more info about the included Apex parser, see the new pmd module “pmd-apex-jorje”, which packages and provides
+the parser as a binary.</p>
+
+<h4 id="incremental-analysis">Incremental Analysis</h4>
+
+<p>The incremental analysis feature first introduced in PMD 5.6.0 has been enhanced. A few minor issues have been fixed,
+and several improvements have been performed to make it more accurate.</p>
+
+<p>The cache will now detect changes to the JARs referenced in the <code class="highlighter-rouge">auxclasspath</code> instead of simply looking at their paths
+and order. This means that if you are referencing a JAR you are overwriting in some way, the incremental analysis can
+now detect it and invalidate it’s cache to avoid false reports.</p>
+
+<p>Similarly, any changes to the execution classpath of PMD will invalidate the cache. This means that if you have custom
+rules packaged in a jar, any changes to it will invalidate the cache automatically.</p>
+
+<p>We have also improved logging on the analysis code, allowing better insight into how the cache is performing,
+under debug / verbose builds you can even see individual hits / misses to the cache (and the reason for any miss!)</p>
+
+<p>Finally, as this feature keeps maturing, we are gently pushing this forward. If not using incremental analysis,
+a warning will now be produced suggesting users to adopt it for better performance.</p>
+
+<h4 id="rule-and-report-properties">Rule and Report Properties</h4>
+
+<p>The implementation around the properties support for rule properties and report properties has been revamped
+to be fully typesafe. Along with that change, the support classes have been moved into an own
+package <code class="highlighter-rouge">net.sourceforge.pmd.properties</code>. While there is no change necessary in the ruleset XML files,
+when using/setting values for rules, there are adjustments necessary when declaring properties in Java-implemented
+rules.</p>
+
+<p>Rule properties can be declared both for Java based rules and XPath rules.
+This is now very well documented in <a href="pmd_devdocs_working_with_properties.html">Working with properties</a>.</p>
+
+<p>With PMD 6.0.0, multivalued properties are now also possible with XPath rules.</p>
+
+<h3 id="fixed-issues">Fixed Issues</h3>
+
+<ul>
+  <li>all
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/394">#394</a>: [core] PMD exclude rules are failing with IllegalArgumentException with non-default minimumPriority</li>
+      <li><a href="https://github.com/pmd/pmd/issues/532">#532</a>: [core] security concerns on URL-based rulesets</li>
+      <li><a href="https://github.com/pmd/pmd/issues/538">#538</a>: [core] Provide an XML Schema for XML reports</li>
+      <li><a href="https://github.com/pmd/pmd/issues/600">#600</a>: [core] Nullpointer while creating cache File</li>
+      <li><a href="https://github.com/pmd/pmd/issues/604">#604</a>: [core] Incremental analysis should detect changes to jars in classpath</li>
+      <li><a href="https://github.com/pmd/pmd/issues/608">#608</a>: [core] Add DEBUG log when applying incremental analysis</li>
+      <li><a href="https://github.com/pmd/pmd/issues/618">#618</a>: [core] Incremental Analysis doesn’t close file correctly on Windows upon a cache hit</li>
+      <li><a href="https://github.com/pmd/pmd/issues/643">#643</a>: [core] PMD Properties (dev-properties) breaks markup on CodeClimateRenderer</li>
+      <li><a href="https://github.com/pmd/pmd/pull/680">#680</a>: [core] Isolate classloaders for runtime and auxclasspath</li>
+      <li><a href="https://github.com/pmd/pmd/issues/762">#762</a>: [core] Remove method and file property from available property descriptors for XPath rules</li>
+      <li><a href="https://github.com/pmd/pmd/issues/763">#763</a>: [core] Turn property descriptor util into an enum and enrich its interface</li>
+    </ul>
+  </li>
+  <li>apex
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/265">#265</a>: [apex] Make Rule suppression work</li>
+      <li><a href="https://github.com/pmd/pmd/pull/488">#488</a>: [apex] Use Apex lexer for CPD</li>
+      <li><a href="https://github.com/pmd/pmd/pull/489">#489</a>: [apex] Update Apex compiler</li>
+      <li><a href="https://github.com/pmd/pmd/issues/500">#500</a>: [apex] Running through CLI shows jorje optimization messages</li>
+      <li><a href="https://github.com/pmd/pmd/issues/605">#605</a>: [apex] java.lang.NoClassDefFoundError in the latest build</li>
+      <li><a href="https://github.com/pmd/pmd/issues/637">#637</a>: [apex] Avoid SOSL in loops</li>
+      <li><a href="https://github.com/pmd/pmd/issues/760">#760</a>: [apex] EmptyStatementBlock complains about missing rather than empty block</li>
+      <li><a href="https://github.com/pmd/pmd/issues/766">#766</a>: [apex] Replace old Jorje parser with new one</li>
+      <li><a href="https://github.com/pmd/pmd/issues/768">#768</a>: [apex] java.lang.NullPointerException from PMD</li>
+    </ul>
+  </li>
+  <li>cpp
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/448">#448</a>: [cpp] Write custom CharStream to handle continuation characters</li>
+    </ul>
+  </li>
+  <li>java
+    <ul>
+      <li><a href="https://sourceforge.net/p/pmd/bugs/1454/">#1454</a>: [java] OptimizableToArrayCall is outdated and invalid in current JVMs</li>
+      <li><a href="https://sourceforge.net/p/pmd/bugs/1513/">#1513</a>: [java] Remove deprecated rule UseSingleton</li>
+      <li><a href="https://github.com/pmd/pmd/issues/328">#328</a>: [java] java.lang.ClassFormatError: Absent Code attribute in method that is not native or abstract in class file javax/servlet/jsp/PageContext</li>
+      <li><a href="https://github.com/pmd/pmd/pull/487">#487</a>: [java] Fix typeresolution for anonymous extending object</li>
+      <li><a href="https://github.com/pmd/pmd/issues/496">#496</a>: [java] processing error on generics inherited from enclosing class</li>
+      <li><a href="https://github.com/pmd/pmd/issues/510">#510</a>: [java] Typeresolution fails on a simple primary when the source is loaded from a class literal</li>
+      <li><a href="https://github.com/pmd/pmd/issues/527">#527</a>: [java] Lombok getter annotation on enum is not recognized correctly</li>
+      <li><a href="https://github.com/pmd/pmd/issues/534">#534</a>: [java] NPE in MethodTypeResolution for static methods</li>
+      <li><a href="https://github.com/pmd/pmd/issues/603">#603</a>: [core] incremental analysis should invalidate upon Java rule plugin changes</li>
+      <li><a href="https://github.com/pmd/pmd/issues/650">#650</a>: [java] ProcesingError analyzing code under 5.8.1</li>
+      <li><a href="https://github.com/pmd/pmd/issues/732">#732</a>: [java] LinkageError with aux classpath</li>
+    </ul>
+  </li>
+  <li>java-basic
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/pull/565">#565</a>: [java] False negative on DontCallThreadRun when extending Thread</li>
+    </ul>
+  </li>
+  <li>java-comments
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/396">#396</a>: [java] CommentRequired: add properties to ignore @Override method and getters / setters</li>
+      <li><a href="https://github.com/pmd/pmd/issues/536">#536</a>: [java] CommentDefaultAccessModifierRule ignores constructors</li>
+    </ul>
+  </li>
+  <li>java-controversial
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/388">#388</a>: [java] controversial.AvoidLiteralsInIfCondition 0.0 false positive</li>
+      <li><a href="https://github.com/pmd/pmd/issues/408">#408</a>: [java] DFA not analyzing asserts</li>
+      <li><a href="https://github.com/pmd/pmd/issues/537">#537</a>: [java] UnnecessaryParentheses fails to detect obvious scenario</li>
+    </ul>
+  </li>
+  <li>java-design
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/357">#357</a>: [java] UncommentedEmptyConstructor consider annotations on Constructor</li>
+      <li><a href="https://github.com/pmd/pmd/issues/438">#438</a>: [java] Relax AbstractClassWithoutAnyMethod when class is annotated by @AutoValue</li>
+      <li><a href="https://github.com/pmd/pmd/issues/590">#590</a>: [java] False positive on MissingStaticMethodInNonInstantiatableClass</li>
+    </ul>
+  </li>
+  <li>java-logging
+    *   <a href="https://github.com/pmd/pmd/issues/457">#457</a>: [java] Merge all log guarding rules
+    *   <a href="https://github.com/pmd/pmd/issues/721">#721</a>: [java] NPE in PMD 5.8.1 InvalidSlf4jMessageFormat</li>
+  <li>java-sunsecure
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/468">#468</a>: [java] ArrayIsStoredDirectly false positive</li>
+    </ul>
+  </li>
+  <li>java-unusedcode
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/521">#521</a>: [java] UnusedPrivateMethod returns false positives with primitive data type in map argument</li>
+    </ul>
+  </li>
+  <li>java-unnecessarycode
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/412">#412</a>: [java] java-unnecessarycode/UnnecessaryFinalModifier missing cases</li>
+      <li><a href="https://github.com/pmd/pmd/issues/676">#676</a>: [java] java-unnecessarycode/UnnecessaryFinalModifier on try-with-resources</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="api-changes">API Changes</h3>
+
+<ul>
+  <li>
+    <p>The class <code class="highlighter-rouge">net.sourceforge.pmd.lang.dfa.NodeType</code> has been converted to an enum.
+All node types are enum members now instead of int constants. The names for node types are retained.</p>
+  </li>
+  <li>
+    <p>The <em>Properties API</em> (rule and report properties) has been revamped to be fully typesafe. This is everything
+around <code class="highlighter-rouge">net.sourceforge.pmd.properties.PropertyDescriptor</code>.</p>
+
+    <p>Note: All classes related to properties have been moved into the package <code class="highlighter-rouge">net.sourceforge.pmd.properties</code>.</p>
+  </li>
+  <li>
+    <p>The rule classes <code class="highlighter-rouge">net.sourceforge.pmd.lang.apex.rule.apexunit.ApexUnitTestClassShouldHaveAsserts</code>
+and <code class="highlighter-rouge">net.sourceforge.pmd.lang.apex.rule.apexunit.ApexUnitTestShouldNotUseSeeAllDataTrue</code> have been
+renamed to <code class="highlighter-rouge">ApexUnitTestClassShouldHaveAssertsRule</code> and <code class="highlighter-rouge">ApexUnitTestShouldNotUseSeeAllDataTrueRule</code>,
+respectively. This is to comply with the naming convention, that each rule class should be suffixed with “Rule”.</p>
+
+    <p>This change has no impact on custom rulesets, since the rule names themselves didn’t change.</p>
+  </li>
+  <li>
+    <p>The never implemented method <code class="highlighter-rouge">PMD.processFiles(PMDConfiguration, RuleSetFactory, Collection&lt;File&gt;, RuleContext, ProgressMonitor)</code> along with the interface <code class="highlighter-rouge">ProgressMonitor</code> has been removed.</p>
+  </li>
+  <li>
+    <p>The method <code class="highlighter-rouge">PMD.setupReport(RuleSets, RuleContext, String)</code> is gone. It was used to report dysfunctional
+rules. But PMD does this now automatically before processing the files, so there is no need for this
+method anymore.</p>
+  </li>
+  <li>All APIs deprecated in older versions are now removed. This includes:
+    <ul>
+      <li><code class="highlighter-rouge">Renderer.getPropertyDefinitions</code></li>
+      <li><code class="highlighter-rouge">AbstractRenderer.defineProperty(String, String)</code></li>
+      <li><code class="highlighter-rouge">AbstractRenderer.propertyDefinitions</code></li>
+      <li><code class="highlighter-rouge">ReportListener</code></li>
+      <li><code class="highlighter-rouge">Report.addListener(ReportListener)</code></li>
+      <li><code class="highlighter-rouge">SynchronizedReportListener</code></li>
+      <li><code class="highlighter-rouge">CPDConfiguration.CPDConfiguration(int, Language, String)</code></li>
+      <li><code class="highlighter-rouge">CPDConfiguration.getRendererFromString(String)</code></li>
+      <li><code class="highlighter-rouge">StreamUtil</code></li>
+      <li><code class="highlighter-rouge">StringUtil.appendXmlEscaped(StringBuilder, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.htmlEncode(String)</code></li>
+    </ul>
+  </li>
+  <li>Several methods in <code class="highlighter-rouge">net.sourceforge.pmd.util.CollectionUtil</code> have been deprecated and will be removed in PMD 7.0.0. In particular:
+    <ul>
+      <li><code class="highlighter-rouge">CollectionUtil.addWithoutDuplicates(T[], T)</code></li>
+      <li><code class="highlighter-rouge">CollectionUtil.addWithoutDuplicates(T[], T[])</code></li>
+      <li><code class="highlighter-rouge">CollectionUtil.areSemanticEquals(T[], T[])</code></li>
+      <li><code class="highlighter-rouge">CollectionUtil.areEqual(Object, Object)</code></li>
+      <li><code class="highlighter-rouge">CollectionUtil.arraysAreEqual(Object, Object)</code></li>
+      <li><code class="highlighter-rouge">CollectionUtil.valuesAreTransitivelyEqual(Object[], Object[])</code></li>
+    </ul>
+  </li>
+  <li>Several methods in <code class="highlighter-rouge">net.sourceforge.pmd.util.StringUtil</code> have been deprecated and will be removed in PMD 7.0.0. In particular:
+    <ul>
+      <li><code class="highlighter-rouge">StringUtil.startsWithAny(String, String[])</code></li>
+      <li><code class="highlighter-rouge">StringUtil.isNotEmpty(String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.isEmpty(String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.isMissing(String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.areSemanticEquals(String, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.replaceString(String, String, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.replaceString(String, char, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.substringsOf(String, char)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.substringsOf(String, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.asStringOn(StringBuffer, Iterator, String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.asStringOn(StringBuilder, Object[], String)</code></li>
+      <li><code class="highlighter-rouge">StringUtil.lpad(String, int)</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>The class <code class="highlighter-rouge">net.sourceforge.pmd.lang.java.typeresolution.typedefinition.JavaTypeDefinition</code> is now abstract, and has been enhanced
+to provide several new methods.</p>
+  </li>
+  <li>
+    <p>The constructor of <code class="highlighter-rouge">net.sourceforge.pmd.RuleSetFactory</code>, which took a <code class="highlighter-rouge">ClassLoader</code> is deprecated.
+Please use the alternative constructor with the <code class="highlighter-rouge">net.sourceforge.pmd.util.ResourceLoader</code> instead.</p>
+  </li>
+  <li>The following GUI related classes have been deprecated and will be removed in PMD 7.0.0.
+The tool “bgastviewer”, that could be started via the script <code class="highlighter-rouge">bgastviewer.bat</code> or <code class="highlighter-rouge">run.sh bgastviewer</code> is
+deprecated, too, and will be removed in PMD 7.0.0.
+Both the “old designer” and “bgastviewer” are replaced by the <a href="#new-rule-designer">New Rule Designer</a>.
+    <ul>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.designer.CodeEditorTextPane</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.designer.CreateXMLRulePanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.designer.Designer</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.designer.DFAPanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.designer.LineGetter</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.Viewer</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.ActionCommands</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.ASTPanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.EvaluationResultsPanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.MainFrame</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.ParseExceptionHandler</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.SourceCodePanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.XPathPanel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.menu.ASTNodePopupMenu</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.menu.AttributesSubMenu</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.menu.SimpleNodeSubMenu</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.gui.menu.XPathFragmentAddingItem</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.ASTModel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.AttributeToolkit</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.SimpleNodeTreeNodeAdapter</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.ViewerModel</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.ViewerModelEvent</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.model.ViewerModelListener</code></li>
+      <li><code class="highlighter-rouge">net.sourceforge.pmd.util.viewer.util.NLS</code></li>
+    </ul>
+  </li>
+  <li>The following methods in <code class="highlighter-rouge">net.sourceforge.pmd.Rule</code> have been deprecated and will be removed in PMD 7.0.0.
+All methods are replaced by their bean-like counterparts
+    <ul>
+      <li><code class="highlighter-rouge">void setUsesDFA()</code>. Use <code class="highlighter-rouge">void setDfa(boolean)</code> instead.</li>
+      <li><code class="highlighter-rouge">boolean usesDFA()</code>. Use <code class="highlighter-rouge">boolean isDfa()</code> instead.</li>
+      <li><code class="highlighter-rouge">void setUsesTypeResolution()</code>. Use <code class="highlighter-rouge">void setTypeResolution(boolean)</code> instead.</li>
+      <li><code class="highlighter-rouge">boolean usesTypeResolution()</code>. Use <code class="highlighter-rouge">boolean isTypeResolution()</code> instead.</li>
+      <li><code class="highlighter-rouge">void setUsesMultifile()</code>. Use <code class="highlighter-rouge">void setMultifile(boolean)</code> instead.</li>
+      <li><code class="highlighter-rouge">boolean usesMultifile()</code>. Use <code class="highlighter-rouge">boolean isMultifile()</code> instead.</li>
+      <li><code class="highlighter-rouge">boolean usesRuleChain()</code>. Use <code class="highlighter-rouge">boolean isRuleChain()</code> instead.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="external-contributions">External Contributions</h3>
+
+<ul>
+  <li><a href="https://github.com/pmd/pmd/pull/287">#287</a>: [apex] Make Rule suppression work - <a href="https://github.com/up2go-rsoesemann">Robert Sösemann</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/420">#420</a>: [java] Fix UR anomaly in assert statements - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/482">#482</a>: [java] Metrics testing framework + improved capabilities for metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/484">#484</a>: [core] Changed linux usage to a more unix like path - <a href="https://github.com/patriksevallius">patriksevallius</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/486">#486</a>: [java] Add basic method typeresolution - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/492">#492</a>: [java] Typeresolution for overloaded methods - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/495">#495</a>: [core] Custom rule reinitialization code - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/479">#479</a>: [core] Typesafe and immutable properties - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/499">#499</a>: [java] Metrics memoization tests - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/501">#501</a>: [java] Add support for most specific vararg method type resolution - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/502">#502</a>: [java] Add support for static field type resolution - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/505">#505</a>: [java] Followup on metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/506">#506</a>: [java] Add reduction rules to type inference - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/511">#511</a>: [core] Prepare abstraction of the metrics framework - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/512">#512</a>: [java] Add incorporation to type inference - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/513">#513</a>: [java] Fix for maximally specific method selection - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/514">#514</a>: [java] Add static method type resolution - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/517">#517</a>: [doc] Metrics documentation - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/518">#518</a>: [core] Properties refactoring: factorized enumerated property - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/523">#523</a>: [java] Npath complexity metric and rule - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/524">#524</a>: [java] Add support for explicit type arguments with method invocation - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/525">#525</a>: [core] Fix line ending and not ignored files issues - <a href="https://github.com/MatiasComercio">Matias Comercio</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/528">#528</a>: [core] Fix typo - <a href="https://github.com/kayoub5">Ayoub Kaanich</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/529">#529</a>: [java] Abstracted the Java metrics framework - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/530">#530</a>: [java] Fix issue #527: Lombok getter annotation on enum is not recognized correctly - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/533">#533</a>: [core] improve error message - <a href="https://github.com/deki">Dennis Kieselhorst</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/535">#535</a>: [apex] Fix broken Apex visitor adapter - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/542">#542</a>: [java] Metrics abstraction - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/545">#545</a>: [apex] Apex metrics framework - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/548">#548</a>: [java] Metrics documentation - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/550">#550</a>: [java] Add basic resolution to type inference - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/553">#553</a>: [java] Refactored ParserTst into a static utility class + add getSourceFromClass - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/554">#554</a>: [java] Fix #537: UnnecessaryParentheses fails to detect obvious scenario - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/555">#555</a>: [java] Changed metrics/CyclomaticComplexityRule to use WMC when reporting classes - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/556">#556</a>: [java] Fix #357: UncommentedEmptyConstructor consider annotations on Constructor - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/557">#557</a>: [java] Fix NPath metric not counting ternaries correctly - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/563">#563</a>: [java] Add support for basic method type inference for strict invocation - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/566">#566</a>: [java] New rule in migrating ruleset: ForLoopCanBeForeach - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/567">#567</a>: [java] Last API change for metrics (metric options) - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/570">#570</a>: [java] Model lower, upper and intersection types - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/573">#573</a>: [java] Data class rule - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/576">#576</a>: [doc][java] Add hint for Guava users in InefficientEmptyStringCheck - <a href="https://github.com/mmoehring">mmoehring</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/578">#578</a>: [java] Refactored god class rule - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/579">#579</a>: [java] Update parsing to produce upper and lower bounds - <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/580">#580</a>: [core] Add AbstractMetric to topple the class hierarchy of metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/581">#581</a>: [java] Relax AbstractClassWithoutAnyMethod when class is annotated by @AutoValue - <a href="https://github.com/vanniktech">Niklas Baudy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/583">#583</a>: [java] Documentation about writing metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/585">#585</a>: [java] Moved NcssCountRule to codesize.xml - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/587">#587</a>: [core] Properties refactoring: Move static constants of ValueParser to class ValueParserConstants - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/588">#588</a>: [java] XPath function to compute metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/598">#598</a>: [java] Fix #388: controversial.AvoidLiteralsInIfCondition 0.0 false positive - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/602">#602</a>: [java] [apex] Separate multifile analysis from metrics - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/620">#620</a>: [core] Moved properties to n.s.pmd.properties - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/625">#625</a>: [apex] empty code ruleset for apex - <a href="https://github.com/JAertgeerts">Jan Aertgeerts</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/632">#632</a>: [apex] Add AvoidDirectAccessTriggerMap rule to the style set - <a href="https://github.com/JAertgeerts">Jan Aertgeerts</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/644">#644</a>: [core] Prevent internal dev-properties from being displayed on CodeClimate renderer - <a href="https://github.com/filipesperandio">Filipe Esperandio</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/660">#660</a>: [apex] avoid sosl in loops - <a href="https://github.com/JAertgeerts">Jan Aertgeerts</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/661">#661</a>: [apex] avoid hardcoding id’s - <a href="https://github.com/JAertgeerts">Jan Aertgeerts</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/666">#666</a>: [java] Add DoNotExtendJavaLangThrowable rule - <a href="https://github.com/robertpainsi">Robert Painsi</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/668">#668</a>: [core] Fix javadoc warnings on pmd-core - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/669">#669</a>: [core] Builder pattern for properties - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/675">#675</a>: [java] Fix in Java grammar: Try with final resource node error - <a href="https://github.com/gibarsin">Gonzalo Ibars Ingman</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/679">#679</a>: [core] Token scheme generalization - <a href="https://github.com/gibarsin">Gonzalo Ibars Ingman</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/694">#694</a>: [core] Add minor fixes to root pom - <a href="https://github.com/MatiasComercio">Matias Comercio</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/696">#696</a>: [core] Add remove operation over nodes - <a href="https://github.com/MatiasComercio">Matias Comercio</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/711">#711</a>: [ui] New rule designer - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/722">#722</a>: [java] Move NPathComplexity from metrics to design - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/723">#723</a>: [core] Rule factory refactoring - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/726">#726</a>: [java] Fix issue #721 (NPE in InvalidSlf4jMessageFormat) - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/727">#727</a>: [core] Fix #725: numeric property descriptors now check their default value - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/733">#733</a>: [java] Some improvements to CommentRequired - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/734">#734</a>: [java] Move CyclomaticComplexity from metrics to design - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/736">#736</a>: [core] Make Saxon support multi valued XPath properties - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/737">#737</a>: [doc] Fix NPathComplexity documentation bad rendering - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/744">#744</a>: [doc] Added Apex to supported languages - <a href="https://github.com/coola">Michał Kuliński</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/746">#746</a>: [doc] Fix typo in incremental analysis log message - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/749">#749</a>: [doc] Update the documentation for properties - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/758">#758</a>: [core] Expose the full mapping from property type id to property extractor - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/764">#764</a>: [core] Prevent method and file property use in XPath rules - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/771">#771</a>: [apex] Fix Apex metrics framework failing on triggers, refs #768 - <a href="https://github.com/oowekyala">Clément Fournier</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/774">#774</a>: [java] Avoid using FileInput/Output - see JDK-8080225 - <a href="https://github.com/chonton">Chas Honton</a></li>
+</ul>
+
 <h2 id="01-july-2017---581">01-July-2017 - 5.8.1</h2>
 
 <p>The PMD team is pleased to announce PMD 5.8.1.</p>
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="fixed-issues">Fixed Issues</h3>
+<h3 id="fixed-issues-1">Fixed Issues</h3>
 
 <ul>
   <li>java
@@ -1254,14 +1969,14 @@ http://sourceforge.net/projects/pmd/files/pmd/</p>
   </li>
 </ul>
 
-<h3 id="api-changes">API Changes</h3>
+<h3 id="api-changes-1">API Changes</h3>
 
 <ul>
   <li>The <code class="highlighter-rouge">getGenericArgs()</code> method introduced to <code class="highlighter-rouge">TypeNode</code> in 5.8.0 was removed. You can access to generics’ info through the <code class="highlighter-rouge">JavaTypeDefinition</code> object.</li>
   <li>The <code class="highlighter-rouge">JavaTypeDefinitionBuilder</code> class introduced in 5.8.0 is not more. You can use factory methods available on <code class="highlighter-rouge">JavaTypeDefinition</code></li>
 </ul>
 
-<h3 id="external-contributions">External Contributions</h3>
+<h3 id="external-contributions-1">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/472">#472</a>: [java] fix error with raw types, bug #471</li>
@@ -1273,9 +1988,9 @@ http://sourceforge.net/projects/pmd/files/pmd/</p>
 
 <p>This is a minor release.</p>
 
-<h3 id="new-and-noteworthy">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-1">New and noteworthy</h3>
 
-<h4 id="java-type-resolution">Java Type Resolution</h4>
+<h4 id="java-type-resolution-1">Java Type Resolution</h4>
 
 <p>As part of Google Summer of Code 2017, <a href="https://github.com/WinterGrascph">Bendegúz Nagy</a> has been working on completing type resolution for Java.
 His progress so far has allowed to properly resolve, in addition to previously supported statements:</p>
@@ -1287,7 +2002,7 @@ His progress so far has allowed to properly resolve, in addition to previously s
 
 <p>Lambda parameter types where these are infered rather than explicit are still not supported. Expect future releases to do so.</p>
 
-<h4 id="metrics-framework">Metrics Framework</h4>
+<h4 id="metrics-framework-1">Metrics Framework</h4>
 
 <p>As part of Google Summer of Code 2017, <a href="https://github.com/oowekyala">Clément Fournier</a> has been working on
 a new metrics framework for object-oriented metrics.</p>
@@ -1301,7 +2016,7 @@ defined in the <em>java-codesize</em> ruleset (see also <a href="https://github.
 <p>Since this work is still in progress, the metrics API (package <code class="highlighter-rouge">net.sourceforge.pmd.lang.java.oom</code>)
 is not finalized yet and is expected to change.</p>
 
-<h4 id="modified-rules">Modified Rules</h4>
+<h4 id="modified-rules-1">Modified Rules</h4>
 
 <ul>
   <li>
@@ -1328,14 +2043,14 @@ either <code class="highlighter-rouge">ignored</code> or <code class="highlighte
   </li>
 </ul>
 
-<h4 id="deprecated-rules">Deprecated Rules</h4>
+<h4 id="deprecated-rules-1">Deprecated Rules</h4>
 
 <ul>
   <li>The three complexity rules <code class="highlighter-rouge">CyclomaticComplexity</code>, <code class="highlighter-rouge">StdCyclomaticComplexity</code>, <code class="highlighter-rouge">ModifiedCyclomaticComplexity</code> (ruleset java-codesize) have been deprecated. They will be eventually replaced
 by a new CyclomaticComplexity rule based on the metrics framework. See also <a href="https://github.com/pmd/pmd/issues/445">issue #445</a>.</li>
 </ul>
 
-<h3 id="fixed-issues-1">Fixed Issues</h3>
+<h3 id="fixed-issues-2">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -1413,7 +2128,7 @@ by a new CyclomaticComplexity rule based on the metrics framework. See also <a h
   </li>
 </ul>
 
-<h3 id="external-contributions-1">External Contributions</h3>
+<h3 id="external-contributions-2">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/406">#406</a>: [java] False positive with lambda in java-design/ConstructorCallsOverridableMethod</li>
@@ -1436,9 +2151,9 @@ by a new CyclomaticComplexity rule based on the metrics framework. See also <a h
 
 <p>This is a minor release.</p>
 
-<h3 id="new-and-noteworthy-1">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-2">New and noteworthy</h3>
 
-<h4 id="modified-rules-1">Modified Rules</h4>
+<h4 id="modified-rules-2">Modified Rules</h4>
 
 <ul>
   <li>
@@ -1461,7 +2176,7 @@ Example usage:</p>
 will still indicate whether violations were found.</li>
 </ul>
 
-<h3 id="fixed-issues-2">Fixed Issues</h3>
+<h3 id="fixed-issues-3">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -1503,14 +2218,14 @@ will still indicate whether violations were found.</li>
   </li>
 </ul>
 
-<h3 id="api-changes-1">API Changes</h3>
+<h3 id="api-changes-2">API Changes</h3>
 
 <ul>
   <li>The method <code class="highlighter-rouge">net.sourceforge.pmd.util.StringUtil#htmlEncode(String)</code> is deprecated.
 <code class="highlighter-rouge">org.apache.commons.lang3.StringEscapeUtils#escapeHtml4(String)</code> should be used instead.</li>
 </ul>
 
-<h3 id="external-contributions-2">External Contributions</h3>
+<h3 id="external-contributions-3">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/368">#368</a>: [vf] Adding proper AST support for negation expressions</li>
@@ -1531,7 +2246,7 @@ will still indicate whether violations were found.</li>
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="fixed-issues-3">Fixed Issues</h3>
+<h3 id="fixed-issues-4">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -1569,9 +2284,9 @@ than PMD 5.5.1, when we first started working on it.</p>
 <p>Java developers will also appreciate the revamp of <code class="highlighter-rouge">CloneMethodMustImplementCloneable</code>,
 making it over 500X faster, and <code class="highlighter-rouge">PreserveStackTrace</code> which is now 7X faster.</p>
 
-<h3 id="new-and-noteworthy-2">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-3">New and noteworthy</h3>
 
-<h4 id="incremental-analysis">Incremental Analysis</h4>
+<h4 id="incremental-analysis-1">Incremental Analysis</h4>
 
 <p>PMD now supports incremental analysis. Analysis results can be cached and reused between runs.
 This allows PMD to skip files without violations that have remained unchanged. In future releases,
@@ -1591,7 +2306,7 @@ specifically configure a cache file.</p>
 
 <p>For Ant, a new <code class="highlighter-rouge">cacheLocation</code> attribute has been added. For instance:</p>
 
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code>    <span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">"pmd"</span><span class="nt">&gt;</span>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">"pmd"</span><span class="nt">&gt;</span>
         <span class="nt">&lt;taskdef</span> <span class="na">name=</span><span class="s">"pmd"</span> <span class="na">classname=</span><span class="s">"net.sourceforge.pmd.ant.PMDTask"</span><span class="nt">/&gt;</span>
         <span class="nt">&lt;pmd</span> <span class="na">cacheLocation=</span><span class="s">"build/pmd/pmd.cache"</span><span class="nt">&gt;</span>
             <span class="nt">&lt;ruleset&gt;</span>rulesets/java/design.xml<span class="nt">&lt;/ruleset&gt;</span>
@@ -1602,8 +2317,7 @@ specifically configure a cache file.</p>
             <span class="nt">&lt;/fileset&gt;</span>
         <span class="nt">&lt;/pmd&gt;</span>
     <span class="nt">&lt;/target&gt;</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h4 id="visualforce-support">Visualforce Support</h4>
 
@@ -1634,15 +2348,14 @@ Hard-wiring these values greatly compromises the security of encrypted data.</p>
 
 <p>For instance, it would report violations on code such as:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class without sharing Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class without sharing Foo {
     Blob hardCodedIV = Blob.valueOf('Hardcoded IV 123');
     Blob hardCodedKey = Blob.valueOf('0000000000000000');
     Blob data = Blob.valueOf('Data to be encrypted');
     Blob encrypted = Crypto.encrypt('AES128', hardCodedKey, hardCodedIV, data);
 }
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexcrudviolation">ApexCRUDViolation</h5>
 
@@ -1652,7 +2365,7 @@ privilege and may produce runtime errors. This check forces you to handle such s
 
 <p>For example, the following code is considered valid:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public Contact foo(String status, String ID) {
         Contact c = [SELECT Status__c FROM Contact WHERE Id=:ID];
 
@@ -1666,8 +2379,7 @@ privilege and may produce runtime errors. This check forces you to handle such s
         return c;
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexcsrf">ApexCSRF</h5>
 
@@ -1676,7 +2388,7 @@ modification of the database just by accessing a page.</p>
 
 <p>For instance, the following code would be invalid:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public init() {
         insert data;
     }
@@ -1685,8 +2397,7 @@ modification of the database just by accessing a page.</p>
         insert data;
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexdangerousmethods">ApexDangerousMethods</h5>
 
@@ -1713,14 +2424,13 @@ redirecting users to phishing sites.</p>
 
 <p>For instance, the following code would be reported:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class without sharing Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class without sharing Foo {
     String unsafeLocation = ApexPage.getCurrentPage().getParameters.get('url_param');
     PageReference page() {
        return new PageReference(unsafeLocation);
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexsharingviolations">ApexSharingViolations</h5>
 
@@ -1733,13 +2443,12 @@ forces the developer to take access restrictions into account before modifying o
 
 <p>For instance, it would report on:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public void test1(String t1) {
         Database.query('SELECT Id FROM Account' + t1);
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexsuggestusingnamedcred">ApexSuggestUsingNamedCred</h5>
 
@@ -1783,14 +2492,13 @@ controlled from the rest.</p>
 
 <p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>if (foo)    // not recommended
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if (foo)    // not recommended
     x++;
 
 if (foo) {  // preferred approach
     x++;
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="whileloopsmustusebraces">WhileLoopsMustUseBraces</h5>
 
@@ -1800,14 +2508,13 @@ controlled from the rest.</p>
 
 <p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>while (true)    // not recommended
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>while (true)    // not recommended
       x++;
 
 while (true) {  // preferred approach
       x++;
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="ifelsestmtsmustusebraces">IfElseStmtsMustUseBraces</h5>
 
@@ -1817,7 +2524,7 @@ from the rest.</p>
 
 <p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>// this is not recommended
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// this is not recommended
 if (foo)
        x = x+1;
    else
@@ -1829,8 +2536,7 @@ if (foo) {
 } else {
    x = x-1;
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="forloopsmustusebraces">ForLoopsMustUseBraces</h5>
 
@@ -1840,16 +2546,15 @@ from the rest.</p>
 
 <p>For instance, the following code shows the different. PMD would report on the not recommended approach:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>for (int i = 0; i &lt; 42; i++) // not recommended
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>for (int i = 0; i &lt; 42; i++) // not recommended
     foo();
 
 for (int i = 0; i &lt; 42; i++) { // preferred approach
     foo();
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<h4 id="new-rules">New Rules</h4>
+<h4 id="new-rules-1">New Rules</h4>
 
 <h5 id="accessormethodgeneration-java-design">AccessorMethodGeneration (java-design)</h5>
 
@@ -1859,7 +2564,7 @@ be avoided by changing the visibility of the field / method from private to pack
 
 <p>For instance, it would report violations on code such as:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class OuterClass {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class OuterClass {
     private int counter;
     /* package */ int id;
 
@@ -1873,12 +2578,11 @@ be avoided by changing the visibility of the field / method from private to pack
         }
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This new rule is part of the <code class="highlighter-rouge">java-design</code> ruleset.</p>
 
-<h4 id="modified-rules-2">Modified Rules</h4>
+<h4 id="modified-rules-3">Modified Rules</h4>
 
 <ul>
   <li>
@@ -1923,7 +2627,7 @@ See <a href="https://github.com/pmd/pmd/pull/250">PR #250</a>.</p>
 
 <p>For example:</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code>    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">someMethod</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">public</span> <span class="n">Object</span> <span class="nf">someMethod</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
         <span class="c1">// some unignored code</span>
 
         <span class="c1">// tell cpd to start ignoring code - CPD-OFF</span>
@@ -1940,8 +2644,7 @@ See <a href="https://github.com/pmd/pmd/pull/250">PR #250</a>.</p>
 
         <span class="c1">// further code will *not* be ignored</span>
     <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h4 id="cpd-filelist-command-line-option">CPD filelist command line option</h4>
 
@@ -1949,7 +2652,7 @@ See <a href="https://github.com/pmd/pmd/pull/250">PR #250</a>.</p>
 contains the names and paths of the files, that should be analyzed. This is similar to PMD’s filelist option.
 You need to use this, if you have a large project with many files, and you hit the command line length limit.</p>
 
-<h3 id="fixed-issues-4">Fixed Issues</h3>
+<h3 id="fixed-issues-5">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -2085,7 +2788,7 @@ You need to use this, if you have a large project with many files, and you hit t
   </li>
 </ul>
 
-<h3 id="api-changes-2">API Changes</h3>
+<h3 id="api-changes-3">API Changes</h3>
 
 <ul>
   <li><code class="highlighter-rouge">net.sourceforge.pmd.RuleSetFactory</code> is now immutable and its behavior cannot be changed anymore.
@@ -2100,7 +2803,7 @@ Therefore, the methods <code class="highlighter-rouge">getSynchronizedListeners(
 replaced by <code class="highlighter-rouge">getListeners()</code> and <code class="highlighter-rouge">addListeners(...)</code>. See <a href="https://github.com/pmd/pmd/pull/193">PR #193</a>.</li>
 </ul>
 
-<h3 id="external-contributions-3">External Contributions</h3>
+<h3 id="external-contributions-4">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/123">#123</a>: [apex] Changing method names to lowercase so casing doesn’t matter</li>
@@ -2172,7 +2875,7 @@ replaced by <code class="highlighter-rouge">getListeners()</code> and <code clas
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="fixed-issues-5">Fixed Issues</h3>
+<h3 id="fixed-issues-6">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -2188,7 +2891,7 @@ replaced by <code class="highlighter-rouge">getListeners()</code> and <code clas
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="fixed-issues-6">Fixed Issues</h3>
+<h3 id="fixed-issues-7">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -2203,7 +2906,7 @@ replaced by <code class="highlighter-rouge">getListeners()</code> and <code clas
 
 <p>The PMD team is pleased to announce PMD 5.5.5.</p>
 
-<h3 id="fixed-issues-7">Fixed Issues</h3>
+<h3 id="fixed-issues-8">Fixed Issues</h3>
 
 <ul>
   <li>general:
@@ -2241,7 +2944,7 @@ replaced by <code class="highlighter-rouge">getListeners()</code> and <code clas
   </li>
 </ul>
 
-<h3 id="external-contributions-4">External Contributions</h3>
+<h3 id="external-contributions-5">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/280">#280</a>: [apex] Support for Aggregate Result in CRUD rules</li>
@@ -2256,9 +2959,9 @@ replaced by <code class="highlighter-rouge">getListeners()</code> and <code clas
 
 <p>The PMD team is pleased to announce PMD 5.5.4</p>
 
-<h3 id="new-and-noteworthy-3">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-4">New and noteworthy</h3>
 
-<h4 id="new-rules-1">New Rules</h4>
+<h4 id="new-rules-2">New Rules</h4>
 
 <h5 id="accessormethodgeneration-java-design-1">AccessorMethodGeneration (java-design)</h5>
 
@@ -2268,7 +2971,7 @@ be avoided by changing the visibility of the field / method from private to pack
 
 <p>For instance, it would report violations on code such as:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class OuterClass {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class OuterClass {
     private int counter;
     /* package */ int id;
 
@@ -2282,12 +2985,11 @@ be avoided by changing the visibility of the field / method from private to pack
         }
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>This new rule is part of the <code class="highlighter-rouge">java-design</code> ruleset.</p>
 
-<h4 id="modified-rules-3">Modified Rules</h4>
+<h4 id="modified-rules-4">Modified Rules</h4>
 
 <ul>
   <li>The Java rule <code class="highlighter-rouge">UnusedModifier</code> (ruleset java-unusedcode) has been expanded to consider more redundant modifiers.
@@ -2304,7 +3006,7 @@ and return statement to be on consecutive lines. Any variable that is used solel
 reported.</li>
 </ul>
 
-<h3 id="fixed-issues-8">Fixed Issues</h3>
+<h3 id="fixed-issues-9">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -2357,7 +3059,7 @@ reported.</li>
   </li>
 </ul>
 
-<h3 id="external-contributions-5">External Contributions</h3>
+<h3 id="external-contributions-6">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/227">#227</a>: [apex] Improving detection of getters</li>
@@ -2389,7 +3091,7 @@ than PMD 5.5.1, when we first started working on it.</p>
 <p>Java developers will also appreciate the revamp of <code class="highlighter-rouge">CloneMethodMustImplementCloneable</code>,
 making it over 500X faster, and <code class="highlighter-rouge">PreserveStackTrace</code> which is now 7X faster.</p>
 
-<h3 id="new-and-noteworthy-4">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-5">New and noteworthy</h3>
 
 <h4 id="apex-security-rule-set-1">Apex Security Rule Set</h4>
 
@@ -2403,15 +3105,14 @@ Hard-wiring these values greatly compromises the security of encrypted data.</p>
 
 <p>For instance, it would report violations on code such as:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class without sharing Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class without sharing Foo {
     Blob hardCodedIV = Blob.valueOf('Hardcoded IV 123');
     Blob hardCodedKey = Blob.valueOf('0000000000000000');
     Blob data = Blob.valueOf('Data to be encrypted');
     Blob encrypted = Crypto.encrypt('AES128', hardCodedKey, hardCodedIV, data);
 }
 
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexcrudviolation-1">ApexCRUDViolation</h5>
 
@@ -2421,7 +3122,7 @@ privilege and may produce runtime errors. This check forces you to handle such s
 
 <p>For example, the following code is considered valid:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public Contact foo(String status, String ID) {
         Contact c = [SELECT Status__c FROM Contact WHERE Id=:ID];
 
@@ -2435,8 +3136,7 @@ privilege and may produce runtime errors. This check forces you to handle such s
         return c;
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexcsrf-1">ApexCSRF</h5>
 
@@ -2445,7 +3145,7 @@ modification of the database just by accessing a page.</p>
 
 <p>For instance, the following code would be invalid:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public init() {
         insert data;
     }
@@ -2454,8 +3154,7 @@ modification of the database just by accessing a page.</p>
         insert data;
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexdangerousmethods-1">ApexDangerousMethods</h5>
 
@@ -2482,14 +3181,13 @@ redirecting users to phishing sites.</p>
 
 <p>For instance, the following code would be reported:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class without sharing Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class without sharing Foo {
     String unsafeLocation = ApexPage.getCurrentPage().getParameters.get('url_param');
     PageReference page() {
        return new PageReference(unsafeLocation);
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexsharingviolations-1">ApexSharingViolations</h5>
 
@@ -2502,13 +3200,12 @@ forces the developer to take access restrictions into account before modifying o
 
 <p>For instance, it would report on:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>public class Foo {
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>public class Foo {
     public void test1(String t1) {
         Database.query('SELECT Id FROM Account' + t1);
     }
 }
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h5 id="apexsuggestusingnamedcred-1">ApexSuggestUsingNamedCred</h5>
 
@@ -2539,14 +3236,14 @@ attacks if unescaped.</p>
 <p>Makes sure that all values obtained from URL parameters are properly escaped / sanitized
 to avoid XSS attacks.</p>
 
-<h4 id="modified-rules-4">Modified Rules</h4>
+<h4 id="modified-rules-5">Modified Rules</h4>
 
 <p>The Java rule “UseLocaleWithCaseConversions” (ruleset java-design) has been modified, to detect calls
 to <code class="highlighter-rouge">toLowerCase</code> and to <code class="highlighter-rouge">toUpperCase</code> also within method call chains. This leads to more detected cases
 and potentially new false positives.
 See also <a href="https://sourceforge.net/p/pmd/bugs/1556/">bugfix #1556</a>.</p>
 
-<h3 id="fixed-issues-9">Fixed Issues</h3>
+<h3 id="fixed-issues-10">Fixed Issues</h3>
 
 <ul>
   <li>General
@@ -2624,7 +3321,7 @@ See also <a href="https://sourceforge.net/p/pmd/bugs/1556/">bugfix #1556</a>.</p
   </li>
 </ul>
 
-<h3 id="api-changes-3">API Changes</h3>
+<h3 id="api-changes-4">API Changes</h3>
 
 <ul>
   <li><code class="highlighter-rouge">net.sourceforge.pmd.RuleSetFactory</code> is now immutable and its behavior cannot be changed anymore.
@@ -2632,7 +3329,7 @@ It provides constructors to create new adjusted instances. This allows to avoid 
 See <a href="https://github.com/pmd/pmd/pull/131">PR #131</a>.</li>
 </ul>
 
-<h3 id="external-contributions-6">External Contributions</h3>
+<h3 id="external-contributions-7">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/123">#123</a>: [apex] Changing method names to lowercase so casing doesn’t matter</li>
@@ -3059,14 +3756,14 @@ hides member variable</li>
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="table-of-contents">Table Of Contents</h3>
+<h3 id="table-of-contents-1">Table Of Contents</h3>
 
 <ul>
   <li><a href="#Fixed_Issues">Fixed Issues</a></li>
   <li><a href="#External_Contributions">External Contributions</a></li>
 </ul>
 
-<h3 id="fixed-issues-10">Fixed Issues</h3>
+<h3 id="fixed-issues-11">Fixed Issues</h3>
 
 <ul>
   <li>general:
@@ -3101,7 +3798,7 @@ hides member variable</li>
   </li>
 </ul>
 
-<h3 id="external-contributions-7">External Contributions</h3>
+<h3 id="external-contributions-8">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/303">#303</a>: [java] InefficientEmptyStringCheckRule now reports String.trim().isEmpty()</li>
@@ -3115,7 +3812,7 @@ hides member variable</li>
 
 <p>This is a bug fixing release.</p>
 
-<h3 id="table-of-contents-1">Table Of Contents</h3>
+<h3 id="table-of-contents-2">Table Of Contents</h3>
 
 <ul>
   <li><a href="#New_and_noteworthy">New and noteworthy</a>
@@ -3127,9 +3824,9 @@ hides member variable</li>
   <li><a href="#External_Contributions">External Contributions</a></li>
 </ul>
 
-<h3 id="new-and-noteworthy-5">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-6">New and noteworthy</h3>
 
-<h4 id="modified-rules-5">Modified Rules</h4>
+<h4 id="modified-rules-6">Modified Rules</h4>
 
 <ul>
   <li>The Java rule <code class="highlighter-rouge">UnusedModifier</code> (ruleset java-unusedcode) has been expanded to consider more redundant modifiers.
@@ -3143,7 +3840,7 @@ hides member variable</li>
   </li>
 </ul>
 
-<h3 id="fixed-issues-11">Fixed Issues</h3>
+<h3 id="fixed-issues-12">Fixed Issues</h3>
 
 <ul>
   <li>general
@@ -3183,7 +3880,7 @@ hides member variable</li>
   </li>
 </ul>
 
-<h3 id="external-contributions-8">External Contributions</h3>
+<h3 id="external-contributions-9">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/266">#266</a>: [java] corrected invalid reporting of LoD violation</li>
@@ -3209,18 +3906,18 @@ than PMD 5.4.2, when we first started working on it.</p>
 <p>Java developers will also appreciate the revamp of <code class="highlighter-rouge">CloneMethodMustImplementCloneable</code>,
 making it over 500X faster, and <code class="highlighter-rouge">PreserveStackTrace</code> which is now 7X faster.</p>
 
-<h3 id="new-and-noteworthy-6">New and noteworthy</h3>
+<h3 id="new-and-noteworthy-7">New and noteworthy</h3>
 
 <p>This is a bug fixing release, no major changes were introduced.</p>
 
-<h4 id="modified-rules-6">Modified Rules</h4>
+<h4 id="modified-rules-7">Modified Rules</h4>
 
 <p>The Java rule “UseLocaleWithCaseConversions” (ruleset java-design) has been modified, to detect calls
 to <code class="highlighter-rouge">toLowerCase</code> and to <code class="highlighter-rouge">toUpperCase</code> also within method call chains. This leads to more detected cases
 and potentially new false positives.
 See also <a href="https://sourceforge.net/p/pmd/bugs/1556/">bugfix #1556</a>.</p>
 
-<h3 id="fixed-issues-12">Fixed Issues</h3>
+<h3 id="fixed-issues-13">Fixed Issues</h3>
 
 <ul>
   <li>java
@@ -3279,7 +3976,7 @@ See also <a href="https://sourceforge.net/p/pmd/bugs/1556/">bugfix #1556</a>.</p
   </li>
 </ul>
 
-<h3 id="external-contributions-9">External Contributions</h3>
+<h3 id="external-contributions-10">External Contributions</h3>
 
 <ul>
   <li><a href="https://github.com/pmd/pmd/pull/129">#129</a>: [plsql] Added correct parse of IS [NOT] NULL and multiline DML</li>
@@ -3690,7 +4387,7 @@ Verifies that only the default types (jar, war, …) for dependencies are used.<
 
 <p>Ruleset snippet to activate the new rules:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>&lt;rule ref="rulesets/java/basic.xml/SimplifiedTernary"/&gt;
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;rule ref="rulesets/java/basic.xml/SimplifiedTernary"/&gt;
 &lt;rule ref="rulesets/java/clone.xml/CloneMethodReturnTypeMustMatchClassName"/&gt;
 &lt;rule ref="rulesets/java/clone.xml/CloneMethodMustBePublic"/&gt;
 &lt;rule ref="rulesets/java/comments.xml/CommentDefaultAccessModifier"/&gt;
@@ -3700,8 +4397,7 @@ Verifies that only the default types (jar, war, …) for dependencies are used.<
 
 &lt;rule ref="rulesets/pom/basic.xml/ProjectVersionAsDependencyVersion"/&gt;
 &lt;rule ref="rulesets/pom/basic.xml/InvalidDependencyTypes"/&gt;
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>Modified Rules:</strong></p>
 
@@ -4486,7 +5182,7 @@ one language is needed. It also makes it easier, to add new languages as extensi
 <p>Therefore, the maven coordinates needed to change. In order to just use pmd with java support, you’ll need
 the following two dependencies:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>&lt;dependency&gt;
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;dependency&gt;
     &lt;groupId&gt;net.sourceforge.pmd&lt;/groupId&gt;
     &lt;artifactId&gt;pmd-core&lt;/artifactId&gt;
     &lt;version&gt;5.2.0&lt;/version&gt;
@@ -4496,8 +5192,7 @@ the following two dependencies:</p>
     &lt;artifactId&gt;pmd-java&lt;/artifactId&gt;
     &lt;version&gt;5.2.0&lt;/version&gt;
 &lt;/dependency&gt;
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p>The binary package still contains all languages and can be used as usual. Have a look at
 <a href="http://search.maven.org/#search|ga|1|g%3Anet.sourceforge.pmd">the central repository</a> for available modules.</p>
@@ -4809,7 +5504,7 @@ that enums can be declared before fields and the rule is not triggered.</li>
 
 <h2 id="august-11-2013---505">August 11, 2013 - 5.0.5:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug  991: AvoidSynchronizedAtMethodLevel for static methods
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug  991: AvoidSynchronizedAtMethodLevel for static methods
 Fixed bug 1084: NPE at UselessStringValueOfRule.java:36
 Fixed bug 1091: file extension for fortran seems to be wrong in cpdgui tools
 Fixed bug 1092: Wrong Attribute "excludemarker" in Ant Task Documentation
@@ -4822,12 +5517,11 @@ Fixed bug 1069: Eclipse plugin does not accept project-local config
 Fixed bug 1111: False positive: Useless parentheses
 Fixed bug 1114: CPD - Tokenizer not initialized with requested properties
 Fixed bug 1118: ClassCastException in pmd.lang.ecmascript.ast.ASTElementGet
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="may-1-2013---504">May 1, 2013 - 5.0.4:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug  254: False+ : UnusedImport with Javadoc @throws
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug  254: False+ : UnusedImport with Javadoc @throws
 Fixed bug  794: False positive on PreserveStackTrace with anonymous inner
 Fixed bug 1063: False+: ArrayIsStoredDirectly
 Fixed bug 1080: net.sourceforge.pmd.cpd.CPDTest test failing
@@ -4837,12 +5531,11 @@ Fixed bug 1085: NullPointerException by at net.sourceforge.pmd.lang.java.rule.de
 Fixed bug 1086: Unsupported Element and Attribute in Ant Task Example
 Fixed bug 1087: PreserveStackTrace (still) ignores initCause()
 Fixed bug 1089: When changing priority in a custom ruleset, violations reported twice
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="april-5-2013---503">April 5, 2013 - 5.0.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug  938: False positive on LooseCoupling for overriding methods
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug  938: False positive on LooseCoupling for overriding methods
 Fixed bug  940: False positive on UnsynchronizedStaticDateFormatter
 Fixed bug  942: CheckResultSet False Positive and Negative
 Fixed bug  943: PreserveStackTrace false positive if a StringBuffer exists
@@ -4869,12 +5562,11 @@ Fixed bug 1076: Report.treeIterator() does not return all violations
 Fixed bug 1077: Missing JavaDocs for Xref-Test Files
 Fixed bug 1078: Package statement introduces false positive UnnecessaryFullyQualifiedName violation
 Merged pull request #14: fix Nullpointer Exception when using -l jsp
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="february-3-2013---502">February 3, 2013 - 5.0.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug  878: False positive: UnusedFormalParameter for abstract methods
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug  878: False positive: UnusedFormalParameter for abstract methods
 Fixed bug  913: SignatureDeclareThrowsException is raised twice
 Fixed bug  947: CloseResource rule fails if field is marked with annotation
 Fixed bug 1004: targetjdk isn't attribute of PMD task
@@ -4896,12 +5588,11 @@ Fixed bug 1049: Errors in "How to write a rule"
 Fixed bug 1055: Please add a colon in the ant output after line,column for Oracle JDeveloper IDE usage
 Fixed bug 1056: "Error while processing" while running on xml file with DOCTYPE reference
 Fixed bug 1060: GodClassRule &gt;&gt;&gt; wrong method
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-28-2012---501">November 28, 2012 - 5.0.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug  820: False+ AvoidReassigningParameters
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug  820: False+ AvoidReassigningParameters
 Fixed bug 1008: pmd-5.0.0: ImmutableField false positive on self-inc/dec
 Fixed bug 1009: pmd-5.0.0: False + UselessParentheses
 Fixed bug 1003: newline characters stripped from CPD data in PMD 5.0.0
@@ -4940,23 +5631,21 @@ Fixed C# support for CPD - thanks to TIOBE Software.
 New Ecmascript rules:
 
     Basic ruleset: AvoidTrailingComma
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="may-1-2012---500">May, 1, 2012 - 5.0.0:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 3515487: Inconsistent reference to ruleset file in documentation
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 3515487: Inconsistent reference to ruleset file in documentation
 Fixed bug 3470274: Using Label for lines in XMLRenderer
 Fixed bug 3175710: NPE in InsufficientStringBufferDeclaration
 
 CPD:
 - Exit with status code 4 when CPD detects code duplication (Patch ID: 3497021)
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="january-31-2012---50-alpha">January 31, 2012 - 5.0-alpha:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>This version of PMD breaks API compatibility with prior versions of PMD, as well
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>This version of PMD breaks API compatibility with prior versions of PMD, as well
 as RuleSet XML compatibility. Also the maven coordinates (groupId) have been changed.
 The decision to break compatibility, allows PMD
 internals and code organization to be improved to better handle additional
@@ -5408,12 +6097,11 @@ New ECMAScript rules:
 
 New XML rules:
     Basic ruleset: MistypedCDATASection
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-4-2011---43">November 4, 2011 - 4.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Add support for Java 7 grammer - thanks to Dinesh Bolkensteyn and SonarSource
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Add support for Java 7 grammer - thanks to Dinesh Bolkensteyn and SonarSource
 Add options --ignore-literals and --ignore-identifiers to the CPD command line task, thanks to Cd-Man
 Fixed character reference in xml report - thanks to Seko
 Add C# support for CPD - thanks to Florian Bauer
@@ -5427,12 +6115,11 @@ Add a script to launch CPDGUI on Unix system - thanks to Tom Wheeler
 New Rule:
     Basic ruleset: DontCallThreadRun - thanks to Andy Throgmorton
     Logging with Jakarta Commons ruleset: GuardDebugLogging
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="september-14-2011---426">September 14, 2011 - 4.2.6:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 2920057 - False + : CloseRessource whith an external getter
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 2920057 - False + : CloseRessource whith an external getter
 Fixed bug 1808110 - Fixed performance issue on PreserveStackTrace
 Fixed bug 2832322 -  cpd.xml file tag path attribute should be entity-encoded
 Fixed bug 2590258 - NPE with nicerhtml output
@@ -5462,12 +6149,11 @@ New rule:
     StrictExceptions : AvoidCatchingGenericException, AvoidLosingExceptionInformation
     Naming : GenericsNaming
     JSP: NoInlineScript
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="february-08-2009---425">February 08, 2009 - 4.2.5:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Enhanced logging in the ClassTypeResolver to provide more detailed messaging.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Enhanced logging in the ClassTypeResolver to provide more detailed messaging.
 Fixed bug 2315623 - @SuppressWarnings("PMD.UseSingleton") has no effect
 Fixed bug 2230809 - False +: ClassWithOnlyPrivateConstructorsShouldBeFinal
 Fixed bug 2338341 - ArrayIndexOutOfBoundsException in CPD (on Ruby)
@@ -5484,23 +6170,21 @@ New rule:
     StrictExceptions : AvoidThrowingNewInstanceOfSameException
 New ruleset:
     android.xml: new rules specific to the Android platform
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-12-2008---424">October 12, 2008 - 4.2.4:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1481051 - false + UnusedNullCheckInEquals (and other false positives too)
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1481051 - false + UnusedNullCheckInEquals (and other false positives too)
 Fixed bug 1943204 - Ant task: &lt;ruleset&gt; path should be relative to Ant basedir
 Fixed bug 2139720 - Exception in PMD Rule Designer for inline comments in source
 Fixed patch 2075906 - Add toString() to the rule UnnecessaryWrapperObjectCreation
 Fixed ClassCastException on generic method in BeanMembersShouldSerialize
 Fixed ClassCastException in symbol table code
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="august-31-2008---423">August 31, 2008 - 4.2.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>JavaCC generated artifacts updated to JavaCC 4.1d1.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>JavaCC generated artifacts updated to JavaCC 4.1d1.
 Java grammar enhanced to include AnnotationMethodDeclaration as parent node of method related children of AnnotationTypeMemberDeclaration
 Fixes for exclude-pattern
 Updates to RuleChain to honor RuleSet exclude-pattern
@@ -5522,21 +6206,19 @@ Fixed handling of escape characters in UseIndexOfChar and AppendCharacterWithCha
 
 New rule:
     Basic ruleset:  EmptyInitializer
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="may-20-2008---422">May 20, 2008 - 4.2.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed false positive in UnusedImports: javadoc comments are parsed to check @see and other tags
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed false positive in UnusedImports: javadoc comments are parsed to check @see and other tags
 Fixed parsing bug: constant fields in annotation classes
 Bug fix: NPE in MoreThanOneLogger
 UnnecessaryParentheses now checks all expressions, not just return statements
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="april-11-2008---421">April 11, 2008 - 4.2.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>'41' and '42' shortcuts for rulesets added
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>'41' and '42' shortcuts for rulesets added
 Fixed bug 1928009 - Error using migration ruleset in PMD 4.2
 Fixed bug 1932242 - EmptyMethodInAbstractClassShouldBeAbstract false +
 Fixed bug 1808110 - PreserveStackTrace
@@ -5549,30 +6231,27 @@ bin and java14/bin scripts:
     retroweaver version was not correct in java14/bin scripts
     support for extra languages in cpd.sh
     standard unix scripts can be used with cygwin
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-25-2008---42">March 25, 2008 - 4.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1920155 - CheckResultSet: Does not pass for loop conditionals
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1920155 - CheckResultSet: Does not pass for loop conditionals
+</code></pre></div></div>
 
 <h2 id="march-21-2008---42rc2">March 21, 2008 - 4.2rc2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1912831 - False + UnusedPrivateMethod with varargs
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1912831 - False + UnusedPrivateMethod with varargs
 Fixed bug 1913536 - Rule Designer does not recognize JSP(XML)
 Add -auxclasspath option for specifying Type Resolution classpath from command line and auxclasspath nested element for ant task.
 Fixed formatting problems in loggers.
 
 Ant task upgrade:
     Added a new attribute 'maxRuleCount' to indicate whether or not to fail the build if PMD finds that much violations.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-07-2008---42rc1">March 07, 2008 - 4.2rc1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1866198 - PMD should not register global Logger
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1866198 - PMD should not register global Logger
 Fixed bug 1843273 - False - on SimplifyBooleanReturns
 Fixed bug 1848888 - Fixed false positive in UseEqualsToCompareStrings
 Fixed bug 1874313 - Documentation bugs
@@ -5611,21 +6290,19 @@ PMD Rule Designer shows position info in tooltip for AST nodes and highlights ma
 CPD Ant task will report to System.out when 'outputFile' not given.
 RuleSetWriter class can be used to Serialize a RuleSet to XML in a standard fashion.  Recommend PMD IDE plugins standardize their behavior.
 retroweaver updated to version 2.0.5.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-17-2007---41">November 17, 2007 - 4.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed annotation bug: ClassCastException when a formal parameter had multiple annotations
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed annotation bug: ClassCastException when a formal parameter had multiple annotations
 Added a Visual Studio renderer for CPD; just use "--format vs".
 Dependencies updates: asm to 3.1, retroweaver to 2.0.2, junit to 4.4
 new ant target ("regress") to test regression bugs only
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-01-2007---41rc1">November 01, 2007 - 4.1rc1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Basic ruleset: AvoidUsingHardCodedIP,CheckResultSet
     Controversial ruleset: AvoidFinalLocalVariable,AvoidUsingShortType,AvoidUsingVolatile,AvoidUsingNativeCode,AvoidAccessibilityAlteration
     Design ruleset: ClassWithOnlyPrivateConstructorsShouldBeFinal,EmptyMethodInAbstractClassShouldBeAbstract
@@ -5657,31 +6334,28 @@ This release adds 'nicehtml', with the plan for the next major release to make n
 New CPD command line feature : Using more than one directory for sources. You can now have several '--files' on the command line.
 SingularField greatly improved to generate very few false positives (none?). Moved from controversial to design. Two options added to restore old behaviour (mostly).
 Jaxen updated to 1.1.1, now Literal[@Image='""'] works in XPath expressions.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-20-2007---40">July 20, 2007 - 4.0</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1697397 - fixed false positives in ClassCastExceptionWithToArray
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1697397 - fixed false positives in ClassCastExceptionWithToArray
 Fixed bug 1728789 - removed redundant rule AvoidNonConstructorMethodsWithClassName; MethodWithSameNameAsEnclosingClass is faster and does the same thing.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-12-2007---40rc2">July 12, 2007 - 4.0rc2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Typeresolution ruleset: SignatureDeclareThrowsException - re-implementation using the new Type Resolution facility (old rule is still available)
 Fixed bug 1698550 - CloneMethodMustImplementCloneable now accepts a clone method that throws CloneNotSupportedException in a final class
 Fixed bug 1680568 - The new typeresolution SignatureDeclareThrowsException rule now ignores setUp and tearDown in JUnit 4 tests and tests that do not directly extend TestCase
 The new typeresolution SignatureDeclareThrowsException rule can now ignore JUnit classes completely by setting the IgnoreJUnitCompletely property
 Fixed false positive in UselessOperationOnImmutable
 PMD now defaults to using a Java 1.5 source code parser.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-22-2007---40rc1">June 22, 2007 - 4.0rc1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Strict exception ruleset: DoNotExtendJavaLangError
     Basic JSP ruleset: JspEncoding
     J2EE ruleset: MDBAndSessionBeanNamingConvention, RemoteSessionInterfaceNamingConvention, LocalInterfaceSessionNamingConvention, LocalHomeNamingConvention, RemoteInterfaceNamingConvention
@@ -5719,12 +6393,11 @@ Memory footprint reduced: most renderers now use less memory by generating repor
 Ant task now takes advantage of multithreading code and on the fly renderers
 Ant task now logs more debug info when using -verbose
 PMD command line now has -benchmark: output a benchmark report upon completion; default to System.err
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="december-19-2006---39">December 19, 2006 - 3.9:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Basic ruleset: BigIntegerInstantiation, AvoidUsingOctalValues
     Codesize ruleset: NPathComplexity, NcssTypeCount, NcssMethodCount, NcssConstructorCount
     Design ruleset: UseCollectionIsEmpty
@@ -5789,12 +6462,11 @@ Performance Refactoring, XPath rules re-written as Java:
     MoreThanOneLogger
     SuspiciousHashcodeMethodName
     UselessStringValueOf
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-4-2006---38">October 4, 2006 - 3.8:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Basic ruleset: BrokenNullCheck
     Strict exceptions ruleset: AvoidRethrowingException
     Optimizations ruleset: UnnecessaryWrapperObjectCreation
@@ -5841,12 +6513,11 @@ Performance Refactoring, XPath rules re-written as Java:
     UseStringBufferForStringAppends
     SingularField
     NonThreadSafeSingleton
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-1-2006---37">June 1, 2006 - 3.7:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Basic-JSP ruleset: DuplicateJspImport
     Design ruleset: PreserveStackTrace
     J2EE ruleset: UseProperClassLoader
@@ -5871,12 +6542,11 @@ Added an optional 'showSuppressed' item to the Ant task; this is false by defaul
 Added an IRuleViolation interface and modified various code classes (include Renderer implementations and Report) to use it.
 Modified JJTree grammar to use conditional node descriptors for various expression nodes and to use node suppression for ASTModifier nodes; this replaces a bunch of DiscardableNodeCleaner hackery.  It also fixed bug 1445026.
 Modified C/CPP grammar to only build the lexical analyzer; we're not using the parser for CPD, just the token manager.  This reduces the PMD jar file size by about 50 KB.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-29-2006---36">March 29, 2006 - 3.6:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Basic ruleset: AvoidThreadGroup
     Design ruleset: UnsynchronizedStaticDateFormatter
     Strings ruleset: InefficientEmptyStringCheck, InsufficientStringBufferDeclaration
@@ -5922,12 +6592,11 @@ Uploaded ruleset schema to http://pmd.sf.net/ruleset_xml_schema.xsd
 UseIndexOfChar now catches cases involving lastIndexOf.
 Rules are now run in the order in which they're listed in a ruleset file.  Internally, they're now stored in a List vs a Set, and RuleSet.getRules() now returns a Collection.
 Upgraded to JUnit version 3.8.2.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="jan-25-2006---35">Jan 25, 2006 - 3.5:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
  Basic ruleset: UselessOperationOnImmutable, MisplacedNullCheck, UnusedNullCheckInEquals
  Migration ruleset: IntegerInstantiation
  JUnit ruleset: UseAssertNullInsteadOfAssertTrue
@@ -5963,12 +6632,11 @@ Added jakarta-oro-2.0.8.jar as a new dependency to support regular expression in
 Ant task now supports a 'minimumPriority' attribute; only rules with this priority or higher will be run.
 Renamed Ant task 'printToConsole' attribute to 'toConsole' and it can only be used inside a formatter element.
 Added David Corley's Javascript report, more details are here: http://tomcopeland.blogs.com/juniordeveloper/2005/12/demo_of_some_ni.html
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-30-2005---34">November 30, 2005 - 3.4:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
  Basic ruleset: ClassCastExceptionWithToArray, AvoidDecimalLiteralsInBigDecimalConstructor
  Design ruleset: NonThreadSafeSingleton, UncommentedEmptyMethod, UncommentedEmptyConstructor
  Controversial ruleset: DefaultPackage
@@ -6007,12 +6675,11 @@ Improved CPD XML report.
 CPD no longer skips header files when checking C/C++ code.
 Reworked CPD command line arguments; old-style arguments will still work for one more version, though.
 Lots of documentation improvements.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="september-15-2005---33">September 15, 2005 - 3.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules:
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules:
     Design: PositionLiteralsFirstInComparisons,  UnnecessaryLocalBeforeReturn
     Logging-jakarta-commons: ProperLogger
     Basic: UselessOverridingMethod
@@ -6066,12 +6733,11 @@ Removed unnecessary '.html' suffix from displayed filenames when the linkPrefix 
 Added an optional 'description' attribute to the 'property' element in the ruleset XML files.
 Added a simplified SimpleNode.addViolation() method to reduce duplicated rule violation creation code.
 Moved from jaxen-1.0-fcs.jar/saxpath-1.0-fcs.jar to jaxen-1.1-beta-7.jar.  This yielded a 20% speed increase in the basic ruleset!
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-21-2005---32">June 21, 2005 - 3.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: UseCorrectExceptionLogging (logging-jakarta-commons ruleset), AvoidPrintStackTrace (logging-java ruleset), CompareObjectsWithEquals (design ruleset)
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: UseCorrectExceptionLogging (logging-jakarta-commons ruleset), AvoidPrintStackTrace (logging-java ruleset), CompareObjectsWithEquals (design ruleset)
 Fixed bug 1201577 - PMD now correctly parses method declarations that return generic types.
 Fixed bug 1205709 - PMD no longer takes a long time to report certain parsing errors.
 Fixed bug 1052356 - ImmutableField no longer triggers on fields which are assigned to in a constructor's try statement.
@@ -6093,12 +6759,11 @@ Modified rule XML definition; it no longer includes a symboltable attribute sinc
 Harden equality of AbstractRule and RuleSet objects (needed for the Eclipse plugin features)
 Change RuleSet.getRuleByName. Now return null instead of throwing a RuntimeException when the rule is not found
 Add .project and .classpath to the module so that it can be checkout as an Eclipse project
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="may-10-2005---31">May 10, 2005 - 3.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: SimplifyStartsWith, UnnecessaryParentheses, CollapsibleIfStatements, UseAssertEqualsInsteadOfAssertTrue,  UseAssertSameInsteadOfAssertTrue, UseStringBufferForStringAppends, SimplifyConditional, SingularField
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: SimplifyStartsWith, UnnecessaryParentheses, CollapsibleIfStatements, UseAssertEqualsInsteadOfAssertTrue,  UseAssertSameInsteadOfAssertTrue, UseStringBufferForStringAppends, SimplifyConditional, SingularField
 Fixed bug 1170535 - LongVariable now report variables longer than 17 characters, not 12.
 Fixed bug 1182755 - SystemPrintln no longer overreports problems.
 Fixed bug 1188372 - AtLeastOneConstructor no longer fires on interfaces.
@@ -6121,12 +6786,11 @@ Implemented RFE 994338 - The msg produced by ConstructorCallsOverridableMethod n
 Modified command line parameters; removed -jdk15 and -jdk13 parameters and added a -'targetjdk [1.3|1.4|1.5]' parameter.
 Modified CSVRenderer to include more columns.
 Optimized rules: FinalFieldCouldBeStatic (115 seconds to 7 seconds), SuspiciousConstantFieldName (48 seconds to 14 seconds), UnusedModifer (49 seconds to 4 seconds)
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-23-2005---30">March 23, 2005 - 3.0:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: MissingSerialVersionUID, UnnecessaryFinalModifier, AbstractClassDoesNotContainAbstractMethod, MissingStaticMethodInNonInstantiatableClass, AvoidSynchronizedAtMethodLevel, AvoidCallingFinalize, UseNotifyAllInsteadOfNotify, MissingBreakInSwitch, AvoidInstanceofChecksInCatchClause, AvoidFieldNameMatchingTypeName, AvoidFieldNameMatchingMethodName, AvoidNonConstructorMethodsWithClassName, TestClassWithoutTestCases, TooManyFields, CallSuperInConstructor, UnnecessaryBooleanAssertion, UseArrayListInsteadOfVector
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: MissingSerialVersionUID, UnnecessaryFinalModifier, AbstractClassDoesNotContainAbstractMethod, MissingStaticMethodInNonInstantiatableClass, AvoidSynchronizedAtMethodLevel, AvoidCallingFinalize, UseNotifyAllInsteadOfNotify, MissingBreakInSwitch, AvoidInstanceofChecksInCatchClause, AvoidFieldNameMatchingTypeName, AvoidFieldNameMatchingMethodName, AvoidNonConstructorMethodsWithClassName, TestClassWithoutTestCases, TooManyFields, CallSuperInConstructor, UnnecessaryBooleanAssertion, UseArrayListInsteadOfVector
 Implemented RFE 1058039 - PMD's command line interface now accepts abbreviated names for the standard rulesets; for example 'java net.sourceforge.pmd.PMD /my/source/code/ text basic,unusedcode' would run the rulesets/basic.xml and the rulesets/unusedcode.xml rulesets on the source in /my/source/code and produce a text report.
 Implemented RFE 1119851 - PMD's Ant task now supports an 'excludeMarker' attribute.
 Fixed bug 994400 - False +: ConstructorCallsOverridableMethodRule, thanks to ereissner for reporting it
@@ -6140,22 +6804,20 @@ Fixed a bug - the PMD Ant task's failOnRuleViolation attribute no longer causes 
 Modified the XSLT to add a summary section.
 Added Ruby support to CPD.
 Optimized various rules and wrote a benchmarking application; results are here - http://infoether.com/~tom/pmd_timing.txt
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="february-1-2005---23">February 1, 2005 - 2.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 1113927 - ExceptionAsFlowControl no longer throws NPEs on code where a throw statement exists without a try statement wrapping it.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 1113927 - ExceptionAsFlowControl no longer throws NPEs on code where a throw statement exists without a try statement wrapping it.
 Fixed bug 1113981 - AvoidConcatenatingNonLiteralsInStringBuffer no longer throws NPEs on code where an append appears as a child of an ExplicitConstructorInvocation node.
 Fixed bug 1114039 - AvoidInstantiatingObjectsInLoops's message no longer contains a spelling error.
 Fixed bug 1114029 - The 'optimization' rules no longer throw NPEs at various points.
 Fixed bug 1114251 - The 'sunsecure' rules no longer throw NPEs at various points.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="january-31-2005---22">January 31, 2005 - 2.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: LocalVariableCouldBeFinal, MethodArgumentCouldBeFinal, AvoidInstantiatingObjectsInLoops, ArrayIsStoredDirectly, MethodReturnsInternalArray, AssignmentToNonFinalStatic, AvoidConcatenatingNonLiteralsInStringBuffer
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: LocalVariableCouldBeFinal, MethodArgumentCouldBeFinal, AvoidInstantiatingObjectsInLoops, ArrayIsStoredDirectly, MethodReturnsInternalArray, AssignmentToNonFinalStatic, AvoidConcatenatingNonLiteralsInStringBuffer
 Fixed bug 1088459 - JUnitTestsShouldContainAsserts no longer throws ClassCastException on interface, native, and abstract method declarations.
 Fixed bug 1100059 - The Ant task now generates a small empty-ish report if there are no violations.
 Implemented RFE 1086168 - PMD XML reports now contain a version and timestamp attribute in the &lt;pmd&gt; element.
@@ -6164,12 +6826,11 @@ Fixed a bug in the rule override logic; it no longer requires the "class" attrib
 Added 'ignoreLiterals' and 'ignoreIdentifiers' boolean options to the CPD task.
 Cleaned up a good bit of the symbol table code; thanks much to Harald Gurres for the patch.
 CPD now contains a generic copy/paste checker for programs in any language
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="december-15-2004---21">December 15, 2004 - 2.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: AvoidProtectedFieldInFinalClass, SystemPrintln
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: AvoidProtectedFieldInFinalClass, SystemPrintln
 Fixed bug 1050173 - ImmutableFieldRule no longer reports false positives for static fields.
 Fixed bug 1050286 - ImmutableFieldRule no longer reports false positives for classes which have multiple constructors only a subset of which set certain fields.
 Fixed bug 1055346 - ImmutableFieldRule no longer reports false positive on preinc/predecrement/postfix expressions.
@@ -6201,12 +6862,11 @@ Many rule names had the word "Rule" tacked on to the end.  Various folks thought
 Continued working on JDK 1.5 compatibility - added support for static import statements, varargs, and the new for loop syntax
 - still TODO: generics and annotations (note that autoboxing shouldn't require a grammar change)
 - Good article on features: http://java.sun.com/developer/technicalArticles/releases/j2se15/
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-19-2004---20">October 19, 2004 - 2.0:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: InstantiationToGetClass, IdempotentOperationsRule, SuspiciousEqualsMethodName, SimpleDateFormatNeedsLocale, JUnitTestsShouldContainAssertsRule, SuspiciousConstantFieldName, ImmutableFieldRule, MoreThanOneLoggerRule, LoggerIsNotStaticFinalRule, UseLocaleWithCaseConversions
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: InstantiationToGetClass, IdempotentOperationsRule, SuspiciousEqualsMethodName, SimpleDateFormatNeedsLocale, JUnitTestsShouldContainAssertsRule, SuspiciousConstantFieldName, ImmutableFieldRule, MoreThanOneLoggerRule, LoggerIsNotStaticFinalRule, UseLocaleWithCaseConversions
 Applied patch in RFE 992576 - Enhancements to VariableNamingConventionsRule
 Implemented RFE 995910 - The HTML report can now include links to HTMLlized source code - for example, the HTML generated by JXR.
 Implemented RFE 665824 - PMD now ignores rule violations in lines containing the string 'NOPMD'.
@@ -6227,12 +6887,11 @@ Enhanced the ASTViewer - and renamed it 'Designer' - to display data flows.
 Moved development environment to Maven 1.0.
 Moved development environment to Ant 1.6.2.  This is nice because using the new JUnit task attribute "forkmode='perBatch'" cuts test runtime from 90 seconds to 7 seconds.  Sweet.
 MethodWithSameNameAsEnclosingClass now reports a more helpful line number.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-14-2004---19">July 14, 2004 - 1.9:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: CloneMethodMustImplementCloneable, CloneThrowsCloneNotSupportedException, EqualsNull, ConfusingTernary
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: CloneMethodMustImplementCloneable, CloneThrowsCloneNotSupportedException, EqualsNull, ConfusingTernary
 Created new "clone" ruleset and moved ProperCloneImplementationRule over from the design ruleset.
 Moved LooseCoupling from design.xml to coupling.xml.
 Some minor performance optimizations - removed some unnecessary casts from the grammar, simplified some XPath rules.
@@ -6246,21 +6905,19 @@ Fixed bug 977022 - UnusedModifier no longer reports false positives for modifier
 Fixed bug 976643 - IfElseStmtsMustUseBracesRule no longer reports false positives for certain if..else constructs.
 Fixed bug 985961 - UseSingletonRule now fires on classes which contain static fields
 Fixed bug 977031 - FinalizeDoesNotCallSuperFinalize no longer reports a false positive when a finalizer contains a call to super.finalize in a try {} finally {} block.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="may-19-2004---18">May 19, 2004 - 1.8:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: ExceptionAsFlowControlRule, BadComparisonRule, AvoidThrowingCertainExceptionTypesRule, AvoidCatchingNPERule, OptimizableToArrayCallRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: ExceptionAsFlowControlRule, BadComparisonRule, AvoidThrowingCertainExceptionTypesRule, AvoidCatchingNPERule, OptimizableToArrayCallRule
 Major grammar changes - lots of new node types added, many superfluous nodes removed from the runtime AST.  Bug 786611 - http://sourceforge.net/tracker/index.php?func=detail&amp;aid=786611&amp;group_id=56262&amp;atid=479921 - explains it a bit more.
 Fixed bug 786611 - Expressions are no longer over-expanded in the AST
 Fixed bug 874284 - The AST now contains tokens for bitwise or expressions - i.e., "|"
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="april-22-2004---17">April 22, 2004 - 1.7:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Moved development environment to Maven 1.0-RC2.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Moved development environment to Maven 1.0-RC2.
 Fixed bug 925840 - Messages were no longer getting variable names plugged in correctly
 Fixed bug 919308 - XMLRenderer was still messed up; 'twas missing a quotation mark.
 Fixed bug 923410 - PMD now uses the default platform character set encoding; optionally, you can pass in a character encoding to use.
@@ -6269,12 +6926,11 @@ Added an optional 'failuresPropertyName' attribute to the Ant task.
 Refactored away duplicate copies of XPath rule definitions in regress/, yay!
 Removed manifest from jar file; it was only there for the Main-class attribute, and it's not very useful now since PMD has several dependencies.
 Began working on JDK 1.5 compatibility - added support for EnumDeclaration nodes.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-15-2004---16">March 15, 2004 - 1.6:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 895661 - XML reports containing error elements no longer have malformed XML.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 895661 - XML reports containing error elements no longer have malformed XML.
 Fixed a bug in UnconditionalIfStatement - it no longer flags things like "if (x==true)".
 Applied Steve Hawkins' improvements to CPD:
 - Various optimizations; now it runs about 4 times faster!
@@ -6283,22 +6939,20 @@ Applied Steve Hawkins' improvements to CPD:
 - CSV renderer
 Added two new renderers - SummaryHTMLRenderer and PapariTextRenderer.
 Moved development environment to Ant 1.6 and JavaCC 3.2.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="february-2-2004---15">February 2, 2004 - 1.5:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: DontImportSunRule, EmptyFinalizer, EmptyStaticInitializer, AvoidDollarSigns, FinalizeOnlyCallsSuperFinalize, FinalizeOverloaded, FinalizeDoesNotCallSuperFinalize, MethodWithSameNameAsEnclosingClass, ExplicitCallToFinalize, NonStaticInitializer, DefaultLabelNotLastInSwitchStmt, NonCaseLabelInSwitchStatement, SuspiciousHashcodeMethodName, EmptyStatementNotInLoop, SuspiciousOctalEscapeRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: DontImportSunRule, EmptyFinalizer, EmptyStaticInitializer, AvoidDollarSigns, FinalizeOnlyCallsSuperFinalize, FinalizeOverloaded, FinalizeDoesNotCallSuperFinalize, MethodWithSameNameAsEnclosingClass, ExplicitCallToFinalize, NonStaticInitializer, DefaultLabelNotLastInSwitchStmt, NonCaseLabelInSwitchStatement, SuspiciousHashcodeMethodName, EmptyStatementNotInLoop, SuspiciousOctalEscapeRule
 FinalizeShouldBeProtected moved from design.xml to finalizers.xml.
 Added isTrue() to ASTBooleanLiteral.
 Added UnaryExpression to the AST.
 Added isPackagePrivate() to AccessNode.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="january-7-2004---14">January 7, 2004 - 1.4:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>New rules: AbstractNamingRule, ProperCloneImplementationRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>New rules: AbstractNamingRule, ProperCloneImplementationRule
 Fixed bug 840926 - AvoidReassigningParametersRule no longer reports a false positive when assigning a value to an array slot when the array is passed as a parameter to a method
 Fixed bug 760520 - RuleSetFactory is less strict about whitespace in ruleset.xml files.
 Fixed bug 826805 - JumbledIncrementorRule no longer reports a false positive when a outer loop incrementor is used as an array index
@@ -6308,21 +6962,19 @@ Fixed a bug in OverrideBothEqualsAndHashcodeRule; it no longer reports a false p
 Implemented RFE 845348 - UnnecessaryReturn yields more useful line numbers now
 Added a ruleset DTD and a ruleset XML Schema.
 Added 'ExplicitExtends' and 'ExplicitImplements' attributes to UnmodifiedClassDeclaration nodes.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-23-2003---13">October 23, 2003 - 1.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Relicensed under a BSD-style license.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Relicensed under a BSD-style license.
 Fixed bug 822245 - VariableNamingConventionsRule now handles interface fields correctly.
 Added new rules: EmptySynchronizedBlock, UnnecessaryReturn
 ASTType now has an getDimensions() method.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-06-2003---122">October 06, 2003 - 1.2.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rule: CloseConnectionRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rule: CloseConnectionRule
 Fixed bug 782246 - FinalFieldCouldBeStatic no longer flags fields in interfaces.
 Fixed bug 782235 - "ant -version" now prints more details when a file errors out.
 Fixed bug 779874 - LooseCouplingRule no longer triggers on ArrayList
@@ -6339,18 +6991,16 @@ Added "dialog cancelled" check to CPD "Save" function
 Added Boris Gruschko's AST viewer.
 Added Jeff Epstein's TextPad integration.
 ASTType now has an isArray() method.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="august-1-2003---121">August 1, 2003 - 1.2.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 781077 - line number "-1" no longer appears for nodes with siblings.
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 781077 - line number "-1" no longer appears for nodes with siblings.
+</code></pre></div></div>
 
 <h2 id="july-30-2003---12">July 30, 2003 - 1.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: VariableNamingConventionsRule, MethodNamingConventionsRule, ClassNamingConventionsRule, AvoidCatchingThrowable, ExceptionSignatureDeclaration, ExceptionTypeChecking, BooleanInstantiation
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: VariableNamingConventionsRule, MethodNamingConventionsRule, ClassNamingConventionsRule, AvoidCatchingThrowable, ExceptionSignatureDeclaration, ExceptionTypeChecking, BooleanInstantiation
 Fixed bug 583047 - ASTName column numbers are now correct
 Fixed bug 761048 - Symbol table now creates a scope level for anonymous inner classes
 Fixed bug 763529 - AccessorClassGenerationRule no longer crashes when given a final inner class
@@ -6364,12 +7014,11 @@ ASTViewer now shows node images and modifiers
 ASTViewer now saves last edited text to ~/.pmd_astviewer
 Moved the PMD Swing UI into a separate module - pmd-swingui.
 Updated license.txt to point to new location.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-19-2003---11">June 19, 2003 - 1.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: FinalizeShouldBeProtected, FinalFieldCouldBeStatic, BeanMembersShouldSerializeRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: FinalizeShouldBeProtected, FinalFieldCouldBeStatic, BeanMembersShouldSerializeRule
 Removed "verbose" attribute from PMD and CPD Ant tasks; now they use built in logging so you can do a "ant -verbose cpd" or "ant -verbose pmd".  Thanks to Philippe T'Seyen for the code.
 Added "excludes" feature to rulesets; thanks to Gael Marziou for the suggestion.
 Removed "LinkedList" from LooseCouplingRule checks; thx to Randall Schulz for the suggestion.
@@ -6380,12 +7029,11 @@ Fixed bug 732592 - Ant task now accepts a nested classpath element.
 Fixed bug 744915 - UseSingletonRule no longer fires on abstract classes, thanks to Pablo Casado for the bug report.
 Fixed bugs 735396 and 735399 - false positives from ConstructorCallsOverridableMethodRule
 Fixed bug 752809 - UnusedPrivateMethodRule now catches unused private static methods, thanks to Conrad Roche for the bug report.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="april-17-2003---105">April 17, 2003 - 1.05:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: ReturnFromFinallyBlock, SimplifyBooleanExpressions
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: ReturnFromFinallyBlock, SimplifyBooleanExpressions
 Added a new Ant task for CPD; thanks to Andy Glover for the code.
 Added ability to specify a class name as a renderer on the command line or in the formatter "type" attribute of the Ant task.
 Brian Ewins completely rewrote CPD using a portion of the Burrows-Wheeler Transform - it's much, much, much faster now.
@@ -6393,24 +7041,22 @@ Rebuilt parser with JavaCC 3.0; made several parser optimizations.
 The Ant task now accepts a &lt;classpath&gt; element to aid in loading custom rulesets.  Thanks to Luke Francl for the suggestion.
 Fixed several bugs in UnnecessaryConstructorRule; thanks to Adam Nemeth for the reports and fixes.
 All test-data classes have been inlined into their respective JUnit tests.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="march-21-2003---104">March 21, 2003 - 1.04</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: ConstructorCallsOverridableMethodRule, AtLeastOneConstructorRule, JUnitAssertionsShouldIncludeMessageRule, DoubleCheckedLockingRule, ExcessivePublicCountRule, AccessorClassGenerationRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: ConstructorCallsOverridableMethodRule, AtLeastOneConstructorRule, JUnitAssertionsShouldIncludeMessageRule, DoubleCheckedLockingRule, ExcessivePublicCountRule, AccessorClassGenerationRule
 The Ant task has been updated; if you set "verbose=true" full stacktraces are printed.  Thx to Paul Roebuck for the suggestion.
 Moved JUnit rules into their own package - "net.sourceforge.pmd.rules.junit".
 Incorporated new ResourceLoader; thanks to Dave Fuller
 Incorporated new XPath-based rule definitions; thanks to Dan Sheppard for the excellent work.
 Fixed bug 697187 - Problem with nested ifs
 Fixed bug 699287 - Grammar bug; good catch by David Whitmore
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="february-11-2003---103">February 11, 2003 - 1.03</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: CyclomaticComplexityRule, AssignmentInOperandRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: CyclomaticComplexityRule, AssignmentInOperandRule
 Added numbering to the HTMLRenderer; thx to Luke Francl for the code.
 Added an optional Ant task attribute 'failOnRuleViolation'.  This stops the build if any rule violations are found.
 Added an XSLT script for processing the PMD XML report; thx to Mats for the code.
@@ -6423,12 +7069,11 @@ Fixed bug 673662 - The Ant task's "failOnError" attribute works again.  Changed 
 Fixed bug 676340 - Symbol table now creates new scope level when it encounters a switch statement.  See the bug for code details; generally, this bug would have triggered runtime exceptions on certain blocks of code.
 Fixed bug 683465 - JavaCC parser no longer has ability to throw java.lang.Error; now it only throws java.lang.RuntimeExceptions.  Thx to Gunnlaugur Thor Briem for a good discussion on this topic.
 Fixed bug in OverrideBothEqualsAndHashcodeRule - it no longer bails out with a NullPtrException on interfaces that declare a method signature "equals(Object)".  Thx to Don Leckie for catching that.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="january-22-2003---102">January 22, 2003 - 1.02:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: ImportFromSamePackageRule, SwitchDensityRule, NullAssignmentRule, UnusedModifierRule, ForLoopShouldBeWhileLoopRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: ImportFromSamePackageRule, SwitchDensityRule, NullAssignmentRule, UnusedModifierRule, ForLoopShouldBeWhileLoopRule
 Updated LooseCouplingRule to check for usage of Vector; thx to Vladimir for the good catch.
 Updated AvoidDuplicateLiteralsRule to report the line number of the first occurrence of the duplicate String.
 Modified Ant task to use a formatter element; this lets you render a report in several formats without having to rerun PMD.
@@ -6440,35 +7085,32 @@ Fixed bug 650623 - the Ant task now uses relative directories for the report fil
 Fixed bug 656944 - PMD no longer prints errors to System.out, instead it just rethrows any exceptions
 Fixed bug 660069 - this was a symbol table bug; thanks to mcclain looney for the report.
 Fixed bug 668119 - OverrideBothEqualsAndHashcodeRule now checks the signature on equals(); thanks to mcclain looney for the report.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-07-2002---101">November 07 2002 - 1.01:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Fixed bug 633879: EmptyFinallyBlockRule now handles multiple catch blocks followed by a finally block.
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Fixed bug 633879: EmptyFinallyBlockRule now handles multiple catch blocks followed by a finally block.
 Fixed bug 633892: StringToStringRule false positive exposed problem in symbol table usage to declaration code.
 Fixed bug 617971: Statistical rules no longer produce tons of false positives due to accumulated results.
 Fixed bug 633209: OnlyOneReturn rule no longer requires the return stmt to be the last statement.
 Enhanced EmptyCatchBlockRule to flag multiple consecutive empty catch blocks.
 Renamed AvoidStringLiteralsRule to AvoidDuplicateLiteralsRule.
 Modified Ant task to truncate file paths to make the HTML output neater.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="november-04-2002---10">November 04 2002 - 1.0:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: StringToStringRule, AvoidReassigningParametersRule, UnnecessaryConstructorRule, AvoidStringLiteralsRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: StringToStringRule, AvoidReassigningParametersRule, UnnecessaryConstructorRule, AvoidStringLiteralsRule
 Fixed bug 631010: AvoidDeeplyNestedIfStmtsRule works correctly with if..else stmts now
 Fixed bug 631605: OnlyOneReturn handles line spillover now.
 Moved AvoidDeeplyNestedIfStmts from the braces ruleset to the design ruleset.
 Moved several rules from the design ruleset to the codesize ruleset.
 Added a new "favorites" ruleset.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="october-04-2002---10rc3">October 04 2002 - 1.0rc3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: OnlyOneReturnRule, JumbledIncrementerRule, AvoidDeeplyNestedIfStmtsRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: OnlyOneReturnRule, JumbledIncrementerRule, AvoidDeeplyNestedIfStmtsRule
 PMD is now built and tested with JUnit 3.8.1 and Ant 1.5.
 Added support for IntelliJ's IDEAJ.
 Fixed bug 610018 - StringInstantiationRule now allows for String(byte[], int, int) usage.
@@ -6476,70 +7118,63 @@ Fixed bug 610693 - UnusedPrivateInstanceVariable handles parameter shadowing bet
 Fixed bug 616535 - Command line interface input checking is better now.
 Fixed bug 616615 - Command line interface allows the text renderer to be used now
 Fixed a bug - the statistics rules now handle interfaces better.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="september-12-2002---10rc2">September 12 2002 - 1.0rc2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: JUnitSpellingRule, JUnitStaticSuiteRule, StringInstantiationRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: JUnitSpellingRule, JUnitStaticSuiteRule, StringInstantiationRule
 Added new rulesets - junit, strings.
 Added a printToConsole attribute to the Ant task so that you can see the report right there in the Ant output.
 Fixed bug in PMD GUI - rules are now saved correctly.
 Fixed bug 597916 - CPD line counts are accurate now.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="september-09-2002---10rc1">September 09 2002 - 1.0rc1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: UnusedImportsRule, EmptySwitchStmtRule, SwitchStmtsShouldHaveDefaultRule, IfStmtsMustUseBracesRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: UnusedImportsRule, EmptySwitchStmtRule, SwitchStmtsShouldHaveDefaultRule, IfStmtsMustUseBracesRule
 Fixed bug 597813 - Rule properties are now parsed correctly
 Fixed bug 597905 - UseSingletonRule now resets its state correctly
 Moved several rules into a new ruleset - braces.
 Improved CPD by removing import statements and package statements from the token set.
 Added Metrics API to the Report.
 Updated PMD GUI.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="august-16-2002---09">August 16 2002 - 0.9:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: LongParameterListRule, SimplifyBooleanReturnsRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: LongParameterListRule, SimplifyBooleanReturnsRule
 Enhanced statistics rules to support various ways of triggering rule violations
 Added rule customization via XML parameters
 Enhanced CopyAndPasteDetector; added a GUI
 Fixed bug 592060 - UnusedPrivateInstanceVariable handles explicitly referenced statics correctly
 Fixed bug 593849 - UnusedPrivateInstanceVariable handles nested classes better
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-30-2002---08">July 30 2002 - 0.8:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rule: UnusedFormalParameterRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rule: UnusedFormalParameterRule
 Fixed bug 588083 - ForLoopsNeedBraces rule correctly handles a variety of for statement formats
 Added prototype of the copy and paste detector
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-25-2002---07">July 25 2002 - 0.7:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: UnusedPrivateMethodRule, WhileLoopsMustUseBracesRule, ForLoopsMustUseBracesRule, LooseCouplingRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: UnusedPrivateMethodRule, WhileLoopsMustUseBracesRule, ForLoopsMustUseBracesRule, LooseCouplingRule
 Fixed bug 583482 - EmptyCatchBlock and EmptyFinallyBlock no longer report an incorrect line number.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-18-2002---06">July 18 2002 - 0.6:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: ExcessiveClassLength, ExcessiveMethodLength
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: ExcessiveClassLength, ExcessiveMethodLength
 DuplicateImportsRule now reports the correct line number.
 Fixed bug 582639 - Rule violations are now reported on the proper line
 Fixed bug 582509 - Removed unneeded throws clause
 Fixed bug 583009 - Now rulesets.properties is in the jar file
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-15-2002---05">July 15 2002 - 0.5:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: DontImportJavaLangRule, DuplicateImportsRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: DontImportJavaLangRule, DuplicateImportsRule
 Added new ruleset: rulesets/imports.xml
 Changed sorting of RuleViolations to group Files together.
 Changed XML Renderer to improved format.
@@ -6549,45 +7184,40 @@ Fixed bug 580093 - OverrideBothEqualsAndHashcodeRule reports a more correct line
 Fixed bug 581853 - UnusedLocalVariableRule now handles anonymous inner classes correctly.
 Fixed bug 580278 - this was a side effect of bug 581853.
 Fixed bug 580123 - UnusedPrivateInstanceVariable now checks for instance variable usage in inner classes.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-10-2002---04">July 10 2002 - 0.4:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: OverrideBothEqualsAndHashcodeRule, EmptyTryBlock, EmptyFinallyBlock
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: OverrideBothEqualsAndHashcodeRule, EmptyTryBlock, EmptyFinallyBlock
 Reports are now sorted by line number
 RuleSets can now reference rules in other RuleSets
 Fixed bug 579718 - made 'ruleset not found' error message clearer.
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="july-03-2002---03">July 03 2002 - 0.3:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: UseSingletonRule, ShortVariableRule, LongVariableRule, ShortMethodNameRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: UseSingletonRule, ShortVariableRule, LongVariableRule, ShortMethodNameRule
 Moved rules into RuleSets which are defined in XML files in the ruleset directory
 Ant task:
 -Added a 'failonerror' attribute
 -Changed 'rulesettype' to 'rulesetfiles'
 -Removed 'text' report format; only 'html' and 'xml' are available now
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-27-2002---02">June 27 2002 - 0.2:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Added new rules: IfElseStmtsMustUseBracesRule, EmptyWhileStmtRule
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Added new rules: IfElseStmtsMustUseBracesRule, EmptyWhileStmtRule
 Modified command line interface to accept a rule set
 Fixed bug in EmptyCatchBlockRule
 Fixed typo in UnnecessaryConversionTemporaryRule
 Moved Ant task to the net.sourceforge.pmd.ant package
 Added new HTML report format
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <h2 id="june-25-2002---01">June 25 2002 - 0.1:</h2>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>Initial release
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Initial release
+</code></pre></div></div>
 
 <p>The PMD book - $20 - http://pmdapplied.com/</p>
 
@@ -6605,8 +7235,8 @@ Added new HTML report format
 <footer>
             <div class="row">
                 <div class="col-lg-12 footer">
-               &copy;2017 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Dec 15, 2017 <br />
+               &copy;2018 PMD Open Source Project. All rights reserved. <br />
+ Site last generated: Jan 21, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

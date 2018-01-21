@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.0.0</li>
+    <li class="sidebarTitle">PMD 6.0.1</li>
     
     
     
@@ -1243,21 +1243,19 @@ $('#toc').on('click', 'a', function() {
 
 <p>Avoid directly accessing Trigger.old and Trigger.new as it can lead to a bug. Triggers should be bulkified and iterate through the map to handle the actions for each item separately.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//ArrayLoadExpression/TriggerVariableExpression | //ArrayLoadExpression/LiteralExpression
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ArrayLoadExpression[TriggerVariableExpression and LiteralExpression]
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">trigger</span> <span class="n">AccountTrigger</span> <span class="n">on</span> <span class="nf">Account</span> <span class="o">(</span><span class="n">before</span> <span class="n">insert</span><span class="o">,</span> <span class="n">before</span> <span class="n">update</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trigger</span> <span class="n">AccountTrigger</span> <span class="n">on</span> <span class="nf">Account</span> <span class="o">(</span><span class="n">before</span> <span class="n">insert</span><span class="o">,</span> <span class="n">before</span> <span class="n">update</span><span class="o">)</span> <span class="o">{</span>
    <span class="n">Account</span> <span class="n">a</span> <span class="o">=</span> <span class="n">Trigger</span><span class="o">.</span><span class="na">new</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span> <span class="c1">//Bad: Accessing the trigger array directly is not recommended.</span>
    
    <span class="n">foreach</span> <span class="o">(</span> <span class="n">Account</span> <span class="n">a</span> <span class="o">:</span> <span class="n">Trigger</span><span class="o">.</span><span class="na">new</span> <span class="o">){</span>   
         <span class="c1">//Good: Iterate through the trigger.new array instead.</span>
    <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1289,9 +1287,8 @@ $('#toc').on('click', 'a', function() {
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/AvoidDirectAccessTriggerMap"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/AvoidDirectAccessTriggerMap"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="avoidhardcodingid">AvoidHardcodingId</h2>
 
@@ -1307,18 +1304,17 @@ the logic can dynamically identify the proper data to operate against and not fa
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="n">without</span> <span class="n">sharing</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">without</span> <span class="n">sharing</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
     <span class="kt">void</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
         <span class="c1">//Error - hardcoded the record type id</span>
-        <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mi">012500000009</span><span class="n">WAr</span><span class="err">'</span><span class="o">){</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01250000000</span><span class="mi">9</span><span class="n">WAr</span><span class="err">'</span><span class="o">){</span>
             <span class="c1">//do some logic here.....</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mi">0123000000095</span><span class="n">Km</span><span class="err">'</span><span class="o">){</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01230000000</span><span class="mi">95</span><span class="n">Km</span><span class="err">'</span><span class="o">){</span>
             <span class="c1">//do some logic here for a different record type...</span>
         <span class="o">}</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1350,9 +1346,8 @@ the logic can dynamically identify the proper data to operate against and not fa
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/AvoidHardcodingId"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/AvoidHardcodingId"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="emptycatchblock">EmptyCatchBlock</h2>
 
@@ -1364,13 +1359,12 @@ the logic can dynamically identify the proper data to operate against and not fa
 In most circumstances, this swallows an exception which should either be acted on 
 or reported.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//CatchBlockStatement[./BlockStatement[count(*) = 0]]
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//CatchBlockStatement[./BlockStatement[count(*) = 0]]
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doSomething</span><span class="o">()</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doSomething</span><span class="o">()</span> <span class="o">{</span>
   <span class="o">...</span>
   <span class="k">try</span> <span class="o">{</span>
     <span class="n">insert</span> <span class="n">accounts</span><span class="o">;</span>
@@ -1378,8 +1372,7 @@ or reported.</p>
     <span class="c1">// not good</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1411,9 +1404,8 @@ or reported.</p>
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyCatchBlock"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyCatchBlock"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="emptyifstmt">EmptyIfStmt</h2>
 
@@ -1423,22 +1415,20 @@ or reported.</p>
 
 <p>Empty If Statement finds instances where a condition is checked but nothing is done about it.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//IfBlockStatement
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//IfBlockStatement
  [BlockStatement[count(*) = 0]]
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
   <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">Integer</span> <span class="n">x</span><span class="o">)</span> <span class="o">{</span>
     <span class="k">if</span> <span class="o">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
       <span class="c1">// empty!</span>
     <span class="o">}</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1470,9 +1460,8 @@ or reported.</p>
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyIfStmt"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyIfStmt"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="emptystatementblock">EmptyStatementBlock</h2>
 
@@ -1482,14 +1471,13 @@ or reported.</p>
 
 <p>Empty block statements serve no purpose and should be removed.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//Method/ModifierNode[@Abstract!='true' and ../BlockStatement[count(*) = 0]]
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Method/ModifierNode[@Abstract!='true' and ../BlockStatement[count(*) = 0]]
 | //Method/BlockStatement//BlockStatement[count(*) = 0 and @Location != parent::*/@Location]
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
 
    <span class="kd">private</span> <span class="kt">int</span> <span class="n">_bar</span><span class="o">;</span>
 
@@ -1498,8 +1486,7 @@ or reported.</p>
    <span class="o">}</span>
 
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1531,9 +1518,8 @@ or reported.</p>
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyStatementBlock"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyStatementBlock"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="emptytryorfinallyblock">EmptyTryOrFinallyBlock</h2>
 
@@ -1543,13 +1529,12 @@ or reported.</p>
 
 <p>Avoid empty try or finally blocks - what’s the point?</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//TryCatchFinallyBlockStatement[./BlockStatement[count(*) = 0]]
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//TryCatchFinallyBlockStatement[./BlockStatement[count(*) = 0]]
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">try</span> <span class="o">{</span>
           <span class="c1">// empty !</span>
@@ -1568,8 +1553,7 @@ or reported.</p>
         <span class="o">}</span>
     <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1601,9 +1585,8 @@ or reported.</p>
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyTryOrFinallyBlock"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyTryOrFinallyBlock"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="emptywhilestmt">EmptyWhileStmt</h2>
 
@@ -1615,19 +1598,17 @@ or reported.</p>
 If it is a timing loop, then you should use Thread.sleep() for it; if it is
 a while loop that does a lot in the exit expression, rewrite it to make it clearer.</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>//WhileLoopStatement[./BlockStatement[count(*) = 0]]
-</code></pre>
-</div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//WhileLoopStatement[./BlockStatement[count(*) = 0]]
+</code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">Integer</span> <span class="n">a</span><span class="o">,</span> <span class="n">Integer</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">Integer</span> <span class="n">a</span><span class="o">,</span> <span class="n">Integer</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
   <span class="k">while</span> <span class="o">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
     <span class="c1">// empty!</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1659,9 +1640,8 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyWhileStmt"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/EmptyWhileStmt"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 <h2 id="methodwithsamenameasenclosingclass">MethodWithSameNameAsEnclosingClass</h2>
 
@@ -1675,14 +1655,13 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyClass</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyClass</span> <span class="o">{</span>
     <span class="c1">// this is OK because it is a constructor</span>
     <span class="kd">public</span> <span class="nf">MyClass</span><span class="o">()</span> <span class="o">{}</span>
     <span class="c1">// this is bad because it is a method</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">MyClass</span><span class="o">()</span> <span class="o">{}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
 <p><strong>This rule has the following properties:</strong></p>
 
@@ -1714,9 +1693,8 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 </table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/MethodWithSameNameAsEnclosingClass"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/MethodWithSameNameAsEnclosingClass"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
 
 
 
@@ -1733,8 +1711,8 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 <footer>
             <div class="row">
                 <div class="col-lg-12 footer">
-               &copy;2017 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Dec 15, 2017 <br />
+               &copy;2018 PMD Open Source Project. All rights reserved. <br />
+ Site last generated: Jan 21, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
