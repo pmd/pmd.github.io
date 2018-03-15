@@ -1422,10 +1422,50 @@ code size and runtime complexity.</p>
 
 <p><strong>Priority:</strong> High (1)</p>
 
-<p>Avoid throwing NullPointerExceptions. These are confusing because most people will assume that the
-virtual machine threw it. Consider using an IllegalArgumentException instead; this will be
-clearly seen as a programmer-initiated exception.</p>
+<p>Avoid throwing NullPointerExceptions. These are confusing because most people will assume that the virtual machine threw it. 
+  To avoid a method being called with a null parameter, you may consider using an IllegalArgumentException instead, 
+  making it clearly seen as a programmer-initiated exception. However, there are better way to handle this:</p>
 
+  <blockquote cite="Effective Java, 3rd Edition, Item 72: Favor the use of standard exceptions">
+      <p><p><strong>Effective Java, 3rd Edition, Item 72: Favor the use of standard exceptions</strong></p>
+      Arguably, every erroneous method invocation boils down to an illegal
+      argument or state, but other exceptions are standardly used for certain kinds
+      of illegal arguments and states. If a caller passes null in some parameter
+      for which null values are prohibited, convention dictates that
+      NullPointerException be thrown rather than IllegalArgumentException.
+      </p>
+  </blockquote>
+
+<p><strong>  So this suggests :</strong></p>
+<div class="highlighter-rouge">
+  <div class="highlight"><pre class="highlight"><code>
+public class Foo {
+  private String exampleValue;
+    
+  void setExampleValue(String exampleValue) {
+   if(exampleValue == null) { // manual check
+       throw new NullPointerException("exampleValue must not be null!");//manual throw
+      }
+     this.exampleValue = exampleValue; // assignment
+   }
+}    
+  </code></pre></div></div> 
+  <p><strong>Java 1.7 :</strong> introduces <em>java.util.Objects.requireNonNull()</em> 
+    to solve this problem in a neat and expressive way. </p>
+    
+  <p><strong>So the above code will now be:</strong></p>
+  <div class="highlighter-rouge">
+    <div class="highlight"><pre class="highlight"><code>
+  public class Foo {
+    private String exampleValue;
+      
+    void setExampleValue(String exampleValue) {
+      // check, throw and assignment in a single standard call
+      this.exampleValue = Objects.requireNonNull(exampleValue, "exampleValue must not be null!");
+    }
+  }    
+    </code></pre></div></div> 
+        
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression/ClassOrInterfaceType[@Image='NullPointerException']
 </code></pre></div></div>
 
