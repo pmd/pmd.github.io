@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Rules which enforce a specific coding style.">
-<meta name="keywords" content=" Code Style, AbstractNaming, AtLeastOneConstructor, AvoidDollarSigns, AvoidFinalLocalVariable, AvoidPrefixingMethodParameters, AvoidProtectedFieldInFinalClass, AvoidProtectedMethodInFinalClassNotExtending, AvoidUsingNativeCode, BooleanGetMethodName, CallSuperInConstructor, ClassNamingConventions, CommentDefaultAccessModifier, ConfusingTernary, DefaultPackage, DontImportJavaLang, DuplicateImports, EmptyMethodInAbstractClassShouldBeAbstract, ExtendsObject, FieldDeclarationsShouldBeAtStartOfClass, ForLoopShouldBeWhileLoop, ForLoopsMustUseBraces, GenericsNaming, IfElseStmtsMustUseBraces, IfStmtsMustUseBraces, LocalHomeNamingConvention, LocalInterfaceSessionNamingConvention, LocalVariableCouldBeFinal, LongVariable, MDBAndSessionBeanNamingConvention, MethodArgumentCouldBeFinal, MethodNamingConventions, MIsLeadingVariableName, NoPackage, OnlyOneReturn, PackageCase, PrematureDeclaration, RemoteInterfaceNamingConvention, RemoteSessionInterfaceNamingConvention, ShortClassName, ShortMethodName, ShortVariable, SuspiciousConstantFieldName, TooManyStaticImports, UnnecessaryConstructor, UnnecessaryFullyQualifiedName, UnnecessaryLocalBeforeReturn, UnnecessaryModifier, UnnecessaryReturn, UselessParentheses, UselessQualifiedThis, VariableNamingConventions, WhileLoopsMustUseBraces">
+<meta name="keywords" content=" Code Style, AbstractNaming, AtLeastOneConstructor, AvoidDollarSigns, AvoidFinalLocalVariable, AvoidPrefixingMethodParameters, AvoidProtectedFieldInFinalClass, AvoidProtectedMethodInFinalClassNotExtending, AvoidUsingNativeCode, BooleanGetMethodName, CallSuperInConstructor, ClassNamingConventions, CommentDefaultAccessModifier, ConfusingTernary, ControlStatementBraces, DefaultPackage, DontImportJavaLang, DuplicateImports, EmptyMethodInAbstractClassShouldBeAbstract, ExtendsObject, FieldDeclarationsShouldBeAtStartOfClass, ForLoopShouldBeWhileLoop, ForLoopsMustUseBraces, GenericsNaming, IfElseStmtsMustUseBraces, IfStmtsMustUseBraces, LocalHomeNamingConvention, LocalInterfaceSessionNamingConvention, LocalVariableCouldBeFinal, LongVariable, MDBAndSessionBeanNamingConvention, MethodArgumentCouldBeFinal, MethodNamingConventions, MIsLeadingVariableName, NoPackage, OnlyOneReturn, PackageCase, PrematureDeclaration, RemoteInterfaceNamingConvention, RemoteSessionInterfaceNamingConvention, ShortClassName, ShortMethodName, ShortVariable, SuspiciousConstantFieldName, TooManyStaticImports, UnnecessaryAnnotationValueElement, UnnecessaryConstructor, UnnecessaryFullyQualifiedName, UnnecessaryLocalBeforeReturn, UnnecessaryModifier, UnnecessaryReturn, UselessParentheses, UselessQualifiedThis, VariableNamingConventions, WhileLoopsMustUseBraces">
 <title>Code Style | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.1.0</li>
+    <li class="sidebarTitle">PMD 6.2.0</li>
     
     
     
@@ -1708,6 +1708,95 @@ as “does the error case go first?” or “does the common case go first?”.<
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/ConfusingTernary"</span> <span class="nt">/&gt;</span>
 </code></pre></div></div>
 
+<h2 id="controlstatementbraces">ControlStatementBraces</h2>
+
+<p><strong>Since:</strong> PMD 6.2.0</p>
+
+<p><strong>Priority:</strong> Medium (3)</p>
+
+<p>Enforce a policy for braces on control statements. It is recommended to use braces on ‘if … else’
+statements and loop statements, even if they are optional. This usually makes the code clearer, and
+helps prepare the future when you need to add another statement. That said, this rule lets you control
+which statements are required to have braces via properties.</p>
+
+<p>From 6.2.0 on, this rule supersedes WhileLoopMustUseBraces, ForLoopMustUseBraces, IfStmtMustUseBraces,
+and IfElseStmtMustUseBraces.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//WhileStatement[$checkWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                //ForStatement[$checkForStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                //DoStatement[$checkDoWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
+                |
+                (: The violation is reported on the sub statement -- not the if statement :)
+                //Statement[$checkIfElseStmt and parent::IfStatement and not(child::Block or child::IfStatement)]
+                |
+                (: Reports case labels if one of their subordinate statements is not braced :)
+                //SwitchLabel[$checkCaseStmt]
+                             [count(following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement) &gt; 1
+                              or (some $stmt (: in only the block statements until the next label :)
+                                  in following-sibling::BlockStatement except following-sibling::SwitchLabel[1]/following-sibling::BlockStatement
+                                  satisfies not($stmt/Statement/Block))]
+</code></pre></div></div>
+
+<p><strong>Example(s):</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span>    <span class="c1">// not recommended</span>
+  <span class="n">x</span><span class="o">++;</span>
+
+<span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>  <span class="c1">// preferred approach</span>
+  <span class="n">x</span><span class="o">++;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>checkIfElseStmt</td>
+      <td>true</td>
+      <td>Require that ‘if … else’ statements use braces</td>
+    </tr>
+    <tr>
+      <td>checkWhileStmt</td>
+      <td>true</td>
+      <td>Require that ‘while’ loops use braces</td>
+    </tr>
+    <tr>
+      <td>checkForStmt</td>
+      <td>true</td>
+      <td>Require that ‘for’ loops should use braces</td>
+    </tr>
+    <tr>
+      <td>checkDoWhileStmt</td>
+      <td>true</td>
+      <td>Require that ‘do … while’ loops use braces</td>
+    </tr>
+    <tr>
+      <td>checkCaseStmt</td>
+      <td>false</td>
+      <td>Require that cases of a switch have braces</td>
+    </tr>
+    <tr>
+      <td>allowEmptyLoop</td>
+      <td>false</td>
+      <td>Allow loops with an empty statement, e.g. ‘while(true);’</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Use this rule by referencing it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/ControlStatementBraces"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
 <h2 id="defaultpackage">DefaultPackage</h2>
 
 <p><strong>Since:</strong> PMD 3.4</p>
@@ -1932,6 +2021,8 @@ usage by developers who should be implementing their own versions in the concret
 
 <h2 id="forloopsmustusebraces">ForLoopsMustUseBraces</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 0.7</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
@@ -1993,6 +2084,8 @@ from the rest.</p>
 
 <h2 id="ifelsestmtsmustusebraces">IfElseStmtsMustUseBraces</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 0.2</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
@@ -2024,6 +2117,8 @@ from the rest.</p>
 </code></pre></div></div>
 
 <h2 id="ifstmtsmustusebraces">IfStmtsMustUseBraces</h2>
+
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
 
 <p><strong>Since:</strong> PMD 1.0</p>
 
@@ -2695,6 +2790,51 @@ which class a static member comes from (Sun 1.5 Language Guide).</p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/TooManyStaticImports"</span> <span class="nt">/&gt;</span>
 </code></pre></div></div>
 
+<h2 id="unnecessaryannotationvalueelement">UnnecessaryAnnotationValueElement</h2>
+
+<p><strong>Since:</strong> PMD 6.2.0</p>
+
+<p><strong>Priority:</strong> Medium (3)</p>
+
+<p>Avoid the use of value in annotations when it’s the only element.</p>
+
+<p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/codestyle/UnnecessaryAnnotationValueElementRule.java">net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryAnnotationValueElementRule</a></p>
+
+<p><strong>Example(s):</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@TestClassAnnotation</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"TEST"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+
+    <span class="nd">@TestMemberAnnotation</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"TEST"</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">y</span><span class="o">;</span>
+
+    <span class="nd">@TestMethodAnnotation</span><span class="o">(</span><span class="n">value</span> <span class="o">=</span> <span class="s">"TEST"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span><span class="o">;</span>
+        <span class="k">return</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// should be</span>
+
+<span class="nd">@TestClassAnnotation</span><span class="o">(</span><span class="s">"TEST"</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
+
+    <span class="nd">@TestMemberAnnotation</span><span class="o">(</span><span class="s">"TEST"</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">y</span><span class="o">;</span>
+
+    <span class="nd">@TestMethodAnnotation</span><span class="o">(</span><span class="s">"TEST"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span><span class="o">;</span>
+        <span class="k">return</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule by referencing it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/UnnecessaryAnnotationValueElement"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
 <h2 id="unnecessaryconstructor">UnnecessaryConstructor</h2>
 
 <p><strong>Since:</strong> PMD 1.0</p>
@@ -3086,6 +3226,8 @@ that should not include underscores.</p>
 
 <h2 id="whileloopsmustusebraces">WhileLoopsMustUseBraces</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 0.7</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
@@ -3127,7 +3269,7 @@ controlled from the rest.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Feb 25, 2018 <br />
+ Site last generated: Mar 26, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

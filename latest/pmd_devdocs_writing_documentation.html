@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.1.0</li>
+    <li class="sidebarTitle">PMD 6.2.0</li>
     
     
     
@@ -1246,12 +1246,48 @@ the <a href="http://idratherbewriting.com/documentation-theme-jekyll/index.html"
 
 <h2 id="structure">Structure</h2>
 
-<p>All documentation is stored in the folder <code class="highlighter-rouge">docs/</code>. This is the folder, that github and the travis-ci scripts
-use to render the site.</p>
+<p>The documentation sources can be found in two places based on how they are generated:</p>
+<ul>
+  <li>the ones that are manually written (like the one you are reading);</li>
+  <li>and the ones that are generated automatically from the category files. All the rule documentation
+pages are generated that way.</li>
+</ul>
 
-<p>New pages are stored in the different subfolders under <code class="highlighter-rouge">pages</code>. The folder structure resembles the sidebar structure.
+<h3 id="handwritten-documentation">Handwritten documentation</h3>
+
+<p>All handwritten documentation is stored in the subfolders under <code class="highlighter-rouge">docs/pages</code>. The folder structure resembles the sidebar structure.
 Since all pages use a simple <em>permalink</em>, in the rendered html pages, all pages are flattened in one directory.
 This makes it easy to view the documentation also offline.</p>
+
+<h3 id="rule-documentation">Rule documentation</h3>
+
+<p>The categories for a language <code class="highlighter-rouge">%lang%</code> are located in
+<code class="highlighter-rouge">pmd-%lang%/src/main/resources/category/%lang% </code>. So for Java the categories
+can be found under <a href="https://github.com/pmd/pmd/tree/master/pmd-java/src/main/resources/category/java">pmd-java/src/main/resources/category/java</a>.
+The XML category files in this directory are transformed during build into markdown pages
+describing the rules they contain. These pages are placed under <code class="highlighter-rouge">docs/</code> like the handwritten
+documentation, and are then rendered with Jekyll like the rest of them. The rule documentation
+generator is the separate submodule <code class="highlighter-rouge">pmd-doc</code>.</p>
+
+<p>Modifying the documentation of a rule should thus not be done on the markdown page,
+but directly on the XML <code class="highlighter-rouge">rule</code> tag corresponding to the rule, in the relevant
+category file.</p>
+
+<p>The XML documentation of rules can contain GitHub flavoured markdown.
+Just wrap the markdown inside CDATA section in the xml. CDATA sections preserve
+all formatting inside the delimiters, and allow to write code samples without
+ escaping special xml characters. For example:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;rule ...&gt;
+ &lt;description&gt;
+ &lt;![CDATA[
+   Full description, can contain markup
+
+   And paragraphs
+ ]]&gt;
+ &lt;/description&gt;
+ ...
+&lt;/rule&gt;
+</code></pre></div></div>
 
 <h2 id="building">Building</h2>
 
@@ -1395,7 +1431,7 @@ public class Foo {
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Feb 25, 2018 <br />
+ Site last generated: Mar 26, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

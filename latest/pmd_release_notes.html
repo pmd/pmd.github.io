@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.1.0</li>
+    <li class="sidebarTitle">PMD 6.2.0</li>
     
     
     
@@ -1235,9 +1235,9 @@ $('#toc').on('click', 'a', function() {
 
     
 
-  <h2 id="25-february-2018---610">25-February-2018 - 6.1.0</h2>
+  <h2 id="26-march-2018---620">26-March-2018 - 6.2.0</h2>
 
-<p>The PMD team is pleased to announce PMD 6.1.0.</p>
+<p>The PMD team is pleased to announce PMD 6.2.0.</p>
 
 <p>This is a minor release.</p>
 
@@ -1246,126 +1246,174 @@ $('#toc').on('click', 'a', function() {
 <ul>
   <li><a href="#new-and-noteworthy">New and noteworthy</a>
     <ul>
-      <li><a href="#designer-ui">Designer UI</a></li>
+      <li><a href="#ecmascript-javascript">Ecmascript (JavaScript)</a></li>
+      <li><a href="#disable-incremental-analysis">Disable Incremental Analysis</a></li>
+      <li><a href="#new-rules">New Rules</a></li>
+      <li><a href="#modified-rules">Modified Rules</a></li>
     </ul>
   </li>
   <li><a href="#fixed-issues">Fixed Issues</a></li>
-  <li><a href="#api-changes">API Changes</a>
-    *   <a href="#changes-to-the-node-interface">Changes to the Node interface</a>
-    *   <a href="#changes-to-cpd-renderers">Changes to CPD renderers</a></li>
+  <li><a href="#api-changes">API Changes</a></li>
   <li><a href="#external-contributions">External Contributions</a></li>
 </ul>
 
 <h3 id="new-and-noteworthy">New and noteworthy</h3>
 
-<h4 id="designer-ui">Designer UI</h4>
+<h4 id="ecmascript-javascript">Ecmascript (JavaScript)</h4>
 
-<p>The Designer now supports configuring properties for XPath based rule development.
-The Designer is still under development and any feedback is welcome.</p>
+<p>The <a href="https://github.com/mozilla/rhino">Rhino Library</a> has been upgraded from version 1.7.7 to version 1.7.7.2.</p>
 
-<p>You can start the designer via <code class="highlighter-rouge">run.sh designer</code> or <code class="highlighter-rouge">designer.bat</code>.</p>
+<p>Detailed changes for changed in Rhino can be found:</p>
+<ul>
+  <li><a href="https://github.com/mozilla/rhino/blob/master/RELEASE-NOTES.md#rhino-1772">For 1.7.7.2</a></li>
+  <li><a href="https://github.com/mozilla/rhino/blob/master/RELEASE-NOTES.md#rhino-1771">For 1.7.7.1</a></li>
+</ul>
+
+<p>Both are bugfixing releases.</p>
+
+<h4 id="disable-incremental-analysis">Disable Incremental Analysis</h4>
+
+<p>Some time ago, we added support for <a href="pmd_userdocs_getting_started.html">Incremental Analysis</a>. On PMD 6.0.0, we
+started to add warns when not using it, as we strongly believe it’s a great improvement to our user’s experience as
+analysis time is greatly reduced; and in the future we plan to have it enabled by default. However, we realize some
+scenarios don’t benefit from it (ie: CI jobs), and having the warning logged can be noisy and cause confusion.</p>
+
+<p>To this end, we have added a new flag to allow you to explicitly disable incremental analysis. On CLI, this is
+the new <code class="highlighter-rouge">-no-cache</code> flag. On Ant, there is a <code class="highlighter-rouge">noCache</code> attribute for the <code class="highlighter-rouge">&lt;pmd&gt;</code> task.</p>
+
+<p>On both scenarios, disabling the cache takes precedence over setting a cache location.</p>
+
+<h4 id="new-rules">New Rules</h4>
+
+<ul>
+  <li>
+    <p>The new Java rule <a href="pmd_rules_java_bestpractices.html#missingoverride"><code class="highlighter-rouge">MissingOverride</code></a>
+(category <code class="highlighter-rouge">bestpractices</code>) detects overridden and implemented methods, which are not marked with the
+<code class="highlighter-rouge">@Override</code> annotation. Annotating overridden methods with <code class="highlighter-rouge">@Override</code> ensures at compile time that
+the method really overrides one, which helps refactoring and clarifies intent.</p>
+  </li>
+  <li>
+    <p>The new Java rule <a href="pmd_rules_java_codestyle.html#unnecessaryannotationvalueelement"><code class="highlighter-rouge">UnnecessaryAnnotationValueElement</code></a>
+(category <code class="highlighter-rouge">codestyle</code>) detects annotations with a single element (<code class="highlighter-rouge">value</code>) that explicitely names it.
+That is, doing <code class="highlighter-rouge">@SuppressWarnings(value = "unchecked")</code> would be flagged in favor of
+<code class="highlighter-rouge">@SuppressWarnings("unchecked")</code>.</p>
+  </li>
+  <li>
+    <p>The new Java rule <a href="pmd_rules_java_codestyle.html#controlstatementbraces"><code class="highlighter-rouge">ControlStatementBraces</code></a>
+(category <code class="highlighter-rouge">codestyle</code>) enforces the presence of braces on control statements where they are optional.
+Properties allow to customize which statements are required to have braces. This rule replaces the now
+deprecated rules <code class="highlighter-rouge">WhileLoopMustUseBraces</code>, <code class="highlighter-rouge">ForLoopMustUseBraces</code>, <code class="highlighter-rouge">IfStmtMustUseBraces</code>, and
+<code class="highlighter-rouge">IfElseStmtMustUseBraces</code>. More than covering the use cases of those rules, this rule also supports
+<code class="highlighter-rouge">do ... while</code> statements and <code class="highlighter-rouge">case</code> labels of <code class="highlighter-rouge">switch</code> statements (disabled by default).</p>
+  </li>
+</ul>
+
+<h4 id="modified-rules">Modified Rules</h4>
+
+<ul>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">CommentContentRule</code> (<code class="highlighter-rouge">java-documentation</code>) previously had the property <code class="highlighter-rouge">wordsAreRegex</code>. But this 
+property never had been implemented and is removed now.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnusedPrivateField</code> (<code class="highlighter-rouge">java-bestpractices</code>) now has a new <code class="highlighter-rouge">ignoredAnnotations</code> property
+that allows to configure annotations that imply the field should be ignored. By default <code class="highlighter-rouge">@java.lang.Deprecated</code>
+and <code class="highlighter-rouge">@javafx.fxml.FXML</code> are ignored.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">UnusedPrivateMethod</code> (<code class="highlighter-rouge">java-bestpractices</code>) now has a new <code class="highlighter-rouge">ignoredAnnotations</code> property
+that allows to configure annotations that imply the method should be ignored. By default <code class="highlighter-rouge">@java.lang.Deprecated</code>
+is ignored.</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">ImmutableField</code> (<code class="highlighter-rouge">java-design</code>) now has a new <code class="highlighter-rouge">ignoredAnnotations</code> property
+that allows to configure annotations that imply the method should be ignored. By default several <code class="highlighter-rouge">lombok</code>
+annotations are ignored</p>
+  </li>
+  <li>
+    <p>The Java rule <code class="highlighter-rouge">SingularField</code> (<code class="highlighter-rouge">java-design</code>) now has a new <code class="highlighter-rouge">ignoredAnnotations</code> property
+that allows to configure annotations that imply the method should be ignored. By default several <code class="highlighter-rouge">lombok</code>
+annotations are ignored</p>
+  </li>
+</ul>
+
+<h4 id="deprecated-rules">Deprecated Rules</h4>
+
+<ul>
+  <li>The Java rules <code class="highlighter-rouge">WhileLoopMustUseBraces</code>, <code class="highlighter-rouge">ForLoopMustUseBraces</code>, <code class="highlighter-rouge">IfStmtMustUseBraces</code>, and <code class="highlighter-rouge">IfElseStmtMustUseBraces</code>
+are deprecated. They will be replaced by the new rule <code class="highlighter-rouge">ControlStatementBraces</code>, in the category <code class="highlighter-rouge">codestyle</code>.</li>
+</ul>
 
 <h3 id="fixed-issues">Fixed Issues</h3>
 
 <ul>
   <li>all
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/569">#569</a>: [core] XPath support requires specific toString implementations</li>
-      <li><a href="https://github.com/pmd/pmd/issues/795">#795</a>: [cpd] java.lang.OutOfMemoryError</li>
-      <li><a href="https://github.com/pmd/pmd/issues/848">#848</a>: [doc] Test failures when building pmd-doc under Windows</li>
-      <li><a href="https://github.com/pmd/pmd/issues/872">#872</a>: [core] NullPointerException at FileDataSource.glomName()</li>
-      <li><a href="https://github.com/pmd/pmd/issues/854">#854</a>: [ci] Use Java9 for building PMD</li>
+      <li><a href="https://github.com/pmd/pmd/issues/928">#928</a>: [core] PMD build failure on Windows</li>
     </ul>
   </li>
-  <li>doc
+  <li>java-bestpracrtices
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/791">#791</a>: [doc] Documentation site reorganisation</li>
-      <li><a href="https://github.com/pmd/pmd/issues/891">#891</a>: [doc] Apex @SuppressWarnings should use single quotes instead of double quotes</li>
-      <li><a href="https://github.com/pmd/pmd/issues/909">#909</a>: [doc] Please add new PMD Eclipse Plugin to tool integration section</li>
+      <li><a href="https://github.com/pmd/pmd/issues/907">#907</a>: [java] UnusedPrivateField false-positive with @FXML</li>
+      <li><a href="https://github.com/pmd/pmd/issues/965">#963</a>: [java] ArrayIsStoredDirectly not triggered from variadic functions</li>
     </ul>
   </li>
-  <li>java
+  <li>java-codestyle
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/825">#825</a>: [java] Excessive*Length ignores too much</li>
-      <li><a href="https://github.com/pmd/pmd/issues/888">#888</a>: [java] ParseException occurs with valid ‘&lt;&gt;’ in Java 1.8 mode</li>
-      <li><a href="https://github.com/pmd/pmd/pull/920">#920</a>: [java] Update valid identifiers in grammar</li>
-    </ul>
-  </li>
-  <li>java-bestpractices
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/784">#784</a>: [java] ForLoopCanBeForeach false-positive</li>
-      <li><a href="https://github.com/pmd/pmd/issues/925">#925</a>: [java] UnusedImports false positive for static import</li>
+      <li><a href="https://github.com/pmd/pmd/issues/974">#974</a>: [java] Merge *StmtMustUseBraces rules</li>
+      <li><a href="https://github.com/pmd/pmd/issues/983">#983</a>: [java] Detect annotations with single value element</li>
     </ul>
   </li>
   <li>java-design
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/855">#855</a>: [java] ImmutableField false-positive with lambdas</li>
+      <li><a href="https://github.com/pmd/pmd/issues/832">#832</a>: [java] AvoidThrowingNullPointerException documentation suggestion</li>
+      <li><a href="https://github.com/pmd/pmd/issues/837">#837</a>: [java] CFGs of declared but not called lambdas are treated as parts of an enclosing method’s CFG</li>
+      <li><a href="https://github.com/pmd/pmd/issues/839">#839</a>: [java] SignatureDeclareThrowsException’s IgnoreJUnitCompletely property not honored for constructors</li>
+      <li><a href="https://github.com/pmd/pmd/issues/968">#968</a>: [java] UseUtilityClassRule reports false positive with lombok NoArgsConstructor</li>
     </ul>
   </li>
-  <li>java-documentation
+  <li>documentation
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/877">#877</a>: [java] CommentRequired valid rule configuration causes PMD error</li>
-    </ul>
-  </li>
-  <li>java-errorprone
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/885">#885</a>: [java] CompareObjectsWithEqualsRule trigger by enum1 != enum2</li>
-    </ul>
-  </li>
-  <li>java-performance
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/541">#541</a>: [java] ConsecutiveLiteralAppends with types other than string</li>
-    </ul>
-  </li>
-  <li>scala
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/853">#853</a>: [scala] Upgrade scala version to support Java 9</li>
-    </ul>
-  </li>
-  <li>xml
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/739">#739</a>: [xml] IllegalAccessException when accessing attribute using Saxon on JRE 9</li>
+      <li><a href="https://github.com/pmd/pmd/issues/978">#978</a>: [core] Broken link in CONTRIBUTING.md</li>
+      <li><a href="https://github.com/pmd/pmd/issues/992">#992</a>: [core] Include info about rule doc generation in “Writing Documentation” md page</li>
     </ul>
   </li>
 </ul>
 
 <h3 id="api-changes">API Changes</h3>
 
-<h4 id="changes-to-the-node-interface">Changes to the Node interface</h4>
-
-<p>The method <code class="highlighter-rouge">getXPathNodeName</code> is added to the <code class="highlighter-rouge">Node</code> interface, which removes the
-use of the <code class="highlighter-rouge">toString</code> of a node to get its XPath element name (see <a href="https://github.com/pmd/pmd/issues/569">#569</a>).
-A default implementation is provided in <code class="highlighter-rouge">AbstractNode</code>, to stay compatible
-with existing implementors.</p>
-
-<p>The <code class="highlighter-rouge">toString</code> method of a Node is not changed for the time being, and still produces
-the name of the XPath node. That behaviour may however change in future major releases,
-e.g. to produce a more useful message for debugging.</p>
-
-<h4 id="changes-to-cpd-renderers">Changes to CPD renderers</h4>
-
-<p>The interface <code class="highlighter-rouge">net.sourceforge.pmd.cpd.Renderer</code> has been deprecated. A new interface <code class="highlighter-rouge">net.sourceforge.pmd.cpd.renderer.CPDRenderer</code>
-has been introduced to replace it. The main difference is that the new interface is meant to render directly to a <code class="highlighter-rouge">java.io.Writer</code>
-rather than to a String. This allows to greatly reduce the memory footprint of CPD, as on large projects, with many duplications,
-it was causing <code class="highlighter-rouge">OutOfMemoryError</code>s (see <a href="https://github.com/pmd/pmd/issues/795">#795</a>).</p>
-
-<p><code class="highlighter-rouge">net.sourceforge.pmd.cpd.FileReporter</code> has also been deprecated as part of this change, as it’s no longer needed.</p>
+<ul>
+  <li>
+    <p>A new CLI switch, <code class="highlighter-rouge">-no-cache</code>, disables incremental analysis and the related suggestion. This overrides the
+    <code class="highlighter-rouge">-cache</code> option. The corresponding Ant task parameter is <code class="highlighter-rouge">noCache</code>.</p>
+  </li>
+  <li>
+    <p>The static method <code class="highlighter-rouge">PMDParameters.transformParametersIntoConfiguration(PMDParameters)</code> is now deprecated,
+for removal in 7.0.0. The new instance method <code class="highlighter-rouge">PMDParameters.toConfiguration()</code> replaces it.</p>
+  </li>
+  <li>
+    <p>The method <code class="highlighter-rouge">ASTConstructorDeclaration.getParameters()</code> has been deprecated in favor of the new method
+<code class="highlighter-rouge">getFormalParameters()</code>. This method is available for both <code class="highlighter-rouge">ASTConstructorDeclaration</code> and
+<code class="highlighter-rouge">ASTMethodDeclaration</code>.</p>
+  </li>
+</ul>
 
 <h3 id="external-contributions">External Contributions</h3>
 
 <ul>
-  <li><a href="https://github.com/pmd/pmd/pull/790">#790</a>: [java] Added some comments for JDK 9 - <a href="https://github.com/tweimer">Tobias Weimer</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/803">#803</a>: [doc] Added SpotBugs as successor of FindBugs - <a href="https://github.com/tweimer">Tobias Weimer</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/828">#828</a>: [core] Add operations to manipulate a document - <a href="https://github.com/gibarsin">Gonzalo Ibars Ingman</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/830">#830</a>: [java] UseArraysAsList: Description added - <a href="https://github.com/tweimer">Tobias Weimer</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/845">#845</a>: [java] Fix false negative PreserveStackTrace on string concatenation - <a href="https://github.com/albfernandez">Alberto Fernández</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/868">#868</a>: [core] Improve XPath documentation &amp;&amp; make small refactors - <a href="https://github.com/gibarsin">Gonzalo Ibars Ingman</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/875">#875</a>: [core] Support shortnames when using filelist - <a href="https://github.com/johnjiabinzhang">John Zhang</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/886">#886</a>: [java] Fix #885 - <a href="https://github.com/MatiasComercio">Matias Comercio</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/900">#900</a>: [core] Use the isEmpty method instead of comparing the value of size() to 0 - <a href="https://github.com/reudismam">reudismam</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/914">#914</a>: [doc] Apex @SuppressWarnings documentation updated - <a href="https://github.com/akshatbahety">Akshat Bahety</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/918">#918</a>: [doc] Add qa-eclipse as new tool - <a href="https://github.com/akshatbahety">Akshat Bahety</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/927">#927</a>: [java][doc] Fix example of AbstractClassWithoutAnyMethod - <a href="https://github.com/wata727">Kazuma Watanabe</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/941">#941</a>: [java] Use char notation to represent a character to improve performance - <a href="https://github.com/reudismam">reudismam</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/943">#943</a>: [java] UnusedPrivateField false-positive with @FXML - <a href="https://github.com/djydewang">BBG</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/951">#951</a>: [java] Add ignoredAnnotations property to unusedPrivateMethod rule - <a href="https://github.com/djydewang">BBG</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/952">#952</a>: [java] SignatureDeclareThrowsException’s IgnoreJUnitCompletely property not honored for constructors - <a href="https://github.com/djydewang">BBG</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/958">#958</a>: [java] Refactor how we ignore annotated elements in rules - <a href="https://github.com/djydewang">BBG</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/965">#965</a>: [java] Make Varargs trigger ArrayIsStoredDirectly - <a href="https://github.com/pmd/pmd/issues/907">Stephen</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/967">#967</a>: [doc] Issue 959: fixed broken link to XPath Rule Tutorial - <a href="https://github.com/epidemia">Andrey Mochalov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/969">#969</a>: [java] Issue 968 Add logic to handle lombok private constructors with utility classes - <a href="https://github.com/clem0110">Kirk Clemens</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/970">#970</a>: [java] Fixed inefficient use of keySet iterator instead of entrySet iterator - <a href="https://github.com/epidemia">Andrey Mochalov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/984">#984</a>: [java] issue983 Add new UnnecessaryAnnotationValueElement rule - <a href="https://github.com/clem0110">Kirk Clemens</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/989">#989</a>: [core] Update Contribute.md to close Issue #978 - <a href="https://github.com/refactormyself">Bolarinwa Saheed Olayemi</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/990">#990</a>: [java] Updated Doc on AvoidThrowingNullPointerException to close Issue #832 - <a href="https://github.com/refactormyself">Bolarinwa Saheed Olayemi</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/993">#993</a>: [core] Update writing_documentation.md to fix Issue #992 - <a href="https://github.com/refactormyself">Bolarinwa Saheed Olayemi</a></li>
 </ul>
 
 
@@ -1384,7 +1432,7 @@ it was causing <code class="highlighter-rouge">OutOfMemoryError</code>s (see <a 
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Feb 25, 2018 <br />
+ Site last generated: Mar 26, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
