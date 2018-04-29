@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.2.0</li>
+    <li class="sidebarTitle">PMD 6.3.0</li>
     
     
     
@@ -583,6 +583,12 @@
                         
                         
                         
+                        
+                        
+                        <li><a href="pmd_rules_java_security.html">Security</a></li>
+                        
+                        
+                        
                     </ul>
                 </li>
                 
@@ -956,7 +962,7 @@
             
 
                 
-                <li><a href="pmd_devdocs_contributing.html">Contributing</a></li>
+                <li><a href="https:github.compmdpmdblobmasterCONTRIBUTING.md">Contributing</a></li>
                 
 
             
@@ -1239,6 +1245,8 @@ $('#toc').on('click', 'a', function() {
 
   <h2 id="abstractnaming">AbstractNaming</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 1.4</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
@@ -1269,6 +1277,7 @@ $('#toc').on('click', 'a', function() {
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1276,6 +1285,7 @@ $('#toc').on('click', 'a', function() {
       <td>strict</td>
       <td>true</td>
       <td>Also flag classes, that are named Abstract, but are not abstract.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -1536,6 +1546,7 @@ and not(../Annotation//Name[@Image = 'Override'])
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1543,6 +1554,7 @@ and not(../Annotation//Name[@Image = 'Override'])
       <td>checkParameterizedMethods</td>
       <td>false</td>
       <td>Check parameterized methods</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -1591,14 +1603,82 @@ another constructor (such as an overloaded constructor) is called, this rule wil
 
 <p><strong>Priority:</strong> High (1)</p>
 
-<p>Class names should always begin with an upper case character.</p>
+<p>Configurable naming conventions for type declarations. This rule reports
+type declarations which do not match the regex that applies to their
+specific kind (e.g. enum or interface). Each regex can be configured through
+properties.</p>
+
+<p>By default this rule uses the standard Java naming convention (Pascal case),
+and reports utility class names not ending with ‘Util’.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/codestyle/ClassNamingConventionsRule.java">net.sourceforge.pmd.lang.java.rule.codestyle.ClassNamingConventionsRule</a></p>
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{}</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// This is Pascal case, the recommended naming convention in Java</span>
+<span class="c1">// Note that the default values of this rule don't allow numbers,</span>
+<span class="c1">// underscores, or accented characters in type names</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">FooBar</span> <span class="o">{}</span>
+
+<span class="c1">// You may want abstract classes to be named 'AbstractXXX',</span>
+<span class="c1">// in which case you can customize the regex for abstract</span>
+<span class="c1">// classes to 'Abstract[A-Z]\w+'</span>
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Thing</span> <span class="o">{}</span>
+
+<span class="c1">// This class doesn't respect the convention, and will be flagged</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="err">É</span><span class="nc">l</span><span class="err">é</span><span class="n">phant</span> <span class="o">{}</span>
 </code></pre></div></div>
+
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+      <th>Multivalued</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>classPattern</td>
+      <td>[A-Z][a-zA-Z]+</td>
+      <td>Regex which applies to concrete class names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>abstractClassPattern</td>
+      <td>[A-Z][a-zA-Z]+</td>
+      <td>Regex which applies to abstract class names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>interfacePattern</td>
+      <td>[A-Z][a-zA-Z]+</td>
+      <td>Regex which applies to interface names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>enumPattern</td>
+      <td>[A-Z][a-zA-Z]+</td>
+      <td>Regex which applies to enum names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>annotationPattern</td>
+      <td>[A-Z][a-zA-Z]+</td>
+      <td>Regex which applies to annotation names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>utilityClassPattern</td>
+      <td>[A-Z][a-zA-Z]+Util</td>
+      <td>Regex which applies to utility class names</td>
+      <td>no</td>
+    </tr>
+  </tbody>
+</table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/ClassNamingConventions"</span> <span class="nt">/&gt;</span>
@@ -1648,6 +1728,7 @@ By default the comment must be /* default */, if you want another, you have to p
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1655,6 +1736,7 @@ By default the comment must be /* default */, if you want another, you have to p
       <td>regex</td>
       <td> </td>
       <td>Regular expression</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -1693,6 +1775,7 @@ as “does the error case go first?” or “does the common case go first?”.<
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1700,6 +1783,7 @@ as “does the error case go first?” or “does the common case go first?”.<
       <td>ignoreElseIf</td>
       <td>false</td>
       <td>Ignore conditions with an else-if case</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -1729,7 +1813,13 @@ and IfElseStmtMustUseBraces.</p>
                 //DoStatement[$checkDoWhileStmt and not(Statement/Block) and not($allowEmptyLoop and Statement/EmptyStatement)]
                 |
                 (: The violation is reported on the sub statement -- not the if statement :)
-                //Statement[$checkIfElseStmt and parent::IfStatement and not(child::Block or child::IfStatement)]
+                //Statement[$checkIfElseStmt and parent::IfStatement and not(child::Block or child::IfStatement)
+                            (: Whitelists single if statements :)
+                            and ($checkSingleIfStmt
+                                 (: Inside this not(...) is the definition of a "single if statement" :)
+                                 or not(count(../Statement) = 1 (: No else stmt :)
+                                        (: Not the last branch of an 'if ... else if' chain :)
+                                        and not(parent::IfStatement[parent::Statement[parent::IfStatement]])))]
                 |
                 (: Reports case labels if one of their subordinate statements is not braced :)
                 //SwitchLabel[$checkCaseStmt]
@@ -1757,6 +1847,7 @@ and IfElseStmtMustUseBraces.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1764,31 +1855,43 @@ and IfElseStmtMustUseBraces.</p>
       <td>checkIfElseStmt</td>
       <td>true</td>
       <td>Require that ‘if … else’ statements use braces</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>checkSingleIfStmt</td>
+      <td>true</td>
+      <td>Require that ‘if’ statements with a single branch use braces</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkWhileStmt</td>
       <td>true</td>
       <td>Require that ‘while’ loops use braces</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkForStmt</td>
       <td>true</td>
       <td>Require that ‘for’ loops should use braces</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkDoWhileStmt</td>
       <td>true</td>
       <td>Require that ‘do … while’ loops use braces</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkCaseStmt</td>
       <td>false</td>
       <td>Require that cases of a switch have braces</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>allowEmptyLoop</td>
       <td>false</td>
       <td>Allow loops with an empty statement, e.g. ‘while(true);’</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -1966,6 +2069,7 @@ usage by developers who should be implementing their own versions in the concret
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -1973,16 +2077,19 @@ usage by developers who should be implementing their own versions in the concret
       <td>ignoreInterfaceDeclarations</td>
       <td>false</td>
       <td>Ignore Interface Declarations that precede fields.</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>ignoreAnonymousClassDeclarations</td>
       <td>true</td>
       <td>Ignore Field Declarations, that are initialized with anonymous class declarations</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>ignoreEnumDeclarations</td>
       <td>true</td>
       <td>Ignore Enum Declarations that precede fields.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2265,6 +2372,7 @@ controlled from the rest.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2272,6 +2380,7 @@ controlled from the rest.</p>
       <td>minimum</td>
       <td>17</td>
       <td>The variable length reporting threshold</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2345,7 +2454,12 @@ controlled from the rest.</p>
 
 <p><strong>Priority:</strong> High (1)</p>
 
-<p>Method names should always begin with a lower case character, and should not contain underscores.</p>
+<p>Configurable naming conventions for method declarations. This rule reports
+method declarations which do not match the regex that applies to their
+specific kind (e.g. JUnit test or native method). Each regex can be
+configured through properties.</p>
+
+<p>By default this rule uses the standard Java naming convention (Camel case).</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/codestyle/MethodNamingConventionsRule.java">net.sourceforge.pmd.lang.java.rule.codestyle.MethodNamingConventionsRule</a></p>
 
@@ -2365,13 +2479,45 @@ controlled from the rest.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>checkNativeMethods</td>
       <td>true</td>
-      <td>Check native methods</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Check native methods</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>methodPattern</td>
+      <td>[a-z][a-zA-Z0-9]+</td>
+      <td>Regex which applies to instance method names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>staticPattern</td>
+      <td>[a-z][a-zA-Z0-9]+</td>
+      <td>Regex which applies to static method names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>nativePattern</td>
+      <td>[a-z][a-zA-Z0-9]+</td>
+      <td>Regex which applies to native method names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>junit3TestPattern</td>
+      <td>test[A-Z0-9][a-zA-Z0-9]*</td>
+      <td>Regex which applies to JUnit 3 test method names</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>junit4TestPattern</td>
+      <td>[a-z][a-zA-Z0-9]+</td>
+      <td>Regex which applies to JUnit 4 test method names</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2605,6 +2751,7 @@ controlled from the rest.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2612,6 +2759,7 @@ controlled from the rest.</p>
       <td>minimum</td>
       <td>5</td>
       <td>Number of characters that are required as a minimum for a class name.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2647,6 +2795,7 @@ controlled from the rest.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2654,6 +2803,7 @@ controlled from the rest.</p>
       <td>minimum</td>
       <td>3</td>
       <td>Number of characters that are required as a minimum for a method name.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2700,6 +2850,7 @@ controlled from the rest.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2707,6 +2858,7 @@ controlled from the rest.</p>
       <td>minimum</td>
       <td>3</td>
       <td>Number of characters that are required as a minimum for a variable name.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2775,6 +2927,7 @@ which class a static member comes from (Sun 1.5 Language Guide).</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2782,6 +2935,7 @@ which class a static member comes from (Sun 1.5 Language Guide).</p>
       <td>maximumStaticImports</td>
       <td>4</td>
       <td>All static imports can be disallowed by setting this to 0</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -2841,17 +2995,11 @@ which class a static member comes from (Sun 1.5 Language Guide).</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>This rule detects when a constructor is not necessary; i.e., when there is only one constructor,
-it’s public, has an empty body, and takes no arguments.</p>
+<p>This rule detects when a constructor is not necessary; i.e., when there is only one constructor and the
+constructor is identical to the default constructor. The default constructor should has same access
+modifier as the declaring class. In an enum type, the default constructor is implicitly private.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceBody[count(ClassOrInterfaceBodyDeclaration/ConstructorDeclaration)=1]
-/ClassOrInterfaceBodyDeclaration/ConstructorDeclaration
-[@Public='true']
-[not(FormalParameters/*)]
-[not(BlockStatement)]
-[not(NameList)]
-[count(ExplicitConstructorInvocation/Arguments/ArgumentList/Expression)=0]
-</code></pre></div></div>
+<p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/codestyle/UnnecessaryConstructorRule.java">net.sourceforge.pmd.lang.java.rule.codestyle.UnnecessaryConstructorRule</a></p>
 
 <p><strong>Example(s):</strong></p>
 
@@ -2859,6 +3007,27 @@ it’s public, has an empty body, and takes no arguments.</p>
   <span class="kd">public</span> <span class="nf">Foo</span><span class="o">()</span> <span class="o">{}</span>
 <span class="o">}</span>
 </code></pre></div></div>
+
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+      <th>Multivalued</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ignoredAnnotations</td>
+      <td>javax.inject.Inject</td>
+      <td>Fully qualified names of the annotation types that should be ignored by this rule</td>
+      <td>yes. Delimiter is ‘|’.</td>
+    </tr>
+  </tbody>
+</table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/UnnecessaryConstructor"</span> <span class="nt">/&gt;</span>
@@ -2917,6 +3086,7 @@ which is covered by an import statement is redundant.  Consider using the non-fu
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
@@ -2924,6 +3094,7 @@ which is covered by an import statement is redundant.  Consider using the non-fu
       <td>statementOrderMatters</td>
       <td>true</td>
       <td>If set to false this rule no longer requires the variable declaration and return statement to be on consecutive lines. Any variable that is used solely in a return statement will be reported.</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -3008,7 +3179,7 @@ For historical reasons, modifiers which are implied by the context are accepted 
   /PrimaryPrefix/Expression
     [not(./CastExpression)]
     [not(./ConditionalExpression[@Ternary='true'])]
-    [not(./AdditiveExpression[//Literal[@StringLiteral='true']])]
+    [not(./AdditiveExpression)]
 |
 //Expression[not(parent::PrimaryPrefix)]/PrimaryExpression[count(*)=1]
   /PrimaryPrefix/Expression
@@ -3154,68 +3325,81 @@ that should not include underscores.</p>
       <th>Name</th>
       <th>Default Value</th>
       <th>Description</th>
+      <th>Multivalued</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td>parameterSuffix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Method parameter variable suffixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>parameterPrefix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Method parameter variable prefixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>localSuffix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Local variable suffixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>localPrefix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Local variable prefixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>memberSuffix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Member variable suffixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>memberPrefix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Member variable prefixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>staticSuffix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Static variable suffixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>checkParameters</td>
       <td>true</td>
       <td>Check constructor and method parameter variables</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkNativeMethodParameters</td>
       <td>true</td>
       <td>Check method parameter of native methods</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>staticPrefix</td>
-      <td>[]</td>
+      <td> </td>
       <td>Static variable prefixes</td>
+      <td>yes. Delimiter is ‘,’.</td>
     </tr>
     <tr>
       <td>checkLocals</td>
       <td>true</td>
       <td>Check local variables</td>
+      <td>no</td>
     </tr>
     <tr>
       <td>checkMembers</td>
       <td>true</td>
       <td>Check member variables</td>
+      <td>no</td>
     </tr>
   </tbody>
 </table>
@@ -3269,7 +3453,7 @@ controlled from the rest.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Mar 26, 2018 <br />
+ Site last generated: Apr 29, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
