@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.3.0</li>
+    <li class="sidebarTitle">PMD 6.4.0</li>
     
     
     
@@ -962,7 +962,7 @@
             
 
                 
-                <li><a href="https:github.compmdpmdblobmasterCONTRIBUTING.md">Contributing</a></li>
+                <li><a href="https://github.com/pmd/pmd/blob/master/CONTRIBUTING.md" target="_blank">Contributing</a></li>
                 
 
             
@@ -1254,6 +1254,7 @@ an incomplete implementation, which is to be completed by subclasses implementin
 abstract methods. If the class is intended to be used as a base class only (not to be instantiated
 directly) a protected constructor can be provided prevent direct instantiation.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceDeclaration
  [@Abstract='true'
   and count( .//MethodDeclaration[@Abstract='true'] )=0 ]
@@ -1373,6 +1374,7 @@ This prevents future changes from the user from affecting the original array.</p
 
 <p>Avoid printStackTrace(); use a logger call instead.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression
  [PrimaryPrefix/Name[contains(@Image,'printStackTrace')]]
  [PrimarySuffix[not(boolean(Arguments/ArgumentList/Expression))]]
@@ -1427,6 +1429,7 @@ This prevents future changes from the user from affecting the original array.</p
 <p>StringBuffers/StringBuilders can grow considerably, and so may become a source of memory leaks
 if held within objects with long lifetimes.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//FieldDeclaration/Type/ReferenceType/ClassOrInterfaceType[@Image = 'StringBuffer' or @Image = 'StringBuilder']
 </code></pre></div></div>
 
@@ -1530,6 +1533,7 @@ If the value return is ‘false’, it should be handled properly.</p>
 <p>Avoid constants in interfaces. Interfaces should define types, constants are implementation details
 better placed in classes or enums. See Effective Java, item 19.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceDeclaration[@Interface='true'][$ignoreIfHasMethods='false' or not(.//MethodDeclaration)]//FieldDeclaration
 </code></pre></div></div>
 
@@ -1590,6 +1594,7 @@ better placed in classes or enums. See Effective Java, item 19.</p>
 
 <p>By convention, the default label should be the last label in a switch statement.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//SwitchStatement
  [not(SwitchLabel[position() = last()][@Default='true'])]
  [SwitchLabel[@Default='true']]
@@ -1707,6 +1712,7 @@ otherwise skip the associate String creation and manipulation.</p>
 <p>In JUnit 3, test suites are indicated by the suite() method. In JUnit 4, suites are indicated
 through the @RunWith(Suite.class) annotation.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceBodyDeclaration[MethodDeclaration/MethodDeclarator[@Image='suite']]
 [MethodDeclaration/ResultType/Type/ReferenceType/ClassOrInterfaceType[@Image='Test' or @Image = 'junit.framework.Test']]
 [not(MethodDeclaration/Block//ClassOrInterfaceType[@Image='JUnit4TestAdapter'])]
@@ -1740,6 +1746,7 @@ through the @RunWith(Suite.class) annotation.</p>
 <p>In JUnit 3, the tearDown method was used to clean up all data entities required in running tests. 
 JUnit 4 skips the tearDown method and executes all methods annotated with @After after running each test</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//CompilationUnit[not(ImportDeclaration/Name[starts-with(@Image, "org.testng")])]
 //ClassOrInterfaceBodyDeclaration[MethodDeclaration/MethodDeclarator[@Image='tearDown']]
 [count(Annotation//Name[@Image='After'])=0]
@@ -1772,6 +1779,7 @@ JUnit 4 skips the tearDown method and executes all methods annotated with @After
 <p>In JUnit 3, the setUp method was used to set up all data entities required in running tests. 
 JUnit 4 skips the setUp method and executes all methods annotated with @Before before all tests</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//CompilationUnit[not(ImportDeclaration/Name[starts-with(@Image, "org.testng")])]
 //ClassOrInterfaceBodyDeclaration[MethodDeclaration/MethodDeclarator[@Image='setUp']]
 [count(Annotation//Name[@Image='Before'])=0]
@@ -1804,8 +1812,13 @@ JUnit 4 skips the setUp method and executes all methods annotated with @Before b
 <p>In JUnit 3, the framework executed all methods which started with the word test as a unit test. 
 In JUnit 4, only methods annotated with the @Test annotation are executed.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceBodyDeclaration[MethodDeclaration[@Public='true']/MethodDeclarator[starts-with(@Image,'test')]]
-[count(Annotation//Name[@Image='Test'])=0]
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceDeclaration[
+       matches(@Image, $testClassPattern)
+        or ExtendsList/ClassOrInterfaceType[pmd-java:typeIs('junit.framework.TestCase')]]
+
+    /ClassOrInterfaceBody/ClassOrInterfaceBodyDeclaration[MethodDeclaration[@Public=true()]/MethodDeclarator[starts-with(@Image, 'test')]]
+    [not(Annotation//Name[pmd-java:typeIs('org.junit.Test')])]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -1821,6 +1834,27 @@ In JUnit 4, only methods annotated with the @Test annotation are executed.</p>
     <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
+
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+      <th>Multivalued</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>testClassPattern</td>
+      <td>Test</td>
+      <td>The regex pattern used to identify test classes</td>
+      <td>no</td>
+    </tr>
+  </tbody>
+</table>
 
 <p><strong>Use this rule by referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/bestpractices.xml/JUnit4TestShouldUseTestAnnotation"</span> <span class="nt">/&gt;</span>
@@ -1863,6 +1897,7 @@ assertEquals(), not the two-argument version.</p>
 it is harder to verify correctness.  Consider breaking the test scenario into multiple, shorter test scenarios.<br />
 Customize the maximum number of assertions used by this Rule to suit your needs.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//MethodDeclarator[(@Image[fn:matches(.,'^test')] or ../../Annotation/MarkerAnnotation/Name[@Image='Test']) and count(..//PrimaryPrefix/Name[@Image[fn:matches(.,'^assert')]]) &gt; $maximumAsserts]
 </code></pre></div></div>
 
@@ -2069,6 +2104,7 @@ the method really overrides one, which helps refactoring and clarifies intent.</
 <p>Java allows the use of several variables declaration of the same type on one line. However, it
 can lead to quite messy code. This rule looks for several declarations on the same line.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//LocalVariableDeclaration
    [count(VariableDeclarator) &gt; 1]
    [$strictMode or count(distinct-values(VariableDeclarator/@BeginLine)) != count(VariableDeclarator)]
@@ -2120,6 +2156,7 @@ can lead to quite messy code. This rule looks for several declarations on the sa
 <p>Position literals first in comparisons, if the second argument is null then NullPointerExceptions
 can be avoided, they will just return false.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[
         PrimaryPrefix[Name
                 [
@@ -2158,6 +2195,7 @@ can be avoided, they will just return false.</p>
 <p>Position literals first in comparisons, if the second argument is null then NullPointerExceptions
 can be avoided, they will just return false.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[
     PrimaryPrefix[Name[(ends-with(@Image, '.equals'))]]
         [
@@ -2232,6 +2270,7 @@ effectively.</p>
 
 <p>Consider replacing Enumeration usages with the newer java.util.Iterator</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ImplementsList/ClassOrInterfaceType[@Image='Enumeration']
 </code></pre></div></div>
 
@@ -2260,6 +2299,7 @@ effectively.</p>
 
 <p>Consider replacing Hashtable usage with the newer java.util.Map if thread safety is not required.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Type/ReferenceType/ClassOrInterfaceType[@Image='Hashtable']
 </code></pre></div></div>
 
@@ -2284,6 +2324,7 @@ effectively.</p>
 
 <p>Consider replacing Vector usages with the newer java.util.ArrayList if expensive thread-safe operations are not required.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Type/ReferenceType/ClassOrInterfaceType[@Image='Vector']
 </code></pre></div></div>
 
@@ -2308,6 +2349,7 @@ effectively.</p>
 
 <p>All switch statements should include a default option to catch any unspecified values.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//SwitchStatement[not(SwitchLabel[@Default='true'])]
 </code></pre></div></div>
 
@@ -2337,6 +2379,7 @@ effectively.</p>
 the codebase even in production code. By using a logger one can enable/disable this behaviour at
 will (and by priority) and avoid clogging the Standard out log.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Name[
     starts-with(@Image, 'System.out.print')
     or
@@ -2547,13 +2590,14 @@ This rule will also find unused on demand imports, i.e. import com.foo.*.</p>
 
 <p>This rule detects JUnit assertions in object equality. These assertions should be made by more specific methods, like assertEquals.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[
     PrimaryPrefix/Name[@Image = 'assertTrue']
 ][
     PrimarySuffix/Arguments/ArgumentList/Expression/PrimaryExpression/PrimaryPrefix/Name
     [ends-with(@Image, '.equals')]
 ]
-[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeof(@Image, 'junit.framework.TestCase','TestCase')] or //MarkerAnnotation/Name[pmd-java:typeof(@Image, 'org.junit.Test', 'Test')]]]
+[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeIs('junit.framework.TestCase')] or //MarkerAnnotation/Name[pmd-java:typeIs('org.junit.Test')]]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -2580,6 +2624,7 @@ This rule will also find unused on demand imports, i.e. import com.foo.*.</p>
 <p>This rule detects JUnit assertions in object references equality. These assertions should be made by 
 more specific methods, like assertNull, assertNotNull.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[
  PrimaryPrefix/Name[@Image = 'assertTrue' or @Image = 'assertFalse']
 ][
@@ -2587,7 +2632,7 @@ more specific methods, like assertNull, assertNotNull.</p>
   Expression/EqualityExpression/PrimaryExpression/PrimaryPrefix/Literal/NullLiteral
  ]
 ]
-[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeof(@Image, 'junit.framework.TestCase','TestCase')] or //MarkerAnnotation/Name[pmd-java:typeof(@Image, 'org.junit.Test', 'Test')]]]
+[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeIs('junit.framework.TestCase')] or //MarkerAnnotation/Name[pmd-java:typeIs('org.junit.Test')]]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -2616,6 +2661,7 @@ more specific methods, like assertNull, assertNotNull.</p>
 <p>This rule detects JUnit assertions in object references equality. These assertions should be made 
 by more specific methods, like assertSame, assertNotSame.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[
     PrimaryPrefix/Name
      [@Image = 'assertTrue' or @Image = 'assertFalse']
@@ -2623,7 +2669,7 @@ by more specific methods, like assertSame, assertNotSame.</p>
 [PrimarySuffix/Arguments
  /ArgumentList/Expression
  /EqualityExpression[count(.//NullLiteral) = 0]]
-[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeof(@Image, 'junit.framework.TestCase','TestCase')] or //MarkerAnnotation/Name[pmd-java:typeof(@Image, 'org.junit.Test', 'Test')]]]
+[ancestor::ClassOrInterfaceDeclaration[//ClassOrInterfaceType[pmd-java:typeIs('junit.framework.TestCase')] or //MarkerAnnotation/Name[pmd-java:typeIs('org.junit.Test')]]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -2649,6 +2695,7 @@ by more specific methods, like assertSame, assertNotSame.</p>
 
 <p>When asserting a value is the same as a literal or Boxed boolean, use assertTrue/assertFalse, instead of assertEquals.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression[PrimaryPrefix/Name[@Image = 'assertEquals']]
 [
   PrimarySuffix/Arguments/ArgumentList/Expression/PrimaryExpression/PrimaryPrefix/Literal/BooleanLiteral
@@ -2727,6 +2774,7 @@ Comparing the value of size() to 0 does not convey intent as well as the isEmpty
 sugar provides flexibility for users of these methods and constructors, allowing them to avoid
 having to deal with the creation of an array.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//FormalParameters/FormalParameter
     [position()=last()]
     [@Array='true']
@@ -2778,7 +2826,7 @@ having to deal with the creation of an array.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Apr 29, 2018 <br />
+ Site last generated: May 29, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

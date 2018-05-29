@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.3.0</li>
+    <li class="sidebarTitle">PMD 6.4.0</li>
     
     
     
@@ -962,7 +962,7 @@
             
 
                 
-                <li><a href="https:github.compmdpmdblobmasterCONTRIBUTING.md">Contributing</a></li>
+                <li><a href="https://github.com/pmd/pmd/blob/master/CONTRIBUTING.md" target="_blank">Contributing</a></li>
                 
 
             
@@ -1252,6 +1252,7 @@ $('#toc').on('click', 'a', function() {
 <p>The conversion of literals to strings by concatenating them with empty strings is inefficient.
 It is much better to use one of the type-specific toString() methods instead.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AdditiveExpression/PrimaryExpression/PrimaryPrefix/Literal[@Image='""']
 </code></pre></div></div>
 
@@ -1296,6 +1297,7 @@ It is much better to use one of the type-specific toString() methods instead.</p
 
 <p>Instead of manually copying data between two arrays, use the efficient Arrays.copyOf or System.arraycopy method instead.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Statement[(ForStatement or WhileStatement) and
 count(*//AssignmentOperator[@Image = '='])=1
 and
@@ -1356,11 +1358,12 @@ or AdditiveExpression) and count(.//PrimaryPrefix/Name)=1]
   <li>Use <code class="highlighter-rouge">Files.newBufferedWriter(Paths.get(fileName))</code> instead of <code class="highlighter-rouge">new FileWriter(fileName)</code>.</li>
 </ul>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryPrefix/AllocationExpression/ClassOrInterfaceType[
-       typeof(@Image, 'java.io.FileInputStream', 'FileInputStream')
-    or typeof(@Image, 'java.io.FileOutputStream', 'FileOutputStream')
-    or typeof(@Image, 'java.io.FileReader', 'FileReader')
-    or typeof(@Image, 'java.io.FileWriter', 'FileWriter')
+       typeIs('java.io.FileInputStream')
+    or typeIs('java.io.FileOutputStream')
+    or typeIs('java.io.FileReader')
+    or typeIs('java.io.FileWriter')
   ]
 </code></pre></div></div>
 
@@ -1425,12 +1428,13 @@ arithmetic capabilities for the short type: the JVM must convert the short into 
 and convert the int back to a short. Thus any storage gains found through use of the ‘short’ type may be offset by
 adverse impacts on performance.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//FieldDeclaration/Type/PrimitiveType[@Image = 'short']
 |
-//ClassOrInterfaceBodyDeclaration[not(Annotation/MarkerAnnotation/Name[typeof(@Image, 'java.lang.Override', 'Override')])]
+//ClassOrInterfaceBodyDeclaration[not(Annotation/MarkerAnnotation/Name[typeIs('java.lang.Override')])]
     /MethodDeclaration/ResultType/Type/PrimitiveType[@Image = 'short']
 |
-//ClassOrInterfaceBodyDeclaration[not(Annotation/MarkerAnnotation/Name[typeof(@Image, 'java.lang.Override', 'Override')])]
+//ClassOrInterfaceBodyDeclaration[not(Annotation/MarkerAnnotation/Name[typeIs('java.lang.Override')])]
     /MethodDeclaration/MethodDeclarator/FormalParameters/FormalParameter/Type/PrimitiveType[@Image = 'short']
 |
 //LocalVariableDeclaration/Type/PrimitiveType[@Image = 'short']
@@ -1509,10 +1513,10 @@ Note that new Boolean() is deprecated since JDK 9 for that reason.</p>
 It makes use of an internal cache that recycles earlier instances making it more memory efficient.
 Note that new Byte() is deprecated since JDK 9 for that reason.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryPrefix/AllocationExpression
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression
 [not (ArrayDimsAndInits)
-and (ClassOrInterfaceType/@Image='Byte'
-or ClassOrInterfaceType/@Image='java.lang.Byte')]
+and ClassOrInterfaceType[typeIs('java.lang.Byte')]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -1610,19 +1614,33 @@ can be appended in a single method call.</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>String.trim().length() is an inefficient way to check if a String is really empty, as it
-creates a new String object just to check its size. Consider creating a static function that
-loops through a string, checking Character.isWhitespace() on each character and returning
-false if a non-whitespace character is found. You can refer to Apache’s StringUtils#isBlank (in commons-lang),
-Spring’s StringUtils#hasText (in the Spring framework) or Google’s CharMatcher#whitespace (in Guava) for
-existing implementations.</p>
+<p>String.trim().length() == 0 (or String.trim().isEmpty() for the same reason) is an inefficient
+way to check if a String is really blank, as it creates a new String object just to check its size.
+Consider creating a static function that loops through a string, checking Character.isWhitespace()
+on each character and returning false if a non-whitespace character is found. A Smarter code to
+check for an empty string would be:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">checkTrimEmpty</span><span class="o">(</span><span class="n">String</span> <span class="n">str</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">str</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+        <span class="k">if</span><span class="o">(!</span><span class="n">Character</span><span class="o">.</span><span class="na">isWhitespace</span><span class="o">(</span><span class="n">str</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span><span class="o">)))</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>You can refer to Apache’s StringUtils#isBlank (in commons-lang),
+Spring’s StringUtils#hasText (in the Spring framework) or Google’s
+CharMatcher#whitespace (in Guava) for existing implementations (some might
+include the check for != null).</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/performance/InefficientEmptyStringCheckRule.java">net.sourceforge.pmd.lang.java.rule.performance.InefficientEmptyStringCheckRule</a></p>
 
 <p><strong>Example(s):</strong></p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">String</span> <span class="n">string</span><span class="o">)</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">(</span><span class="n">string</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">string</span><span class="o">.</span><span class="na">trim</span><span class="o">().</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">string</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">string</span><span class="o">.</span><span class="na">trim</span><span class="o">().</span><span class="na">length</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
         <span class="n">doSomething</span><span class="o">();</span>
     <span class="o">}</span>
 <span class="o">}</span>
@@ -1694,11 +1712,10 @@ is assumed if the length of the constructor can not be determined.</p>
 It makes use of an internal cache that recycles earlier instances making it more memory efficient.
 Note that new Integer() is deprecated since JDK 9 for that reason.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryPrefix
- /AllocationExpression
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression
   [not (ArrayDimsAndInits)
-   and (ClassOrInterfaceType/@Image='Integer'
-    or ClassOrInterfaceType/@Image='java.lang.Integer')]
+   and ClassOrInterfaceType[typeIs('java.lang.Integer')]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -1722,11 +1739,10 @@ Note that new Integer() is deprecated since JDK 9 for that reason.</p>
 It makes use of an internal cache that recycles earlier instances making it more memory efficient.
 Note that new Long() is deprecated since JDK 9 for that reason.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryPrefix
-/AllocationExpression
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression
 [not (ArrayDimsAndInits)
-and (ClassOrInterfaceType/@Image='Long'
-or ClassOrInterfaceType/@Image='java.lang.Long')]
+and ClassOrInterfaceType[typeIs('java.lang.Long')]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -1760,6 +1776,7 @@ reflection is nowadays as fast as the direct allocation.</p>
 <p>Note: If you don’t need an array of the correct type, then the simple <code class="highlighter-rouge">toArray()</code> method without an array
 is faster, but returns only an array of type <code class="highlighter-rouge">Object[]</code>.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression
 [PrimaryPrefix/Name[ends-with(@Image, 'toArray')]]
 [
@@ -1833,11 +1850,10 @@ is redundant and results in a larger class file (approximately three additional 
 It makes use of an internal cache that recycles earlier instances making it more memory efficient.
 Note that new Short() is deprecated since JDK 9 for that reason.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryPrefix
-/AllocationExpression
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression
 [not (ArrayDimsAndInits)
-and (ClassOrInterfaceType/@Image='Short'
-or ClassOrInterfaceType/@Image='java.lang.Short')]
+and ClassOrInterfaceType[typeIs('java.lang.Short')]]
 </code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -1860,6 +1876,7 @@ or ClassOrInterfaceType/@Image='java.lang.Short')]
 <p>Since it passes in a literal of length 1, calls to (string).startsWith can be rewritten using (string).charAt(0)
 at the expense of some readability.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//PrimaryExpression
  [PrimaryPrefix/Name
   [ends-with(@Image, '.startsWith')] or PrimarySuffix[@Image='startsWith']]
@@ -1941,6 +1958,7 @@ at the expense of some readability.</p>
 cases is ill-advised, since switches are not as easy to understand as if-then statements. In these cases use the
 if-then statement to increase code readability.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//SwitchStatement[
     (count(.//SwitchLabel) &lt; $minimumNumberCaseForASwitch)
 ]
@@ -2029,6 +2047,7 @@ garbage-collected later.</p>
 
 <p>ArrayList is a much better Collection implementation than Vector if thread-safe operation is not required.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//CompilationUnit[count(ImportDeclaration) = 0 or count(ImportDeclaration/Name[@Image='java.util.Vector']) &gt; 0]
   //AllocationExpression/ClassOrInterfaceType
     [@Image='Vector' or @Image='java.util.Vector']
@@ -2062,6 +2081,7 @@ changes in the returned list will result in the array to be modified.
 For that reason, it is not possible to add new elements to the returned list of Arrays.asList() (UnsupportedOperationException).
 You must use new ArrayList&lt;&gt;(Arrays.asList(…)) if that is inconvenient for you (e.g. because of concurrent access).</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Statement[
     (ForStatement) and (ForStatement//VariableInitializer//Literal[@IntLiteral='true' and @Image='0']) and (count(.//IfStatement)=0)
    ]
@@ -2230,7 +2250,7 @@ or StringBuffer.toString().length() == …</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Apr 29, 2018 <br />
+ Site last generated: May 29, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

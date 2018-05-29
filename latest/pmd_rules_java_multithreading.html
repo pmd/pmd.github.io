@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.3.0</li>
+    <li class="sidebarTitle">PMD 6.4.0</li>
     
     
     
@@ -962,7 +962,7 @@
             
 
                 
-                <li><a href="https:github.compmdpmdblobmasterCONTRIBUTING.md">Contributing</a></li>
+                <li><a href="https://github.com/pmd/pmd/blob/master/CONTRIBUTING.md" target="_blank">Contributing</a></li>
                 
 
             
@@ -1253,6 +1253,7 @@ $('#toc').on('click', 'a', function() {
 Block-level synchronization helps to ensure that only the code that needs synchronization
 gets it.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//MethodDeclaration[@Synchronized='true']
 </code></pre></div></div>
 
@@ -1293,7 +1294,8 @@ gets it.</p>
 <p>Avoid using java.lang.ThreadGroup; although it is intended to be used in a threaded environment
 it contains methods that are not thread-safe.</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression/ClassOrInterfaceType[pmd-java:typeof(@Image, 'java.lang.ThreadGroup')]|
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//AllocationExpression/ClassOrInterfaceType[pmd-java:typeIs('java.lang.ThreadGroup')]|
 //PrimarySuffix[contains(@Image, 'getThreadGroup')]
 </code></pre></div></div>
 
@@ -1323,6 +1325,7 @@ it contains methods that are not thread-safe.</p>
 a good expertise of the Java Memory Model. Moreover, its range of action is somewhat misknown. Therefore,
 the volatile keyword should not be used for maintenance purpose and portability.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//FieldDeclaration[contains(@Volatile,'true')]
 </code></pre></div></div>
 
@@ -1346,6 +1349,7 @@ the volatile keyword should not be used for maintenance purpose and portability.
 
 <p>The J2EE specification explicitly forbids the use of threads.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//ClassOrInterfaceType[@Image = 'Thread' or @Image = 'Runnable']
 </code></pre></div></div>
 
@@ -1377,14 +1381,15 @@ the volatile keyword should not be used for maintenance purpose and portability.
 
 <p>Explicitly calling Thread.run() method will execute in the caller’s thread of control.  Instead, call Thread.start() for the intended behavior.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//StatementExpression/PrimaryExpression
 [
     PrimaryPrefix
     [
         ./Name[ends-with(@Image, '.run') or @Image = 'run']
         and substring-before(Name/@Image, '.') =//VariableDeclarator/VariableDeclaratorId/@Image
-            [../../../Type/ReferenceType/ClassOrInterfaceType[typeof(@Image, 'java.lang.Thread', 'Thread')]]
-        or (./AllocationExpression/ClassOrInterfaceType[typeof(@Image, 'java.lang.Thread', 'Thread')]
+            [../../../Type/ReferenceType/ClassOrInterfaceType[typeIs('java.lang.Thread')]]
+        or (./AllocationExpression/ClassOrInterfaceType[typeIs('java.lang.Thread')]
         and ../PrimarySuffix[@Image = 'run'])
     ]
 ]
@@ -1543,6 +1548,7 @@ synchronized either on method or block level.</p>
 <p>Since Java5 brought a new implementation of the Map designed for multi-threaded access, you can
 perform efficient map reads without blocking other threads.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//Type[../VariableDeclarator/VariableInitializer//AllocationExpression/ClassOrInterfaceType[@Image != 'ConcurrentHashMap']]
 /ReferenceType/ClassOrInterfaceType[@Image = 'Map']
 </code></pre></div></div>
@@ -1573,6 +1579,7 @@ perform efficient map reads without blocking other threads.</p>
 <p>Thread.notify() awakens a thread monitoring the object. If more than one thread is monitoring, then only
 one is chosen.  The thread chosen is arbitrary; thus its usually safer to call notifyAll() instead.</p>
 
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>//StatementExpression/PrimaryExpression
 [PrimarySuffix/Arguments[@ArgumentCount = '0']]
 [
@@ -1614,7 +1621,7 @@ one is chosen.  The thread chosen is arbitrary; thus its usually safer to call n
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Apr 29, 2018 <br />
+ Site last generated: May 29, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

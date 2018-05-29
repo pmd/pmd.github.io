@@ -169,7 +169,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.3.0</li>
+    <li class="sidebarTitle">PMD 6.4.0</li>
     
     
     
@@ -962,7 +962,7 @@
             
 
                 
-                <li><a href="https:github.compmdpmdblobmasterCONTRIBUTING.md">Contributing</a></li>
+                <li><a href="https://github.com/pmd/pmd/blob/master/CONTRIBUTING.md" target="_blank">Contributing</a></li>
                 
 
             
@@ -1481,76 +1481,36 @@ $('#toc').on('click', 'a', function() {
 
 <p>finds all private fields. You can see the code that determines all the attributes <a href="pmd-core/xref/net/sourceforge/pmd/lang/ast/xpath/AttributeAxisIterator.html">here</a></p>
 
-<p>Thanks to Miguel Griffa for writing a longer <a href="xpathruletutorial.html">XPath tutorial</a>.</p>
-
-<h2 id="i-want-to-implement-a-rule-that-analyze-more-than-the-class">I want to implement a rule that analyze more than the class!</h2>
-
-<p>An obvious limitation of the previous mechanism is the “class-centric” focus of the rule. How can you implement a rule that checks stuff across the all source code? Let’s take a dummy example. Let’s say you want to implement a rule that count how many Expression Node you have in your source code (told you, it was a dummy example :) ).</p>
-
-<p>You realize quite simply. You just have to add static field to the RulesContext, as an attribute, and uses Rule.start() and Rule.end() hook to initialized and finalize your rule’s implementation:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">net</span><span class="o">.</span><span class="na">sourceforge</span><span class="o">.</span><span class="na">pmd</span><span class="o">.</span><span class="na">rules</span><span class="o">;</span>
-
-<span class="kn">import</span> <span class="nn">java.util.concurrent.atomic.AtomicLong</span><span class="o">;</span>
-
-<span class="kn">import</span> <span class="nn">net.sourceforge.pmd.RuleContext</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.rule.AbstractJavaRule</span><span class="o">;</span>
-<span class="kn">import</span> <span class="nn">net.sourceforge.pmd.lang.java.ast.ASTExpression</span><span class="o">;</span>
-
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">CountRule</span> <span class="kd">extends</span> <span class="n">AbstractJavaRule</span> <span class="o">{</span>
-
-       <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">COUNT</span> <span class="o">=</span> <span class="s">"count"</span><span class="o">;</span>
-
-       <span class="nd">@Override</span>
-       <span class="kd">public</span> <span class="kt">void</span> <span class="nf">start</span><span class="o">(</span><span class="n">RuleContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="o">{</span>
-               <span class="n">ctx</span><span class="o">.</span><span class="na">setAttribute</span><span class="o">(</span><span class="n">COUNT</span><span class="o">,</span> <span class="k">new</span> <span class="n">AtomicLong</span><span class="o">());</span>
-               <span class="kd">super</span><span class="o">.</span><span class="na">start</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>
-       <span class="o">}</span>
-
-       <span class="nd">@Override</span>
-       <span class="kd">public</span> <span class="n">Object</span> <span class="nf">visit</span><span class="o">(</span><span class="n">ASTExpression</span> <span class="n">node</span><span class="o">,</span> <span class="n">Object</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
-               <span class="c1">// How many Expression nodes are there in all files parsed!  I must know!</span>
-               <span class="n">RuleContext</span> <span class="n">ctx</span> <span class="o">=</span> <span class="o">(</span><span class="n">RuleContext</span><span class="o">)</span><span class="n">data</span><span class="o">;</span>
-               <span class="n">AtomicLong</span> <span class="n">total</span> <span class="o">=</span> <span class="o">(</span><span class="n">AtomicLong</span><span class="o">)</span><span class="n">ctx</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(</span><span class="n">COUNT</span><span class="o">);</span>
-               <span class="n">total</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
-               <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">visit</span><span class="o">(</span><span class="n">node</span><span class="o">,</span> <span class="n">data</span><span class="o">);</span>
-       <span class="o">}</span>
-
-       <span class="nd">@Override</span>
-       <span class="kd">public</span> <span class="kt">void</span> <span class="nf">end</span><span class="o">(</span><span class="n">RuleContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="o">{</span>
-               <span class="n">AtomicLong</span> <span class="n">total</span> <span class="o">=</span> <span class="o">(</span><span class="n">AtomicLong</span><span class="o">)</span><span class="n">ctx</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(</span><span class="n">COUNT</span><span class="o">);</span>
-               <span class="n">addViolation</span><span class="o">(</span><span class="n">ctx</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]</span> <span class="o">{</span> <span class="n">total</span> <span class="o">});</span>
-               <span class="n">ctx</span><span class="o">.</span><span class="na">removeAttribute</span><span class="o">(</span><span class="n">COUNT</span><span class="o">);</span>
-               <span class="kd">super</span><span class="o">.</span><span class="na">end</span><span class="o">(</span><span class="n">ctx</span><span class="o">);</span>
-       <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div></div>
-
-<p>As you can see in this example, the method start will be call the first time the rule is going to be used, so you can initialize properly your rule here. Once the rule will have finished to parses the source code, the method end() will be invoke you can assert there if, or not, your rule has been violated.</p>
-
-<blockquote>
-  <p>Note that the example logs a violation <strong>without</strong> a proper classname. This is not really a good idea. Indeed, a lot of aggregating tools that PMD (Such as <a href="http://xradar.sourceforge.net">XRadar</a>, or <a href="http://www.sonarsource.com/">Sonar</a>) probably uses this kind of meta data on their aggregation processes. So, when implements such a rule, always try to find a way to add classname to the violation report.</p>
-</blockquote>
+<p>More information about writing XPath rules is <a href="pmd_userdocs_extending_writing_xpath_rules.html">available here</a>.</p>
 
 <h2 id="i-need-some-kind-of-type-resolution-for-my-rule">I need some kind of Type Resolution for my rule!</h2>
 
 <h3 id="inside-an-xpath-query">Inside an XPath query</h3>
 
-<p>PMD XPath syntax includes now a new function called <code class="highlighter-rouge">typeof</code> which determines if a node (ClassOrInterfaceType only right now) is of the provided type. It also scans the type’s hierarchy, so if you extend a class it will also find this out.</p>
+<p>PMD’s XPath extensions include two functions called <code class="highlighter-rouge">typeIs</code> and <code class="highlighter-rouge">typeIsExactly</code>,
+which determine if a node is of a specific type (either any subtype or exactly,
+respectively).</p>
 
-<p>Here a an example of use, inside an XPath Query:</p>
+<p>Here a an example of use, inside an XPath query:</p>
 
-<pre><code class="language-xpath">//ClassOrInterfaceDeclaration[
-    //ClassOrInterfaceType[typeof(@Image, 'junit.framework.TestCase','TestCase')]
-]
-</code></pre>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="sr">//</span><span class="no">ClassOrInterfaceDeclaration</span><span class="o">/</span><span class="no">ExtendsList</span><span class="o">/</span><span class="no">ClassOrInterfaceType</span><span class="p">[</span><span class="n">typeIs</span><span class="p">(</span><span class="s1">'junit.framework.TestCase'</span><span class="p">)]</span>
+</code></pre></div></div>
 
-<p>This query will match on such source code:</p>
+<p>This query will for instance match the following class declaration:</p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">junit.framework.TestCase</span><span class="o">;</span>
 
 <span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="kd">extends</span> <span class="n">TestCase</span> <span class="o">{</span> <span class="o">}</span>
 </code></pre></div></div>
+
+<p>It will also match against classes which extend a <em>subtype</em> of <code class="highlighter-rouge">junit.framework.TestCase</code>,
+i.e. a base class itself extending <code class="highlighter-rouge">TestCase</code> transitively. If you don’t want this behaviour,
+then use <code class="highlighter-rouge">typeIsExactly</code> instead of <code class="highlighter-rouge">typeIs</code>.</p>
+
+<p>Checking against an array type is possible with the double bracket syntax.
+An array type is denoted by just appending <code class="highlighter-rouge">[]</code> to the fully qualified class name
+of the component type. These can be repeated for arrays of arrays
+(e.g. <code class="highlighter-rouge">byte[][]</code> or <code class="highlighter-rouge">java.lang.String[]</code>).</p>
 
 <h3 id="with-java-code">With Java code</h3>
 
@@ -1626,7 +1586,7 @@ $('#toc').on('click', 'a', function() {
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
-<span>Page last updated:</span> July 3, 2016<br/> Site last generated: Apr 29, 2018 <br />
+<span>Page last updated:</span> July 3, 2016<br/> Site last generated: May 29, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
