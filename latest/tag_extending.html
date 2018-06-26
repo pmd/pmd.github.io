@@ -4,9 +4,9 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Properties are a way to parameterise the behaviour of PMD rules and your own directly from the ruleset XML, which greatly improves their reusability. This pa...">
-<meta name="keywords" content="customizingproperties,  ">
-<title>Using rule properties | PMD Source Code Analyzer</title>
+<meta name="description" content="">
+<meta name="keywords" content=" ">
+<title>Extending PMD | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
 
@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/lavish-bootstrap.css">
 <link rel="stylesheet" href="css/customstyles.css">
 <link rel="stylesheet" href="css/theme-blue.css">
+<link rel="stylesheet" href="css/pmd-customstyles.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
@@ -37,7 +38,7 @@
 <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
 
-<link rel="alternate" type="application/rss+xml" title="" href="http://pmd.sourceforge.net/feed.xml">
+<link rel="alternate" type="application/rss+xml" title="" href="https://pmd.github.io/pmd/feed.xml">
 
     <script>
         $(document).ready(function() {
@@ -91,6 +92,9 @@
 
 </head>
 <body>
+<!-- Content is offset by the height of the topnav bar. -->
+<!-- There's already a padding-top rule in modern-business.css, but it apparently doesn't work on Firefox 60 and Chrome 67 -->
+<div id="topbar-content-offset">
 <!-- Navigation -->
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container topnavlinks">
@@ -136,7 +140,7 @@
                                 searchInput: document.getElementById('search-input'),
                                 resultsContainer: document.getElementById('results-container'),
                                 dataSource: 'search.json',
-                                searchResultTemplate: '<li><a href="{url}" title="Using rule properties">{title}</a></li>',
+                                searchResultTemplate: '<li><a href="{url}" title="Extending PMD">{title}</a></li>',
                     noResultsText: 'No results found.',
                             limit: 10,
                             fuzzy: true,
@@ -157,9 +161,9 @@
     <div class="row">
         
         
-            <!-- Sidebar Column -->
-            <div class="col-md-3" id="tg-sb-sidebar">
-                
+        <!-- Sidebar Column -->
+        <div class="col-md-3" id="tg-sb-sidebar">
+            
 
 
 
@@ -169,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.4.0</li>
+    <li class="sidebarTitle">PMD 6.5.0</li>
     
     
     
@@ -186,7 +190,7 @@
             
 
                 
-                <li><a href="index.html">Introduction</a></li>
+                <li><a href="index.html">Home</a></li>
                 
 
             
@@ -233,19 +237,7 @@
             
 
                 
-                <li><a href="pmd_userdocs_getting_started.html">Getting started</a></li>
-                
-
-            
-
-            
-            
-            
-
-            
-
-                
-                <li><a href="pmd_userdocs_understanding_rulesets.html">Understanding rulesets</a></li>
+                <li><a href="pmd_userdocs_installation.html">Installation and basic CLI usage</a></li>
                 
 
             
@@ -269,7 +261,7 @@
             
 
                 
-                <li class="active"><a href="pmd_userdocs_using_properties.html">Using rule properties</a></li>
+                <li><a href="pmd_userdocs_configuring_rules.html">Configuring rules</a></li>
                 
 
             
@@ -294,6 +286,30 @@
 
                 
                 <li><a href="pmd_userdocs_suppressing_warnings.html">Suppressing warnings</a></li>
+                
+
+            
+
+            
+            
+            
+
+            
+
+                
+                <li><a href="pmd_userdocs_incremental_analysis.html">Incremental analysis</a></li>
+                
+
+            
+
+            
+            
+            
+
+            
+
+                
+                <li><a href="pmd_userdocs_cli_reference.html">PMD CLI reference</a></li>
                 
 
             
@@ -1190,22 +1206,20 @@
 <!-- this highlights the active parent class in the navgoco sidebar. this is critical so that the parent expands when you're viewing a page. This must appear below the sidebar code above. Otherwise, if placed inside customscripts.js, the script runs before the sidebar code runs and the class never gets inserted.-->
 <script>$("li.active").parents('li').toggleClass("active");</script>
 
-            </div>
-            
+        </div>
+        
         
 
         <!-- Content Column -->
         <div class="col-md-9" id="tg-sb-content">
             <div class="post-header">
-   <h1 class="post-title-main">Using rule properties</h1>
+   <h1 class="post-title-main">Extending PMD</h1>
 </div>
 
 
 
 <div class="post-content">
 
-   
-    <div class="summary">Properties are a way to parameterise the behaviour of PMD rules and your own directly from the ruleset XML, which greatly improves their reusability. This page explains how to use rule properties to make the most of your rulesets.</div>
    
 
     
@@ -1239,47 +1253,447 @@ $('#toc').on('click', 'a', function() {
         
         
 
-    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/pmd/userdocs/using_properties.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/tags/tag_extending.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
 
     
 
-  <p>Properties make it easy to customise the behaviour of a rule directly from the xml. They come in several types, which correspond to the type of their values. For example, NPathComplexity declares a property “reportLevel”, with an integer value type, and which corresponds to the threshold above which a method will be reported. If you believe that its default value of 200 is too high, you could lower it to e.g. 150 in the following way:</p>
+  <p>The following pages and posts are tagged with <button type="button" style="cursor: default" class="btn btn-default navbar-btn">extending</button></p>
+<table><thead><tr><th>Title</th><th>Type</th><th>Excerpt</th></tr></thead>
+    <tbody>
+    
+  
+    
+   
+    
+        
+     
+        
 
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NPathComplexity"</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;properties&gt;</span>
-        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"reportLevel"</span><span class="nt">&gt;</span>150<span class="nt">&lt;/property&gt;</span>
-    <span class="nt">&lt;/properties&gt;</span>
-<span class="nt">&lt;/rule&gt;</span>
-</code></pre></div></div>
+        <tr><td><a href="pmd_devdocs_major_adding_new_cpd_language.html">How to add a new CPD language</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> How to add a new CPD language </td>
+        </tr>
+        
+     
+   
+    
+        
+     
+        
 
-<p>Properties are assigned a value with a <code class="highlighter-rouge">property</code> element, which should mention the name of a property as an attribute. The value of the property can be specified either in the content of the element, like above, or in the <code class="highlighter-rouge">value</code> attribute, e.g.</p>
+        <tr><td><a href="pmd_devdocs_major_adding_new_language.html">Adding PMD support for a new language</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> How to add a new language to PMD. </td>
+        </tr>
+        
+     
+   
+    
+        
+     
+        
 
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"reportLevel"</span> <span class="na">value=</span><span class="s">"150"</span><span class="nt">/&gt;</span>
-</code></pre></div></div>
+        <tr><td><a href="pmd_devdocs_major_adding_new_metrics_framework.html">Adding support for metrics to a language</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> PMD's Java module has an extensive framework for the calculation of metrics, which allows rule developers to implement and use new code metrics very simply. ... </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
 
-<p>All property assignements must be enclosed in a <code class="highlighter-rouge">properties</code> element, which is itself inside a <code class="highlighter-rouge">rule</code> element.</p>
+        <tr><td><a href="pmd_apex_metrics_index.html">Index of Apex code metrics</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Index of the code metrics available out of the box to Apex rule developers. </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+        
 
-<div class="alert alert-success" role="alert"><i class="fa fa-check-square-o"></i> <b>Tip:</b> The properties of a rule are documented with the rule, e.g. <a href="pmd_rules_java_design.html#npathcomplexity">here</a> for NPathComplexity. Note that <strong>assigning a value to a property that does not exist throws an error!</strong></div>
+        <tr><td><a href="pmd_userdocs_extending_defining_properties.html">Defining rule properties</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Learn how to define your own properties both for Java and XPath rules. </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+   
+    
+        
+     
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
 
-<p>Some properties take multiple values (a list), in which case you can provide them all by delimiting them with a delimiter character. It is usually a pipe (‘|’), or a comma (‘,’) for numeric properties, e.g.</p>
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"legalCollectionTypes"</span>
-           <span class="na">value=</span><span class="s">"java.util.ArrayList|java.util.Vector|java.util.HashMap"</span><span class="nt">/&gt;</span>
-</code></pre></div></div>
+        <tr><td><a href="pmd_java_metrics_index.html">Index of Java code metrics</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Index of the code metrics available out of the box to Java rule developers. </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+        
 
-<p>These properties are referred to as <strong>multivalued properties</strong> in this documentation.</p>
+        <tr><td><a href="pmd_userdocs_extending_metrics_howto.html">Using and defining code metrics for custom rules</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Since version 6.0.0, PMD is enhanced with the ability to compute code metrics on Java and Apex source (the so-called Metrics Framework). This framework provi... </td>
+        </tr>
+        
+     
+        
+     
+        
+     
+   
+    
+   
+    
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+   
+    
+        
+
+        <tr><td><a href="pmd_userdocs_extending_rule_guidelines.html">Rule guidelines</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Rule Guidelines </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+     
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+        
+
+        <tr><td><a href="pmd_userdocs_extending_testing.html">Testing your rules</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Learn how to use PMD's simple test framework for unit testing rules. </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+   
+    
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+   
+    
+        
+
+        <tr><td><a href="pmd_userdocs_extending_writing_pmd_rules.html">Writing a custom rule</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Learn how to write a custom rule for PMD </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+        
+
+        <tr><td><a href="pmd_userdocs_extending_writing_xpath_rules.html">Writing XPath rules</a></td>
+            <td><span class="label label-default">Page</span></td>
+          <td> Writing XPath rules for PMD </td>
+        </tr>
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+    
+        
+     
+        
+     
+   
+
+        
+        
+
+   </tbody>
+</table>
+
 
 
     <div class="tags">
-        
-        <b>Tags: </b>
-        
-        
-        
-        <a href="tag_customizing.html" class="btn btn-default navbar-btn cursorNorm" role="button">customizing</a>
-        
-        
-        
-        
         
     </div>
 
@@ -1293,7 +1707,7 @@ $('#toc').on('click', 'a', function() {
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2018 PMD Open Source Project. All rights reserved. <br />
-<span>Page last updated:</span> December 2017 (6.0.0)<br/> Site last generated: May 29, 2018 <br />
+ Site last generated: Jun 26, 2018 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
@@ -1301,11 +1715,11 @@ $('#toc').on('click', 'a', function() {
 
 
         </div>
-    <!-- /.row -->
-</div>
-<!-- /.container -->
+        <!-- /.row -->
     </div>
-
+    <!-- /.container -->
+</div>
+</div>
 </body>
 
 </html>
