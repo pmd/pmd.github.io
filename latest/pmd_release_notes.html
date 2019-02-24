@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.11.0</li>
+    <li class="sidebarTitle">PMD 6.12.0</li>
     
     
     
@@ -1278,172 +1278,136 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
 
     
 
-  <h2 id="27-january-2019---6110">27-January-2019 - 6.11.0</h2>
+  <h2 id="24-february-2019---6120">24-February-2019 - 6.12.0</h2>
 
-<p>The PMD team is pleased to announce PMD 6.11.0.</p>
+<p>The PMD team is pleased to announce PMD 6.12.0.</p>
 
 <p>This is a minor release.</p>
 
 <h3 id="new-and-noteworthy">New and noteworthy</h3>
 
-<h4 id="updated-apex-support">Updated Apex Support</h4>
+<h4 id="call-for-logo">Call For Logo</h4>
 
+<p>PMD’s logo was great for a long time. But now we want to take the opportunity with the next major release to change
+our logo in order to use a more “politically correct” one.</p>
+
+<p>Learn more about how to participate on <a href="https://github.com/pmd/pmd/issues/1663">github issue 1663</a>.</p>
+
+<h4 id="cpd-suppression-for-antlr-based-languages">CPD Suppression for Antlr-based languages</h4>
+
+<p><a href="https://www.itba.edu.ar/">ITBA</a> students <a href="https://github.com/matifraga">Matías Fraga</a>,
+<a href="https://github.com/tomidelucca">Tomi De Lucca</a> and <a href="https://github.com/lsoncini">Lucas Soncini</a>
+keep working on bringing full Antlr support to PMD. For this release, they have implemented
+token filtering in an equivalent way as we did for JavaCC languages, adding support for CPD
+suppressions through <code class="highlighter-rouge">CPD-OFF</code> and <code class="highlighter-rouge">CPD-ON</code> comments for all Antlr-based languages.</p>
+
+<p>This means, you can now ignore arbitrary blocks of code on:</p>
 <ul>
-  <li>The Apex language support has been bumped to version 45 (Spring ‘19). All new language features are now properly
-parsed and processed.</li>
-  <li>Many nodes now expose more informations, such as the operator for BooleanExpressions. This makes these operators
-consumable by XPath rules, e.g. <code class="highlighter-rouge">//BooleanExpression[@Operator='&amp;&amp;']</code>.</li>
+  <li>Go</li>
+  <li>Kotlin</li>
+  <li>Swift</li>
 </ul>
+
+<p>Simply start the suppression with any comment (single or multiline) containing <code class="highlighter-rouge">CPD-OFF</code>,
+and resume again with a comment containing <code class="highlighter-rouge">CPD-ON</code>.</p>
+
+<p>More information is available in <a href="pmd_userdocs_cpd.html#suppression">the user documentation</a>.</p>
 
 <h4 id="plsql-grammar-improvements">PL/SQL Grammar improvements</h4>
 
 <ul>
-  <li>In this release, many parser bugs in our PL/SQL support have been fixed. This adds e.g. support for
-table collection expressions (<code class="highlighter-rouge">SELECT * FROM TABLE(expr)</code>).</li>
-  <li>Support for parsing insert statements has been added.</li>
-  <li>More improvements are planned for the next release of PMD.</li>
+  <li>In this release, many more parser bugs in our PL/SQL support have been fixed. This adds more complete
+support for UPDATE statements and subqueries and hierarchical queries in SELECT statements.</li>
+  <li>Support for analytic functions such as LISTAGG has been added.</li>
+  <li>Conditions in WHERE clauses support now REGEX_LIKE and multiset conditions.</li>
 </ul>
 
 <h4 id="new-rules">New Rules</h4>
 
 <ul>
-  <li>
-    <p>The new Java rule <a href="pmd_rules_java_multithreading.html#unsynchronizedstaticformatter"><code class="highlighter-rouge">UnsynchronizedStaticFormatter</code></a> (<code class="highlighter-rouge">java-multithreading</code>) detects
-unsynchronized usages of static <code class="highlighter-rouge">java.text.Format</code> instances. This rule is a more generic replacement of the
-rule <a href="pmd_rules_java_multithreading.html#unsynchronizedstaticdateformatter"><code class="highlighter-rouge">UnsynchronizedStaticDateFormatter</code></a> which focused just on <code class="highlighter-rouge">DateFormat</code>.</p>
-  </li>
-  <li>
-    <p>The new Java rule <a href="pmd_rules_java_bestpractices.html#forloopvariablecount"><code class="highlighter-rouge">ForLoopVariableCount</code></a> (<code class="highlighter-rouge">java-bestpractices</code>) checks for
-the number of control variables in a for-loop. Having a lot of control variables makes it harder to understand
-what the loop does. The maximum allowed number of variables is by default 1 and can be configured by a
-property.</p>
-  </li>
-  <li>
-    <p>The new Java rule <a href="pmd_rules_java_bestpractices.html#avoidreassigningloopvariables"><code class="highlighter-rouge">AvoidReassigningLoopVariables</code></a> (<code class="highlighter-rouge">java-bestpractices</code>) searches
-for loop variables that are reassigned. Changing the loop variables additionally to the loop itself can lead to
-hard-to-find bugs.</p>
-  </li>
-  <li>
-    <p>The new Java rule <a href="pmd_rules_java_codestyle.html#usediamondoperator"><code class="highlighter-rouge">UseDiamondOperator</code></a> (<code class="highlighter-rouge">java-codestyle</code>) looks for constructor
-calls with explicit type parameters. Since Java 1.7, these type parameters are not necessary anymore, as they
-can be inferred now.</p>
-  </li>
-</ul>
-
-<h4 id="modified-rules">Modified Rules</h4>
-
-<ul>
-  <li>The Java rule <a href="pmd_rules_java_codestyle.html#localvariablecouldbefinal"><code class="highlighter-rouge">LocalVariableCouldBeFinal</code></a> (<code class="highlighter-rouge">java-codestyle</code>) has a new
-property <code class="highlighter-rouge">ignoreForEachDecl</code>, which is by default disabled. The new property allows for ignoring
-non-final loop variables in a for-each statement.</li>
-</ul>
-
-<h4 id="deprecated-rules">Deprecated Rules</h4>
-
-<ul>
-  <li>The Java rule <a href="pmd_rules_java_multithreading.html#unsynchronizedstaticdateformatter"><code class="highlighter-rouge">UnsynchronizedStaticDateFormatter</code></a> has been deprecated and
-will be removed with PMD 7.0.0. The rule is replaced by the more general
-<a href="pmd_rules_java_multithreading.html#unsynchronizedstaticformatter"><code class="highlighter-rouge">UnsynchronizedStaticFormatter</code></a>.</li>
+  <li>The new Java rule <a href="pmd_rules_java_bestpractices.html#usetrywithresources"><code class="highlighter-rouge">UseTryWithResources</code></a> (apex-codestyle) has a new
+property <code class="highlighter-rouge">skipTestMethodUnderscores</code>, which is by default disabled. The new property allows for ignoring
+all test methods, either using the <code class="highlighter-rouge">testMethod</code> modifier or simply annotating them <code class="highlighter-rouge">@isTest</code>.</li>
 </ul>
 
 <h3 id="fixed-issues">Fixed Issues</h3>
 
 <ul>
-  <li>core
+  <li>all
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1196">#1196</a>: [core] CPD results not consistent between runs</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1496">#1496</a> [core] Refactor metrics to be dealt with generically from pmd-core</li>
-    </ul>
-  </li>
-  <li>apex
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/pull/1542">#1542</a>: [apex] Include the documentation category</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1546">#1546</a>: [apex] PMD parsing exception for Apex classes using ‘inherited sharing’ keyword</li>
-      <li><a href="https://github.com/pmd/pmd/pull/1568">#1568</a>: [apex] AST node attribute @Image not usable / always null in XPath rule / Designer</li>
-    </ul>
-  </li>
-  <li>java
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1556">#1556</a>: [java] Default methods should not be considered abstract</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1578">#1578</a>: [java] Private field is detected as public inside nested classes in interfaces</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1462">#1462</a>: [core] Failed build on Windows with source zip archive</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1559">#1559</a>: [core] CPD: Lexical error in file (no file name provided)</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1671">#1671</a>: [doc] Wrong escaping in suppressing warnings for nopmd-comment</li>
+      <li><a href="https://github.com/pmd/pmd/pull/1693">#1693</a>: [ui] Improved error reporting for the designer</li>
     </ul>
   </li>
   <li>java-bestpractices
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/658">#658</a>: [java] OneDeclarationPerLine: False positive for loops</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1518">#1518</a>: [java] New rule: AvoidReassigningLoopVariable</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1519">#1519</a>: [java] New rule: ForLoopVariableCount</li>
+      <li><a href="https://github.com/pmd/pmd/issues/808">#808</a>: [java] AccessorMethodGeneration false positives with compile time constants</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1405">#1405</a>: [java] New Rule: UseTryWithResources - Replace close and IOUtils.closeQuietly with try-with-resources</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1555">#1555</a>: [java] UnusedImports false positive for method parameter type in @see Javadoc</li>
     </ul>
   </li>
   <li>java-codestyle
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1513">#1513</a>: [java] LocalVariableCouldBeFinal: allow excluding the variable in a for-each loop</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1517">#1517</a>: [java] New Rule: UseDiamondOperator</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1543">#1543</a>: [java] LinguisticNaming should ignore overriden methods</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1547">#1547</a>: [java] AtLeastOneConstructorRule: false-positive with lombok.AllArgsConstructor</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1624">#1624</a>: [java] UseDiamondOperator false positive with var initializer</li>
+    </ul>
+  </li>
+  <li>java-design
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/1641">#1641</a>: [java] False-positive with Lombok and inner classes</li>
     </ul>
   </li>
   <li>java-errorprone
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1035">#1035</a>: [java] ReturnFromFinallyBlock: False positive on lambda expression in finally block</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1549">#1549</a>: [java] NPE in PMD 6.8.0 InvalidSlf4jMessageFormat</li>
+      <li><a href="https://github.com/pmd/pmd/issues/780">#780</a>: [java] BeanMembersShouldSerializeRule does not recognize lombok accessors</li>
     </ul>
   </li>
   <li>java-multithreading
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1533">#1533</a>: [java] New rule: UnsynchronizedStaticFormatter</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1633">#1633</a>: [java] UnsynchronizedStaticFormatter reports commons lang FastDateFormat</li>
+    </ul>
+  </li>
+  <li>java-performance
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/1632">#1632</a>: [java] ConsecutiveLiteralAppends false positive over catch</li>
     </ul>
   </li>
   <li>plsql
     <ul>
-      <li>
-        <table>
-          <tbody>
-            <tr>
-              <td><a href="https://github.com/pmd/pmd/issues/1507">#1507</a>: [plsql] Parse Exception when using ‘</td>
-              <td> </td>
-              <td>’ operator in where clause</td>
-            </tr>
-          </tbody>
-        </table>
-      </li>
-      <li><a href="https://github.com/pmd/pmd/issues/1508">#1508</a>: [plsql] Parse Exception when using SELECT COUNT(*)</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1509">#1509</a>: [plsql] Parse Exception with OUTER/INNER Joins</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1511">#1511</a>: [plsql] Parse Exception with IS NOT NULL</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1526">#1526</a>: [plsql] ParseException when using TableCollectionExpression</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1583">#1583</a>: [plsql] Update Set Clause should allow multiple columns</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1586">#1586</a>: [plsql] Parse Exception when functions are used with LIKE</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1588">#1588</a>: [plsql] Parse Exception with function calls in WHERE clause</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1587">#1587</a>: [plsql] ParseException with EXISTS</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1589">#1589</a>: [plsql] ParseException with subqueries in WHERE clause</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1590">#1590</a>: [plsql] ParseException when using hierarchical query clause</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1656">#1656</a>: [plsql] ParseException with analytic functions, trim and subqueries</li>
+    </ul>
+  </li>
+  <li>designer
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/1679">#1679</a>: [ui] No default language version selected</li>
     </ul>
   </li>
 </ul>
 
 <h3 id="api-changes">API Changes</h3>
 
-<ul>
-  <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/lang/rule/stat/StatisticalRule.html#"><code class="highlighter-rouge">StatisticalRule</code></a> and the related helper classes and base rule classes
-are deprecated for removal in 7.0.0. This includes all of <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/stat/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.stat</code></a> and <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/lang/rule/stat/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.lang.rule.stat</code></a>,
-and also <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.11.0/net/sourceforge/pmd/lang/java/rule/AbstractStatisticalJavaRule.html#"><code class="highlighter-rouge">AbstractStatisticalJavaRule</code></a>, <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-apex/6.11.0/net/sourceforge/pmd/lang/apex/rule/AbstractStatisticalApexRule.html#"><code class="highlighter-rouge">AbstractStatisticalApexRule</code></a> and the like.
-The methods <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/Report.html#addMetric(net.sourceforge.pmd.stat.Metric)"><code class="highlighter-rouge">Report#addMetric</code></a> and <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/ThreadSafeReportListener.html#metricAdded(net.sourceforge.pmd.stat.Metric)"><code class="highlighter-rouge">metricAdded</code></a>
-will also be removed.</li>
-  <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/properties/PropertySource.html#setProperty(net.sourceforge.pmd.properties.MultiValuePropertyDescriptor,Object[])"><code class="highlighter-rouge">setProperty</code></a> is deprecated,
-because <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net/sourceforge/pmd/properties/MultiValuePropertyDescriptor.html#"><code class="highlighter-rouge">MultiValuePropertyDescriptor</code></a> is deprecated as well</li>
-</ul>
-
 <h3 id="external-contributions">External Contributions</h3>
 
 <ul>
-  <li><a href="https://github.com/pmd/pmd/pull/1503">#1503</a>: [java] Fix for ReturnFromFinallyBlock false-positives - <a href="https://github.com/rishabhdeepsingh">RishabhDeep Singh</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1514">#1514</a>: [java] LocalVariableCouldBeFinal: allow excluding the variable in a for-each loop - <a href="https://github.com/kris-scheibe">Kris Scheibe</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1516">#1516</a>: [java] OneDeclarationPerLine: Don’t report multiple variables in a for statement. - <a href="https://github.com/kris-scheibe">Kris Scheibe</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1520">#1520</a>: [java] New rule: ForLoopVariableCount: check the number of control variables in a for loop - <a href="https://github.com/kris-scheibe">Kris Scheibe</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1521">#1521</a>: [java] Upgrade to ASM7 for JDK 11 support - <a href="https://github.com/markpritchard">Mark Pritchard</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1530">#1530</a>: [java] New rule: AvoidReassigningLoopVariables - <a href="https://github.com/kris-scheibe">Kris Scheibe</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1534">#1534</a>: [java] This is the change regarding the usediamondoperator #1517 - <a href="https://github.com/hemanshu070">hemanshu070</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1545">#1545</a>: [doc] fixing dead links + tool to check for dead links automatically - <a href="https://github.com/kris-scheibe">Kris Scheibe</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1551">#1551</a>: [java] InvalidSlf4jMessageFormatRule should not throw NPE for enums - <a href="https://github.com/rmartinus">Robbie Martinus</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1552">#1552</a>: [core] Upgrading Google Gson from 2.5 to 2.8.5 - <a href="https://github.com/Thunderforge">Thunderforge</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1553">#1553</a>: [core] Upgrading System Rules dependency from 1.8.0 to 1.19.0 - <a href="https://github.com/Thunderforge">Thunderforge</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1554">#1554</a>: [plsql] updates should allow for multiple statements - <a href="https://github.com/tashiscool">tashiscool</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1584">#1584</a>: [core] Fixes 1196: inconsistencies of clones returned by different CPD executions for the same files  - <a href="https://github.com/bmbferreira">Bruno Ferreira</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1623">#1623</a>: [java] Fix lombok.AllArgsConstructor support - <a href="https://github.com/CasualSuperman">Bobby Wertman</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1625">#1625</a>: [java] UnusedImports false positive for method parameter type in @see Javadoc - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1628">#1628</a>: [java] LinguisticNaming should ignore overriden methods - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1634">#1634</a>: [java] BeanMembersShouldSerializeRule does not recognize lombok accessors - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1635">#1635</a>: [java] UnsynchronizedStaticFormatter reports commons lang FastDateFormat - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1637">#1637</a>: [java] Compile time constants initialized by literals avoided by AccessorMethodGenerationRule - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1640">#1640</a>: [java] Update instead of override classHasLombokAnnotation flag - <a href="https://github.com/fluxroot">Phokham Nonava</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1644">#1644</a>: [apex] Add property to allow apex test methods to contain underscores - <a href="https://github.com/tomdaly">Tom</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1645">#1645</a>: [java] ConsecutiveLiteralAppends false positive - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1646">#1646</a>: [java] UseDiamondOperator doesn’t work with var - <a href="https://github.com/Shubham-2k17">Shubham</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1654">#1654</a>: [core] Antlr token filter - <a href="https://github.com/tomidelucca">Tomi De Lucca</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1655">#1655</a>: [kotlin] Kotlin tokenizer refactor - <a href="https://github.com/lsoncini">Lucas Soncini</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/1686">#1686</a>: [doc] Replaced wrong escaping with “&gt;” - <a href="https://github.com/hpandeycodeit">Himanshu Pandey</a></li>
 </ul>
 
 
@@ -1462,7 +1426,7 @@ because <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.11.0/net
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2019 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Jan 27, 2019 <br />
+ Site last generated: Feb 24, 2019 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
