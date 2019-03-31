@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Rules that help you discover design issues.">
-<meta name="keywords" content=" Design, AbstractClassWithoutAnyMethod, AvoidCatchingGenericException, AvoidDeeplyNestedIfStmts, AvoidRethrowingException, AvoidThrowingNewInstanceOfSameException, AvoidThrowingNullPointerException, AvoidThrowingRawExceptionTypes, ClassWithOnlyPrivateConstructorsShouldBeFinal, CollapsibleIfStatements, CouplingBetweenObjects, CyclomaticComplexity, DataClass, DoNotExtendJavaLangError, ExceptionAsFlowControl, ExcessiveClassLength, ExcessiveImports, ExcessiveMethodLength, ExcessiveParameterList, ExcessivePublicCount, FinalFieldCouldBeStatic, GodClass, ImmutableField, LawOfDemeter, LogicInversion, LoosePackageCoupling, ModifiedCyclomaticComplexity, NcssConstructorCount, NcssCount, NcssMethodCount, NcssTypeCount, NPathComplexity, SignatureDeclareThrowsException, SimplifiedTernary, SimplifyBooleanAssertion, SimplifyBooleanExpressions, SimplifyBooleanReturns, SimplifyConditional, SingularField, StdCyclomaticComplexity, SwitchDensity, TooManyFields, TooManyMethods, UselessOverridingMethod, UseObjectForClearerAPI, UseUtilityClass">
+<meta name="keywords" content=" Design, AbstractClassWithoutAnyMethod, AvoidCatchingGenericException, AvoidDeeplyNestedIfStmts, AvoidRethrowingException, AvoidThrowingNewInstanceOfSameException, AvoidThrowingNullPointerException, AvoidThrowingRawExceptionTypes, AvoidUncheckedExceptionsInSignatures, ClassWithOnlyPrivateConstructorsShouldBeFinal, CollapsibleIfStatements, CouplingBetweenObjects, CyclomaticComplexity, DataClass, DoNotExtendJavaLangError, ExceptionAsFlowControl, ExcessiveClassLength, ExcessiveImports, ExcessiveMethodLength, ExcessiveParameterList, ExcessivePublicCount, FinalFieldCouldBeStatic, GodClass, ImmutableField, LawOfDemeter, LogicInversion, LoosePackageCoupling, ModifiedCyclomaticComplexity, NcssConstructorCount, NcssCount, NcssMethodCount, NcssTypeCount, NPathComplexity, SignatureDeclareThrowsException, SimplifiedTernary, SimplifyBooleanAssertion, SimplifyBooleanExpressions, SimplifyBooleanReturns, SimplifyConditional, SingularField, StdCyclomaticComplexity, SwitchDensity, TooManyFields, TooManyMethods, UselessOverridingMethod, UseObjectForClearerAPI, UseUtilityClass">
 <title>Design | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.12.0</li>
+    <li class="sidebarTitle">PMD 6.13.0</li>
     
     
     
@@ -1395,8 +1395,16 @@ protected constructor in order to prevent instantiation than make the class misl
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/AvoidDeeplyNestedIfStmts"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/AvoidDeeplyNestedIfStmts"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"problemDepth"</span> <span class="na">value=</span><span class="s">"3"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="avoidrethrowingexception">AvoidRethrowingException</h2>
@@ -1553,6 +1561,33 @@ Exception, or Error, use a subclassed exception or error instead.</p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/AvoidThrowingRawExceptionTypes"</span> <span class="nt">/&gt;</span>
 </code></pre></div></div>
 
+<h2 id="avoiduncheckedexceptionsinsignatures">AvoidUncheckedExceptionsInSignatures</h2>
+
+<p><strong>Since:</strong> PMD 6.13.0</p>
+
+<p><strong>Priority:</strong> Medium (3)</p>
+
+<p>A method or constructor should not explicitly declare unchecked exceptions in its
+<code class="highlighter-rouge">throws</code> clause. Java doesn’t force the caller to handle an unchecked exception,
+so it’s unnecessary except for documentation. A better practice is to document the
+exceptional cases with a <code class="highlighter-rouge">@throws</code> Javadoc tag, which allows being more descriptive.</p>
+
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">MethodDeclaration</span><span class="o">/</span><span class="nt">NameList</span><span class="o">/</span><span class="nt">Name</span><span class="p">[</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s2">"java.lang.RuntimeException"</span><span class="p">)]</span><span class="w">
+</span><span class="p">|</span><span class="w">
+</span><span class="o">//</span><span class="nt">ConstructorDeclaration</span><span class="o">/</span><span class="nt">NameList</span><span class="o">/</span><span class="nt">Name</span><span class="p">[</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s2">"java.lang.RuntimeException"</span><span class="p">)]</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>Example(s):</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">foo</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">RuntimeException</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule by referencing it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/AvoidUncheckedExceptionsInSignatures"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
 <h2 id="classwithonlyprivateconstructorsshouldbefinal">ClassWithOnlyPrivateConstructorsShouldBeFinal</h2>
 
 <p><strong>Since:</strong> PMD 4.1</p>
@@ -1671,8 +1706,16 @@ A number higher than the specified threshold can indicate a high degree of coupl
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/CouplingBetweenObjects"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/CouplingBetweenObjects"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"threshold"</span> <span class="na">value=</span><span class="s">"20"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="cyclomaticcomplexity">CyclomaticComplexity</h2>
@@ -1766,8 +1809,18 @@ into subcomponents.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/CyclomaticComplexity"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/CyclomaticComplexity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"classReportLevel"</span> <span class="na">value=</span><span class="s">"80"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"methodReportLevel"</span> <span class="na">value=</span><span class="s">"10"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"cycloOptions"</span> <span class="na">value=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="dataclass">DataClass</h2>
@@ -1907,26 +1960,34 @@ apart the code becomes more manageable and ripe for reuse.</p>
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>1000.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveClassLength"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveClassLength"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"1000.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="excessiveimports">ExcessiveImports</h2>
@@ -1966,26 +2027,34 @@ user-specified threshold.</p>
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>30.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveImports"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveImports"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"30.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="excessivemethodlength">ExcessiveMethodLength</h2>
@@ -2025,26 +2094,34 @@ Try to reduce the method length by creating helper methods and removing any copy
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>100.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveMethodLength"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveMethodLength"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"100.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="excessiveparameterlist">ExcessiveParameterList</h2>
@@ -2088,26 +2165,34 @@ same datatype. These situations usually denote the need for new objects to wrap 
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>10.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveParameterList"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessiveParameterList"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"10.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="excessivepubliccount">ExcessivePublicCount</h2>
@@ -2153,26 +2238,34 @@ developed easily.</p>
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>45.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessivePublicCount"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ExcessivePublicCount"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"45.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="finalfieldcouldbestatic">FinalFieldCouldBeStatic</h2>
@@ -2270,8 +2363,16 @@ of the field or by a constructor.  This helps in converting existing classes to 
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ImmutableField"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ImmutableField"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ignoredAnnotations"</span> <span class="na">value=</span><span class="s">"lombok.Setter|lombok.Getter|lombok.Builder|lombok.Data|lombok.RequiredArgsConstructor|lombok.AllArgsConstructor|lombok.Value|lombok.NoArgsConstructor"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="lawofdemeter">LawOfDemeter</h2>
@@ -2404,8 +2505,17 @@ except when using one of the configured allowed classes.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/LoosePackageCoupling"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/LoosePackageCoupling"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"packages"</span> <span class="na">value=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"classes"</span> <span class="na">value=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="modifiedcyclomaticcomplexity">ModifiedCyclomaticComplexity</h2>
@@ -2500,8 +2610,18 @@ by the rule <a href="pmd_rules_java_design.html#cyclomaticcomplexity"><code clas
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ModifiedCyclomaticComplexity"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/ModifiedCyclomaticComplexity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"showMethodsComplexity"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"showClassesComplexity"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"reportLevel"</span> <span class="na">value=</span><span class="s">"10"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="ncssconstructorcount">NcssConstructorCount</h2>
@@ -2552,26 +2672,34 @@ by the rule <a href="pmd_rules_java_design.html#ncsscount"><code class="highligh
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>100.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssConstructorCount"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssConstructorCount"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"100.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="ncsscount">NcssCount</h2>
@@ -2649,8 +2777,18 @@ the <a href="/pmd_java_metrics_index.html#non-commenting-source-statements-ncss"
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssCount"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssCount"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"methodReportLevel"</span> <span class="na">value=</span><span class="s">"60"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"classReportLevel"</span> <span class="na">value=</span><span class="s">"1500"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ncssOptions"</span> <span class="na">value=</span><span class="s">""</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="ncssmethodcount">NcssMethodCount</h2>
@@ -2702,26 +2840,34 @@ by the rule <a href="pmd_rules_java_design.html#ncsscount"><code class="highligh
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>100.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssMethodCount"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssMethodCount"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"100.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="ncsstypecount">NcssTypeCount</h2>
@@ -2772,26 +2918,34 @@ by the rule <a href="pmd_rules_java_design.html#ncsscount"><code class="highligh
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>1500.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssTypeCount"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NcssTypeCount"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"1500.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="npathcomplexity">NPathComplexity</h2>
@@ -2876,8 +3030,16 @@ complexity and increase readability.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NPathComplexity"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/NPathComplexity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"reportLevel"</span> <span class="na">value=</span><span class="s">"200"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="signaturedeclarethrowsexception">SignatureDeclareThrowsException</h2>
@@ -2920,8 +3082,16 @@ derived from RuntimeException or a checked exception.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SignatureDeclareThrowsException"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SignatureDeclareThrowsException"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"IgnoreJUnitCompletely"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="simplifiedternary">SimplifiedTernary</h2>
@@ -3186,8 +3356,18 @@ within those methods.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SingularField"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SingularField"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ignoredAnnotations"</span> <span class="na">value=</span><span class="s">"lombok.Setter|lombok.Getter|lombok.Builder|lombok.Data|lombok.RequiredArgsConstructor|lombok.AllArgsConstructor|lombok.Value|lombok.NoArgsConstructor"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"checkInnerClasses"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"disallowNotAssignment"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="stdcyclomaticcomplexity">StdCyclomaticComplexity</h2>
@@ -3281,8 +3461,18 @@ by the rule <a href="pmd_rules_java_design.html#cyclomaticcomplexity"><code clas
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/StdCyclomaticComplexity"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/StdCyclomaticComplexity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"showMethodsComplexity"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"showClassesComplexity"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"reportLevel"</span> <span class="na">value=</span><span class="s">"10"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="switchdensity">SwitchDensity</h2>
@@ -3329,26 +3519,34 @@ on the switch variable.</p>
     <tr>
       <td>topscore</td>
       <td> </td>
-      <td>Top score value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Top score value</td>
       <td>no</td>
     </tr>
     <tr>
       <td>minimum</td>
-      <td> </td>
+      <td>10.0</td>
       <td>Minimum reporting threshold</td>
       <td>no</td>
     </tr>
     <tr>
       <td>sigma</td>
       <td> </td>
-      <td>Sigma value</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Sigma value</td>
       <td>no</td>
     </tr>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SwitchDensity"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/SwitchDensity"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"minimum"</span> <span class="na">value=</span><span class="s">"10.0"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="toomanyfields">TooManyFields</h2>
@@ -3400,8 +3598,16 @@ city/state/zip fields could park them within a single Address field.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/TooManyFields"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/TooManyFields"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"maxfields"</span> <span class="na">value=</span><span class="s">"15"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="toomanymethods">TooManyMethods</h2>
@@ -3449,8 +3655,16 @@ complexity and find a way to have more fine grained objects.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/TooManyMethods"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/TooManyMethods"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"maxmethods"</span> <span class="na">value=</span><span class="s">"10"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="uselessoverridingmethod">UselessOverridingMethod</h2>
@@ -3500,8 +3714,16 @@ complexity and find a way to have more fine grained objects.</p>
   </tbody>
 </table>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/UselessOverridingMethod"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/design.xml/UselessOverridingMethod"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"ignoreAnnotations"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="useobjectforclearerapi">UseObjectForClearerAPI</h2>
@@ -3586,7 +3808,7 @@ remember to add a private constructor to prevent instantiation.
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2019 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Feb 24, 2019 <br />
+ Site last generated: Mar 31, 2019 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
