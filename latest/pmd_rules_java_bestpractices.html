@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Rules which enforce generally accepted best practices.">
-<meta name="keywords" content=" Best Practices, AbstractClassWithoutAbstractMethod, AccessorClassGeneration, AccessorMethodGeneration, ArrayIsStoredDirectly, AvoidPrintStackTrace, AvoidReassigningLoopVariables, AvoidReassigningParameters, AvoidStringBufferField, AvoidUsingHardCodedIP, CheckResultSet, ConstantsInInterface, DefaultLabelNotLastInSwitchStmt, DoubleBraceInitialization, ForLoopCanBeForeach, ForLoopVariableCount, GuardLogStatement, JUnit4SuitesShouldUseSuiteAnnotation, JUnit4TestShouldUseAfterAnnotation, JUnit4TestShouldUseBeforeAnnotation, JUnit4TestShouldUseTestAnnotation, JUnitAssertionsShouldIncludeMessage, JUnitTestContainsTooManyAsserts, JUnitTestsShouldIncludeAssert, JUnitUseExpected, LooseCoupling, MethodReturnsInternalArray, MissingOverride, OneDeclarationPerLine, PositionLiteralsFirstInCaseInsensitiveComparisons, PositionLiteralsFirstInComparisons, PreserveStackTrace, ReplaceEnumerationWithIterator, ReplaceHashtableWithMap, ReplaceVectorWithList, SwitchStmtsShouldHaveDefault, SystemPrintln, UnusedFormalParameter, UnusedImports, UnusedLocalVariable, UnusedPrivateField, UnusedPrivateMethod, UseAssertEqualsInsteadOfAssertTrue, UseAssertNullInsteadOfAssertTrue, UseAssertSameInsteadOfAssertTrue, UseAssertTrueInsteadOfAssertEquals, UseCollectionIsEmpty, UseTryWithResources, UseVarargs, WhileLoopWithLiteralBoolean">
+<meta name="keywords" content=" Best Practices, AbstractClassWithoutAbstractMethod, AccessorClassGeneration, AccessorMethodGeneration, ArrayIsStoredDirectly, AvoidMessageDigestField, AvoidPrintStackTrace, AvoidReassigningLoopVariables, AvoidReassigningParameters, AvoidStringBufferField, AvoidUsingHardCodedIP, CheckResultSet, ConstantsInInterface, DefaultLabelNotLastInSwitchStmt, DoubleBraceInitialization, ForLoopCanBeForeach, ForLoopVariableCount, GuardLogStatement, JUnit4SuitesShouldUseSuiteAnnotation, JUnit4TestShouldUseAfterAnnotation, JUnit4TestShouldUseBeforeAnnotation, JUnit4TestShouldUseTestAnnotation, JUnitAssertionsShouldIncludeMessage, JUnitTestContainsTooManyAsserts, JUnitTestsShouldIncludeAssert, JUnitUseExpected, LooseCoupling, MethodReturnsInternalArray, MissingOverride, OneDeclarationPerLine, PositionLiteralsFirstInCaseInsensitiveComparisons, PositionLiteralsFirstInComparisons, PreserveStackTrace, ReplaceEnumerationWithIterator, ReplaceHashtableWithMap, ReplaceVectorWithList, SwitchStmtsShouldHaveDefault, SystemPrintln, UnusedFormalParameter, UnusedImports, UnusedLocalVariable, UnusedPrivateField, UnusedPrivateMethod, UseAssertEqualsInsteadOfAssertTrue, UseAssertNullInsteadOfAssertTrue, UseAssertSameInsteadOfAssertTrue, UseAssertTrueInsteadOfAssertEquals, UseCollectionIsEmpty, UseTryWithResources, UseVarargs, WhileLoopWithLiteralBoolean">
 <title>Best Practices | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.17.0</li>
+    <li class="sidebarTitle">PMD 6.18.0</li>
     
     
     
@@ -347,6 +347,12 @@
                         
                         
                         <li><a href="pmd_userdocs_extending_writing_xpath_rules.html">Writing XPath rules</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_extending_designer_reference.html">Rule designer reference</a></li>
                         
                         
                         
@@ -1404,6 +1410,51 @@ This prevents future changes from the user from affecting the original array.</p
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/bestpractices.xml/ArrayIsStoredDirectly"</span> <span class="nt">/&gt;</span>
 </code></pre></div></div>
 
+<h2 id="avoidmessagedigestfield">AvoidMessageDigestField</h2>
+
+<p><strong>Since:</strong> PMD 6.18.0</p>
+
+<p><strong>Priority:</strong> Medium (3)</p>
+
+<p>Declaring a MessageDigest instance as a field make this instance directly available to multiple threads.
+Such sharing of MessageDigest instances should be avoided if possible since it leads to wrong results
+if the access is not synchronized correctly.
+Just create a new instance and use it locally, where you need it.
+Creating a new instance is easier than synchronizing access to a shared instance.</p>
+
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">FieldDeclaration</span><span class="p">[</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s1">'java.security.MessageDigest'</span><span class="p">)]</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>Example(s):</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">java.security.MessageDigest</span><span class="o">;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">AvoidMessageDigestFieldExample</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">MessageDigest</span> <span class="n">sharedMd</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="nf">AvoidMessageDigestFieldExample</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">sharedMd</span> <span class="o">=</span> <span class="n">MessageDigest</span><span class="o">.</span><span class="na">getInstance</span><span class="o">(</span><span class="s">"SHA-256"</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">calculateHashShared</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// sharing a MessageDigest like this without synchronizing access</span>
+        <span class="c1">// might lead to wrong results</span>
+        <span class="n">sharedMd</span><span class="o">.</span><span class="na">reset</span><span class="o">();</span>
+        <span class="n">sharedMd</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">data</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">sharedMd</span><span class="o">.</span><span class="na">digest</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="c1">// better</span>
+    <span class="kd">public</span> <span class="kt">byte</span><span class="o">[]</span> <span class="nf">calculateHash</span><span class="o">(</span><span class="kt">byte</span><span class="o">[]</span> <span class="n">data</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+        <span class="n">MessageDigest</span> <span class="n">md</span> <span class="o">=</span> <span class="n">MessageDigest</span><span class="o">.</span><span class="na">getInstance</span><span class="o">(</span><span class="s">"SHA-256"</span><span class="o">);</span>
+        <span class="n">md</span><span class="o">.</span><span class="na">update</span><span class="o">(</span><span class="n">data</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">md</span><span class="o">.</span><span class="na">digest</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule by referencing it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/bestpractices.xml/AvoidMessageDigestField"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
 <h2 id="avoidprintstacktrace">AvoidPrintStackTrace</h2>
 
 <p><strong>Since:</strong> PMD 3.2</p>
@@ -1780,11 +1831,17 @@ accessible from outside the anonymous class, and those legit cases should be sup
 <p><strong>Example(s):</strong></p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// this is double-brace initialization</span>
-<span class="k">return</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(){{</span> <span class="n">addAll</span><span class="o">(</span><span class="s">"a"</span><span class="o">,</span><span class="s">"b"</span><span class="o">,</span><span class="s">"c"</span><span class="o">);</span> <span class="o">}};</span>
+<span class="k">return</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(){{</span>
+    <span class="n">add</span><span class="o">(</span><span class="s">"a"</span><span class="o">);</span>
+    <span class="n">add</span><span class="o">(</span><span class="s">"b"</span><span class="o">);</span>
+    <span class="n">add</span><span class="o">(</span><span class="s">"c"</span><span class="o">);</span>
+<span class="o">}};</span>
 
 <span class="c1">// the better way is to not create an anonymous class:</span>
 <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
-<span class="n">a</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="s">"a"</span><span class="o">,</span><span class="s">"b"</span><span class="o">,</span><span class="s">"c"</span><span class="o">);</span>
+<span class="n">a</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"a"</span><span class="o">);</span>
+<span class="n">a</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"b"</span><span class="o">);</span>
+<span class="n">a</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"c"</span><span class="o">);</span>
 <span class="k">return</span> <span class="n">a</span><span class="o">;</span>
 </code></pre></div></div>
 
@@ -2699,7 +2756,10 @@ will (and by priority) and avoid clogging the Standard out log.</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>Avoid passing parameters to methods or constructors without actually referencing them in the method body.</p>
+<p>Avoid passing parameters to methods or constructors without actually referencing them in the method body. 
+Removing unused formal parameters from public methods could cause a ripple effect through the code base. 
+Hence, by default, this rule only considers private methods. To include non-private methods, set the
+<code class="highlighter-rouge">checkAll</code> property to <code class="highlighter-rouge">true</code>.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/bestpractices/UnusedFormalParameterRule.java">net.sourceforge.pmd.lang.java.rule.bestpractices.UnusedFormalParameterRule</a></p>
 
@@ -3279,7 +3339,7 @@ a block <code class="highlighter-rouge">{}</code> is sufficient.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2019 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Jul 28, 2019 <br />
+ Site last generated: Sep 15, 2019 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
