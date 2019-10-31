@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.18.0</li>
+    <li class="sidebarTitle">PMD 6.19.0</li>
     
     
     
@@ -1284,182 +1284,175 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
 
     
 
-  <h2 id="15-september-2019---6180">15-September-2019 - 6.18.0</h2>
+  <h2 id="31-october-2019---6190">31-October-2019 - 6.19.0</h2>
 
-<p>The PMD team is pleased to announce PMD 6.18.0.</p>
+<p>The PMD team is pleased to announce PMD 6.19.0.</p>
 
 <p>This is a minor release.</p>
 
 <h3 id="new-and-noteworthy">New and noteworthy</h3>
 
-<h4 id="java-13-support">Java 13 Support</h4>
+<h4 id="updated-pmd-designer">Updated PMD Designer</h4>
 
-<p>This release of PMD brings support for Java 13. PMD can parse <a href="http://openjdk.java.net/jeps/354">Switch Expressions</a>
-with the new <code class="highlighter-rouge">yield</code> statement and resolve the type of such an expression.</p>
+<p>This PMD release ships a new version of the pmd-designer.
+For the changes, see <a href="https://github.com/pmd/pmd-designer/releases/tag/6.19.0">PMD Designer Changelog</a>.</p>
 
-<p>PMD also parses <a href="http://openjdk.java.net/jeps/355">Text Blocks</a> as String literals.</p>
-
-<p>Note: The Switch Expressions and Text Blocks are a preview language feature of OpenJDK 13
-and are not enabled by default. In order to
-analyze a project with PMD that uses these language features, you’ll need to enable it via the environment
-variable <code class="highlighter-rouge">PMD_JAVA_OPTS</code> and select the new language version <code class="highlighter-rouge">13-preview</code>:</p>
-
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export PMD_JAVA_OPTS=--enable-preview
-./run.sh pmd -language java -version 13-preview ...
-</code></pre></div></div>
-
-<p>Note: Support for the extended break statement introduced in Java 12 as a preview language feature
-will be removed with the next PMD version 6.19.0.</p>
-
-<h4 id="full-support-for-scala">Full support for Scala</h4>
-
-<p>Thanks to <a href="https://github.com/tophersmith">Chris Smith</a> PMD now fully supports Scala. Now rules for analyzing Scala
-code can be developed in addition to the Copy-Paste-Detection (CPD) functionality. There are no rules yet, so
-contributions are welcome.</p>
-
-<p>Additionally Scala support has been upgraded from 2.12.4 to 2.13.</p>
-
-<h4 id="new-rule-designer-documentation">New rule designer documentation</h4>
-
-<p>The documentation for the rule designer is now available on the main PMD documentation page:
-<a href="pmd_userdocs_extending_designer_reference.html">Rule Designer Reference</a>. Check it out to learn
-about the usage and features of the rule designer.</p>
-
-<h4 id="new-rules">New rules</h4>
+<h4 id="java-metrics">Java Metrics</h4>
 
 <ul>
-  <li>
-    <p>The Java rule <a href="pmd_rules_java_bestpractices.html#avoidmessagedigestfield"><code class="highlighter-rouge">AvoidMessageDigestField</code></a> (<code class="highlighter-rouge">java-bestpractices</code>) detects fields
-of the type <code class="highlighter-rouge">java.security.MessageDigest</code>. Using a message digest instance as a field would need to be
-synchronized, as it can easily be used by multiple threads. Without synchronization the calculated hash could
-be entirely wrong. Instead of declaring this as a field and synchronize access to use it from multiple threads,
-a new instance should be created when needed. This rule is also active when using java’s quickstart ruleset.</p>
-  </li>
-  <li>
-    <p>The Apex rule <a href="pmd_rules_apex_bestpractices.html#debugsshoulduselogginglevel"><code class="highlighter-rouge">DebugsShouldUseLoggingLevel</code></a> (<code class="highlighter-rouge">apex-bestpractices</code>) detects
-usages of <code class="highlighter-rouge">System.debug()</code> method calls that are used without specifying the log level. Having the log
-level specified provides a cleaner log, and improves readability of it.</p>
-  </li>
+  <li>The new metric “Class Fan Out Complexity” has been added. See
+<a href="pmd_java_metrics_index.html#class-fan-out-complexity-class_fan_out">Java Metrics Documentation</a> for details.</li>
 </ul>
 
 <h4 id="modified-rules">Modified Rules</h4>
 
 <ul>
-  <li>The Java rule <a href="pmd_rules_java_errorprone.html#closeresource"><code class="highlighter-rouge">CloseResource</code></a> (<code class="highlighter-rouge">java-errorprone</code>) now ignores by default instances
-of <code class="highlighter-rouge">java.util.stream.Stream</code>. These streams are <code class="highlighter-rouge">AutoCloseable</code>, but most streams are backed by collections,
-arrays, or generating functions, which require no special resource management. However, there are some exceptions:
-The stream returned by <code class="highlighter-rouge">Files::lines(Path)</code> is backed by a actual file and needs to be closed. These instances
-won’t be found by default by the rule anymore.</li>
+  <li>
+    <p>The Java rules <a href="pmd_rules_java_errorprone.html#invalidlogmessageformat"><code class="highlighter-rouge">InvalidLogMessageFormat</code></a> and <a href="pmd_rules_java_errorprone.html#morethanonelogger"><code class="highlighter-rouge">MoreThanOneLogger</code></a>
+(<code class="highlighter-rouge">java-errorprone</code>) now both support <a href="https://logging.apache.org/log4j/2.x/">Log4j2</a>. Note that the
+rule “InvalidSlf4jMessageFormat” has been renamed to “InvalidLogMessageFormat” to reflect the fact, that it now
+supports more than slf4j.</p>
+  </li>
+  <li>
+    <p>The Java rule <a href="pmd_rules_java_design.html#lawofdemeter"><code class="highlighter-rouge">LawOfDemeter</code></a> (<code class="highlighter-rouge">java-design</code>) ignores now also Builders, that are
+not assigned to a local variable, but just directly used within a method call chain. The method, that creates
+the builder needs to end with “Builder”, e.g. <code class="highlighter-rouge">newBuilder()</code> or <code class="highlighter-rouge">initBuilder()</code> works. This change
+fixes a couple of false positives.</p>
+  </li>
+  <li>
+    <p>The Java rule <a href="pmd_rules_java_errorprone.html#dataflowanomalyanalysis"><code class="highlighter-rouge">DataflowAnomalyAnalysis</code></a> (<code class="highlighter-rouge">java-errorprone</code>) doesn’t check for
+UR anomalies (undefined and then referenced) anymore. These checks were all false-positives, since actual
+UR occurrences would lead to compile errors.</p>
+  </li>
+  <li>
+    <p>The java rule <a href="pmd_rules_java_multithreading.html#donotusethreads"><code class="highlighter-rouge">DoNotUseThreads</code></a> (<code class="highlighter-rouge">java-multithreading</code>) has been changed
+to not report usages of <code class="highlighter-rouge">java.lang.Runnable</code> anymore. Just using <code class="highlighter-rouge">Runnable</code> does not automatically create
+a new thread. While the check for <code class="highlighter-rouge">Runnable</code> has been removed, the rule now additionally checks for
+usages of <code class="highlighter-rouge">Executors</code> and <code class="highlighter-rouge">ExecutorService</code>. Both create new threads, which are not managed by a J2EE
+server.</p>
+  </li>
+</ul>
+
+<h4 id="renamed-rules">Renamed Rules</h4>
+
+<ul>
+  <li>The Java rule <a href="pmd_rules_java_errorprone.html#invalidslf4jmessageformat"><code class="highlighter-rouge">InvalidSlf4jMessageFormat</code></a> has been renamed to
+<a href="pmd_rules_java_errorprone.html#invalidlogmessageformat"><code class="highlighter-rouge">InvalidLogMessageFormat</code></a> since it supports now both slf4j and log4j2
+message formats.</li>
 </ul>
 
 <h3 id="fixed-issues">Fixed Issues</h3>
 
 <ul>
-  <li>all
+  <li>core
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1465">#1465</a>: [core] Stylesheet pmd-report.xslt fails to display filepath if ‘java’ in path</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1923">#1923</a>: [core] Incremental analysis does not work with shortnames</li>
-      <li><a href="https://github.com/pmd/pmd/pull/1983">#1983</a>: [core] Avoid crashes with analysis cache when classpath references non-existing directories</li>
-      <li><a href="https://github.com/pmd/pmd/pull/1990">#1990</a>: [core] Incremental analysis mixes XPath rule violations</li>
-    </ul>
-  </li>
-  <li>apex
-    <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1901">#1901</a>: [apex] Expose super type name of UserClass</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1942">#1942</a>: [apex] Add best practice rule for debug statements in Apex</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1978">#1978</a>: [core] PMD fails on excluding unknown rules</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2014">#2014</a>: [core] Making add(SourceCode sourceCode) public for alternative file systems</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2020">#2020</a>: [core] Wrong deprecation warnings for unused XPath attributes</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2036">#2036</a>: [core] Wrong include/exclude patterns are silently ignored</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2048">#2048</a>: [core] Enable type resolution by default for XPath rules</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2067">#2067</a>: [core] Build issue on Windows</li>
+      <li><a href="https://github.com/pmd/pmd/pull/2068">#2068</a>: [core] Rule loader should use the same resources loader for the ruleset</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2071">#2071</a>: [ci] Add travis build on windows</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2072">#2072</a>: [test][core] Not enough info in “test setup error” when numbers of lines do not match</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2082">#2082</a>: [core] Incorrect logging of deprecated/renamed rules</li>
     </ul>
   </li>
   <li>java
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1930">#1930</a>: [java] Add Java 13 support</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2042">#2042</a>: [java] PMD crashes with ClassFormatError: Absent Code attribute…</li>
     </ul>
   </li>
   <li>java-bestpractices
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1227">#1227</a>: [java] UnusedFormalParameter should explain checkAll better</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1862">#1862</a>: [java] New rule for MessageDigest.getInstance</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1952">#1952</a>: [java] UnusedPrivateField not triggering if @Value annotation present</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1531">#1531</a>: [java] UnusedPrivateMethod false-positive with method result</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2025">#2025</a>: [java] UnusedImports when @see / @link pattern includes a FQCN</li>
     </ul>
   </li>
   <li>java-codestyle
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1951">#1951</a>: [java] UnnecessaryFullyQualifiedName rule triggered when variable name clashes with package name</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2017">#2017</a>: [java] UnnecessaryFullyQualifiedName triggered for inner class</li>
+    </ul>
+  </li>
+  <li>java-design
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/1912">#1912</a>: [java] Metrics not computed correctly with annotations</li>
     </ul>
   </li>
   <li>java-errorprone
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1922">#1922</a>: [java] CloseResource possible false positive with Streams</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1966">#1966</a>: [java] CloseResource false positive if Stream is passed as method parameter</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1967">#1967</a>: [java] CloseResource false positive with late assignment of variable</li>
+      <li><a href="https://github.com/pmd/pmd/issues/336">#336</a>: [java] InvalidSlf4jMessageFormat applies to log4j2</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1636">#1636</a>: [java] Stop checking UR anomalies for DataflowAnomalyAnalysis</li>
     </ul>
   </li>
-  <li>plsql
+  <li>java-multithreading
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/1933">#1933</a>: [plsql] ParseException with cursor declared in anonymous block</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1935">#1935</a>: [plsql] ParseException with SELECT INTO record defined as global variable</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1936">#1936</a>: [plslq] ParseException with cursor inside procedure declaration</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1946">#1946</a>: [plsql] ParseException with using TRIM inside IF statements condition</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1947">#1947</a>: [plsql] ParseError - SELECT with FOR UPDATE OF</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1948">#1948</a>: [plsql] ParseException with INSERT INTO using package global variables</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1950">#1950</a>: [plsql] ParseException with UPDATE and package record variable</li>
-      <li><a href="https://github.com/pmd/pmd/issues/1953">#1953</a>: [plsql] ParseException with WITH in CURSOR</li>
+      <li><a href="https://github.com/pmd/pmd/issues/1627">#1627</a>: [java] DoNotUseThreads should not warn on Runnable</li>
+    </ul>
+  </li>
+  <li>doc
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/2058">#2058</a>: [doc] CLI reference for <code class="highlighter-rouge">-norulesetcompatibility</code> shows a boolean default value</li>
     </ul>
   </li>
 </ul>
 
 <h3 id="api-changes">API Changes</h3>
 
-<h4 id="changes-to-renderer">Changes to Renderer</h4>
-
-<ul>
-  <li>
-    <p>Each renderer has now a new method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/renderers/Renderer.html#setUseShortNames(List)"><code class="highlighter-rouge">Renderer#setUseShortNames</code></a> which
-is used for implementing the “shortnames” CLI option. The method is automatically called by PMD, if this
-CLI option is in use. When rendering filenames to the report, the new helper method
-<a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/renderers/AbstractRenderer.html#determineFileName(String)"><code class="highlighter-rouge">AbstractRenderer#determineFileName</code></a> should be used. This will change
-the filename to a short name, if the CLI option “shortnames” is used.</p>
-
-    <p>Not adjusting custom renderers will make them render always the full file names and not honoring the
-CLI option “shortnames”.</p>
-  </li>
-</ul>
-
 <h4 id="deprecated-apis">Deprecated APIs</h4>
 
 <h5 id="for-removal">For removal</h5>
 
 <ul>
-  <li>The methods <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/ast/ASTImportDeclaration.html#getImportedNameNode()"><code class="highlighter-rouge">getImportedNameNode</code></a> and
-<a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/ast/ASTImportDeclaration.html#getPackage()"><code class="highlighter-rouge">getPackage</code></a> have been deprecated and
-will be removed with PMD 7.0.0.</li>
-  <li>The method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/RuleContext.html#setSourceCodeFilename(String)"><code class="highlighter-rouge">RuleContext#setSourceCodeFilename</code></a> has been deprecated
-and will be removed. The already existing method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/RuleContext.html#setSourceCodeFile(File)"><code class="highlighter-rouge">RuleContext#setSourceCodeFile</code></a>
-should be used instead. The method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/RuleContext.html#getSourceCodeFilename()"><code class="highlighter-rouge">RuleContext#getSourceCodeFilename</code></a> still
-exists and returns just the filename without the full path.</li>
-  <li>The method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/processor/AbstractPMDProcessor.html#filenameFrom(DataSource)"><code class="highlighter-rouge">AbstractPMDProcessor#filenameFrom</code></a> has been
-deprecated. It was used to determine a “short name” of the file being analyzed, so that the report
-can use short names. However, this logic has been moved to the renderers.</li>
-  <li>The method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/Report.html#metrics()"><code class="highlighter-rouge">Report#metrics</code></a> and <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/Report.html#"><code class="highlighter-rouge">Report</code></a> have
-been deprecated. They were leftovers from a previous deprecation round targeting
-<a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/lang/rule/stat/StatisticalRule.html#"><code class="highlighter-rouge">StatisticalRule</code></a>.</li>
-</ul>
-
-<h5 id="internal-apis">Internal APIs</h5>
-
-<p>Those APIs are not intended to be used by clients, and will be hidden or removed with PMD 7.0.0. You can identify them with the <code class="highlighter-rouge">@InternalApi</code> annotation. You’ll also get a deprecation warning.</p>
-
-<ul>
   <li>pmd-core
     <ul>
-      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.18.0/net/sourceforge/pmd/cache/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.cache</code></a></li>
+      <li>All the package <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/dcd/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.dcd</code></a> and its subpackages. See <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/dcd/DCD.html#"><code class="highlighter-rouge">DCD</code></a>.</li>
+      <li>In <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#"><code class="highlighter-rouge">LanguageRegistry</code></a>:
+        <ul>
+          <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#commaSeparatedTerseNamesForLanguageVersion(List)"><code class="highlighter-rouge">commaSeparatedTerseNamesForLanguageVersion</code></a></li>
+          <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#commaSeparatedTerseNamesForLanguage(List)"><code class="highlighter-rouge">commaSeparatedTerseNamesForLanguage</code></a></li>
+          <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#findAllVersions()"><code class="highlighter-rouge">findAllVersions</code></a></li>
+          <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#findLanguageVersionByTerseName(String)"><code class="highlighter-rouge">findLanguageVersionByTerseName</code></a></li>
+          <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/LanguageRegistry.html#getInstance()"><code class="highlighter-rouge">getInstance</code></a></li>
+        </ul>
+      </li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/RuleSet.html#getExcludePatterns()"><code class="highlighter-rouge">RuleSet#getExcludePatterns</code></a>. Use the new method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/RuleSet.html#getFileExclusions()"><code class="highlighter-rouge">getFileExclusions</code></a> instead.</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/RuleSet.html#getIncludePatterns()"><code class="highlighter-rouge">RuleSet#getIncludePatterns</code></a>. Use the new method <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/RuleSet.html#getFileInclusions()"><code class="highlighter-rouge">getFileInclusions</code></a> instead.</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/Parser.html#canParse()"><code class="highlighter-rouge">Parser#canParse</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/lang/Parser.html#getSuppressMap()"><code class="highlighter-rouge">Parser#getSuppressMap</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/rules/RuleBuilder.html#RuleBuilder(String,String,String)"><code class="highlighter-rouge">RuleBuilder#RuleBuilder</code></a>. Use the new constructor with the correct ResourceLoader instead.</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/rules/RuleFactory.html#RuleFactory()"><code class="highlighter-rouge">RuleFactory#RuleFactory</code></a>. Use the new constructor with the correct ResourceLoader instead.</li>
     </ul>
   </li>
   <li>pmd-java
     <ul>
-      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/typeresolution/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.lang.java.typeresolution</code></a>: Everything, including
-subpackages, except <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/typeresolution/TypeHelper.html#"><code class="highlighter-rouge">TypeHelper</code></a> and
-<a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/typeresolution/typedefinition/JavaTypeDefinition.html#"><code class="highlighter-rouge">JavaTypeDefinition</code></a>.</li>
-      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.18.0/net/sourceforge/pmd/lang/java/ast/ASTCompilationUnit.html#getClassTypeResolver()"><code class="highlighter-rouge">ASTCompilationUnit#getClassTypeResolver</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/ast/CanSuppressWarnings.html#"><code class="highlighter-rouge">CanSuppressWarnings</code></a> and its implementations</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/rule/AbstractJavaRule.html#isSuppressed(Node)"><code class="highlighter-rouge">isSuppressed</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/rule/AbstractJavaRule.html#getDeclaringType(Node)"><code class="highlighter-rouge">getDeclaringType</code></a>.</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/rule/JavaRuleViolation.html#isSupressed(Node,Rule)"><code class="highlighter-rouge">isSupressed</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/ast/ASTMethodDeclarator.html#"><code class="highlighter-rouge">ASTMethodDeclarator</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/ast/ASTMethodDeclaration.html#getMethodName()"><code class="highlighter-rouge">getMethodName</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/ast/ASTMethodDeclaration.html#getBlock()"><code class="highlighter-rouge">getBlock</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.19.0/net/sourceforge/pmd/lang/java/ast/ASTConstructorDeclaration.html#getParameterCount()"><code class="highlighter-rouge">getParameterCount</code></a></li>
+    </ul>
+  </li>
+  <li>pmd-apex
+    <ul>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-apex/6.19.0/net/sourceforge/pmd/lang/apex/ast/CanSuppressWarnings.html#"><code class="highlighter-rouge">CanSuppressWarnings</code></a> and its implementations</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-apex/6.19.0/net/sourceforge/pmd/lang/apex/rule/ApexRuleViolation.html#isSupressed(Node,Rule)"><code class="highlighter-rouge">isSupressed</code></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h5 id="internal-apis">Internal APIs</h5>
+
+<ul>
+  <li>pmd-core
+    <ul>
+      <li>All the package <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/util/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.util</code></a> and its subpackages,
+except <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/util/datasource/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.util.datasource</code></a> and <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/util/database/package-summary.html#"><code class="highlighter-rouge">net.sourceforge.pmd.util.database</code></a>.</li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/cpd/GridBagHelper.html#"><code class="highlighter-rouge">GridBagHelper</code></a></li>
+      <li><a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.19.0/net/sourceforge/pmd/renderers/ColumnDescriptor.html#"><code class="highlighter-rouge">ColumnDescriptor</code></a></li>
     </ul>
   </li>
 </ul>
@@ -1467,18 +1460,16 @@ subpackages, except <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-jav
 <h3 id="external-contributions">External Contributions</h3>
 
 <ul>
-  <li><a href="https://github.com/pmd/pmd/pull/1943">#1943</a>: [apex] Adds “debug should use logging level” best practice rule for Apex - <a href="https://github.com/renatoliveira">Renato Oliveira</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1965">#1965</a>: [scala] Use Scalameta for parsing - <a href="https://github.com/tophersmith">Chris Smith</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1970">#1970</a>: [java] DoubleBraceInitialization: Fix example - <a href="https://github.com/tweimer">Tobias Weimer</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1971">#1971</a>: [java] 1862 - Message Digest should not be used as class field - <a href="https://github.com/AnthonyKot">AnthonyKot</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1972">#1972</a>: [plsql] ParseError - SELECT with FOR UPDATE OF - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1974">#1974</a>: [plsql] Fixes for referencing record type variables - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1975">#1975</a>: [plsql] TRIM function with record type variables - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1976">#1976</a>: [plsql] Fix for mistaking / for MultiplicativeExpression - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1977">#1977</a>: [plsql] fix for skipping sql starting with WITH - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1986">#1986</a>: [plsql] Fix for cursors in anonymous blocks - <a href="https://github.com/szyman23">Piotr Szymanski</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/1994">#1994</a>: [core] Resolve pmd-report failure when java folder in filepath - <a href="https://github.com/shahamish150294">Amish Shah</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/2015">#2015</a>: [java] Update doc for unused formal parameter - <a href="https://github.com/shahamish150294">Amish Shah</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2010">#2010</a>: [java] LawOfDemeter to support inner builder pattern - <a href="https://github.com/gregorriegler">Gregor Riegler</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2012">#2012</a>: [java] Fixes 336, slf4j log4j2 support - <a href="https://github.com/markhall82">Mark Hall</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2032">#2032</a>: [core] Allow adding SourceCode directly into CPD - <a href="https://github.com/nbraun-Google">Nathan Braun</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2047">#2047</a>: [java] Fix computation of metrics with annotations - <a href="https://github.com/andipabst">Andi Pabst</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2065">#2065</a>: [java] Stop checking UR anomalies - <a href="https://github.com/l0s">Carlos Macasaet</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2068">#2068</a>: [core] Rule loader should use the same resources loader for the ruleset - <a href="https://github.com/willamette">Chen Yang</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2070">#2070</a>: [core] Fix renderer tests for windows builds - <a href="https://github.com/Saladoc">Saladoc</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2073">#2073</a>: [test][core] Add expected and actual line of numbers to message wording - <a href="https://github.com/snuyanzin">snuyanzin</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2076">#2076</a>: [java] Add Metric ClassFanOutComplexity - <a href="https://github.com/andipabst">Andi Pabst</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/2078">#2078</a>: [java] DoNotUseThreads should not warn on Runnable #1627 - <a href="https://github.com/mclay">Michael Clay</a></li>
 </ul>
 
 
@@ -1497,7 +1488,7 @@ subpackages, except <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-jav
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2019 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Sep 15, 2019 <br />
+ Site last generated: Oct 31, 2019 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
