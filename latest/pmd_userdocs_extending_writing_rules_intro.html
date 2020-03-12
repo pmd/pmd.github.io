@@ -4,9 +4,9 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="">
-<meta name="keywords" content=" ">
-<title>Developer and contributor documentation | PMD Source Code Analyzer</title>
+<meta name="description" content="Writing your own PMD rules">
+<meta name="keywords" content="extendinguserdocsgetting_started,  ">
+<title>Introduction to writing PMD rules | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
 
@@ -140,7 +140,7 @@
                                 searchInput: document.getElementById('search-input'),
                                 resultsContainer: document.getElementById('results-container'),
                                 dataSource: 'search.json',
-                                searchResultTemplate: '<li><a href="{url}" title="Developer and contributor documentation">{title}</a></li>',
+                                searchResultTemplate: '<li><a href="{url}" title="Introduction to writing PMD rules">{title}</a></li>',
                     noResultsText: 'No results found.',
                             limit: 10,
                             fuzzy: true,
@@ -340,7 +340,7 @@
                         
                         
                         
-                        <li><a href="pmd_userdocs_extending_writing_rules_intro.html">Introduction to writing rules</a></li>
+                        <li class="active"><a href="pmd_userdocs_extending_writing_rules_intro.html">Introduction to writing rules</a></li>
                         
                         
                         
@@ -1331,13 +1331,15 @@
         <!-- Content Column -->
         <div class="col-md-9" id="tg-sb-content">
             <div class="post-header">
-   <h1 class="post-title-main">Developer and contributor documentation</h1>
+   <h1 class="post-title-main">Introduction to writing PMD rules</h1>
 </div>
 
 
 
 <div class="post-content">
 
+   
+    <div class="summary">Writing your own PMD rules</div>
    
 
     
@@ -1362,517 +1364,158 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
         
         
 
-    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/tags/tag_devdocs.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/pmd/userdocs/extending/writing_rules_intro.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
 
     
 
-  <p>The following pages and posts are tagged with <button type="button" style="cursor: default" class="btn btn-default navbar-btn">devdocs</button></p>
-<table><thead><tr><th>Title</th><th>Type</th><th>Excerpt</th></tr></thead>
-    <tbody>
-    
-  
-    
-   
-    
-        
+  <p>PMD is a framework to perform code analysis. You can create your own rules to
+check for patterns specific to your codebase, or the coding practices of your
+team.</p>
 
-        <tr><td><a href="pmd_devdocs_major_adding_new_cpd_language.html">How to add a new CPD language</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> How to add a new CPD language </td>
-        </tr>
-        
-     
-        
-     
-   
-    
-        
+<h2 id="how-rules-work-the-ast">How rules work: the AST</h2>
 
-        <tr><td><a href="pmd_devdocs_major_adding_new_language.html">Adding PMD support for a new language</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> How to add a new language to PMD. </td>
-        </tr>
-        
-     
-        
-     
-   
-    
-        
+<p>Before running rules, PMD parses the source file into a data structure called an
+<strong>abstract syntax tree (AST)</strong>. This tree represents the syntactic structure of the
+code, and encodes syntactic relations between source code elements. For instance,
+in Java, method declarations belong to a class: in the AST, the nodes representing
+method declarations will be descendants of a node representing the declaration of
+their enclosing class. This representation is thus much richer than the original
+source code (which, for a program, is just a chain of characters), or the token
+chain produced by a lexer (which is e.g. what Checkstyle works on). For example:</p>
 
-        <tr><td><a href="pmd_devdocs_major_adding_new_metrics_framework.html">Adding support for metrics to a language</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> PMD's Java module has an extensive framework for the calculation of metrics, which allows rule developers to implement and use new code metrics very simply. ... </td>
-        </tr>
-        
-     
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
+<table>
+<colgroup>
+<col width="40%" />
+<col width="70%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sample code (Java)</th>
+<th>AST</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
 
-        <tr><td><a href="pmd_devdocs_experimental_ast_dump.html">Creating XML dump of the AST</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> Creating a XML representation of the AST allows to analyze the AST with other tools. </td>
-        </tr>
-        
-     
-        
-     
-   
-    
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
+        <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Foo</span> <span class="kd">extends</span> <span class="nc">Object</span> <span class="o">{</span>
 
-        <tr><td><a href="pmd_devdocs_building.html">Building PMD from source</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td>   Note: TODO add IDE specific indications Compiling PMD  JDK 10 or higher   Note: While Java 10 is required for building, running PMD only requires Java 7 (or Java 8 for Apex... </td>
-        </tr>
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
+<span class="o">}</span>
+</code></pre></div>        </div>
 
-        <tr><td><a href="pmd_devdocs_development.html">Developer Resources</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> The next version of PMD will be developed in parallel with this release. We will release additional bugfix versions as needed. Source Code The complete source code can be found on github:  github.com/pmd/pmd - main PMD repository. Includes all the code to support all languages, including this... </td>
-        </tr>
-        
-     
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-        
+      </td>
+<td>
 
-        <tr><td><a href="pmd_devdocs_how_pmd_works.html">How PMD Works</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> Processing overview of the different steps taken by PMD. </td>
-        </tr>
-        
-     
-   
-    
-        
-     
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
+        <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">└─</span> <span class="nc">CompilationUnit</span>
+   <span class="err">└─</span> <span class="nc">TypeDeclaration</span>
+      <span class="err">└─</span> <span class="nc">ClassOrInterfaceDeclaration</span> <span class="s">"Foo"</span>
+         <span class="err">├─</span> <span class="nc">ExtendsList</span>
+         <span class="err">│</span>  <span class="err">└─</span> <span class="nc">ClassOrInterfaceType</span> <span class="s">"Object"</span>
+         <span class="err">└─</span> <span class="nc">ClassOrInterfaceBody</span>
+</code></pre></div>        </div>
 
-        <tr><td><a href="pmd_devdocs_pmdtester.html">Pmdtester</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> Introduction Pmdtester is a regression testing tool that ensures no new problems and unexpected behaviors will be introduced to PMD after fixing an issue. It can also be used to verify, that new rules work as expected. It has been integrated into travis CI and is actually used automatically... </td>
-        </tr>
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-
-        <tr><td><a href="pmd_devdocs_roadmap.html">Roadmap</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> TODO:  Update Future direction projects, plans Google Summer of Code  Future directions Want to know what’s coming? Or, better, wanna contribute ? Here is the page listing what are our plans - when we have ones, for the future of PMD. It also give you hints at... </td>
-        </tr>
-        
-     
-   
-    
-        
-
-        <tr><td><a href="pmd_devdocs_rule_deprecation_policy.html">Rule deprecation policy</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> Describes when and how rules are deprecated </td>
-        </tr>
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-   
-    
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-
-        <tr><td><a href="pmd_devdocs_writing_documentation.html">Writing documentation</a></td>
-            <td><span class="label label-default">Page</span></td>
-          <td> PMD's documentation uses [Jekyll](https://jekyllrb.com/) with the [I'd rather be writing Jekyll Theme](http://idratherbewriting.com/documentation-theme-jekyll/index.html). Here are some quick tips. ## Format The pages are in general in [Github Flavored Markdown](https://kramdown.gettalong.org/parser/gfm.html). ## Structure The documentation sources can be found in two places based on how they are generated: - the ones that are... </td>
-        </tr>
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-    
-        
-     
-        
-     
-   
-
-        
-        
-
-   </tbody>
+      </td>
+</tr>
+</tbody>
 </table>
+
+<p>Conceptually, PMD rules work by <strong>matching a “pattern” against the AST</strong> of a
+file.
+Rules explore the AST and find nodes that satisfy some conditions that are characteristic
+of the specific thing the rule is trying to flag. Rules then report a violation on these nodes.</p>
+
+<h3 id="discovering-the-ast">Discovering the AST</h3>
+
+<p>ASTs are represented by Java classes deriving from <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-core/6.22.0/net/sourceforge/pmd/lang/ast/Node.html#"><code>Node</code></a>.
+Each PMD language has its own set of such classes, and its own rules about how
+these classes relate to one another, based on the grammar of the language. For
+example, all Java AST nodes extend <a href="https://javadoc.io/page/net.sourceforge.pmd/pmd-java/6.22.0/net/sourceforge/pmd/lang/java/ast/JavaNode.html#"><code>JavaNode</code></a>.</p>
+
+<p>The structure of the AST can be discovered through</p>
+<ul>
+  <li>the <a href="pmd_userdocs_extending_designer_reference.html#ast-inspection">Rule Designer</a></li>
+  <li>the <a href="pmd_devdocs_experimental_ast_dump.html">AST dump feature</a></li>
+</ul>
+
+<h2 id="writing-new-rules">Writing new rules</h2>
+
+<p>PMD supports two ways to define rules: using an <strong>XPath query</strong>, or using a
+<strong>Java visitor</strong>. XPath rules are much easier to set up, since they’re defined
+directly in your ruleset XML, and are expressive enough for nearly any task.</p>
+
+<p>On the other hand, some parts of PMD’s API are only accessible from Java, e.g.
+accessing the usages of a declaration. And Java rules allow you to do some
+complicated processing, to which an XPath rule couldn’t scale.</p>
+
+<p>In the end, choosing one strategy or the other depends on the difficulty of what
+your rule does. I’d advise to keep to XPath unless you have no other choice.</p>
+
+<h2 id="xml-rule-definition">XML rule definition</h2>
+
+<p>New rules must be declared in a ruleset before they’re referenced. This is the
+case for both XPath and Java rules. To do this, the <code class="highlighter-rouge">rule</code> element is used, but
+instead of mentioning the <code class="highlighter-rouge">ref</code> attribute, it mentions the <code class="highlighter-rouge">class</code> attribute,
+with the implementation class of your rule.</p>
+
+<ul>
+  <li><strong>For Java rules:</strong> this is the class extending AbstractRule (transitively)</li>
+  <li><strong>For XPath rules:</strong> this is <code class="highlighter-rouge">net.sourceforge.pmd.lang.rule.XPathRule</code></li>
+</ul>
+
+<p>Example:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">name=</span><span class="s">"MyJavaRule"</span>
+      <span class="na">language=</span><span class="s">"java"</span>
+      <span class="na">message=</span><span class="s">"Violation!"</span>
+      <span class="na">class=</span><span class="s">"com.me.MyJavaRule"</span> <span class="nt">&gt;</span>
+    <span class="nt">&lt;description&gt;</span>
+        Description
+    <span class="nt">&lt;/description&gt;</span>
+    <span class="nt">&lt;priority&gt;</span>3<span class="nt">&lt;/priority&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
+</code></pre></div></div>
+
+<h2 id="resource-index">Resource index</h2>
+
+<p>To learn how to write a rule:</p>
+
+<ul>
+  <li><a href="pmd_userdocs_extending_your_first_rule.html">Your First Rule</a>
+introduces the basic development process of a rule with a running example</li>
+  <li><a href="pmd_userdocs_extending_writing_xpath_rules.html">Writing XPath Rules</a>
+explains a bit more about XPath rules and our XPath API</li>
+  <li><a href="pmd_userdocs_extending_writing_java_rules.html">Writing Java Rules</a>
+describes how to write a rule in Java</li>
+</ul>
+
+<p>To go further:</p>
+<ul>
+  <li><a href="pmd_userdocs_extending_defining_properties.html">Defining Properties</a>
+describes how to make your rules more configurable with rule properties</li>
+  <li><a href="pmd_userdocs_extending_testing.html">Testing your Rules</a> introduces
+our testing framework and how you can use it to safeguard the quality of
+your rule</li>
+</ul>
 
 
 
     <div class="tags">
+        
+        <b>Tags: </b>
+        
+        
+        
+        <a href="tag_extending.html" class="btn btn-default navbar-btn cursorNorm" role="button">extending</a>
+        
+        
+        
+        <a href="tag_userdocs.html" class="btn btn-default navbar-btn cursorNorm" role="button">userdocs</a>
+        
+        
+        
+        <a href="tag_getting_started.html" class="btn btn-default navbar-btn cursorNorm" role="button">getting_started</a>
+        
+        
         
     </div>
 
@@ -1886,7 +1529,7 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2020 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Mar 12, 2020 <br />
+<span>Page last updated:</span> February 2020 (6.22.0)<br/> Site last generated: Mar 12, 2020 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>

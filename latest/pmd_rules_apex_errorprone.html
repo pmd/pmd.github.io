@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Rules to detect constructs that are either broken, extremely confusing or prone to runtime errors.">
-<meta name="keywords" content=" Error Prone, ApexCSRF, AvoidDirectAccessTriggerMap, AvoidHardcodingId, EmptyCatchBlock, EmptyIfStmt, EmptyStatementBlock, EmptyTryOrFinallyBlock, EmptyWhileStmt, MethodWithSameNameAsEnclosingClass, AvoidNonExistentAnnotations">
+<meta name="keywords" content=" Error Prone, ApexCSRF, AvoidDirectAccessTriggerMap, AvoidHardcodingId, EmptyCatchBlock, EmptyIfStmt, EmptyStatementBlock, EmptyTryOrFinallyBlock, EmptyWhileStmt, MethodWithSameNameAsEnclosingClass, AvoidNonExistentAnnotations, TestMethodsMustBeInTestClasses">
 <title>Error Prone | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.21.0</li>
+    <li class="sidebarTitle">PMD 6.22.0</li>
     
     
     
@@ -340,13 +340,25 @@
                         
                         
                         
-                        <li><a href="pmd_userdocs_extending_writing_pmd_rules.html">Writing a rule</a></li>
+                        <li><a href="pmd_userdocs_extending_writing_rules_intro.html">Introduction to writing rules</a></li>
                         
                         
                         
                         
                         
-                        <li><a href="pmd_userdocs_extending_writing_xpath_rules.html">Writing XPath rules</a></li>
+                        <li><a href="pmd_userdocs_extending_your_first_rule.html">Your first rule</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_extending_writing_xpath_rules.html">XPath rules</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_extending_writing_java_rules.html">Java rules</a></li>
                         
                         
                         
@@ -413,13 +425,25 @@
                         
                         
                         
-                        <li><a href="pmd_userdocs_tools_maven.html">Maven PMD plugin</a></li>
+                        <li><a href="pmd_userdocs_tools_maven.html">Maven PMD Plugin</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_tools_gradle.html">Gradle</a></li>
                         
                         
                         
                         
                         
                         <li><a href="pmd_userdocs_tools_ant.html">Ant</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_tools_java_api.html">PMD Java API</a></li>
                         
                         
                         
@@ -1435,10 +1459,10 @@ using DML in constructors is not a security problem, but crashes the application
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trigger</span> <span class="n">AccountTrigger</span> <span class="n">on</span> <span class="nf">Account</span> <span class="o">(</span><span class="n">before</span> <span class="n">insert</span><span class="o">,</span> <span class="n">before</span> <span class="n">update</span><span class="o">)</span> <span class="o">{</span>
-   <span class="n">Account</span> <span class="n">a</span> <span class="o">=</span> <span class="n">Trigger</span><span class="o">.</span><span class="na">new</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span> <span class="c1">//Bad: Accessing the trigger array directly is not recommended.</span>
-   
-   <span class="n">foreach</span> <span class="o">(</span> <span class="n">Account</span> <span class="n">a</span> <span class="o">:</span> <span class="n">Trigger</span><span class="o">.</span><span class="na">new</span> <span class="o">){</span>   
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trigger</span> <span class="nc">AccountTrigger</span> <span class="n">on</span> <span class="nf">Account</span> <span class="o">(</span><span class="n">before</span> <span class="n">insert</span><span class="o">,</span> <span class="n">before</span> <span class="n">update</span><span class="o">)</span> <span class="o">{</span>
+   <span class="nc">Account</span> <span class="n">a</span> <span class="o">=</span> <span class="nc">Trigger</span><span class="o">.</span><span class="na">new</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span> <span class="c1">//Bad: Accessing the trigger array directly is not recommended.</span>
+
+   <span class="k">for</span> <span class="o">(</span> <span class="nc">Account</span> <span class="n">a</span> <span class="o">:</span> <span class="nc">Trigger</span><span class="o">.</span><span class="na">new</span> <span class="o">){</span>
         <span class="c1">//Good: Iterate through the trigger.new array instead.</span>
    <span class="o">}</span>
 <span class="o">}</span>
@@ -1498,9 +1522,9 @@ the logic can dynamically identify the proper data to operate against and not fa
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">without</span> <span class="n">sharing</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
     <span class="kt">void</span> <span class="nf">foo</span><span class="o">()</span> <span class="o">{</span>
         <span class="c1">//Error - hardcoded the record type id</span>
-        <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01250000000</span><span class="mi">9</span><span class="n">WAr</span><span class="err">'</span><span class="o">){</span>
+        <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01250000000</span><span class="mi">9</span><span class="nc">WAr</span><span class="err">'</span><span class="o">){</span>
             <span class="c1">//do some logic here.....</span>
-        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01230000000</span><span class="mi">95</span><span class="n">Km</span><span class="err">'</span><span class="o">){</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span><span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">RecordTypeId</span> <span class="o">==</span> <span class="err">'</span><span class="mo">01230000000</span><span class="mi">95</span><span class="nc">Km</span><span class="err">'</span><span class="o">){</span>
             <span class="c1">//do some logic here for a different record type...</span>
         <span class="o">}</span>
     <span class="o">}</span>
@@ -1609,8 +1633,8 @@ A full list of supported annotations can be found at https://developer.salesforc
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>Empty Catch Block finds instances where an exception is caught, but nothing is done.<br />
-In most circumstances, this swallows an exception which should either be acted on 
+<p>Empty Catch Block finds instances where an exception is caught, but nothing is done.
+In most circumstances, this swallows an exception which should either be acted on
 or reported.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
@@ -1623,7 +1647,7 @@ or reported.</p>
   <span class="o">...</span>
   <span class="k">try</span> <span class="o">{</span>
     <span class="n">insert</span> <span class="n">accounts</span><span class="o">;</span>
-  <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">DmlException</span> <span class="n">dmle</span><span class="o">)</span> <span class="o">{</span>
+  <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">DmlException</span> <span class="n">dmle</span><span class="o">)</span> <span class="o">{</span>
     <span class="c1">// not good</span>
   <span class="o">}</span>
 <span class="o">}</span>
@@ -1682,7 +1706,7 @@ or reported.</p>
 <p><strong>Example(s):</strong></p>
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
-  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">Integer</span> <span class="n">x</span><span class="o">)</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="nc">Integer</span> <span class="n">x</span><span class="o">)</span> <span class="o">{</span>
     <span class="k">if</span> <span class="o">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
       <span class="c1">// empty!</span>
     <span class="o">}</span>
@@ -1808,7 +1832,7 @@ or reported.</p>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
         <span class="k">try</span> <span class="o">{</span>
           <span class="c1">// empty !</span>
-        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
             <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
         <span class="o">}</span>
     <span class="o">}</span>
@@ -1868,7 +1892,7 @@ or reported.</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>Empty While Statement finds all instances where a while statement does nothing.<br />
+<p>Empty While Statement finds all instances where a while statement does nothing.
 If it is a timing loop, then you should use Thread.sleep() for it; if it is
 a while loop that does a lot in the exit expression, rewrite it to make it clearer.</p>
 
@@ -1878,7 +1902,7 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 
 <p><strong>Example(s):</strong></p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="n">Integer</span> <span class="n">a</span><span class="o">,</span> <span class="n">Integer</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">bar</span><span class="o">(</span><span class="nc">Integer</span> <span class="n">a</span><span class="o">,</span> <span class="nc">Integer</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
   <span class="k">while</span> <span class="o">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
     <span class="c1">// empty!</span>
   <span class="o">}</span>
@@ -1979,6 +2003,98 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/MethodWithSameNameAsEnclosingClass"</span> <span class="nt">/&gt;</span>
 </code></pre></div></div>
 
+<h2 id="testmethodsmustbeintestclasses">TestMethodsMustBeInTestClasses</h2>
+
+<p><strong>Since:</strong> PMD 6.22.0</p>
+
+<p><strong>Priority:</strong> Medium (3)</p>
+
+<p>Test methods marked as a testMethod or annotated with @IsTest,
+but not residing in a test class should be moved to a proper
+class or have the @IsTest annotation added to the class.</p>
+
+<p>Support for tests inside functional classes was removed in Spring-13 (API Version 27.0),
+making classes that violate this rule fail compile-time. This rule is mostly usable when
+dealing with legacy code.</p>
+
+<p><strong>This rule is defined by the following XPath expression:</strong></p>
+<div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">UserClass</span><span class="p">[</span><span class="w">
+      </span><span class="ow">not</span><span class="p">(.</span><span class="o">/</span><span class="nt">ModifierNode</span><span class="o">/</span><span class="nt">Annotation</span><span class="p">[</span><span class="nf">lower-case</span><span class="p">(</span><span class="na">@Image</span><span class="p">)</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="s1">'istest'</span><span class="p">])</span><span class="w"> </span><span class="ow">and</span><span class="w">
+      </span><span class="p">(</span><span class="w">
+        </span><span class="p">(.</span><span class="o">/</span><span class="nt">Method</span><span class="o">/</span><span class="nt">ModifierNode</span><span class="o">/</span><span class="nt">Annotation</span><span class="p">[</span><span class="nf">lower-case</span><span class="p">(</span><span class="na">@Image</span><span class="p">)</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="s1">'istest'</span><span class="p">])</span><span class="w"> </span><span class="ow">or</span><span class="w">
+        </span><span class="p">(.</span><span class="o">/</span><span class="nt">Method</span><span class="o">/</span><span class="nt">ModifierNode</span><span class="p">[</span><span class="na">@Test</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="nf">true</span><span class="p">()])</span><span class="w">
+      </span><span class="p">)</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span></code></pre></div></div>
+
+<p><strong>Example(s):</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Violating</span>
+<span class="kd">private</span> <span class="kd">class</span> <span class="nc">TestClass</span> <span class="o">{</span>
+  <span class="nd">@IsTest</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">myTest</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// Code here</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="kd">class</span> <span class="nc">TestClass</span> <span class="o">{</span>
+  <span class="kd">static</span> <span class="n">testMethod</span> <span class="kt">void</span> <span class="nf">myTest</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// Code here</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="c1">// Compliant</span>
+<span class="nd">@IsTest</span>
+<span class="kd">private</span> <span class="kd">class</span> <span class="nc">TestClass</span> <span class="o">{</span>
+  <span class="nd">@IsTest</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">myTest</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// Code here</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="nd">@IsTest</span>
+<span class="kd">private</span> <span class="kd">class</span> <span class="nc">TestClass</span> <span class="o">{</span>
+  <span class="kd">static</span> <span class="n">testMethod</span> <span class="kt">void</span> <span class="nf">myTest</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// Code here</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+      <th>Multivalued</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cc_categories</td>
+      <td>Style</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Code Climate Categories</td>
+      <td>yes. Delimiter is ‘|’.</td>
+    </tr>
+    <tr>
+      <td>cc_remediation_points_multiplier</td>
+      <td>1</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Code Climate Remediation Points multiplier</td>
+      <td>no</td>
+    </tr>
+    <tr>
+      <td>cc_block_highlighting</td>
+      <td>false</td>
+      <td><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f; font-size: 75%;">Deprecated</span>  Code Climate Block Highlighting</td>
+      <td>no</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/apex/errorprone.xml/TestMethodsMustBeInTestClasses"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
 
 
     <div class="tags">
@@ -1995,7 +2111,7 @@ a while loop that does a lot in the exit expression, rewrite it to make it clear
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2020 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Jan 24, 2020 <br />
+ Site last generated: Mar 12, 2020 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
