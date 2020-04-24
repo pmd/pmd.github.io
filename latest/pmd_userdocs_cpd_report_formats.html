@@ -4,9 +4,9 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="">
-<meta name="keywords" content=" ">
-<title> | PMD Source Code Analyzer</title>
+<meta name="description" content="Overview of the built-in report formats for CPD">
+<meta name="keywords" content="cpduserdocs,  formatsrenderers">
+<title>Report formats for CPD | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
 
@@ -140,7 +140,7 @@
                                 searchInput: document.getElementById('search-input'),
                                 resultsContainer: document.getElementById('results-container'),
                                 dataSource: 'search.json',
-                                searchResultTemplate: '<li><a href="{url}" title="">{title}</a></li>',
+                                searchResultTemplate: '<li><a href="{url}" title="Report formats for CPD">{title}</a></li>',
                     noResultsText: 'No results found.',
                             limit: 10,
                             fuzzy: true,
@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.22.0</li>
+    <li class="sidebarTitle">PMD 6.23.0</li>
     
     
     
@@ -333,6 +333,49 @@
             
 
                 
+                <li><a href="pmd_userdocs_report_formats.html">PMD Report formats</a></li>
+                
+
+            
+
+            
+            
+            
+
+            
+
+                
+                
+                <li class="subfolders">
+                    <a href="#">CPD reference</a>
+                    <ul>
+                        
+                        
+                        
+                        <li><a href="pmd_userdocs_cpd.html">Copy-paste detection</a></li>
+                        
+                        
+                        
+                        
+                        
+                        <li class="active"><a href="pmd_userdocs_cpd_report_formats.html">CPD Report formats</a></li>
+                        
+                        
+                        
+                    </ul>
+                </li>
+                
+                
+
+            
+
+            
+            
+            
+
+            
+
+                
                 
                 <li class="subfolders">
                     <a href="#">Extending PMD</a>
@@ -395,18 +438,6 @@
                     </ul>
                 </li>
                 
-                
-
-            
-
-            
-            
-            
-
-            
-
-                
-                <li><a href="pmd_userdocs_cpd.html">Copy-paste detection</a></li>
                 
 
             
@@ -1300,6 +1331,12 @@
                         
                         
                         
+                        
+                        
+                        <li><a href="pmd_projectdocs_committers_main_landing_page.html">Main Landing page</a></li>
+                        
+                        
+                        
                     </ul>
                 </li>
                 
@@ -1331,13 +1368,15 @@
         <!-- Content Column -->
         <div class="col-md-9" id="tg-sb-content">
             <div class="post-header">
-   <h1 class="post-title-main"></h1>
+   <h1 class="post-title-main">Report formats for CPD</h1>
 </div>
 
 
 
 <div class="post-content">
 
+   
+    <div class="summary">Overview of the built-in report formats for CPD</div>
    
 
     
@@ -1362,30 +1401,226 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
         
         
 
-    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pdfconfigs/titlepage.html" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/pmd/userdocs/cpd/cpd_report_formats.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
 
     
 
-  <div class="printTitleArea">
-    <div class="printTitle"></div>
-    <div class="printSubtitle"></div>
-    <div class="lastGeneratedDate">Last generated: March 12, 2020</div>
-    <hr />
+  <h2 id="overview">Overview</h2>
 
-    <div class="printTitleImage">
-        <img src="https://pmd.github.io/pmd//images/company_logo_big.png" alt="Company Logo"/>
-    </div>
+<p>CPD collects occurrences of found duplications and provides them to the selected report format.
+Each found code duplication appears in one or more other files, so that each code duplication can
+have multiple locations. Not all report formats display all locations.</p>
 
-    <div class="copyrightBoilerplate">
-        <p>&copy; 2020 PMD Open Source Project. This is a boilerplate copyright statement... All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law.
-        </p>
+<p>The following examples always describe the same duplications:</p>
 
-    </div>
+<ol>
+  <li>a code block of 239 tokens spanning 33 lines in RuleReferenceTest. This is a duplication within the same file.</li>
+  <li>a code block of 110 tokens spanning 16 lines in JaxenXPathRuleQueryTest. This is a duplication that appears
+3 times within the same file.</li>
+</ol>
 
-</div>
+<h2 id="text">text</h2>
+
+<p>This is the default format.</p>
+
+<p>All duplications are reported one after another. For each duplication, the complete code snippet is output.
+Each duplication is separated by <code class="highlighter-rouge">======</code>.</p>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Found a 33 line (239 tokens) duplication in the following files: 
+Starting at line 32 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java
+Starting at line 68 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java
+
+    public void testOverride() {
+        final StringProperty PROPERTY1_DESCRIPTOR = new StringProperty("property1", "Test property", null, 0f);
+        MockRule rule = new MockRule();
+        rule.definePropertyDescriptor(PROPERTY1_DESCRIPTOR);
+        rule.setLanguage(LanguageRegistry.getLanguage(Dummy2LanguageModule.NAME));
+        rule.setName("name1");
+        rule.setProperty(PROPERTY1_DESCRIPTOR, "value1");
+        rule.setMessage("message1");
+        rule.setDescription("description1");
+        rule.addExample("example1");
+        rule.setExternalInfoUrl("externalInfoUrl1");
+        rule.setPriority(RulePriority.HIGH);
+
+        final StringProperty PROPERTY2_DESCRIPTOR = new StringProperty("property2", "Test property", null, 0f);
+        RuleReference ruleReference = new RuleReference();
+        ruleReference.setRule(rule);
+        ruleReference.definePropertyDescriptor(PROPERTY2_DESCRIPTOR);
+        ruleReference.setLanguage(LanguageRegistry.getLanguage(DummyLanguageModule.NAME));
+        ruleReference
+                .setMinimumLanguageVersion(LanguageRegistry.getLanguage(DummyLanguageModule.NAME).getVersion("1.3"));
+        ruleReference
+                .setMaximumLanguageVersion(LanguageRegistry.getLanguage(DummyLanguageModule.NAME).getVersion("1.7"));
+        ruleReference.setDeprecated(true);
+        ruleReference.setName("name2");
+        ruleReference.setProperty(PROPERTY1_DESCRIPTOR, "value2");
+        ruleReference.setProperty(PROPERTY2_DESCRIPTOR, "value3");
+        ruleReference.setMessage("message2");
+        ruleReference.setDescription("description2");
+        ruleReference.addExample("example2");
+        ruleReference.setExternalInfoUrl("externalInfoUrl2");
+        ruleReference.setPriority(RulePriority.MEDIUM_HIGH);
+
+        validateOverridenValues(PROPERTY1_DESCRIPTOR, PROPERTY2_DESCRIPTOR, ruleReference);
+=====================================================================
+Found a 16 line (110 tokens) duplication in the following files: 
+Starting at line 66 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java
+Starting at line 88 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java
+Starting at line 110 of /home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java
+
+        JaxenXPathRuleQuery query = createQuery(xpath);
+        List&lt;String&gt; ruleChainVisits = query.getRuleChainVisits();
+        Assert.assertEquals(2, ruleChainVisits.size());
+        Assert.assertTrue(ruleChainVisits.contains("dummyNode"));
+        // Note: Having AST_ROOT in the rule chain visits is probably a mistake. But it doesn't hurt, it shouldn't
+        // match a real node name.
+        Assert.assertTrue(ruleChainVisits.contains(JaxenXPathRuleQuery.AST_ROOT));
+
+        DummyNodeWithListAndEnum dummy = new DummyNodeWithListAndEnum(1);
+        RuleContext data = new RuleContext();
+        data.setLanguageVersion(LanguageRegistry.findLanguageByTerseName("dummy").getDefaultVersion());
+
+        query.evaluate(dummy, data);
+        // note: the actual xpath queries are only available after evaluating
+        Assert.assertEquals(2, query.nodeNameToXPaths.size());
+        Assert.assertEquals("self::node()[(attribute::Test1 = \"false\")][(attribute::Test2 = \"true\")]", query.nodeNameToXPaths.get("dummyNode").get(0).toString());
+</code></pre></div></div>
+
+<h2 id="xml">xml</h2>
+
+<p>This format uses XML to output the duplications in a more structured format.</p>
+
+<p>Example:</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="nt">&lt;pmd-cpd&gt;</span>
+   <span class="nt">&lt;duplication</span> <span class="na">lines=</span><span class="s">"33"</span> <span class="na">tokens=</span><span class="s">"239"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;file</span> <span class="na">column=</span><span class="s">"29"</span> <span class="na">endcolumn=</span><span class="s">"75"</span> <span class="na">endline=</span><span class="s">"64"</span> <span class="na">line=</span><span class="s">"32"</span>
+            <span class="na">path=</span><span class="s">"/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;file</span> <span class="na">column=</span><span class="s">"37"</span> <span class="na">endcolumn=</span><span class="s">"75"</span> <span class="na">endline=</span><span class="s">"100"</span> <span class="na">line=</span><span class="s">"68"</span>
+            <span class="na">path=</span><span class="s">"/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;codefragment&gt;</span><span class="cp">&lt;![CDATA[    public void testOverride() {
+        final StringProperty PROPERTY1_DESCRIPTOR = new StringProperty("property1", "Test property", null, 0f);
+        MockRule rule = new MockRule();
+        rule.definePropertyDescriptor(PROPERTY1_DESCRIPTOR);
+        rule.setLanguage(LanguageRegistry.getLanguage(Dummy2LanguageModule.NAME));
+        rule.setName("name1");
+        rule.setProperty(PROPERTY1_DESCRIPTOR, "value1");
+        rule.setMessage("message1");
+        rule.setDescription("description1");
+        rule.addExample("example1");
+        rule.setExternalInfoUrl("externalInfoUrl1");
+        rule.setPriority(RulePriority.HIGH);
+
+        final StringProperty PROPERTY2_DESCRIPTOR = new StringProperty("property2", "Test property", null, 0f);
+        RuleReference ruleReference = new RuleReference();
+        ruleReference.setRule(rule);
+        ruleReference.definePropertyDescriptor(PROPERTY2_DESCRIPTOR);
+        ruleReference.setLanguage(LanguageRegistry.getLanguage(DummyLanguageModule.NAME));
+        ruleReference
+                .setMinimumLanguageVersion(LanguageRegistry.getLanguage(DummyLanguageModule.NAME).getVersion("1.3"));
+        ruleReference
+                .setMaximumLanguageVersion(LanguageRegistry.getLanguage(DummyLanguageModule.NAME).getVersion("1.7"));
+        ruleReference.setDeprecated(true);
+        ruleReference.setName("name2");
+        ruleReference.setProperty(PROPERTY1_DESCRIPTOR, "value2");
+        ruleReference.setProperty(PROPERTY2_DESCRIPTOR, "value3");
+        ruleReference.setMessage("message2");
+        ruleReference.setDescription("description2");
+        ruleReference.addExample("example2");
+        ruleReference.setExternalInfoUrl("externalInfoUrl2");
+        ruleReference.setPriority(RulePriority.MEDIUM_HIGH);
+
+        validateOverridenValues(PROPERTY1_DESCRIPTOR, PROPERTY2_DESCRIPTOR, ruleReference);]]&gt;</span><span class="nt">&lt;/codefragment&gt;</span>
+   <span class="nt">&lt;/duplication&gt;</span>
+   <span class="nt">&lt;duplication</span> <span class="na">lines=</span><span class="s">"16"</span> <span class="na">tokens=</span><span class="s">"110"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;file</span> <span class="na">column=</span><span class="s">"9"</span> <span class="na">endcolumn=</span><span class="s">"28"</span> <span class="na">endline=</span><span class="s">"81"</span> <span class="na">line=</span><span class="s">"66"</span>
+            <span class="na">path=</span><span class="s">"/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;file</span> <span class="na">column=</span><span class="s">"9"</span> <span class="na">endcolumn=</span><span class="s">"28"</span> <span class="na">endline=</span><span class="s">"103"</span> <span class="na">line=</span><span class="s">"88"</span>
+            <span class="na">path=</span><span class="s">"/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;file</span> <span class="na">column=</span><span class="s">"9"</span> <span class="na">endcolumn=</span><span class="s">"28"</span> <span class="na">endline=</span><span class="s">"125"</span> <span class="na">line=</span><span class="s">"110"</span>
+            <span class="na">path=</span><span class="s">"/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java"</span><span class="nt">/&gt;</span>
+      <span class="nt">&lt;codefragment&gt;</span><span class="cp">&lt;![CDATA[        JaxenXPathRuleQuery query = createQuery(xpath);
+        List&lt;String&gt;</span> ruleChainVisits = query.getRuleChainVisits();
+        Assert.assertEquals(2, ruleChainVisits.size());
+        Assert.assertTrue(ruleChainVisits.contains("dummyNode"));
+        // Note: Having AST_ROOT in the rule chain visits is probably a mistake. But it doesn't hurt, it shouldn't
+        // match a real node name.
+        Assert.assertTrue(ruleChainVisits.contains(JaxenXPathRuleQuery.AST_ROOT));
+
+        DummyNodeWithListAndEnum dummy = new DummyNodeWithListAndEnum(1);
+        RuleContext data = new RuleContext();
+        data.setLanguageVersion(LanguageRegistry.findLanguageByTerseName("dummy").getDefaultVersion());
+
+        query.evaluate(dummy, data);
+        // note: the actual xpath queries are only available after evaluating
+        Assert.assertEquals(2, query.nodeNameToXPaths.size());
+        Assert.assertEquals("self::node()[(attribute::Test1 = \"false\")][(attribute::Test2 = \"true\")]", query.nodeNameToXPaths.get("dummyNode").get(0).toString());]]&gt;<span class="nt">&lt;/codefragment&gt;</span>
+   <span class="nt">&lt;/duplication&gt;</span>
+<span class="nt">&lt;/pmd-cpd&gt;</span>
+</code></pre></div></div>
+
+<h2 id="csv">csv</h2>
+
+<p>This outputs the duplication as comma separated values. It only reports the duplication size (number
+of lines and tokens) and the number of occurrences. After that, the begin lines and filenames are reported on
+after another.</p>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>lines,tokens,occurrences
+33,239,2,32,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java,68,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java
+16,110,3,66,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java,88,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java,110,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java
+</code></pre></div></div>
+
+<h2 id="csv_with_linecount_per_file">csv_with_linecount_per_file</h2>
+
+<p>This format is similar to “csv”, but it has one difference: The duplication size in number of lines is reported
+for each occurrence separately. While the tokens are the same, due to formatting or comments, the code blocks might be
+different. Whitespace and comments are usually ignored when finding duplicated code.</p>
+
+<p>In each line, the duplication size in tokens is reported, then the number of occurrences. And after that, for each
+file, the begin line, the number of duplicated lines and the filename.</p>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tokens,occurrences
+239,2,32,33,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java,68,33,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenc
+eTest.java
+110,3,66,16,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java,88,16,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java,110,16,/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java
+</code></pre></div></div>
+
+<h2 id="vs">vs</h2>
+
+<p>This outputs the duplication in a format, that Visual Studio. CPD can be added as a external tool and the output
+is shown in the console. You can then click on the filenames to jump to the source where the duplication is located.</p>
+
+<p>Each occurrence of a duplication is reported in a separate line, that’s why in this example, we have 5 lines.</p>
+
+<p>Example:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java(32): Between lines 32 and 65
+/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/RuleReferenceTest.java(68): Between lines 68 and 101
+/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java(66): Between lines 66 and 82
+/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java(88): Between lines 88 and 104
+/home/pmd/source/pmd-core/src/test/java/net/sourceforge/pmd/lang/rule/xpath/JaxenXPathRuleQueryTest.java(110): Between lines 110 and 126
+</code></pre></div></div>
 
 
     <div class="tags">
+        
+        <b>Tags: </b>
+        
+        
+        
+        
+        
+        <a href="tag_userdocs.html" class="btn btn-default navbar-btn cursorNorm" role="button">userdocs</a>
+        
+        
         
     </div>
 
@@ -1399,7 +1634,7 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2020 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Mar 12, 2020 <br />
+ Site last generated: Apr 24, 2020 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
