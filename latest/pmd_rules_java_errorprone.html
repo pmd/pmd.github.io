@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.26.0</li>
+    <li class="sidebarTitle">PMD 6.27.0</li>
     
     
     
@@ -2006,8 +2006,8 @@ This probably means that type and/or field names should be chosen more carefully
 or private members with descriptive names maintainability is enhanced. By default, the literals "-1" and "0" are ignored.
 More exceptions can be defined with the property "ignoreMagicNumbers".</p>
 
-<p>The rule doesn’t consider deeper expressions by default, but this can be enabled via the property <code class="highlighter-rouge">ignoreExpressions</code>.
-With this property set to false, if-conditions like <code class="highlighter-rouge">i == 1 + 5</code> are reported as well. Note that in that case,
+<p>The rule doesn’t consider deeper expressions by default, but this can be enabled via the property <code class="language-plaintext highlighter-rouge">ignoreExpressions</code>.
+With this property set to false, if-conditions like <code class="language-plaintext highlighter-rouge">i == 1 + 5</code> are reported as well. Note that in that case,
 the property ignoreMagicNumbers is not taken into account, if there are multiple literals involved in such an expression.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
@@ -2645,16 +2645,16 @@ of the clone method doesn’t need to cast the returned clone to the correct typ
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>Ensure that resources (like <code class="highlighter-rouge">java.sql.Connection</code>, <code class="highlighter-rouge">java.sql.Statement</code>, and <code class="highlighter-rouge">java.sql.ResultSet</code> objects
-and any subtype of <code class="highlighter-rouge">java.lang.AutoCloseable</code>) are always closed after use.
+<p>Ensure that resources (like <code class="language-plaintext highlighter-rouge">java.sql.Connection</code>, <code class="language-plaintext highlighter-rouge">java.sql.Statement</code>, and <code class="language-plaintext highlighter-rouge">java.sql.ResultSet</code> objects
+and any subtype of <code class="language-plaintext highlighter-rouge">java.lang.AutoCloseable</code>) are always closed after use.
 Failing to do so might result in resource leaks.</p>
 
-<p>Note: It suffices to configure the super type, e.g. <code class="highlighter-rouge">java.lang.AutoClosable</code>, so that this rule automatically triggers
-on any subtype (e.g. <code class="highlighter-rouge">java.io.FileInputStream</code>). Additionally specifying <code class="highlighter-rouge">java.sql.Connection</code> helps in detecting
+<p>Note: It suffices to configure the super type, e.g. <code class="language-plaintext highlighter-rouge">java.lang.AutoClosable</code>, so that this rule automatically triggers
+on any subtype (e.g. <code class="language-plaintext highlighter-rouge">java.io.FileInputStream</code>). Additionally specifying <code class="language-plaintext highlighter-rouge">java.sql.Connection</code> helps in detecting
 the types, if the type resolution / auxclasspath is not correctly setup.</p>
 
-<p>Note: Since PMD 6.16.0 the default value for the property <code class="highlighter-rouge">types</code> contains <code class="highlighter-rouge">java.lang.AutoCloseable</code> and detects
-now cases where the standard <code class="highlighter-rouge">java.io.*Stream</code> classes are involved. In order to restore the old behaviour,
+<p>Note: Since PMD 6.16.0 the default value for the property <code class="language-plaintext highlighter-rouge">types</code> contains <code class="language-plaintext highlighter-rouge">java.lang.AutoCloseable</code> and detects
+now cases where the standard <code class="language-plaintext highlighter-rouge">java.io.*Stream</code> classes are involved. In order to restore the old behaviour,
 just remove "AutoCloseable" from the types.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/errorprone/CloseResourceRule.java">net.sourceforge.pmd.lang.java.rule.errorprone.CloseResourceRule</a></p>
@@ -2723,6 +2723,12 @@ just remove "AutoCloseable" from the types.</p>
       <td>Exact class names that do not need to be closed</td>
       <td>yes. Delimiter is ‘|’.</td>
     </tr>
+    <tr>
+      <td>closeNotInFinally</td>
+      <td>false</td>
+      <td>Detect if ‘close’ (or other closeTargets) is called outside of a finally-block</td>
+      <td>no</td>
+    </tr>
   </tbody>
 </table>
 
@@ -2737,6 +2743,7 @@ just remove "AutoCloseable" from the types.</p>
         <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"types"</span> <span class="na">value=</span><span class="s">"java.lang.AutoCloseable,java.sql.Connection,java.sql.Statement,java.sql.ResultSet"</span> <span class="nt">/&gt;</span>
         <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"closeAsDefaultTarget"</span> <span class="na">value=</span><span class="s">"true"</span> <span class="nt">/&gt;</span>
         <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"allowedResourceTypes"</span> <span class="na">value=</span><span class="s">"java.io.ByteArrayOutputStream|java.io.ByteArrayInputStream|java.io.StringWriter|java.io.CharArrayWriter|java.util.stream.Stream|java.util.stream.IntStream|java.util.stream.LongStream|java.util.stream.DoubleStream"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"closeNotInFinally"</span> <span class="na">value=</span><span class="s">"false"</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;/properties&gt;</span>
 <span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
@@ -2808,6 +2815,8 @@ private method bar() that calls a public method buz(), this denotes a problem.</
 
 <h2 id="dataflowanomalyanalysis">DataflowAnomalyAnalysis</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 3.9</p>
 
 <p><strong>Priority:</strong> Low (5)</p>
@@ -2819,6 +2828,8 @@ From those informations there can be found various problems.</p>
   <li>DU - Anomaly: A recently defined variable is undefined. These anomalies may appear in normal source text.</li>
   <li>DD - Anomaly: A recently defined variable is redefined. This is ominous but don’t have to be a bug.</li>
 </ol>
+
+<p>This rule is deprecated. Use <a href="pmd_rules_java_bestpractices.html#unusedassignment"><code class="language-plaintext highlighter-rouge">UnusedAssignment</code></a> in category bestpractices instead.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/errorprone/DataflowAnomalyAnalysisRule.java">net.sourceforge.pmd.lang.java.rule.errorprone.DataflowAnomalyAnalysisRule</a></p>
 
@@ -3850,7 +3861,7 @@ You should not misspell method name if you want your test to set up and clean up
 <p>In most cases, the Logger reference can be declared as static and final.</p>
 
 <p>This rule is deprecated and will be removed with PMD 7.0.0.
-The rule is replaced by <a href="pmd_rules_java_errorprone.html#properlogger"><code class="highlighter-rouge">ProperLogger</code></a>.</p>
+The rule is replaced by <a href="pmd_rules_java_errorprone.html#properlogger"><code class="language-plaintext highlighter-rouge">ProperLogger</code></a>.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">VariableDeclarator</span><span class="w">
@@ -4044,7 +4055,7 @@ chain needs an own serialVersionUID field. See also <a href="https://stackoverfl
 
 <p>When one of the private constructors is annotated with one of the annotations, then the class is not considered
 non-instantiatable anymore and no violation will be reported.
-See the property <code class="highlighter-rouge">annotations</code>.</p>
+See the property <code class="language-plaintext highlighter-rouge">annotations</code>.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">ClassOrInterfaceDeclaration</span><span class="p">[</span><span class="na">@Nested</span><span class="err">=</span><span class="w"> </span><span class="nf">false</span><span class="p">()]</span><span class="w">
@@ -4311,7 +4322,7 @@ of assignment is an indication that the programmer doesn’t completely understa
 <p><strong>Priority:</strong> Medium (3)</p>
 
 <p>A logger should normally be defined private static final and be associated with the correct class.
-<code class="highlighter-rouge">private final Log log;</code> is also allowed for rare cases where loggers need to be passed around,
+<code class="language-plaintext highlighter-rouge">private final Log log;</code> is also allowed for rare cases where loggers need to be passed around,
 with the restriction that the logger needs to be passed into the constructor.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
@@ -4615,7 +4626,7 @@ behavior especially when instances are distributed by the container on several J
 <p>Individual character values provided as initialization arguments will be converted into integers.
 This can lead to internal buffer sizes that are larger than expected. Some examples:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>new StringBuffer()      //  16
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>new StringBuffer()      //  16
 new StringBuffer(6)     //  6
 new StringBuffer("hello world")  // 11 + 16 = 27
 new StringBuffer('A')   //  chr(A) = 65
@@ -4660,8 +4671,12 @@ new StringBuilder("A")   //  1 + 16 = 17
 
 <p><strong>Priority:</strong> Medium High (2)</p>
 
-<p>The method name and parameter number are suspiciously close to equals(Object), which can denote an
-intention to override the equals(Object) method.</p>
+<p>The method name and parameter number are suspiciously close to <code class="language-plaintext highlighter-rouge">Object.equals</code>, which can denote an
+intention to override it. However, the method does not override <code class="language-plaintext highlighter-rouge">Object.equals</code>, but overloads it instead.
+Overloading <code class="language-plaintext highlighter-rouge">Object.equals</code> method is confusing for other programmers, error-prone and hard to maintain,
+especially when using inheritance, because <code class="language-plaintext highlighter-rouge">@Override</code> annotations used in subclasses can provide a false
+sense of security. For more information on <code class="language-plaintext highlighter-rouge">Object.equals</code> method, see Effective Java, 3rd Edition,
+Item 10: Obey the general contract when overriding equals.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">MethodDeclaration</span><span class="p">[</span><span class="na">@Name</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="s1">'equals'</span><span class="p">]</span><span class="w">
@@ -4738,7 +4753,7 @@ The Java language specification (section 3.10.6) says an octal
 escape sequence inside a literal String shall consist of a backslash
 followed by:</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>OctalDigit | OctalDigit OctalDigit | ZeroToThree OctalDigit OctalDigit
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>OctalDigit | OctalDigit OctalDigit | ZeroToThree OctalDigit OctalDigit
 </code></pre></div></div>
 
 <p>Any octal escape sequence followed by non-octal digits can be confusing,
@@ -5078,15 +5093,15 @@ since the result of the operation is a new object. Therefore, ignoring the opera
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>When doing <code class="highlighter-rouge">String::toLowerCase()/toUpperCase()</code> conversions, use an explicit locale argument to specify the case transformation rules.</p>
+<p>When doing <code class="language-plaintext highlighter-rouge">String::toLowerCase()/toUpperCase()</code> conversions, use an explicit locale argument to specify the case transformation rules.</p>
 
-<p>Using <code class="highlighter-rouge">String::toLowerCase()</code> without arguments implicitly uses <code class="highlighter-rouge">Locale::getDefault()</code>.
+<p>Using <code class="language-plaintext highlighter-rouge">String::toLowerCase()</code> without arguments implicitly uses <code class="language-plaintext highlighter-rouge">Locale::getDefault()</code>.
 The problem is that the default locale depends on the current JVM setup (and usually on the system in which it is running).
 Using the system default may be exactly what you want (e.g. if you are manipulating strings you got through standard input),
 but it may as well not be the case (e.g. if you are getting the string over the network or a file, and the encoding is well-defined
 and independent of the environment). In the latter case, using the default locale makes the case transformation brittle, as
 it may yield unexpected results on a machine whose locale has other case translation rules. For example, in Turkish, the
-uppercase form of <code class="highlighter-rouge">i</code> is <code class="highlighter-rouge">İ</code> (U+0130, not ASCII) and not <code class="highlighter-rouge">I</code> (U+0049) as in English.</p>
+uppercase form of <code class="language-plaintext highlighter-rouge">i</code> is <code class="language-plaintext highlighter-rouge">İ</code> (U+0130, not ASCII) and not <code class="language-plaintext highlighter-rouge">I</code> (U+0049) as in English.</p>
 
 <p>The rule is intended to <em>force</em> developers to think about locales when dealing with strings. By taking a conscious decision about
 the choice of locale at the time of writing, you reduce the risk of surprising behaviour down the line, and communicate your intent
@@ -5170,7 +5185,7 @@ Thread.currentThread().getContextClassLoader() instead.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2020 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Jul 25, 2020 <br />
+ Site last generated: Aug 31, 2020 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
