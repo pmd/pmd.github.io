@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.32.0</li>
+    <li class="sidebarTitle">PMD 6.33.0</li>
     
     
     
@@ -1048,6 +1048,18 @@
 
             
             
+            
+
+            
+
+                
+                <li><a href="pmd_languages_plsql.html">PLSQL</a></li>
+                
+
+            
+
+            
+            
         </ul>
      </li>
        
@@ -1403,117 +1415,75 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
 
     
 
-  <h2 id="27-february-2021---6320">27-February-2021 - 6.32.0</h2>
+  <h2 id="27-march-2021---6330">27-March-2021 - 6.33.0</h2>
 
-<p>The PMD team is pleased to announce PMD 6.32.0.</p>
+<p>The PMD team is pleased to announce PMD 6.33.0.</p>
 
 <p>This is a minor release.</p>
 
 <h3 id="new-and-noteworthy">New and noteworthy</h3>
 
-<h4 id="java-16-support">Java 16 Support</h4>
+<h4 id="plsql-parsing-exclusions">PLSQL parsing exclusions</h4>
 
-<p>This release of PMD brings support for Java 16. PMD supports <a href="https://openjdk.java.net/jeps/394">JEP 394: Pattern Matching for instanceof</a> and <a href="https://openjdk.java.net/jeps/395">JEP 395: Records</a>. Both have been promoted
-to be a standard language feature of Java 16.</p>
-
-<p>PMD also supports <a href="https://openjdk.java.net/jeps/397">JEP 397: Sealed Classes (Second Preview)</a> as a preview
-language feature. In order to analyze a project with PMD that uses these language features, you’ll need to enable
-it via the environment variable <code class="language-plaintext highlighter-rouge">PMD_JAVA_OPTS</code> and select the new language version <code class="language-plaintext highlighter-rouge">16-preview</code>:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export PMD_JAVA_OPTS=--enable-preview
-./run.sh pmd -language java -version 16-preview ...
-</code></pre></div></div>
-
-<p>Note: Support for Java 14 preview language features have been removed. The version “14-preview” is no longer available.</p>
-
-<h4 id="modified-rules">Modified Rules</h4>
-
-<ul>
-  <li>The Apex rule <a href="pmd_rules_apex_documentation.html#apexdoc"><code class="language-plaintext highlighter-rouge">ApexDoc</code></a> has two new properties: <code class="language-plaintext highlighter-rouge">reportPrivate</code> and
-<code class="language-plaintext highlighter-rouge">reportProtected</code>. Previously the rule only considered public and global classes, methods, and
-properties. With these properties, you can verify the existence of ApexDoc comments for private
-and protected methods as well. By default, these properties are disabled to preserve backwards
-compatible behavior.</li>
-</ul>
+<p>The PMD PLSQL parser might not parse every valid PL/SQL code without problems.
+In order to still use PMD on such files, you can now mark certain lines for exclusion from
+the parser. More information can be found in the <a href="pmd_languages_plsql.html">language specific documentation for PLSQL</a>.</p>
 
 <h3 id="fixed-issues">Fixed Issues</h3>
 
 <ul>
-  <li>apex-documentation
+  <li>apex-design
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3075">#3075</a>: [apex] ApexDoc should support private access modifier</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3142">#3142</a>: [apex] ExcessiveClassLength multiple warning on the same class</li>
     </ul>
   </li>
   <li>java
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3101">#3101</a>: [java] NullPointerException when running PMD under JRE 11</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3117">#3117</a>: [java] Infinite loop when parsing invalid code nested in lambdas</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3145">#3145</a>: [java] Parse exception when using “record” as variable name</li>
     </ul>
   </li>
   <li>java-bestpractices
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3132">#3132</a>: [java] UnusedImports with static imports on subclasses</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3118">#3118</a>: [java] UnusedPrivateMethod false positive when passing in lombok.val as argument</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3144">#3144</a>: [java] GuardLogStatement can have more detailed example</li>
+      <li><a href="https://github.com/pmd/pmd/pull/3155">#3155</a>: [java] GuardLogStatement: False negative with unguarded method call</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3160">#3160</a>: [java] MethodReturnsInternalArray does not consider static final fields and fields initialized with empty array</li>
     </ul>
   </li>
   <li>java-errorprone
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/2716">#2716</a>: [java] CompareObjectsWithEqualsRule: False positive with Enums</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3089">#3089</a>: [java] CloseResource rule throws exception on spaces in property types</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3133">#3133</a>: [java] InvalidLogMessageFormat FP with StringFormattedMessage and ParameterizedMessage</li>
+      <li><a href="https://github.com/pmd/pmd/issues/2977">#2977</a>: [java] CloseResource: false positive with reassignment detection</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3146">#3146</a>: [java] InvalidLogMessageFormat detection failing when String.format used</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3148">#3148</a>: [java] CloseResource false positive with Objects.nonNull</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3165">#3165</a>: [java] InvalidLogMessageFormat detection failing when String.format used in a variable</li>
+    </ul>
+  </li>
+  <li>java-performance
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/2427">#2427</a>: [java] ConsecutiveLiteralAppend false-positive with builder inside lambda</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3152">#3152</a>: [java] ConsecutiveLiteralAppends and InsufficientStringBufferDeclaration: FP with switch expressions</li>
     </ul>
   </li>
   <li>plsql
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3106">#3106</a>: [plsql] ParseException while parsing EXECUTE IMMEDIATE ‘drop database link ‘ || linkname;</li>
+      <li><a href="https://github.com/pmd/pmd/issues/195">#195</a>: [plsql] Ampersand ‘&amp;’ causes PMD processing error in sql file - Lexical error in file</li>
     </ul>
   </li>
-</ul>
-
-<h3 id="api-changes">API Changes</h3>
-
-<h4 id="experimental-apis">Experimental APIs</h4>
-
-<ul>
-  <li>The experimental class <code class="language-plaintext highlighter-rouge">ASTTypeTestPattern</code> has been renamed to <a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTTypePattern.html#"><code>ASTTypePattern</code></a>
-in order to align the naming to the JLS.</li>
-  <li>The experimental class <code class="language-plaintext highlighter-rouge">ASTRecordConstructorDeclaration</code> has been renamed to <a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTCompactConstructorDeclaration.html#"><code>ASTCompactConstructorDeclaration</code></a>
-in order to align the naming to the JLS.</li>
-  <li>The AST types and APIs around Pattern Matching and Records are not experimental anymore:
-    <ul>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTVariableDeclaratorId.html#isPatternBinding()"><code>ASTVariableDeclaratorId#isPatternBinding</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTPattern.html#"><code>ASTPattern</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTTypePattern.html#"><code>ASTTypePattern</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTRecordDeclaration.html#"><code>ASTRecordDeclaration</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTRecordComponentList.html#"><code>ASTRecordComponentList</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTRecordComponent.html#"><code>ASTRecordComponent</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTRecordBody.html#"><code>ASTRecordBody</code></a></li>
-      <li><a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/ast/ASTCompactConstructorDeclaration.html#"><code>ASTCompactConstructorDeclaration</code></a></li>
-    </ul>
-  </li>
-</ul>
-
-<h4 id="internal-api">Internal API</h4>
-
-<p>Those APIs are not intended to be used by clients, and will be hidden or removed with PMD 7.0.0.
-You can identify them with the <code class="language-plaintext highlighter-rouge">@InternalApi</code> annotation. You’ll also get a deprecation warning.</p>
-
-<ul>
-  <li>The protected or public member of the Java rule <a href="https://docs.pmd-code.org/apidocs/pmd-java/6.32.0/net/sourceforge/pmd/lang/java/rule/bestpractices/AvoidUsingHardCodedIPRule.html#"><code>AvoidUsingHardCodedIPRule</code></a>
-are deprecated and considered to be internal API. They will be removed with PMD 7.</li>
 </ul>
 
 <h3 id="external-contributions">External Contributions</h3>
 
 <ul>
-  <li><a href="https://github.com/pmd/pmd/pull/3098">#3098</a>: [apex] ApexDoc optionally report private and protected - <a href="https://github.com/jonathanwiesel">Jonathan Wiesel</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/3107">#3107</a>: [plsql] Fix ParseException for EXECUTE IMMEDIATE str1||str2; - <a href="https://github.com/hvbtup">hvbtup</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/3125">#3125</a>: [doc] Fix sample code indentation in documentation - <a href="https://github.com/arturdryomov">Artur Dryomov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3161">#3161</a>: [plsql] Add support for lexical parameters in SQL*Plus scripts, allow excluding lines which the parser does not understand - <a href="https://github.com/hvbtup">Henning von Bargen</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3167">#3167</a>: [java] Minor typo in quickstart ruleset - <a href="https://github.com/AustinTice">Austin Tice</a></li>
 </ul>
 
 <h3 id="stats">Stats</h3>
 <ul>
-  <li>43 commits</li>
-  <li>21 closed tickets &amp; PRs</li>
-  <li>Days since last release: 27</li>
+  <li>49 commits</li>
+  <li>27 closed tickets &amp; PRs</li>
+  <li>Days since last release: 28</li>
 </ul>
 
 
@@ -1532,7 +1502,7 @@ are deprecated and considered to be internal API. They will be removed with PMD 
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2021 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Feb 27, 2021 <br />
+ Site last generated: Mar 27, 2021 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
