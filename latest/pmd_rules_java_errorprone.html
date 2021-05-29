@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.34.0</li>
+    <li class="sidebarTitle">PMD 6.35.0</li>
     
     
     
@@ -1418,8 +1418,9 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
 
         
         
-
-    <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/../pmd-java/src/main/resources/category/java/errorprone.xml" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+        
+        <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/../pmd-java/src/main/resources/category/java/errorprone.xml" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+        
 
     
 
@@ -1960,7 +1961,7 @@ Smalltalk often prefer this approach as the methods denote accessor methods.</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>It is somewhat confusing to have a field name matching the declaring class name.
+<p>It is somewhat confusing to have a field name matching the declaring type name.
 This probably means that type and/or field names should be chosen more carefully.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/errorprone/AvoidFieldNameMatchingTypeNameRule.java">net.sourceforge.pmd.lang.java.rule.errorprone.AvoidFieldNameMatchingTypeNameRule</a></p>
@@ -1969,6 +1970,9 @@ This probably means that type and/or field names should be chosen more carefully
 
 <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="kd">extends</span> <span class="nc">Bar</span> <span class="o">{</span>
     <span class="kt">int</span> <span class="n">foo</span><span class="o">;</span>    <span class="c1">// There is probably a better name that can be used</span>
+<span class="o">}</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Operation</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="no">OPERATION</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="c1">// There is probably a better name that can be used</span>
 <span class="o">}</span>
 </code></pre></div></div>
 
@@ -2624,11 +2628,19 @@ of the clone method doesn’t need to cast the returned clone to the correct typ
 
 <h2 id="clonethrowsclonenotsupportedexception">CloneThrowsCloneNotSupportedException</h2>
 
+<p><span style="border-radius: 0.25em; color: #fff; padding: 0.2em 0.6em 0.3em; display: inline; background-color: #d9534f;">Deprecated</span></p>
+
 <p><strong>Since:</strong> PMD 1.9</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
 <p>The method clone() should throw a CloneNotSupportedException.</p>
+
+<p>This rule is deprecated since PMD 6.35.0 without replacement. The rule has no real value as
+<code class="language-plaintext highlighter-rouge">CloneNotSupportedException</code> is a checked exception and therefore you need to deal with it while
+implementing the <code class="language-plaintext highlighter-rouge">clone()</code> method. You either need to declare the exception or catch it. If you catch it,
+then subclasses can’t throw it themselves explicitly. However, <code class="language-plaintext highlighter-rouge">Object.clone()</code> will still throw this
+exception if the <code class="language-plaintext highlighter-rouge">Cloneable</code> interface is not implemented.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">MethodDeclaration</span><span class="w">
@@ -2772,19 +2784,30 @@ just remove "AutoCloseable" from the types.</p>
 
 <p><strong>Priority:</strong> Medium (3)</p>
 
-<p>Use equals() to compare object references; avoid comparing them with ==.</p>
+<p>Use <code class="language-plaintext highlighter-rouge">equals()</code> to compare object references; avoid comparing them with <code class="language-plaintext highlighter-rouge">==</code>.</p>
+
+<p>Since comparing objects with named constants is useful in some cases (eg, when
+defining constants for sentinel values), the rule ignores comparisons against
+fields with all-caps name (eg <code class="language-plaintext highlighter-rouge">this == SENTINEL</code>), which is a common naming
+convention for constant fields.</p>
+
+<p>You may allow some types to be compared by reference by listing the exceptions
+in the <code class="language-plaintext highlighter-rouge">typesThatCompareByReference</code> property.</p>
 
 <p><strong>This rule is defined by the following XPath expression:</strong></p>
 <div class="language-xpath highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">//</span><span class="nt">EqualityExpression</span><span class="w">
-    </span><span class="p">[</span><span class="nf">count</span><span class="p">(</span><span class="nt">PrimaryExpression</span><span class="w">
-        </span><span class="p">[</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s1">'java.lang.Object'</span><span class="p">)]</span><span class="w">
-        </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s1">'java.lang.Enum'</span><span class="p">))]</span><span class="w">
-        </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s1">'java.lang.Class'</span><span class="p">))])</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="m">2</span><span class="w">
+    </span><span class="p">[</span><span class="nf">count</span><span class="p">(</span><span class="w">
+        </span><span class="nt">PrimaryExpression</span><span class="p">[</span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="s1">'java.lang.Object'</span><span class="p">)]</span><span class="w">
+        </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="kr">some</span><span class="w"> </span><span class="nv">$t</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$typesThatCompareByReference</span><span class="w"> </span><span class="kr">satisfies</span><span class="w"> </span><span class="nn">pmd-java:</span><span class="nf">typeIs</span><span class="p">(</span><span class="nv">$t</span><span class="p">))]</span><span class="w">
+       </span><span class="p">)</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="m">2</span><span class="w">
     </span><span class="p">]</span><span class="w">
     </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nt">PrimaryExpression</span><span class="p">[</span><span class="nt">PrimaryPrefix</span><span class="err">/</span><span class="na">@ThisModifier</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="nf">true</span><span class="p">()]</span><span class="w">
                           </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nt">PrimarySuffix</span><span class="p">)]</span><span class="w">
                           </span><span class="p">[</span><span class="kn">ancestor::</span><span class="nt">MethodDeclaration</span><span class="p">[</span><span class="na">@Name</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="s1">'equals'</span><span class="p">]])</span><span class="w">
     </span><span class="p">]</span><span class="w">
+    </span><span class="c">(: Is not a field access with an all-caps identifier :)</span><span class="w">
+    </span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nt">PrimaryExpression</span><span class="p">[</span><span class="ow">not</span><span class="p">(</span><span class="nt">PrimarySuffix</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="nt">PrimaryPrefix</span><span class="o">/</span><span class="nt">Name</span><span class="p">[</span><span class="nf">upper-case</span><span class="p">(</span><span class="na">@Image</span><span class="p">)</span><span class="err">=</span><span class="na">@Image</span><span class="p">]</span><span class="w">
+     </span><span class="ow">or</span><span class="w"> </span><span class="nt">PrimaryExpression</span><span class="o">/</span><span class="nt">PrimarySuffix</span><span class="p">[</span><span class="nf">last</span><span class="p">()][</span><span class="nf">upper-case</span><span class="p">(</span><span class="na">@Image</span><span class="p">)</span><span class="err">=</span><span class="na">@Image</span><span class="p">]])]</span><span class="w">
 </span></code></pre></div></div>
 
 <p><strong>Example(s):</strong></p>
@@ -2796,8 +2819,37 @@ just remove "AutoCloseable" from the types.</p>
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p><strong>Use this rule by referencing it:</strong></p>
+<p><strong>This rule has the following properties:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Default Value</th>
+      <th>Description</th>
+      <th>Multivalued</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>typesThatCompareByReference</td>
+      <td>java.lang.Enum , java.lang.Class</td>
+      <td>List of canonical type names for which reference comparison is allowed.</td>
+      <td>yes. Delimiter is ‘,’.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Use this rule with the default properties by just referencing it:</strong></p>
 <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/errorprone.xml/CompareObjectsWithEquals"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p><strong>Use this rule and customize it:</strong></p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/errorprone.xml/CompareObjectsWithEquals"</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;properties&gt;</span>
+        <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"typesThatCompareByReference"</span> <span class="na">value=</span><span class="s">"java.lang.Enum,java.lang.Class"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/properties&gt;</span>
+<span class="nt">&lt;/rule&gt;</span>
 </code></pre></div></div>
 
 <h2 id="constructorcallsoverridablemethod">ConstructorCallsOverridableMethod</h2>
@@ -4592,9 +4644,9 @@ for each call and new objects will be created for every invocation.</p>
 
 <p><strong>Priority:</strong> Medium High (2)</p>
 
-<p>Some classes contain overloaded getInstance. The problem with overloaded getInstance methods
-is that the instance created using the overloaded method is not cached and so,
-for each call and new objects will be created for every invocation.</p>
+<p>A singleton class should only ever have one instance. Failure to check
+whether an instance has already been created may result in multiple
+instances being created.</p>
 
 <p><strong>This rule is defined by the following Java class:</strong> <a href="https://github.com/pmd/pmd/blob/master/pmd-java/src/main/java/net/sourceforge/pmd/lang/java/rule/errorprone/SingletonClassReturningNewInstanceRule.java">net.sourceforge.pmd.lang.java.rule.errorprone.SingletonClassReturningNewInstanceRule</a></p>
 
@@ -4604,7 +4656,7 @@ for each call and new objects will be created for every invocation.</p>
     <span class="kd">private</span> <span class="kd">static</span> <span class="nc">Singleton</span> <span class="n">instance</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
     <span class="kd">public</span> <span class="kd">static</span> <span class="nc">Singleton</span> <span class="nf">getInstance</span><span class="o">()</span> <span class="o">{</span>
         <span class="kd">synchronized</span><span class="o">(</span><span class="nc">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="k">new</span> <span class="nf">Singleton</span><span class="o">();</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="nf">Singleton</span><span class="o">();</span> <span class="c1">// this should be assigned to the field</span>
         <span class="o">}</span>
     <span class="o">}</span>
 <span class="o">}</span>
@@ -5225,7 +5277,7 @@ Thread.currentThread().getContextClassLoader() instead.</p>
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2021 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Apr 24, 2021 <br />
+ Site last generated: May 29, 2021 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
