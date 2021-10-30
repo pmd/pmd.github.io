@@ -4,9 +4,9 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Learn how to suppress some rule violations, from the source code using annotations or comments, or globally from the ruleset">
-<meta name="keywords" content="userdocs,  suppressingwarningssuppresswarningsnopmdviolationSuppressXPathviolationSuppressRegex">
-<title>Suppressing warnings | PMD Source Code Analyzer</title>
+<meta name="description" content="">
+<meta name="keywords" content=" ">
+<title>Visualforce Support | PMD Source Code Analyzer</title>
 <link rel="stylesheet" href="css/syntax.css">
 
 
@@ -140,7 +140,7 @@
                                 searchInput: document.getElementById('search-input'),
                                 resultsContainer: document.getElementById('results-container'),
                                 dataSource: 'search.json',
-                                searchResultTemplate: '<li><a href="{url}" title="Suppressing warnings">{title}</a></li>',
+                                searchResultTemplate: '<li><a href="{url}" title="Visualforce Support">{title}</a></li>',
                     noResultsText: 'No results found.',
                             limit: 10,
                             fuzzy: true,
@@ -297,7 +297,7 @@
             
 
                 
-                <li class="active"><a href="pmd_userdocs_suppressing_warnings.html">Suppressing warnings</a></li>
+                <li><a href="pmd_userdocs_suppressing_warnings.html">Suppressing warnings</a></li>
                 
 
             
@@ -1065,7 +1065,7 @@
             
 
                 
-                <li><a href="pmd_languages_visualforce.html">Visualforce</a></li>
+                <li class="active"><a href="pmd_languages_visualforce.html">Visualforce</a></li>
                 
 
             
@@ -1404,15 +1404,13 @@
         <!-- Content Column -->
         <div class="col-md-9" id="tg-sb-content">
             <div class="post-header">
-   <h1 class="post-title-main">Suppressing warnings</h1>
+   <h1 class="post-title-main">Visualforce Support</h1>
 </div>
 
 
 
 <div class="post-content">
 
-   
-    <div class="summary">Learn how to suppress some rule violations, from the source code using annotations or comments, or globally from the ruleset</div>
    
 
     
@@ -1437,234 +1435,56 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
         
         
         
-        <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/pmd/userdocs/suppressing_warnings.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
+        <a target="_blank" href="https://github.com/pmd/pmd/blob/master/docs/pages/pmd/languages/visualforce.md" class="btn btn-default githubEditButton" role="button"><i class="fa fa-github fa-lg"></i> Edit me</a>
         
 
     
 
-  <p>PMD provides several methods by which Rule violations can be suppressed.
-Follow these steps to help you determine which expression method works best
-for you:</p>
+  <h2 id="type-resolution">Type resolution</h2>
 
-<ol>
+<p>Since PMD 6.30.0 support for type resolution has been added.</p>
+
+<p>The Visualforce AST now can resolve the data type of Visualforce expressions that reference
+Apex Controller properties and Custom Object fields. This feature improves the precision of existing rules,
+like <a href="pmd_rules_vf_security.html#vfunescapeel"><code class="language-plaintext highlighter-rouge">VfUnescapeEl</code></a>.</p>
+
+<p>This can be configured using two environment variables:</p>
+
+<ul>
   <li>
-    <p>Is the thing you need to suppress universally appealing to other
-users of PMD, or is it a false positive? Can you modify the Rule to
-support this specific suppression via a configuration property, or to
-fix the false positive?  If you can do this, then please do so, and
-submit a patch back to the PMD project.  Since PMD is built by users
-for users, your help would be greatly appreciated by everyone.  If you
-cannot…</p>
+    <p><code class="language-plaintext highlighter-rouge">PMD_VF_APEXDIRECTORIES</code>: Comma separated list of directories for Apex classes. Absolute or relative
+to the Visualforce directory. Default is <code class="language-plaintext highlighter-rouge">../classes</code>. Specifying an empty string will disable data type
+resolution for Apex Controller properties.</p>
   </li>
   <li>
-    <p>Can you use Annotations or the NOPMD marker to work around your
-particular issue on a case by case basis?  If not…</p>
+    <p><code class="language-plaintext highlighter-rouge">PMD_VF_OBJECTSDIRECTORIES</code>: Comma separated list of directories for Custom Objects. Absolute or relative
+to the Visualforce directory. Default is <code class="language-plaintext highlighter-rouge">../objects</code>. Specifying an empty string will disable data type
+resolution for Custom Object fields.</p>
   </li>
-  <li>
-    <p>Can a regular expression matching the violation message work
-around your particular issue?  If not…</p>
-  </li>
-  <li>
-    <p>Can a XPath query on the violation node work around your particular
-issue? If not…</p>
-  </li>
-  <li>
-    <p>Your last and final option is to see the first point about
-changing the Rule, but you do not need to submit a patch back to the
-PMD project.</p>
-  </li>
-</ol>
+</ul>
 
-<p>If you need to modify the Rule, see <a href="pmd_userdocs_extending_writing_rules_intro.html">How to write a rule</a>.
-Otherwise, the other suppression methods are explained in the following sections.</p>
+<p>This feature is experimental, in particular, expect changes to the way the configuration is specified.
+We’ll probably extend the CLI instead of relying on environment variables in a future version.</p>
 
-<h2 id="annotations">Annotations</h2>
+<h3 id="sample-usage">Sample usage</h3>
 
-<p>When using Java 1.5 or later, you can use annotations to suppress PMD warnings, like this:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// This will suppress all the PMD warnings in this class</span>
-<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"PMD"</span><span class="o">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Bar</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kt">int</span> <span class="n">foo</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>PMD_VF_APEXDIRECTORIES=../classes \
+PMD_VF_OBJECTSDIRECTORIES=../objects \
+run.sh pmd -d $GITHUB_WORKSPACE/force-app/main/default/pages \
+    -R category/vf/security.xml/VfUnescapeEl -f text
 </code></pre></div></div>
 
-<p>When using Apex make sure to use single quotes instead of double quotes</p>
+<p>If you run with debug logging turned on, you might see log messages like this:</p>
 
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// This will suppress all the PMD warnings in this class</span>
-<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="err">'</span><span class="no">PMD</span><span class="err">'</span><span class="o">)</span>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Okt. 14, 2021 11:30:44 AM net.sourceforge.pmd.lang.vf.VfExpressionTypeVisitor visit
+FINE: Unable to determine type for: Account.NotFoundField__c
 </code></pre></div></div>
 
-<p>Or you can suppress one rule with an annotation like this:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// This will suppress UnusedLocalVariable warnings in this class</span>
-<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"PMD.UnusedLocalVariable"</span><span class="o">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Bar</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kt">int</span> <span class="n">foo</span><span class="o">;</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div></div>
-
-<p>Multiple rules can be suppressed by providing multiple values, ie:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@SuppressWarnings</span><span class="o">({</span><span class="s">"PMD.UnusedLocalVariable"</span><span class="o">,</span> <span class="s">"PMD.UnusedPrivateMethod"</span><span class="o">})</span>
-</code></pre></div></div>
-
-<p>For Apex, the syntax for this is slightly different:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="err">'</span><span class="no">PMD</span><span class="o">.</span><span class="na">UnusedLocalVariable</span><span class="o">,</span> <span class="no">PMD</span><span class="o">.</span><span class="na">UnusedPrivateMethod</span><span class="err">'</span><span class="o">)</span>
-</code></pre></div></div>
-
-<p>PMD Java also obeys the JDK annotation @SuppressWarnings(“unused”), which will apply to all rules in the unused ruleset.</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// This will suppress UnusedLocalVariable and UnusedPrivateMethod warnings in this class</span>
-<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unused"</span><span class="o">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Bar</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kt">int</span> <span class="n">foo</span><span class="o">;</span>
-    <span class="o">}</span>
-    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">foobar</span><span class="o">(){}</span>
-<span class="o">}</span>
-</code></pre></div></div>
-
-<h2 id="nopmd-comment">NOPMD comment</h2>
-
-<p>Alternatively, you can tell PMD to ignore a specific line by using the “NOPMD” marker in a comment, like this:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Bar</span> <span class="o">{</span>
-    <span class="c1">// 'bar' is accessed by a native method, so we want to suppress warnings for it</span>
-    <span class="kd">private</span> <span class="kt">int</span> <span class="n">bar</span><span class="o">;</span> <span class="c1">//NOPMD</span>
-<span class="o">}</span>
-</code></pre></div></div>
-
-<p>You can use whatever text string you want to suppress warnings, by using the <code class="language-plaintext highlighter-rouge">-suppressmarker</code> CLI option.
-For example, here’s how to use <code class="language-plaintext highlighter-rouge">TURN_OFF_WARNINGS</code> as the suppressor:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">cat</span> <span class="nc">Foo</span><span class="o">.</span><span class="na">java</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span><span class="o">;</span> <span class="c1">// TURN_OFF_WARNINGS</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-
-<span class="err">$</span> <span class="o">./</span><span class="n">run</span><span class="o">.</span><span class="na">sh</span> <span class="n">pmd</span> <span class="o">-</span><span class="n">d</span> <span class="nc">Foo</span><span class="o">.</span><span class="na">java</span> <span class="o">-</span><span class="n">f</span> <span class="n">text</span> <span class="o">-</span><span class="no">R</span> <span class="n">java</span><span class="o">-</span><span class="n">unusedcode</span> <span class="o">-</span><span class="n">suppressmarker</span> <span class="no">TURN_OFF_WARNINGS</span>
-<span class="nc">No</span> <span class="n">problems</span> <span class="n">found</span><span class="o">!</span>
-<span class="nc">UnusedLocalVariable</span> <span class="n">rule</span> <span class="n">violation</span> <span class="n">suppressed</span> <span class="n">by</span> <span class="c1">//NOPMD in /home/tom/pmd/pmd/bin/Foo.java</span>
-</code></pre></div></div>
-<p>Note that PMD expects the //NOPMD marker to be on the same line as the violation. So, for
-example, if you want to suppress an “empty <code class="language-plaintext highlighter-rouge">if</code> statement” warning, you’ll need to place it on
-the line containing the <code class="language-plaintext highlighter-rouge">if</code> keyword, e.g.:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="n">cat</span> <span class="o">~/</span><span class="n">tmp</span><span class="o">/</span><span class="nc">Foo</span><span class="o">.</span><span class="na">java</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">42</span><span class="o">;</span>
-        <span class="k">if</span> <span class="o">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="o">)</span> <span class="o">{</span> <span class="c1">// NOPMD</span>
-        <span class="o">}</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-<span class="err">$</span> <span class="n">java</span> <span class="n">net</span><span class="o">.</span><span class="na">sourceforge</span><span class="o">.</span><span class="na">pmd</span><span class="o">.</span><span class="na">PMD</span> <span class="o">-</span><span class="n">d</span> <span class="o">~/</span><span class="n">tmp</span><span class="o">/</span><span class="nc">Foo</span><span class="o">.</span><span class="na">java</span> <span class="o">-</span><span class="n">f</span> <span class="n">text</span> <span class="o">-</span><span class="no">R</span> <span class="n">java</span><span class="o">-</span><span class="n">basic</span>
-<span class="nc">No</span> <span class="n">problems</span> <span class="n">found</span><span class="o">!</span>
-</code></pre></div></div>
-
-<p>A message placed after the NOPMD marker will get placed in the report, e.g.:</p>
-
-<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Foo</span> <span class="o">{</span>
-    <span class="kt">void</span> <span class="nf">bar</span><span class="o">()</span> <span class="o">{</span>
-        <span class="k">try</span> <span class="o">{</span>
-            <span class="n">bar</span><span class="o">();</span>
-        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">FileNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{}</span> <span class="c1">// NOPMD - this surely will never happen</span>
-    <span class="o">}</span>
-<span class="o">}</span>
-</code></pre></div></div>
-
-<h2 id="xpath-and-regex-message-suppression">XPath and Regex message suppression</h2>
-
-<p>If a particular rule consistently reports a warning in a particular context, you can fall
-back to disabling the rule for all these contexts using one of two rule properties
-that are defined on every rule. Depending on what you’re after, you can suppress
-violations for <strong>specific messages</strong> using regular expressions, or <strong>specific nodes</strong>
-using an XPath expression.</p>
-
-<h3 id="the-property-violationsuppressregex">The property <code class="language-plaintext highlighter-rouge">violationSuppressRegex</code></h3>
-
-<p>This property defines a regular expression to match against the
-message of the violation.  If the regular expression matches,
-then the violation will be suppressed.</p>
-
-<p>For example, to suppress reporting specifically named parameters which
-are unused:</p>
-
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"rulesets/java/unusedcode.xml/UnusedFormalParameter"</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;properties&gt;</span>
-    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"violationSuppressRegex"</span> <span class="na">value=</span><span class="s">".*'mySpecialParameterName'.*"</span><span class="nt">/&gt;</span>
-  <span class="nt">&lt;/properties&gt;</span>
-<span class="nt">&lt;/rule&gt;</span>
-</code></pre></div></div>
-
-<p>Note for message based suppression to work, you must know how to write
-a regular expression that matches the message of violations you wish to
-suppress. Regular expressions are explained in the JavaDoc for standard
-Java class java.util.regex.Pattern.</p>
-
-<p>This technique of course relies on how the rule’s message is implemented.
-Some rules always report the same message, in which case this property is
-of no use.</p>
-
-<h3 id="the-property-violationsuppressxpath">The property <code class="language-plaintext highlighter-rouge">violationSuppressXPath</code></h3>
-
-<p>This property defines an XPath query to be executed <em>using the
-violation node as the context node</em>.  If the XPath query matches anything,
-then the violation will be suppressed. Note that the query shouldn’t be finding
-the violation nodes to suppress, but rather, finding a non-empty sequence of nodes
-when evaluated with the violation node as a context node.</p>
-
-<p>The XPath version used by those queries is XPath 1.0, so it doesn’t support various XPath 2.0
-features. This will be updated with PMD 7.0.0.</p>
-
-<p>For example, to suppress reporting specifically “String” parameters which are unused:</p>
-
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"rulesets/java/unusedcode.xml/UnusedFormalParameter"</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;properties&gt;</span>
-    <span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"violationSuppressXPath"</span> <span class="na">value=</span><span class="s">".[typeIs('java.lang.String')]"</span><span class="nt">/&gt;</span>
-  <span class="nt">&lt;/properties&gt;</span>
-<span class="nt">&lt;/rule&gt;</span>
-</code></pre></div></div>
-
-<p>Note the use of <code class="language-plaintext highlighter-rouge">.</code> to refer to the context node. Using <code class="language-plaintext highlighter-rouge">//</code> at the start of the
-expression should be avoided, as it would test all nodes in the file, and suppress
-more violations than expected.</p>
-
-<p>Another example, to suppress violations occurring in classes whose name contains <code class="language-plaintext highlighter-rouge">Bean</code>:</p>
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"violationSuppressXPath"</span> <span class="na">value=</span><span class="s">"./ancestor::ClassOrInterfaceDeclaration[contains(@Image, 'Bean')]"</span><span class="nt">/&gt;</span>
-</code></pre></div></div>
-
-<p>You can also use regex for string comparison. The next example suppresses violations in classes ending with <code class="language-plaintext highlighter-rouge">Bean</code>:</p>
-<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;property</span> <span class="na">name=</span><span class="s">"violationSuppressXPath"</span> <span class="na">value=</span><span class="s">"./ancestor::ClassOrInterfaceDeclaration[matches(@Image, '^.*Bean$')]"</span><span class="nt">/&gt;</span>
-</code></pre></div></div>
-
-<p>Note here the usage of the <code class="language-plaintext highlighter-rouge">./ancestor::</code> axis instead of <code class="language-plaintext highlighter-rouge">//</code>. The latter would match
-any ClassOrInterfaceDeclaration in the file, while the former matches only class
-declaration nodes that <em>enclose the violation node</em>, which is usually what you’d want.</p>
-
-<p>Note for XPath based suppression to work, you must know how to write
-an XPath query that matches the AST structure of the nodes of the
-violations you wish to suppress.  XPath queries are explained in
-<a href="pmd_userdocs_extending_writing_xpath_rules.html">XPath Rule tutorial</a>.</p>
+<p>This means, that type resolution didn’t work. Maybe the provided directories are missing or do not contain
+the needed data.</p>
 
 
     <div class="tags">
-        
-        <b>Tags: </b>
-        
-        
-        
-        <a href="tag_userdocs.html" class="btn btn-default navbar-btn cursorNorm" role="button">userdocs</a>
-        
-        
         
     </div>
 
@@ -1678,7 +1498,7 @@ violations you wish to suppress.  XPath queries are explained in
             <div class="row">
                 <div class="col-lg-12 footer">
                &copy;2021 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Oct 30, 2021 <br />
+<span>Page last updated:</span> October 2021<br/> Site last generated: Oct 30, 2021 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
