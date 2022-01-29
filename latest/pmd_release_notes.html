@@ -173,7 +173,7 @@
 
 
 <ul id="mysidebar" class="nav">
-    <li class="sidebarTitle">PMD 6.41.0</li>
+    <li class="sidebarTitle">PMD 6.42.0</li>
     
     
     
@@ -1440,231 +1440,116 @@ $('#toc').toc({ minimumHeaders: 0, listType: 'ul', showSpeed: 0, headers: 'h2,h3
 
     
 
-  <h2 id="27-november-2021---6410">27-November-2021 - 6.41.0</h2>
+  <h2 id="29-january-2022---6420">29-January-2022 - 6.42.0</h2>
 
-<p>The PMD team is pleased to announce PMD 6.41.0.</p>
+<p>The PMD team is pleased to announce PMD 6.42.0.</p>
 
 <p>This is a minor release.</p>
 
 <h3 id="new-and-noteworthy">New and noteworthy</h3>
 
-<h4 id="github-action-for-pmd">GitHub Action for PMD</h4>
+<h4 id="javascript-rhino-updated-to-latest-version-1714">Javascript: Rhino updated to latest version 1.7.14</h4>
 
-<p>PMD now has its own official GitHub Action: <a href="https://github.com/marketplace/actions/pmd">GitHub Action for PMD</a>.
-It can execute PMD with your own ruleset against your project. It creates a <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">SARIF</a>
-report which is uploaded as a build artifact. Furthermore the build can be failed based on the number of violations.</p>
+<p><a href="https://github.com/mozilla/rhino">Rhino</a>, the implementation of JavaScript we use
+for parsing JavaScript code, has been updated to the latest version 1.7.14.
+Now language features like template strings can be parsed. However Rhino does
+not support all features of the latest EcmaScript standard.</p>
 
-<p>Feedback and pull requests are welcome at <a href="https://github.com/pmd/pmd-github-action">https://github.com/pmd/pmd-github-action</a>.</p>
+<h4 id="new-rules">New rules</h4>
 
-<h4 id="last-release-in-2021">Last release in 2021</h4>
+<ul>
+  <li>The new Java rule <a href="pmd_rules_java_codestyle.html#finalparameterinabstractmethod"><code class="language-plaintext highlighter-rouge">FinalParameterInAbstractMethod</code></a> detects parameters that are
+declared as final in interfaces or abstract methods. Declaring the parameters as final is useless
+because the implementation may choose to not respect it.</li>
+</ul>
 
-<p>This minor release will be the last one in 2021. The next release is scheduled to be end of January 2022.</p>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="nt">&lt;rule</span> <span class="na">ref=</span><span class="s">"category/java/codestyle.xml/FinalParameterInAbstractMethod"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p>The rule is part of the quickstart.xml ruleset.</p>
+
+<h4 id="modified-rules">Modified rules</h4>
+
+<ul>
+  <li>The Apex rule <a href="pmd_rules_apex_documentation.html#apexdoc"><code class="language-plaintext highlighter-rouge">ApexDoc</code></a> has a new property <code class="language-plaintext highlighter-rouge">reportProperty</code>.
+If set to <code class="language-plaintext highlighter-rouge">false</code> (default is <code class="language-plaintext highlighter-rouge">true</code> if unspecified) doesn’t report missing ApexDoc comments on properties.
+It allows you to enforce ApexDoc comments for classes and methods without requiring them for properties.</li>
+</ul>
 
 <h3 id="fixed-issues">Fixed Issues</h3>
 
 <ul>
   <li>core
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/2954">#2954</a>: Create GitHub Action for PMD</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3424">#3424</a>: [core] Migrate CLI to using GNU-style long options</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3425">#3425</a>: [core] Add a <code class="language-plaintext highlighter-rouge">--version</code> CLI option</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3593">#3593</a>: [core] Ant task fails with Java17</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3635">#3635</a>: [ci] Update sample projects for regression tester</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3328">#3328</a>: [core] designer.bat errors when JAVAFX_HOME contains spaces</li>
+    </ul>
+  </li>
+  <li>java
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/3698">#3698</a>: [java] Error resolving Symbol Table</li>
     </ul>
   </li>
   <li>java-bestpractices
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3595">#3595</a>: [java] PrimitiveWrapperInstantiation: no violation on ‘new Boolean(val)’</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3613">#3613</a>: [java] ArrayIsStoredDirectly doesn’t consider nested classes</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3614">#3614</a>: [java] JUnitTestsShouldIncludeAssert doesn’t consider nested classes</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3618">#3618</a>: [java] UnusedFormalParameter doesn’t consider anonymous classes</li>
-      <li><a href="https://github.com/pmd/pmd/issues/3630">#3630</a>: [java] MethodReturnsInternalArray doesn’t consider anonymous classes</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3209">#3209</a>: [java] UnusedPrivateMethod false positive with static method and cast expression</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3468">#3468</a>: [java] UnusedPrivateMethod false positive when outer class calls private static method on inner class</li>
     </ul>
   </li>
   <li>java-design
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3620">#3620</a>: [java] SingularField doesn’t consider anonymous classes defined in non-private fields</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3679">#3679</a>: [java] Make FinalFieldCouldBeStatic detect constant variable</li>
     </ul>
   </li>
   <li>java-errorprone
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3624">#3624</a>: [java] TestClassWithoutTestCases reports wrong classes in a file</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3644">#3644</a>: [java] InvalidLogMessageFormat: false positives with logstash structured logging</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3686">#3686</a>: [java] ReturnEmptyCollectionRatherThanNull - false negative with conditioned returns</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3701">#3701</a>: [java] MissingStaticMethodInNonInstantiatableClass false positive with method inner classes</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3721">#3721</a>: [java] ReturnEmptyCollectionRatherThanNull - false positive with stream and lambda</li>
     </ul>
   </li>
   <li>java-performance
     <ul>
-      <li><a href="https://github.com/pmd/pmd/issues/3491">#3491</a>: [java] UselessStringValueOf: False positive when <code class="language-plaintext highlighter-rouge">valueOf(char [], int, int)</code> is used</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3492">#3492</a>: [java] UselessStringValueOf: False positive when there is no initial String to append to</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3639">#3639</a>: [java] UseStringBufferLength: false negative with empty string variable</li>
+      <li><a href="https://github.com/pmd/pmd/issues/3712">#3712</a>: [java] InsufficientStringBufferDeclaration false positive with StringBuilder.setLength(0)</li>
+    </ul>
+  </li>
+  <li>javascript
+    <ul>
+      <li><a href="https://github.com/pmd/pmd/issues/3703">#3703</a>: [javascript] Error - no Node adapter class registered for XmlPropRef</li>
     </ul>
   </li>
 </ul>
 
 <h3 id="api-changes">API Changes</h3>
 
-<h4 id="command-line-interface">Command Line Interface</h4>
-
-<p>The command line options for PMD and CPD now use GNU-syle long options format. E.g. instead of <code class="language-plaintext highlighter-rouge">-rulesets</code> the
-preferred usage is now <code class="language-plaintext highlighter-rouge">--rulesets</code>. Alternatively one can still use the short option <code class="language-plaintext highlighter-rouge">-R</code>.
-Some options also have been renamed to a more consistent casing pattern at the same time
-(<code class="language-plaintext highlighter-rouge">--fail-on-violation</code> instead of <code class="language-plaintext highlighter-rouge">-failOnViolation</code>).
-The old single-dash options are still supported but are deprecated and will be removed with PMD 7.
-This change makes the command line interface more consistent within PMD and also less surprising
-compared to other cli tools.</p>
-
-<p>The changes in detail for PMD:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>old option</th>
-      <th>new option</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-rulesets</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--rulesets</code> (or <code class="language-plaintext highlighter-rouge">-R</code>)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-uri</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--uri</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-dir</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--dir</code> (or <code class="language-plaintext highlighter-rouge">-d</code>)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-filelist</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--file-list</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-ignorelist</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--ignore-list</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-format</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--format</code> (or <code class="language-plaintext highlighter-rouge">-f</code>)</td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-debug</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--debug</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-verbose</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--verbose</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-help</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--help</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-encoding</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--encoding</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-threads</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--threads</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-benchmark</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--benchmark</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-stress</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--stress</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-shortnames</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--short-names</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-showsuppressed</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--show-suppressed</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-suppressmarker</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--suppress-marker</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-minimumpriority</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--minimum-priority</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-property</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--property</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-reportfile</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--report-file</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-force-language</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--force-language</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-auxclasspath</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--aux-classpath</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-failOnViolation</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--fail-on-violation</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--failOnViolation</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--fail-on-violation</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-norulesetcompatibility</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--no-ruleset-compatibility</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-cache</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--cache</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-no-cache</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--no-cache</code></td>
-    </tr>
-  </tbody>
-</table>
-
-<p>The changes in detail for CPD:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>old option</th>
-      <th>new option</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--failOnViolation</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--fail-on-violation</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">-failOnViolation</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--fail-on-violation</code></td>
-    </tr>
-    <tr>
-      <td><code class="language-plaintext highlighter-rouge">--filelist</code></td>
-      <td><code class="language-plaintext highlighter-rouge">--file-list</code></td>
-    </tr>
-  </tbody>
-</table>
+<p>No changes.</p>
 
 <h3 id="external-contributions">External Contributions</h3>
 
 <ul>
-  <li><a href="https://github.com/pmd/pmd/pull/3600">#3600</a>: [core] Implement GNU-style long options and ‘–version’ - <a href="https://github.com/duanyang25">Yang</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/3612">#3612</a>: [java] Created fix for UselessStringValueOf false positive - <a href="https://github.com/johnra2">John Armgardt</a></li>
-  <li><a href="https://github.com/pmd/pmd/pull/3648">#3648</a>: [doc] Rename Code Inspector to Codiga - <a href="https://github.com/juli1">Julien Delange</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3631">#3631</a>: [java] Fixed False positive for UselessStringValueOf when there is no initial String to append to - <a href="https://github.com/johnra2">John Armgardt</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3683">#3683</a>: [java] Fixed 3468 UnusedPrivateMethod false positive when outer class calls private static method on inner class - <a href="https://github.com/johnra2">John Armgardt</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3688">#3688</a>: [java] Bump log4j to 2.16.0 - <a href="https://github.com/snuyanzin">Sergey Nuyanzin</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3693">#3693</a>: [apex] ApexDoc: Add reportProperty property - <a href="https://github.com/babula">Steve Babula</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3704">#3704</a>: [java] Fix for #3686 - Fix ReturnEmptyCollectionRatherThanNull - <a href="https://github.com/dykov">Oleksii Dykov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3713">#3713</a>: [java] Enhance UnnecessaryModifier to support records - <a href="https://github.com/vgalloy">Vincent Galloy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3719">#3719</a>: [java] Upgrade log4j to 2.17.1 - <a href="https://github.com/squaresurf">Daniel Paul Searles</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3720">#3720</a>: [java] New rule: FinalParameterInAbstractMethod - <a href="https://github.com/vgalloy">Vincent Galloy</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3724">#3724</a>: [java] Fix for #3679 - fix FinalFieldCouldBeStatic - <a href="https://github.com/dykov">Oleksii Dykov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3727">#3727</a>: [java] #3724 - fix FinalFieldCouldBeStatic: triggers only if the referenced name is static - <a href="https://github.com/dykov">Oleksii Dykov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3742">#3742</a>: [java] Fix #3701 - fix MissingStaticMethodInNonInstantiatableClass for method local classes - <a href="https://github.com/dykov">Oleksii Dykov</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3744">#3744</a>: [core] Updated SaxonXPathRuleQueryTest.java - <a href="https://github.com/Vyom-Yadav">Vyom Yadav</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3745">#3745</a>: [java] Fix #3712: InsufficientStringBufferDeclaration setLength false positive - <a href="https://github.com/gredler">Daniel Gredler</a></li>
+  <li><a href="https://github.com/pmd/pmd/pull/3747">#3747</a>: [visualforce] Updated DataType.java - <a href="https://github.com/Vyom-Yadav">Vyom Yadav</a></li>
 </ul>
 
 <h3 id="stats">Stats</h3>
 <ul>
-  <li>80 commits</li>
-  <li>23 closed tickets &amp; PRs</li>
-  <li>Days since last release: 28</li>
+  <li>88 commits</li>
+  <li>35 closed tickets &amp; PRs</li>
+  <li>Days since last release: 62</li>
 </ul>
 
 
@@ -1682,8 +1567,8 @@ compared to other cli tools.</p>
 <footer>
             <div class="row">
                 <div class="col-lg-12 footer">
-               &copy;2021 PMD Open Source Project. All rights reserved. <br />
- Site last generated: Nov 27, 2021 <br />
+               &copy;2022 PMD Open Source Project. All rights reserved. <br />
+ Site last generated: Jan 29, 2022 <br />
 <p><img src="images/pmd-logo-small.png" alt="Company logo"/></p>
                 </div>
             </div>
