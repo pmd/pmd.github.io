@@ -1,8 +1,8 @@
 ---
 permalink: /404.html
 ---
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
     <title>PMD: 404 - Not Found</title>
     <meta http-equiv="content-type" content="text/xhtml;charset=UTF-8" />
@@ -12,20 +12,42 @@ permalink: /404.html
 <script type="text/javascript">
 (function() {
 
-//
-// Redirects to pmd.sourceforge.net/pmd-x.y.z, if the visited url starts with https://pmd.github.io/pmd-x.y.z
-//
+// Redirect to https://docs.pmd-code.org/* by default
+var url = new URL(location.href);
+url.host = 'docs.pmd-code.org';
+url.protocol = 'https';
+url.port = 443;
 
-var url = location.href;
-var fullPattern = /^https?:\/\/pmd.github.io\/pmd-\d+\.\d+\.\d+/i;
-
-if (fullPattern.test(url)) {
-    var pattern = /^https?:\/\/pmd.github.io/i;
-
-    url = url.replace(pattern, "http://pmd.sourceforge.net");
-    document.write("Redirecting to <a href='" + url + "'>" + url + "</a>...");
-    location.href = url;
+var newUrl = undefined;
+if (url.pathname.startsWith('/latest')) {
+    newUrl = url.href;
 }
+// new style doc path, e.g. /pmd-doc-6.55.0
+else if (url.pathname.startsWith('/pmd-doc-')) {
+    newUrl = url.href;
+}
+else if (url.pathname.startsWith('/pmd-')) {
+    var versionNumberPattern = new RegExp(/^\/pmd-(\d+)\.(\d+)\.(\d+[^\/]*)(\/?.*)/i);
+    var version = url.pathname.match(versionNumberPattern);
+    if (version) {
+        // pmd 5 and pmd 6 until including 6.20.0 are hosted on pmd.sourceforge.io
+        if (version[1] == '5' || version[1] == '6' && version[2] < 21) {
+            url.host = 'pmd.sourceforge.io';
+        }
+        // newer versions are on docs.pmd-code.org, but with "-doc-" in the path, e.g. /pmd-doc-6.55.0
+        else {
+            url.pathname = '/pmd-doc-' + version[1] + '.' + version[2] + '.' + version[3] + version[4];
+        }
+    }
+
+    newUrl = url.href;
+}
+
+if (newUrl) {
+    document.write("Redirecting to <a href='" + newUrl + "'>" + newUrl + "</a>...");
+    //location.href = newUrl;
+}
+
 })();
 </script>
 
@@ -36,12 +58,15 @@ if (fullPattern.test(url)) {
 <p>Here is what you can do:</p>
 <ul>
     <li>Start over at the homepage: <a href="https://pmd.github.io">https://pmd.github.io</a></li>
+    <li>Check out available documentation at: <a href="https://docs.pmd-code.org">https://docs.pmd-code.org</a></li>
     <li>Email us and let us know what you were looking for: <a href="mailto: pmd-devel@lists.sourceforge.net">pmd-devel@lists.sourceforge.net</a></li>
     <li>Create a new issue on <a href="https://github.com/pmd/pmd/issues">GitHub</a>.</li>
-    <li>Ask us in our <a href="http://sourceforge.net/p/pmd/discussion/188192/">discussion forum</a>.</li>
-    <li>Try searching <a href="https://www.google.com/search?q=site:pmd.github.io">pmd.github.io</a> or <a href="https://www.google.com/search?q=site:pmd.sourceforge.net">pmd.sourceforge.net</a> with google.</li>
+    <li>Ask us in our <a href="https://github.com/pmd/pmd/discussions">discussion forum</a>.</li>
+    <li>Try searching <a href="https://www.google.com/search?q=site:pmd.github.io">pmd.github.io</a>
+        or <a href="https://www.google.com/search?q=site:docs.pmd-code.org">docs.pmd-code.org</a>
+        or <a href="https://www.google.com/search?q=site:pmd.sourceforge.io">pmd.sourceforge.io</a> with google.</li>
 </ul>
 <hr />
-<a href="https://pmd.github.io"><img src="https://pmd.github.io/pmd_logo.jpg" width="101" alt="PMD - Don't shoot the messenger" /></a>
+<a href="https://pmd.github.io"><img src="img/pmd-logo-70px.png" alt="PMD" /></a>
 </body>
 </html>
