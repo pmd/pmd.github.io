@@ -43,13 +43,14 @@ title: PMD Schema
 
 **Namespace:** http://pmd.sourceforge.net/rule-tests
 
-**Schema Location:** <https://pmd.github.io/schema/rule-tests_1_1_0.xsd>
+**Schema Location:** <https://pmd.github.io/schema/rule-tests_1_1_1.xsd>
 
-**Current Version:** 1.1.0
+**Current Version:** 1.1.1
 
-**Last Change:** 2025-06-22
+**Last Change:** 2025-08-08
 
 **Documentation:** [Testing your rules](https://docs.pmd-code.org/latest/pmd_userdocs_extending_testing.html#test-xml-reference)
 
 **Old Versions:**
+* [1.1.0 (2025-06-22)](https://pmd.github.io/schema/rule-tests_1_1_0.xsd)
 * [1.0.0 (2022-07-22)](https://pmd.github.io/schema/rule-tests_1_0_0.xsd)
