@@ -10,7 +10,7 @@ consulting, custom rule development, integration, or training.
 
 | Company | Services | Contact |
 |---------|----------|---------|
-|no entries yet|
+|[MicroDoc Computersysteme GmbH](https://microdoc.com/)|Consulting, Support, Training, Custom Rules|<https://microdoc.com/PMD/>|
 {: .table .table-striped .table-hover }
 
 This list is sorted alphabetically. It is provided for convenience only and
